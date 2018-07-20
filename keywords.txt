@@ -1,0 +1,18 @@
+#######################################
+# Syntax Coloring Map For LightingRod
+#######################################
+
+#######################################
+# Class (KEYWORD3)
+#######################################
+
+LRSerial		KEYWORD3
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin				KEYWORD2
+available		KEYWORD2
+get					KEYWORD2
+set					KEYWORD2
