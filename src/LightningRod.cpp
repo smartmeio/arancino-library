@@ -2,7 +2,7 @@
 ****************************************************************************
 * Copyright (c) 2018 SmartME.IO. All right reserved.
 *
-* File : LightingRod.cpp
+* File : LightningRod.cpp
 * Date : 2018/07/19
 * Revision : 0.0.1 $
 * Author: andrea[at]smartme[dot]io
@@ -11,7 +11,7 @@
 
 */
 
-#include "LightingRod.h"
+#include "LightningRod.h"
 
 #define SET_METHOD 			"SET"
 #define GET_METHOD 			"GET"
@@ -20,12 +20,12 @@
 #define TIMEOUT 				2000
 
 
-LightingRodClass::LightingRodClass(Stream &_stream):
+LightningRodClass::LightningRodClass(Stream &_stream):
 	stream(_stream), started(false) {
   // Empty
 }
 
-void LightingRodClass::begin() {
+void LightningRodClass::begin() {
 	
 	//String start;
 	//String stop;
@@ -42,7 +42,7 @@ void LightingRodClass::begin() {
 	}while (start != "VERSION#");*/
 }
 
-String LightingRodClass::get( String key ) {
+String LightningRodClass::get( String key ) {
 	
 	stream.print(GET_METHOD);					// send read request 
 	if (key != ""){
@@ -55,7 +55,7 @@ String LightingRodClass::get( String key ) {
 	return message;
 }
 
-String LightingRodClass::set( String key, String value ) {
+String LightningRodClass::set( String key, String value ) {
 
 	stream.print(SET_METHOD);					// send read request 
 	if (key != ""){
@@ -73,13 +73,13 @@ String LightingRodClass::set( String key, String value ) {
 	
 }
 
-/*void LightingRodClass::dropAll() {
+/*void LightningRodClass::dropAll() {
   while (stream.available() > 0) {
     stream.read();
   }
 }*/
 
-// LightingRod instance
-SerialLightingRodClass LRSerial(SerialUSB);
+// LightningRod instance
+SerialLightningRodClass LRSerial(SerialUSB);
 
 //#endif
