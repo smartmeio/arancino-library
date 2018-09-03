@@ -28,14 +28,33 @@
 class LightningRodClass {
 	public:
 		void begin();
-		void println(String log){};
-		String get (String);
-		String set (String, String);
+		String get (String value);
+		void set (String key, String value);
+		void set (String key, int value);
+		void set (String key, double value);
+		int del (String key);
+		int del (String* key, int number);
+		int set(String key, String field, String value);
+		String* keys(String pattern="");
+		String hget(String key, String field);
+		String* hgetall(String key);
+		String* hkeys(String key);
+		String* hvals(String key);
+		int hset( String Key, String field, String value);
+		int hdel( String key, String field);
+		int hdel( String key, String* fields);
 		LightningRodClass(Stream &_stream);
-
+		//TO-DO
+		//void parseArray(String message);
+		int arraySize=0;
+		String* arrayKey;
+		
 	private:
 		//void dropAll();
-		bool started;
+		//bool started;
+		//String* arrayKey;
+		String parse(String message);
+		String* parseArray(String message);
 		Stream &stream;
 };
 
