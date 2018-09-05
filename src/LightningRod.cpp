@@ -66,7 +66,6 @@ String LightningRodClass::get( String key ) {
 	}
 	stream.println();
 	String message = stream.readStringUntil(END_TX_CHAR);
-	//data = parse(message, ";");
 	return parse(message);
 }
 
@@ -79,7 +78,6 @@ int LightningRodClass::del( String key ) {
 	}
 	stream.println();
 	String message = stream.readStringUntil(END_TX_CHAR);
-	//data = parse(message, ";");
 	return parse(message).toInt();
 }
 
@@ -94,7 +92,6 @@ int LightningRodClass::del( String* key , int number) {
 	}
 	stream.println();
 	String message = stream.readStringUntil(END_TX_CHAR);
-	//data = parse(message, ";");
 	return parse(message).toInt();
 }
 
@@ -111,9 +108,6 @@ void LightningRodClass::set( String key, String value ) {
 	}
 	stream.println();
 	String message = stream.readStringUntil(END_TX_CHAR);
-	
-	//data = parse(message, ";");
-	//return parse(message).toInt();
 	
 }
 
@@ -138,7 +132,6 @@ String LightningRodClass::hget( String key, String field ) {
 	}
 	stream.println();
 	String message = stream.readStringUntil(END_TX_CHAR);
-	//data = parse(message, ";");
 	return parse(message);
 }
 
@@ -151,12 +144,11 @@ String* LightningRodClass::hgetall( String key) {
 	}
 	stream.println();
 	String message = stream.readStringUntil(END_TX_CHAR);
-	//data = parse(message, ";");
 	parseArray(parse(message));
 	return arrayKey;
 }
 
-String* LightningRodClass::hkeys( String key) {
+String* LightningRodClass::hgetkeys( String key) {
 	
 	stream.print(HKEYS_COMMAND);					// send read request 
 	if (key != ""){
@@ -165,7 +157,6 @@ String* LightningRodClass::hkeys( String key) {
 	}
 	stream.println();
 	String message = stream.readStringUntil(END_TX_CHAR);
-	//data = parse(message, ";");
 	parseArray(parse(message));
 	return arrayKey;
 }
@@ -179,7 +170,6 @@ String* LightningRodClass::hvals( String key) {
 	}
 	stream.println();
 	String message = stream.readStringUntil(END_TX_CHAR);
-	//data = parse(message, ";");
 	parseArray(parse(message));
 	return arrayKey;
 }
@@ -216,7 +206,40 @@ int LightningRodClass::hset( String key, String field , String value) {
 	}
 	stream.println();
 	String message = stream.readStringUntil(END_TX_CHAR);
-	//data = parse(message, ";");
+	return parse(message).toInt();
+}
+
+int LightningRodClass::hdel( String key, String field ) {
+	
+	stream.print(HDEL_COMMAND);					// send read request 
+	if (key != ""){
+		stream.print(DATA_SPLIT_CHAR);
+		stream.print(key);
+	}
+	if (field != ""){
+		stream.print(DATA_SPLIT_CHAR);
+		stream.print(field);
+	}
+	stream.println();
+	String message = stream.readStringUntil(END_TX_CHAR);
+	return parse(message).toInt();
+}
+
+int LightningRodClass::hdel( String key, String* fields , int number) {
+	
+	stream.print(HDEL_COMMAND);					// send read request 
+	if (key != ""){
+		stream.print(DATA_SPLIT_CHAR);
+		stream.print(key);
+	}
+	for(int i=0;i<number;i++){
+		if(fields[i] != ""){
+			stream.print(DATA_SPLIT_CHAR);
+			stream.print(fields[i]);
+		}		
+	}
+	stream.println();
+	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
 
@@ -240,17 +263,17 @@ void LightningRodClass::parseArray(String data){
 		arrayKey[i++]=data.substring(idx,idx_temp);
 		idx=idx_temp+1;
 	}
-  //return arrayKey;
 }
 
 String LightningRodClass::parse(String message){
 	
 	String status;
-	String value;
+	String value = "";
 	int statusIndex = message.indexOf(DATA_SPLIT_CHAR);
-	int valueIndex = message.indexOf(DATA_SPLIT_CHAR, statusIndex+1);
+	//int valueIndex = message.indexOf(DATA_SPLIT_CHAR, statusIndex+1);
 	status = message.substring(0, statusIndex);				//message status (0: no message; 1:data ready; -1:error)
-	value = message.substring(statusIndex+1);
+	if(statusIndex != -1)
+		value = message.substring(statusIndex+1);
 	return value;
 	
 }
