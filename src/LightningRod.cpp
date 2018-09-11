@@ -64,7 +64,7 @@ String LightningRodClass::get( String key ) {
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
 	}
-	stream.println();
+	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message);
 }
@@ -76,7 +76,7 @@ int LightningRodClass::del( String key ) {
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
 	}
-	stream.println();
+	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
@@ -90,7 +90,7 @@ int LightningRodClass::del( String* key , int number) {
 			stream.print(key[i]);
 		}		
 	}
-	stream.println();
+	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
@@ -106,7 +106,7 @@ void LightningRodClass::set( String key, String value ) {
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(value);
 	}
-	stream.println();
+	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	
 }
@@ -130,7 +130,7 @@ String LightningRodClass::hget( String key, String field ) {
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(field);
 	}
-	stream.println();
+	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message);
 }
@@ -142,7 +142,7 @@ String* LightningRodClass::hgetall( String key) {
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
 	}
-	stream.println();
+	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
@@ -155,7 +155,7 @@ String* LightningRodClass::hgetkeys( String key) {
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
 	}
-	stream.println();
+	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
@@ -168,7 +168,7 @@ String* LightningRodClass::hvals( String key) {
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
 	}
-	stream.println();
+	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
@@ -181,7 +181,7 @@ String* LightningRodClass::keys(String key){
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
 	}
-	stream.println();
+	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
@@ -204,7 +204,7 @@ int LightningRodClass::hset( String key, String field , String value) {
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(value);
 	}
-	stream.println();
+	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
@@ -220,7 +220,7 @@ int LightningRodClass::hdel( String key, String field ) {
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(field);
 	}
-	stream.println();
+	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
@@ -238,7 +238,7 @@ int LightningRodClass::hdel( String key, String* fields , int number) {
 			stream.print(fields[i]);
 		}		
 	}
-	stream.println();
+	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
