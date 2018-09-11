@@ -1,4 +1,4 @@
-#include <LightingRod.h>
+#include <LightningRod.h>
 
 void setup() {
   
