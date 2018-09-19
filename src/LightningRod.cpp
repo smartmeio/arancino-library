@@ -13,6 +13,7 @@
 
 #include "LightningRod.h"
 
+#define START_COMMAND 		"START"
 #define SET_COMMAND 			"SET"
 #define GET_COMMAND 			"GET"
 #define DEL_COMMAND 			"DEL"
@@ -24,14 +25,17 @@
 #define HSET_COMMAND			"HSET"
 #define HVALS_COMMAND			"HVALS"
 
-#define END_TX_CHAR			(char)4 //'@' //
-#define DATA_SPLIT_CHAR	(char)30 //'#' //
-#define TIMEOUT 				100
-#define RSP_OK					200
-#define	RSP_KO					100
-#define	ERR_NOT_AVAIL		101
-#define	ERR_SET					102
-#define	ERR_NOT_FOUND		103
+#define END_TX_CHAR				(char)4 //'@' //
+#define DATA_SPLIT_CHAR		(char)30 //'#' //
+#define TIMEOUT 					100
+#define RSP_OK						100
+#define RSP_HSET_NEW			101
+#define RSP_HSET_UPD			102
+#define ERR								200
+#define ERR_NULL					201
+#define ERR_SET						202
+#define ERR_NOT_FOUND			203
+
 
 //String arrayKey[3]={}; 
 
@@ -42,19 +46,14 @@ LightningRodClass::LightningRodClass(Stream &_stream):
 
 void LightningRodClass::begin() {
 	
-	//String start;
-	//String stop;
+	String start;
   stream.setTimeout(TIMEOUT);			//response timeout
-  // Wait for U-boot to finish startup
-	/*do {
-		dropAll();
-		delay(1000);
-	}while (stream.available() > 0);*/
-
-	/*do{ 
-		stream.println("");				//check if bridge python is running
+  // Start communication with serial module on CPU
+	do{
+		stream.print(START_COMMAND); 
+		stream.print(END_TX_CHAR);				//check if bridge python is running
 		start = stream.readStringUntil(END_TX_CHAR);
-	}while (start != "VERSION#");*/
+	}while (start.toInt() != RSP_OK);
 }
 
 String LightningRodClass::get( String key ) {
