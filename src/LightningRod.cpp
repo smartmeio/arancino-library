@@ -80,7 +80,7 @@ int LightningRodClass::del( String key ) {
 	return parse(message).toInt();
 }
 
-int LightningRodClass::del( String* key , int number) {
+/*int LightningRodClass::del( String* key , int number) {
 	
 	stream.print(DEL_COMMAND);					// send read request 
 	for(int i=0;i<number;i++){
@@ -92,7 +92,7 @@ int LightningRodClass::del( String* key , int number) {
 	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
-}
+}*/
 
 void LightningRodClass::set( String key, String value ) {
 
@@ -224,7 +224,7 @@ int LightningRodClass::hdel( String key, String field ) {
 	return parse(message).toInt();
 }
 
-int LightningRodClass::hdel( String key, String* fields , int number) {
+/*int LightningRodClass::hdel( String key, String* fields , int number) {
 	
 	stream.print(HDEL_COMMAND);					// send read request 
 	if (key != ""){
@@ -240,7 +240,7 @@ int LightningRodClass::hdel( String key, String* fields , int number) {
 	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
-}
+}*/
 
 void LightningRodClass::parseArray(String data){
 	arraySize=0;																	//reset size array

@@ -33,7 +33,7 @@ class LightningRodClass {
 		void set (String key, int value);
 		void set (String key, double value);
 		int del (String key);
-		int del (String* key, int number);
+		//int del (String* key, int number);
 		int set(String key, String field, String value);
 		String* keys(String pattern="");
 		String hget(String key, String field);
@@ -42,7 +42,7 @@ class LightningRodClass {
 		String* hvals(String key);
 		int hset( String Key, String field, String value);
 		int hdel( String key, String field);
-		int hdel( String key, String* fields, int number);
+		//int hdel( String key, String* fields, int number);
 		LightningRodClass(Stream &_stream);
 		int arraySize=0;
 		String* arrayKey;
