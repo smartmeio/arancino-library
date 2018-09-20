@@ -13,6 +13,8 @@
 
 #include "LightningRod.h"
 
+
+#define START_COMMAND 		"START"
 #define SET_COMMAND 			"SET"
 #define GET_COMMAND 			"GET"
 #define DEL_COMMAND 			"DEL"
@@ -24,16 +26,19 @@
 #define HSET_COMMAND			"HSET"
 #define HVALS_COMMAND			"HVALS"
 
-#define END_TX_CHAR			(char)4 //'@' //
-#define DATA_SPLIT_CHAR	(char)30 //'#' //
-#define TIMEOUT 				100
-#define RSP_OK					200
-#define	RSP_KO					100
-#define	ERR_NOT_AVAIL		101
-#define	ERR_SET					102
-#define	ERR_NOT_FOUND		103
+#define END_TX_CHAR				(char)4 //'@' //
+#define DATA_SPLIT_CHAR		(char)30 //'#' //
+#define TIMEOUT 					100
+#define RSP_OK						100
+#define RSP_HSET_NEW			101
+#define RSP_HSET_UPD			102
+#define ERR								200
+#define ERR_NULL					201
+#define ERR_SET						202
+#define ERR_NOT_FOUND			203
 
-//String arrayKey[3]={}; 
+
+//String arrayKey[3]={};
 
 LightningRodClass::LightningRodClass(Stream &_stream):
 	stream(_stream), started(false) {
@@ -41,25 +46,20 @@ LightningRodClass::LightningRodClass(Stream &_stream):
 }
 
 void LightningRodClass::begin() {
-	
-	//String start;
-	//String stop;
-  stream.setTimeout(TIMEOUT);			//response timeout
-  // Wait for U-boot to finish startup
-	/*do {
-		dropAll();
-		delay(1000);
-	}while (stream.available() > 0);*/
 
-	/*do{ 
-		stream.println("");				//check if bridge python is running
+	String start;
+  stream.setTimeout(TIMEOUT);			//response timeout
+  // Start communication with serial module on CPU
+	do{
+		stream.print(START_COMMAND);
+		stream.print(END_TX_CHAR);				//check if bridge python is running
 		start = stream.readStringUntil(END_TX_CHAR);
-	}while (start != "VERSION#");*/
+	}while (start.toInt() != RSP_OK);
 }
 
 String LightningRodClass::get( String key ) {
-	
-	stream.print(GET_COMMAND);					// send read request 
+
+	stream.print(GET_COMMAND);					// send read request
 	if (key != ""){
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
@@ -71,7 +71,7 @@ String LightningRodClass::get( String key ) {
 
 int LightningRodClass::del( String key ) {
 	
-	stream.print(DEL_COMMAND);					// send read request 
+	stream.print(DEL_COMMAND);					// send read request
 	if (key != ""){
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
@@ -81,23 +81,23 @@ int LightningRodClass::del( String key ) {
 	return parse(message).toInt();
 }
 
-int LightningRodClass::del( String* key , int number) {
-	
-	stream.print(DEL_COMMAND);					// send read request 
+/*int LightningRodClass::del( String* key , int number) {
+
+	stream.print(DEL_COMMAND);					// send read request
 	for(int i=0;i<number;i++){
 		if(key[i] != ""){
 			stream.print(DATA_SPLIT_CHAR);
 			stream.print(key[i]);
-		}		
+		}
 	}
 	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
-}
+}*/
 
 void LightningRodClass::set( String key, String value ) {
 
-	stream.print(SET_COMMAND);					// send read request 
+	stream.print(SET_COMMAND);					// send read request
 	if (key != ""){
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
@@ -108,20 +108,20 @@ void LightningRodClass::set( String key, String value ) {
 	}
 	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
-	
+
 }
 
 void LightningRodClass::set( String key, int value ) {
-	set(key, String(value)); 	
+	set(key, String(value));
 }
 
 void LightningRodClass::set( String key, double value ) {
-	set(key, String(value)); 	
+	set(key, String(value));
 }
 
 String LightningRodClass::hget( String key, String field ) {
-	
-	stream.print(HGET_COMMAND);					// send read request 
+
+	stream.print(HGET_COMMAND);					// send read request
 	if (key != ""){
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
@@ -136,8 +136,8 @@ String LightningRodClass::hget( String key, String field ) {
 }
 
 String* LightningRodClass::hgetall( String key) {
-	
-	stream.print(HGETALL_COMMAND);					// send read request 
+
+	stream.print(HGETALL_COMMAND);					// send read request
 	if (key != ""){
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
@@ -149,8 +149,8 @@ String* LightningRodClass::hgetall( String key) {
 }
 
 String* LightningRodClass::hgetkeys( String key) {
-	
-	stream.print(HKEYS_COMMAND);					// send read request 
+
+	stream.print(HKEYS_COMMAND);					// send read request
 	if (key != ""){
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
@@ -162,8 +162,8 @@ String* LightningRodClass::hgetkeys( String key) {
 }
 
 String* LightningRodClass::hvals( String key) {
-	
-	stream.print(HVALS_COMMAND);					// send read request 
+
+	stream.print(HVALS_COMMAND);					// send read request
 	if (key != ""){
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
@@ -175,8 +175,8 @@ String* LightningRodClass::hvals( String key) {
 }
 
 String* LightningRodClass::keys(String key){
-	
-	stream.print(KEYS_COMMAND);					// send read request 
+
+	stream.print(KEYS_COMMAND);					// send read request
 	if (key != ""){
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
@@ -185,13 +185,13 @@ String* LightningRodClass::keys(String key){
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
-	
+
 };
 
 
 int LightningRodClass::hset( String key, String field , String value) {
-	
-	stream.print(HSET_COMMAND);					// send read request 
+
+	stream.print(HSET_COMMAND);					// send read request
 	if (key != ""){
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
@@ -210,8 +210,8 @@ int LightningRodClass::hset( String key, String field , String value) {
 }
 
 int LightningRodClass::hdel( String key, String field ) {
-	
-	stream.print(HDEL_COMMAND);					// send read request 
+
+	stream.print(HDEL_COMMAND);					// send read request
 	if (key != ""){
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
@@ -225,9 +225,9 @@ int LightningRodClass::hdel( String key, String field ) {
 	return parse(message).toInt();
 }
 
-int LightningRodClass::hdel( String key, String* fields , int number) {
-	
-	stream.print(HDEL_COMMAND);					// send read request 
+/*int LightningRodClass::hdel( String key, String* fields , int number) {
+
+	stream.print(HDEL_COMMAND);					// send read request
 	if (key != ""){
 		stream.print(DATA_SPLIT_CHAR);
 		stream.print(key);
@@ -236,12 +236,12 @@ int LightningRodClass::hdel( String key, String* fields , int number) {
 		if(fields[i] != ""){
 			stream.print(DATA_SPLIT_CHAR);
 			stream.print(fields[i]);
-		}		
+		}
 	}
 	stream.print(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
-}
+}*/
 
 void LightningRodClass::parseArray(String data){
 	arraySize=0;																	//reset size array
@@ -266,7 +266,7 @@ void LightningRodClass::parseArray(String data){
 }
 
 String LightningRodClass::parse(String message){
-	
+
 	String status;
 	String value = "";
 	int statusIndex = message.indexOf(DATA_SPLIT_CHAR);
@@ -275,7 +275,7 @@ String LightningRodClass::parse(String message){
 	if(statusIndex != -1)
 		value = message.substring(statusIndex+1);
 	return value;
-	
+
 }
 
 /*void LightningRodClass::dropAll() {
