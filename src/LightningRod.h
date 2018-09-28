@@ -19,6 +19,7 @@
 
 #if defined(__SAMD21G18A__)
 #define BAUDRATE 4000000
+#define TIMEOUT 100
 #define SERIAL_PORT SerialUSB
 #endif
 
@@ -27,7 +28,8 @@
 
 class LightningRodClass {
 	public:
-		void begin();
+		//void begin();
+		void begin(int timeout);
 		String get (String value);
 		void set (String key, String value);
 		void set (String key, int value);
@@ -62,9 +64,10 @@ class SerialLightningRodClass : public LightningRodClass {
 			: LightningRodClass(_serial), serial(_serial){
 			// Empty	
 		}
-		void begin( unsigned long baudrate = BAUDRATE) {
-			serial.begin(baudrate);
-			LightningRodClass::begin();
+		//void begin(int timeout=TIMEOUT, unsigned long baudrate = BAUDRATE) {
+		void begin(int timeout=TIMEOUT) {
+			serial.begin(BAUDRATE);
+			LightningRodClass::begin(timeout);
 		}
 	private:
 		SERIAL_TRANSPORT &serial;

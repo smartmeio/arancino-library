@@ -27,27 +27,30 @@
 
 #define END_TX_CHAR				(char)4 //'@' //
 #define DATA_SPLIT_CHAR		(char)30 //'#' //
-#define TIMEOUT 					100
-#define RSP_OK						100
-#define RSP_HSET_NEW			101
-#define RSP_HSET_UPD			102
-#define ERR								200
-#define ERR_NULL					201
-#define ERR_SET						202
-#define ERR_NOT_FOUND			203
-
-
-//String arrayKey[3]={}; 
+//#define RSP_OK						100
+//#define RSP_HSET_NEW			101
+//#define RSP_HSET_UPD			102
+//#define ERR								200		//Generic Error
+//#define ERR_NULL					201		//Null value
+//#define ERR_SET						202		//Error during SET
+//#define ERR_CMD_NOT_FND		203		//Command Not Found
+//#define ERR_CMD_NOT_RCV		204		//Command Not Received
+//#define ERR_CMD_PRM_NUM		205		//Invalid parameter number
+//#define ERR_REDIS					206		//Generic Redis Error
 
 LightningRodClass::LightningRodClass(Stream &_stream):
 	stream(_stream), started(false) {
   // Empty
 }
 
-void LightningRodClass::begin() {
+/*void LightningRodClass::begin() {
+	begin(TIMEOUT);
+}*/
+
+void LightningRodClass::begin(int timeout) {
 	
 	String start;
-  stream.setTimeout(TIMEOUT);			//response timeout
+  stream.setTimeout(timeout);			//response timeout
   // Start communication with serial module on CPU
 	do{
 		stream.print(START_COMMAND); 
