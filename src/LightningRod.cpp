@@ -27,16 +27,17 @@
 
 #define END_TX_CHAR				(char)4 //'@' //
 #define DATA_SPLIT_CHAR		(char)30 //'#' //
-//#define RSP_OK						100
-//#define RSP_HSET_NEW			101
-//#define RSP_HSET_UPD			102
-//#define ERR								200		//Generic Error
-//#define ERR_NULL					201		//Null value
-//#define ERR_SET						202		//Error during SET
-//#define ERR_CMD_NOT_FND		203		//Command Not Found
-//#define ERR_CMD_NOT_RCV		204		//Command Not Received
-//#define ERR_CMD_PRM_NUM		205		//Invalid parameter number
-//#define ERR_REDIS					206		//Generic Redis Error
+
+#define RSP_OK						100
+#define RSP_HSET_NEW			101
+#define RSP_HSET_UPD			102
+#define ERR								200		//Generic Error
+#define ERR_NULL					201		//Null value
+#define ERR_SET						202		//Error during SET
+#define ERR_CMD_NOT_FND		203		//Command Not Found
+#define ERR_CMD_NOT_RCV		204		//Command Not Received
+#define ERR_CMD_PRM_NUM		205		//Invalid parameter number
+#define ERR_REDIS					206		//Generic Redis Error
 
 LightningRodClass::LightningRodClass(Stream &_stream):
 	stream(_stream), started(false) {
