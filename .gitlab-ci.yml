@@ -1,0 +1,39 @@
+# Project:  Arancino Library - Serial Manager
+# Author:   Sergio Tomasello <sergio@smartme.io>
+# Created:  2018.10.11
+# Notes:    La pipeline esegue la creazione dell'archivio della libreria compatibile per Aduino IDE
+
+
+stages:
+  - package
+  - packege_release
+
+#questo job esegue la compressione ad ogni commit su tutti i branch tranne master
+package:
+  stage: package
+  script:
+    - cd ../
+    - tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHA.zip $CI_PROJECT_NAME/
+    - mv $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHA.zip $CI_PROJECT_NAME
+  artifacts:
+    paths:
+      - $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHA.zip
+  only:
+    - branches
+  except:
+    - master
+
+#esegue la compressione del pacchetto quando viene creato un tag su master (ovvero ad ogni release)
+packege_release:
+  stage: package
+  script:
+    - cd ../
+    - tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME.zip $CI_PROJECT_NAME/
+    - mv $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME.zip $CI_PROJECT_NAME
+  artifacts:
+    paths:
+      - $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME.zip
+  only:
+    - tags
+  except:
+    - branches
