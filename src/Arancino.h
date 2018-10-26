@@ -54,6 +54,8 @@ class ArancinoClass {
 		bool started;
 		String parse(String message);
 		void parseArray(String message);
+		void sendArancinoCommand(String command);
+		void sendArancinoCommand(char command);
 		Stream &stream;
 };
 

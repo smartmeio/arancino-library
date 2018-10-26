@@ -25,6 +25,9 @@
 #define HSET_COMMAND			"HSET"
 #define HVALS_COMMAND			"HVALS"
 
+#define SENT_STRING				"Sent Command: "
+#define RCV_STRING				"Received Response: "
+
 #define END_TX_CHAR				(char)4 //'@' //
 #define DATA_SPLIT_CHAR		(char)30 //'#' //
 
@@ -39,6 +42,8 @@
 #define ERR_CMD_PRM_NUM		205		//Invalid parameter number
 #define ERR_REDIS					206		//Generic Redis Error
 
+#define DBG_PIN						26		//pin used to Debug Message
+
 ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
   // Empty
@@ -52,65 +57,83 @@ void ArancinoClass::begin(int timeout) {
 	
 	String start;
   stream.setTimeout(timeout);			//response timeout
+  //DEBUG
+  pinMode(DBG_PIN,INPUT);
+  if(!digitalRead(DBG_PIN)){
+  	Serial.begin(115200);
+  }
   // Start communication with serial module on CPU
 	do{
-		stream.print(START_COMMAND); 
-		stream.print(END_TX_CHAR);				//check if bridge python is running
+		if(!digitalRead(DBG_PIN)){
+			Serial.print(SENT_STRING);
+		}
+		sendArancinoCommand(START_COMMAND); 
+		sendArancinoCommand(END_TX_CHAR);				//check if bridge python is running
 		start = stream.readStringUntil(END_TX_CHAR);
 	}while (start.toInt() != RSP_OK);
 }
 
 String ArancinoClass::get( String key ) {
 	
-	stream.print(GET_COMMAND);					// send read request 
-	if (key != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(key);
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
 	}
-	stream.print(END_TX_CHAR);
+	sendArancinoCommand(GET_COMMAND);					// send read request 
+	if (key != ""){
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
+	}
+	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message);
 }
 
 int ArancinoClass::del( String key ) {
 	
-	stream.print(DEL_COMMAND);					// send read request 
-	if (key != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(key);
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
 	}
-	stream.print(END_TX_CHAR);
+	sendArancinoCommand(DEL_COMMAND);					// send read request 
+	if (key != ""){
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
+	}
+	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
 
 /*int ArancinoClass::del( String* key , int number) {
 	
-	stream.print(DEL_COMMAND);					// send read request 
+	sendArancinoCommand(DEL_COMMAND);					// send read request 
 	for(int i=0;i<number;i++){
 		if(key[i] != ""){
-			stream.print(DATA_SPLIT_CHAR);
-			stream.print(key[i]);
+			sendArancinoCommand(DATA_SPLIT_CHAR);
+			sendArancinoCommand(key[i]);
 		}		
 	}
-	stream.print(END_TX_CHAR);
+	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }*/
 
 void ArancinoClass::set( String key, String value ) {
 
-	stream.print(SET_COMMAND);					// send read request 
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	sendArancinoCommand(SET_COMMAND);					// send read request 
 	if (key != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(key);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
 	}
 	if (value != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(value);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(value);
 	}
-	stream.print(END_TX_CHAR);
+	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
+	parse(message);
 	
 }
 
@@ -123,68 +146,83 @@ void ArancinoClass::set( String key, double value ) {
 }
 
 String ArancinoClass::hget( String key, String field ) {
-	
-	stream.print(HGET_COMMAND);					// send read request 
+
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}	
+	sendArancinoCommand(HGET_COMMAND);					// send read request 
 	if (key != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(key);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
 	}
 	if (field != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(field);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(field);
 	}
-	stream.print(END_TX_CHAR);
+	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message);
 }
 
 String* ArancinoClass::hgetall( String key) {
-	
-	stream.print(HGETALL_COMMAND);					// send read request 
+
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}	
+	sendArancinoCommand(HGETALL_COMMAND);					// send read request 
 	if (key != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(key);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
 	}
-	stream.print(END_TX_CHAR);
+	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
 }
 
 String* ArancinoClass::hgetkeys( String key) {
-	
-	stream.print(HKEYS_COMMAND);					// send read request 
+
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}	
+	sendArancinoCommand(HKEYS_COMMAND);					// send read request 
 	if (key != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(key);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
 	}
-	stream.print(END_TX_CHAR);
+	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
 }
 
 String* ArancinoClass::hvals( String key) {
-	
-	stream.print(HVALS_COMMAND);					// send read request 
+
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}	
+	sendArancinoCommand(HVALS_COMMAND);					// send read request 
 	if (key != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(key);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
 	}
-	stream.print(END_TX_CHAR);
+	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
 }
 
 String* ArancinoClass::keys(String key){
-	
-	stream.print(KEYS_COMMAND);					// send read request 
+
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}	
+	sendArancinoCommand(KEYS_COMMAND);					// send read request 
 	if (key != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(key);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
 	}
-	stream.print(END_TX_CHAR);
+	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
@@ -193,55 +231,61 @@ String* ArancinoClass::keys(String key){
 
 
 int ArancinoClass::hset( String key, String field , String value) {
-	
-	stream.print(HSET_COMMAND);					// send read request 
+
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}	
+	sendArancinoCommand(HSET_COMMAND);					// send read request 
 	if (key != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(key);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
 	}
 	if (field != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(field);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(field);
 	}
 	if (value != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(value);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(value);
 	}
-	stream.print(END_TX_CHAR);
+	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
 
 int ArancinoClass::hdel( String key, String field ) {
 	
-	stream.print(HDEL_COMMAND);					// send read request 
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	sendArancinoCommand(HDEL_COMMAND);					// send read request 
 	if (key != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(key);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
 	}
 	if (field != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(field);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(field);
 	}
-	stream.print(END_TX_CHAR);
+	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
 
 /*int ArancinoClass::hdel( String key, String* fields , int number) {
 	
-	stream.print(HDEL_COMMAND);					// send read request 
+	sendArancinoCommand(HDEL_COMMAND);					// send read request 
 	if (key != ""){
-		stream.print(DATA_SPLIT_CHAR);
-		stream.print(key);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
 	}
 	for(int i=0;i<number;i++){
 		if(fields[i] != ""){
-			stream.print(DATA_SPLIT_CHAR);
-			stream.print(fields[i]);
+			sendArancinoCommand(DATA_SPLIT_CHAR);
+			sendArancinoCommand(fields[i]);
 		}		
 	}
-	stream.print(END_TX_CHAR);
+	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }*/
@@ -277,8 +321,32 @@ String ArancinoClass::parse(String message){
 	status = message.substring(0, statusIndex);				//message status (0: no message; 1:data ready; -1:error)
 	if(statusIndex != -1)
 		value = message.substring(statusIndex+1);
+	//DEBUG	
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(RCV_STRING);
+		Serial.print(status);
+		Serial.print(" ");
+		Serial.println(value);		
+	}
 	return value;
 	
+}
+
+void ArancinoClass::sendArancinoCommand(String command){
+	stream.print(command);
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(command);
+	}
+}
+
+void ArancinoClass::sendArancinoCommand(char command){
+	stream.print(command);
+	if(!digitalRead(DBG_PIN)){
+		if(command == END_TX_CHAR)
+			Serial.println(command);
+		else
+			Serial.print(command);		
+	}
 }
 
 /*void ArancinoClass::dropAll() {
