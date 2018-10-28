@@ -40,6 +40,20 @@ Arancino.set("humidity",67.5);
 
 
 ___
+### *String get( String key )*
+Get the *value* of *key*. If the *key* does not exist TODO:~~the special value nil is returned.~~ 
+
+#### Parameters
+* **`key`**: the name of the key from which retrieve the value
+
+#### Return value
+XXX TODO
+
+##### Example
+
+
+
+___
 ### *int del( String key )*
 Removes the specified *key*. A *key* is ignored if it does not exist.
 
@@ -84,14 +98,14 @@ ___
 Sets *field* in the hash stored at *key* to *value*. If *key* does not exist, a new *key* holding a hash is created. If *field* already exists in the hash, it is overwritten.
 
 ##### Parameters
-* **`key`**: the name of the key used to create the hash.
-* **`field`**: the name of the field to store in the hash.
+* **`key`**: the name of the *key* used to create the hash.
+* **`field`**: the name of the *field* to store in the hash.
 * **`value`**: the value to store in the hash with the specified field.
 
 ##### Return value
 int reply:
 - 1 if *field* is a new field in the hash and *value* was set.
-- 0 if *field* already exists in the hash and the value was updated.
+- 0 if *field* already exists in the hash and the *value* was updated.
 
 ##### Example
 XXX TODO
@@ -99,11 +113,18 @@ XXX TODO
 
 
 ___
-### Hashtable Get
+### *String hget( String key, String field ) {*
+Returns the *value* associated with *field* in the hash stored at *key*.
+
 ##### Parameters
-TODO
+* **`key`**: the name of the *key* which hold the hash.
+* **`field`**: the name of the *field* from which retrieve the value
+
 ##### Return value
-TODO
+String reply: TODO (check if is correct)
+- the *value* if a value is stored in *field* at *key*
+- NULL if there's not value stored 
+
 ##### Example
 TODO
 
@@ -154,14 +175,20 @@ TODO
 
 ## Protocol
 Arancino Library use simple protocol to communicate with Arancino Module over the serial connection. 
+
 TODO: describe protocol
 
 ## Debug 
 It's a feature introduced in version [0.0.3](https://git.smartme.io/smartme.io/arancino/arancino-library/milestones/1). Debug mode can be enabled in Arancino Board by setting the GPIO `XXXX`; after setting the Debug GPIO, power on Arancino Board (or resetting the microtroller if previously powered on) Debug data will be send over the `SERIAL???` and you can read it trough a serial console, like cu, screen or the Arduino IDE Serial Monitor.
 
 ### Debug Message
+TODO
 
 ### Responde Code
 Each command send via the API, will receive a response. Response contains the Response code and the Response value.
 
 
+
+
+## Credits
+Much of the documentation has been extrapolated from [Redis Command](https://redis.io/commands/)
