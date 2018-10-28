@@ -7,29 +7,36 @@ TODO: which Serial of Arduino it uses and which Baudrate
 
 ## Getting Started
 TODO: how to import in Arduino IDE
+TODO: first example
 
 
 ## Arancino Library API
 
-### void set( String key, String [ int | float] value )
+### *void set( String key, String [ int | float] value )*
 ___
 Set *key* to hold the string *value*. If *key* already holds a *value*, it is overwritten, regardless of its type.
 
+#### Parameters
 * **`key`**: the *key* name 
 * **`value`**: the *value* for the specified *key*. can be String, int o float  
 
 #### Example
+
 ```C++
 Arancino.set("humidity",67.5);
 ```
 
-### String get( String key )
+### *String get( String key )*
 ___
-Get the *value* of *key*. If the *key* does not exist ~~the special value nil is returned.~~ 
+Get the *value* of *key*. If the *key* does not exist TODO:~~the special value nil is returned.~~ 
 
-* **String `key`**: the name of the key from which to retrieve the value
+#### Parameters
+* **`key`**: the name of the key from which to retrieve the value
 
-#### Example
+#### Return value
+XXX TODO
+
+##### Example
 ```C++
 // Get the cpu usage. The cpu usage is written by a linux process into a key named cpu_usage 
 String cpu = Arancino.get("cpu_usage");
@@ -37,21 +44,60 @@ String cpu = Arancino.get("cpu_usage");
 //TODO:mostrare come gestire il ritorno
 ```
 
-### Delete
+### *int del( String key )*
+___
+Removes the specified keys. A key is ignored if it does not exist. Return the num
 
-### Get Keys
+#### Parameters
+* **`key`**: the name of the key to delete. 
+
+#### Return value
+int reply: The number of keys that were removed.
+
+#### Example
+XXX TODO
+
+
+### *String\* keys(String pattern)*
+___
+Returns all keys matching pattern.
+
+Supported glob-style patterns:
+
+- h?llo matches hello, hallo and hxllo
+- h*llo matches hllo and heeeello
+- h[ae]llo matches hello and hallo, but not hillo
+- h[^e]llo matches hallo, hbllo, ... but not hello
+- h[a-b]llo matches hallo and hbllo
+
+Use \ to escape special characters if you want to match them verbatim.
+
+#### Parameters
+* **`pattern`**: the pattern used to find the matching keys.
+
+#### Return value
+String* reply: ~list~ of keys matching pattern.
+
+#### Example
+XXX TODO
 
 ### Hashtable Set
+___
 
 ### Hashtable Get
+___
 
 ### Hashtable Get All 
+___
 
 ### Hashtable Get Keys
+___
 
 ### Hastable Get Values
+___
 
 ### Hashtable Delete
+___
 
 
 ## Protocol
