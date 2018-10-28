@@ -12,55 +12,51 @@ TODO: first example
 
 ## Arancino Library API
 
-### *void set( String key, String [ int | float] value )*
+### *void begin(int timeout)* 
+TODO
+
+##### Parameters
+* **`timeout`**: TODO:
+
+##### Example
+TODO:
+
+
+
 ___
+### *void set( String key, String [ int | float] value )*
 Set *key* to hold the string *value*. If *key* already holds a *value*, it is overwritten, regardless of its type.
 
-#### Parameters
+##### Parameters
 * **`key`**: the *key* name 
 * **`value`**: the *value* for the specified *key*. can be String, int o float  
 
-#### Example
+##### Example
 
 ```C++
 Arancino.set("humidity",67.5);
 ```
 
-### *String get( String key )*
+
+
 ___
-Get the *value* of *key*. If the *key* does not exist TODO:~~the special value nil is returned.~~ 
-
-#### Parameters
-* **`key`**: the name of the key from which to retrieve the value
-
-#### Return value
-XXX TODO
-
-##### Example
-```C++
-// Get the cpu usage. The cpu usage is written by a linux process into a key named cpu_usage 
-String cpu = Arancino.get("cpu_usage");
-
-//TODO:mostrare come gestire il ritorno
-```
-
 ### *int del( String key )*
-___
-Removes the specified keys. A key is ignored if it does not exist. Return the num
+Removes the specified *key*. A *key* is ignored if it does not exist.
 
-#### Parameters
+##### Parameters
 * **`key`**: the name of the key to delete. 
 
-#### Return value
+##### Return value
 int reply: The number of keys that were removed.
 
-#### Example
-XXX TODO
+##### Example
+TODO
 
 
-### *String\* keys(String pattern)*
+
 ___
-Returns all keys matching pattern.
+### *String\* keys(String pattern)*
+Returns all keys matching *pattern*.
 
 Supported glob-style patterns:
 
@@ -72,32 +68,88 @@ Supported glob-style patterns:
 
 Use \ to escape special characters if you want to match them verbatim.
 
-#### Parameters
-* **`pattern`**: the pattern used to find the matching keys.
+##### Parameters
+* **`pattern`**: the pattern used to find matching keys.
 
-#### Return value
-String* reply: ~list~ of keys matching pattern.
+##### Return value
+String* reply: ~list~ of keys matching *pattern*.
 
-#### Example
+##### Example
 XXX TODO
 
-### Hashtable Set
-___
 
+
+___
+### *int hset( String key, String field , String [ int | float] value )*
+Sets *field* in the hash stored at *key* to *value*. If *key* does not exist, a new *key* holding a hash is created. If *field* already exists in the hash, it is overwritten.
+
+##### Parameters
+* **`key`**: the name of the key used to create the hash.
+* **`field`**: the name of the field to store in the hash.
+* **`value`**: the value to store in the hash with the specified field.
+
+##### Return value
+int reply:
+- 1 if *field* is a new field in the hash and *value* was set.
+- 0 if *field* already exists in the hash and the value was updated.
+
+##### Example
+XXX TODO
+
+
+
+___
 ### Hashtable Get
-___
+##### Parameters
+TODO
+##### Return value
+TODO
+##### Example
+TODO
 
+
+
+___
 ### Hashtable Get All 
-___
+##### Parameters
+TODO
+##### Return value
+TODO
+##### Example
+TODO
 
+
+
+___
 ### Hashtable Get Keys
-___
+##### Parameters
+TODO
+##### Return value
+TODO
+##### Example
+TODO
 
+
+
+___
 ### Hastable Get Values
-___
+##### Parameters
+TODO
+##### Return value
+TODO
+##### Example
+TODO
 
-### Hashtable Delete
+
+
 ___
+### Hashtable Delete
+##### Parameters
+TODO
+##### Return value
+TODO
+##### Example
+TODO
 
 
 ## Protocol
