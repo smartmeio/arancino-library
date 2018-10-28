@@ -197,8 +197,54 @@ TODO
 
 
 
-## Protocol
-Arancino Library use simple protocol to communicate with Arancino Module over the serial connection. 
+## Cortex Protocol
+Arancino Library uses a simple protocol, called Cortex, to communicate with Arancino Module over serial connection. Cortex Protocol is designed to be easy to read and processed. Arancino Library, Arancino Module and Cortex Protocol are designed to be monodirectional and synchronous.
+
+Each command sent using Cortex Protocol is composed by a *command identifier* and one or more *parameters*. *Command identifier* and *parameters* are separated by a separator char, and the command ends with and end chars.
+
+### Commands identifier:
+
+
+| API           | Command Identifies    | Response Code  |
+| ------------- |:-------------:| -----:|
+| `get`         | GET           |       |
+| `set`         | SET           |       |
+| `del`         | DEL           |       |
+| `keys`        | KEYS          |       |
+| `hget`        | HGET          |       |
+| `hset`        | HSET          |       |
+| `hkeys`       | HKEYS         |       |
+| `hvals`       | HVALS         |       |
+| `hdel`        | HDEL          |       |
+
+
+CHR_EOT = chr(4)            #End Of Transmission Char
+CHR_SEP = chr(30)           #Separator Char
+
+CMD_SYS_START   = 'START' #Start Commmand
+
+CMD_APP_GET     = 'GET'     #Get value at key
+CMD_APP_SET     = 'SET'     #Set value at key
+CMD_APP_DEL     = 'DEL'     #Delete one or multiple keys
+CMD_APP_KEYS    = 'KEYS'    #Get keys by a pattern
+CMD_APP_HGET    = 'HGET'    #
+CMD_APP_HGETALL = 'HGETALL' #
+CMD_APP_HKEYS   = 'HKEYS'   #
+CMD_APP_HVALS   = 'HVALS'   #
+CMD_APP_HDEL    = 'HDEL'    #
+CMD_APP_HSET    = 'HSET'    #
+
+RSP_OK          = '100'     #OK Response
+RSP_HSET_NEW    = '101'     #Set value into a new field
+RSP_HSET_UPD    = '102'     #Set value into an existing field
+
+ERR             = '200'     #Generic Error
+ERR_NULL        = '201'     #Null value
+ERR_SET         = '202'     #Error during SET
+ERR_CMD_FOUND   = '203'     #Command Not Found
+
+
+
 
 TODO: describe protocol
 
@@ -209,7 +255,7 @@ It's a feature introduced in version [0.0.3](https://git.smartme.io/smartme.io/a
 TODO
 
 ### Responde Code
-Each command send via the API, will receive a response. Response contains the Response code and the Response value.
+Each command sent via the API, will receive a response. Response contains the Response code and the Response value.
 
 
 
