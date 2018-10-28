@@ -1,7 +1,7 @@
 # Arancino Library
 Arancino Library works on Arancino boards, it's written in Arduino lang and can be imported in Arduino IDE. Arancino Library it's written to runs on SAMD21 Microcontroller over SAMD Arduino platform. Arancino Library uses the serial connection to communicate with Arancino Module which runs in the linux side of the Arancino board.
 
-Arancino Library allows to export/import data to/from the Linux enviroment using it as key-value datastore. The API of Arancino Library API are modeled on redis commands.
+Arancino Library allows to export/import data to/from the Linux enviroment using Redis as database cache. Arancino Library API are modeled on Redis Commands.
 
 TODO: which Serial of Arduino it uses and which Baudrate
 
@@ -163,7 +163,7 @@ TODO
 
 
 ___
-### *String\* hgetvals( String key )*
+### *String\* hvals( String key )*
 Returns all values in the hash stored at *key*.
 
 ##### Parameters
