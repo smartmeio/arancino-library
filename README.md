@@ -131,46 +131,70 @@ TODO
 
 
 ___
-### Hashtable Get All 
+### *String\* hgetall( String key )*
+Returns all fields and values of the hash stored at *key*. In the returned value, every *field* name is followed by its *value*.
+
 ##### Parameters
-TODO
+* **`key`**: the name of the *key* which hold the hash.
+
 ##### Return value
+*String reply:
 TODO
+
 ##### Example
 TODO
 
 
 
 ___
-### Hashtable Get Keys
+### *String\* hkeys( String key )*
+Returns all field names in the hash stored at key.
+
 ##### Parameters
-TODO
+* **`key`**: the name of the *key* which hold the hash.
+
 ##### Return value
+*String reply:
 TODO
+
 ##### Example
 TODO
 
 
 
 ___
-### Hastable Get Values
+### *String\* hgetvals( String key )*
+Returns all values in the hash stored at *key*.
+
 ##### Parameters
-TODO
+* **`key`**: the name of the *key* which hold the hash.
+
 ##### Return value
+*String reply:
 TODO
+
 ##### Example
 TODO
 
 
 
 ___
-### Hashtable Delete
+### *int hdel( String key, String field )*
+Removes the specified *field* from the hash stored at *key*. ~If specified *field* that does not exist within this hash, this commands returns 0~. If key does not exist, it is treated as an empty hash and this command returns 0.
+TODO check if correct
+
+
+
 ##### Parameters
-TODO
+* **`key`**: the name of the *key* which hold the hash.
+* **`field`**: the name of the *field* to delete.
+
 ##### Return value
-TODO
+int reply: the number of fields that were removed from the hash.
+
 ##### Example
 TODO
+
 
 
 ## Protocol
