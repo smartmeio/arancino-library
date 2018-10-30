@@ -77,11 +77,11 @@ package_staging:
     paths:
       - tmp/
   
-#  only:
-#    - branches
-#  
-#  except:
-#    - tags
+  only:
+    - branches
+  
+  except:
+    - tags
 
 #esegue la compressione del pacchetto quando viene creato un tag su master (ovvero ad ogni release)
 .package_release:
@@ -97,11 +97,11 @@ package_staging:
     paths:
       - $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME.zip
   
-#  only:
-#    - tags
-#
-#  except:
-#    - branches
+  only:
+    - tags
+
+  except:
+    - branches
 
 
 #################################
