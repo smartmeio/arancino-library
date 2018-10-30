@@ -1,39 +1,145 @@
-# Project:  Arancino Library - Serial Manager
-# Author:   Sergio Tomasello <sergio@smartme.io>
-# Created:  2018.10.11
-# Notes:    La pipeline esegue la creazione dell'archivio della libreria compatibile per Aduino IDE
+# Project:          Arancino Library - Serial Manager
+# Author:           Sergio Tomasello <sergio@smartme.io>
+# Created:          2018.10.11
+# Notes:            La pipeline esegue la creazione dell'archivio della libreria compatibile per Aduino IDE
+# Internal Vars:    Lista delle variabili definete internamente ed usate nella pipeline:
+#                   DATE:           data di esecuzione della pipeline
+#                   PKG_NAME:       nome del pacchetto
+#                   REPO_NAME:      nome del repository di produzione, composto da due parti:
+#                                   il nome del progetto -> $CI_PROJECT_NAME
+#                                   ambiente di lavoro: -> "staging" o "release"
+#                                   $CI_PROJECT_NAME-staging
+#                                   $CI_PROJECT_NAME-release
+#                   REPO_DIR:       nome della directory di upload del repository, composto da due parti:
+#                                   il nome del progetto -> $CI_PROJECT_NAME
+#                                   ambiente di lavoro: -> "staging" o "release"
+#                                   $CI_PROJECT_NAME/staging
+#                                   $CI_PROJECT_NAME/release
+#
+# External Vars:    Lista delle variabili definite estarnamente ed usate nella pipeline:
+#                   REPO_USR:       nome utente del associato a dev ops per effettuare upload dell'artefatto
+#                   REPO_PWD:       password associata all'utente dev ops
+#                   REPO_BASE_URL:  url di base del repository: https://download.smartme.io
+#                   
+
+# https://download.smartme.io/service/rest/v1/components?repository=arancino-library
+# $REPO_BASE_URL + /service/rest/v1/components?repository= + $REPO_NAME
 
 
 stages:
+  - start
   - package
-  - packege_release
+  - upload
+  - cleanup
 
-#questo job esegue la compressione ad ogni commit su tutti i branch tranne master
-package:
-  stage: package
+#################################
+#######       START       #######
+#################################
+
+start:
+  stage: start
+  
+  variables:
+    GIT_STRATEGY: none
+  
   script:
-    - cd ../
-    - tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHA.zip $CI_PROJECT_NAME/
-    - mv $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHA.zip $CI_PROJECT_NAME
+    - mkdir -p tmp
+    - echo `date +%Y-%m-%d` > tmp/date.tmp
+  
   artifacts:
     paths:
-      - $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHA.zip
+      - tmp/
+    expire_in: 1d
+
+
+#################################
+#######      PACKAGE      #######
+#################################
+
+#questo job esegue la compressione ad ogni commit su tutti i branch tranne master
+package_staging:
+  
+  stage: package
+  
+  script:
+    - DATE="$(cat dist/date.tmp)"
+    - PKG_NAME = $CI_PROJECT_NAME-$DATE-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHA
+    - echo $PKG_NAME > tmp/pgk_name.tmp
+    - ls -alh && ls -alh tmp/
+    - cd ../
+    - tar --exclude='*.git*' --exclude='*.DS_Store*' --exlude='tmp/*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
+    - mv $PKG_NAME.zip $CI_PROJECT_NAME/tmp/
+    
+  dependencies:
+    - start  
+  
+  artifacts:
+    paths:
+      - tmp/
+  
   only:
     - branches
+  
   except:
     - master
+    - tags
 
 #esegue la compressione del pacchetto quando viene creato un tag su master (ovvero ad ogni release)
-packege_release:
+.package_release:
+  
   stage: package
+  
   script:
     - cd ../
     - tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME.zip $CI_PROJECT_NAME/
     - mv $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME.zip $CI_PROJECT_NAME
+  
   artifacts:
     paths:
       - $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME.zip
   only:
     - tags
+    - master
+  
   except:
     - branches
+
+
+#################################
+#######       UPLOAD      #######
+#################################
+
+upload_staging:
+
+  stage: upload
+
+  script: 
+    - DATE="$(cat tmp/date.tmp)"
+    - PKG_NAME="$(cat tmp/pgk_name.tmp)"
+    - REPO_NAME=$PRJ_NAME-staging
+    - REPO_DIR=$PRJ_NAME-release
+#TODO cambiare nella url le due variabili: $REPO_BASE_URL e $REPO_NAME
+    - curl -X POST 'https://download.smartme.io/service/rest/v1/components?repository=arancino-library' -u $REPO_USR:$REPO_PWD -F raw.asset1=@tmp/$PKG_NAME.zip -F raw.asset1.filename=$PKG_NAME.zip -F raw.directory=$REPO_DIR
+
+  dependencies:
+    - package_staging
+
+
+#################################
+#######      CLEANUP      #######
+#################################
+
+#######    Cleanup Job    #######
+cleanup:
+
+    stage: cleanup
+
+    variables:
+        GIT_STRATEGY: none
+    
+    script:
+        - echo "Cleaning up"
+        - rm -rf tmp/
+    
+    when: always
+
