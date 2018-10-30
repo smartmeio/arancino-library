@@ -81,7 +81,6 @@ package_staging:
     - branches
   
   except:
-    - master
     - tags
 
 #esegue la compressione del pacchetto quando viene creato un tag su master (ovvero ad ogni release)
@@ -97,10 +96,10 @@ package_staging:
   artifacts:
     paths:
       - $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME.zip
+  
   only:
     - tags
-    - master
-  
+
   except:
     - branches
 
