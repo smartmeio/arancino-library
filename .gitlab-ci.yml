@@ -4,6 +4,7 @@
 # Notes:    La pipeline esegue la creazione dell'archivio della libreria compatibile per Aduino IDE
 
 
+
 stages:
   - package
   - packege_release
