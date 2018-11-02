@@ -84,18 +84,21 @@ String value = "";
 
 void setup() {
   Arancino.begin();
+  Serial.begin(115200);
 }
 
 void loop() {
     Arancino.set("foo","bar");
     value = Arancino.get("foo");
-    //value contains "bar"
-
+    Serial.println("foo -> " value);
+    //foo -> bar
+    
     delay(2000);
 
     Arancino.set("foo","baz");
     value = Arancino.get("foo");
-    //value contains "baz"
+    Serial.println("foo -> " value);
+    //foo -> baz
 }
 
 ```
@@ -118,13 +121,22 @@ int reply: The number of keys that were removed.
 #include <Arancino.h>
 
 void setup() {
+  Serial.begin(115200);
   Arancino.begin();
   Arancino.set("foo","bar");
-  int num = Arancino.del("baz");
-  //num contains 0
-  num = Arancino.del("foo");
-  //num contains 1
-}
+
+  Arancino.set("pressure",1023);
+  Arancino.set("humidity",67.5);
+  Arancino.set("temperature",24.4);
+
+  int num = Arancino.del("pressure");
+  Serial.printl(num);
+  //1
+  
+  num = Arancino.del("altitude");
+  Serial.printl(num);
+  //0
+
 
 void loop() {
   //do something
@@ -308,14 +320,18 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 
 | Response Code     | Description           |
 | ----------------- |:---------------------:|
+|                   OK                                                   |
 | `100`             | **OK** - Generic operation successfully completed. |
 | `101`             | **OK** - Setted value into a new field.            |
 | `102`             | **OK** - Setted value into an nexistingew field    |
+|                   KO                                                   |
 | `200`             | **KO** - Generic Error                             |
 | `201`             | **KO** - Retrieved NULL value                      |
 | `202`             | **KO** - Error during *SET* command                |
 | `203`             | **KO** - Command not found                         |
-
+| `204`             | **KO** - Command not received                      |
+| `205`             | **KO** - Invalid parameter number                  |
+| `206`             | **KO** - Generic Redis Error                       |
 
 TODO: describe protocol
 
