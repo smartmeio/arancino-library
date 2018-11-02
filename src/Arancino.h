@@ -43,6 +43,8 @@ class ArancinoClass {
 		String* hkeys(String key);
 		String* hvals(String key);
 		int hset( String Key, String field, String value);
+		int hset( String key, String field, int value);
+		int hset( String key, String field, double value);
 		int hdel( String key, String field);
 		//int hdel( String key, String* fields, int number);
 		ArancinoClass(Stream &_stream);

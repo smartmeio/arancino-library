@@ -253,6 +253,15 @@ int ArancinoClass::hset( String key, String field , String value) {
 	return parse(message).toInt();
 }
 
+int ArancinoClass::hset( String key, String field, int value ) {
+	hset(key, field, String(value));
+}
+
+int ArancinoClass::hset( String key, String field, double value ) {
+	hset(key, field, String(value));
+}
+
+
 int ArancinoClass::hdel( String key, String field ) {
 
 	if(!digitalRead(DBG_PIN)){
