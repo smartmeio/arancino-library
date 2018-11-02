@@ -125,18 +125,11 @@ void setup() {
   Arancino.begin();
   Arancino.set("foo","bar");
 
-  Arancino.set("pressure",1023);
-  Arancino.set("humidity",67.5);
-  Arancino.set("temperature",24.4);
-
-  int num = Arancino.del("pressure");
-  Serial.printl(num);
-  //1
-  
-  num = Arancino.del("altitude");
-  Serial.printl(num);
+  int num = Arancino.del("baz");
   //0
-
+  num = Arancino.del("foo");
+  //1
+}
 
 void loop() {
   //do something
@@ -168,7 +161,35 @@ Use \ to escape special characters if you want to match them verbatim.
 String* reply: ~list~ of keys matching *pattern*.
 
 ##### Example
-XXX TODO
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Serial.begin(115200);
+  Arancino.begin();
+
+  Arancino.set("pressure",1023);
+  Arancino.set("humidity",67.5);
+  Arancino.set("temperature",24.4);
+
+  String* key= Arancino.keys();
+  
+  for(int i=0;i<Arancino.arraySize;i++){
+    if(i!=0)
+      Serial.println(keys[i]);  
+  }
+  //pressure
+  //humidity
+  //temperature
+
+
+}
+
+void loop() {
+  //do something
+}
+
+```
 
 
 
@@ -320,11 +341,9 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 
 | Response Code     | Description           |
 | ----------------- |:---------------------:|
-|                   OK                                                   |
 | `100`             | **OK** - Generic operation successfully completed. |
 | `101`             | **OK** - Setted value into a new field.            |
 | `102`             | **OK** - Setted value into an nexistingew field    |
-|                   KO                                                   |
 | `200`             | **KO** - Generic Error                             |
 | `201`             | **KO** - Retrieved NULL value                      |
 | `202`             | **KO** - Error during *SET* command                |
@@ -342,9 +361,7 @@ It's a feature introduced in version [0.0.3](https://git.smartme.io/smartme.io/a
 TODO
 
 ### Responde Code
-Each command sent via the API, will receive a response. Response contains the Response code and the Response value.
-
-
+Each command sent via the API, will receive a response. Response contains the _Response Code_ and one or more _Response Value_.
 
 
 ## Credits
