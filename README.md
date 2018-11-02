@@ -120,11 +120,14 @@ int reply: The number of keys that were removed.
 void setup() {
   Arancino.begin();
   Arancino.set("foo","bar");
+  int num = Arancino.del("baz");
+  //num contains 0
+  num = Arancino.del("foo");
+  //num contains 1
 }
 
 void loop() {
-    String value = Arancino.get("foo");
-    //value contains "bar"
+  //do something
 }
 
 ```
