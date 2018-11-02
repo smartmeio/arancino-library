@@ -20,7 +20,7 @@ package:
     paths:
       - $CI_PROJECT_NAME-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHA.zip
   only:
-    - branches
+    - dev
   except:
     - master
 

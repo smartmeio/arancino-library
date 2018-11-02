@@ -211,10 +211,10 @@ TODO
 
 
 ## Cortex Protocol
-Arancino Library uses a simple protocol, called **Cortex**, to communicate with Arancino Module over serial connection. Cortex Protocol is designed to be easy to read and processed. Arancino Library, Arancino Module and Cortex Protocol are designed to be monodirectional and synchronous. In this scenario microcontoller acts as *master* with Arancino Library and Arancino Module as *slave*.
+Arancino Library uses a simple protocol, called **Cortex**, to communicate with Arancino Module over serial connection. Cortex Protocol is designed to be easy to read and processed. Arancino Library, Arancino Module and Cortex Protocol are designed to be monodirectional and synchronous. In this scenario Arancino Library within the microcontoller acts as *master*, and Arancino Module as *slave*.
 
 
-Each command sent using Cortex Protocol is composed by a *command identifier* and one or more *parameters*. *Command identifier* and *parameters* are separated by a separator char, and the command ends with and end chars.
+Each command sent using Cortex Protocol is composed by a *command identifier* and one or more *parameters*. *Command identifiers* and *parameters* are separated by a separator char, and the command ends with and end chars. Each sent commands will receive a response, formed by a Response Code and one or more retuerned values. Each items are separated by the same separtor char and ends with the same end char. Commands receive Response within an timeout interval of `100ms`. If no Response are received, Command will be skipped.
 
 ### Commands identifier:
 
@@ -240,6 +240,8 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | Command Sepatator     | `4`           |
 | End of transmission   | `30`          |
 
+
+### Response Codes
 
 | Response Code     | Description           |
 | ----------------- |:---------------------:|
