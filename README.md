@@ -13,19 +13,32 @@ TODO: first example
 
 ### begin
 ##### *void begin(int timeout)* 
-TODO
+##### *void begin()* 
+Start the communication with Arancino Module.
 
 ##### Parameters
-* **`timeout`**: TODO:
+* **`timeout`**: rappresents the time each commands sent wait for a response. Otherwise commands will skipped. When `begin` is called w/o `timeout` it assume its default value: `100ms`.
 
 ##### Example
-TODO:
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+}
+
+void loop() {
+    //do something
+}
+```
 
 
 
 ___
 ### set
-##### *void set( String key, String [ int | float] value )*
+##### *void set( String key, String value )*
+##### *void set( String key,  int value )*
+##### *void set( String key, float value )*
 
 Set *key* to hold the string *value*. If *key* already holds a *value*, it is overwritten, regardless of its type.
 
@@ -35,8 +48,18 @@ Set *key* to hold the string *value*. If *key* already holds a *value*, it is ov
 
 ##### Example
 
-```C++
-Arancino.set("humidity",67.5);
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+  Arancino.set("foo","bar");
+}
+
+void loop() {
+    //do something
+}
+
 ```
 
 
@@ -54,7 +77,28 @@ Get the *value* of *key*. If the *key* does not exist TODO:~~the special value n
 XXX TODO
 
 ##### Example
+```c++
+#include <Arancino.h>
 
+String value = "";
+
+void setup() {
+  Arancino.begin();
+}
+
+void loop() {
+    Arancino.set("foo","bar");
+    value = Arancino.get("foo");
+    //value contains "bar"
+
+    delay(2000);
+
+    Arancino.set("foo","baz");
+    value = Arancino.get("foo");
+    //value contains "baz"
+}
+
+```
 
 
 ___
@@ -70,7 +114,20 @@ Removes the specified *key*. A *key* is ignored if it does not exist.
 int reply: The number of keys that were removed.
 
 ##### Example
-TODO
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+  Arancino.set("foo","bar");
+}
+
+void loop() {
+    String value = Arancino.get("foo");
+    //value contains "bar"
+}
+
+```
 
 
 
@@ -102,7 +159,10 @@ XXX TODO
 
 ___
 ### hset
-#####*int hset( String key, String field , String [ int | float] value )*
+#####*int hset( String key, String field , String value )*
+#####*int hset( String key, String field , int value )*
+#####*int hset( String key, String field , float value )*
+
 Sets *field* in the hash stored at *key* to *value*. If *key* does not exist, a new *key* holding a hash is created. If *field* already exists in the hash, it is overwritten.
 
 ##### Parameters
