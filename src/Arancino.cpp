@@ -212,7 +212,7 @@ String* ArancinoClass::hvals( String key) {
 	return arrayKey;
 }
 
-String* ArancinoClass::keys(String key){
+String* ArancinoClass::keys(String pattern){
 
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
@@ -220,7 +220,7 @@ String* ArancinoClass::keys(String key){
 	sendArancinoCommand(KEYS_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
+		sendArancinoCommand(pattern);
 	}
 	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
