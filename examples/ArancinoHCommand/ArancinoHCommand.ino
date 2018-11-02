@@ -15,8 +15,8 @@ void loop() {
   String hget_value = Arancino.hget("CAP","Messina");
   String* hgetall_value = Arancino.hgetall("CAP");
   delay(5000);
-  String* hgetkeys_value = Arancino.hgetkeys("CAP");
-  String* hgetvals_value = Arancino.hgetvals("CAP");
+  String* hkeys_value = Arancino.hkeys("CAP");
+  String* hvals_value = Arancino.hvals("CAP");
   delay(5000);
   int hdel_value=Arancino.hdel("CAP","Roma");
   hdel_value=Arancino.hdel("CAP","Torino");

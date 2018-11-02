@@ -40,8 +40,8 @@ class ArancinoClass {
 		String* keys(String pattern="");
 		String hget(String key, String field);
 		String* hgetall(String key);
-		String* hgetkeys(String key);
-		String* hgetvals(String key);
+		String* hkeys(String key);
+		String* hvals(String key);
 		int hset( String Key, String field, String value);
 		int hdel( String key, String field);
 		//int hdel( String key, String* fields, int number);

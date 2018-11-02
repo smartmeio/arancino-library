@@ -180,7 +180,7 @@ String* ArancinoClass::hgetall( String key) {
 	return arrayKey;
 }
 
-String* ArancinoClass::hgetkeys( String key) {
+String* ArancinoClass::hkeys( String key) {
 
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
@@ -196,7 +196,7 @@ String* ArancinoClass::hgetkeys( String key) {
 	return arrayKey;
 }
 
-String* ArancinoClass::hgetvals( String key) {
+String* ArancinoClass::hvals( String key) {
 
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
