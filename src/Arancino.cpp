@@ -218,7 +218,7 @@ String* ArancinoClass::keys(String pattern){
 		Serial.print(SENT_STRING);
 	}
 	sendArancinoCommand(KEYS_COMMAND);					// send read request
-	if (key != ""){
+	if (pattern != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(pattern);
 	}
