@@ -70,13 +70,15 @@ ___
 ### get
 ##### *String get( String key )*
 
-Get the *value* of *key*. If the *key* does not exist TODO:~~the special value nil is returned.~~ 
+Get the *value* of *key*. If the *key* does not exist the special value NULL is returned.
 
 #### Parameters
 * **`key`**: the name of the key from which retrieve the value
 
 #### Return value
-XXX TODO
+String reply: 
+- the value of the passed *key*. 
+- NULL if the *key* doesn't exist.
 
 ##### Example
 ```c++
@@ -244,9 +246,9 @@ Returns the *value* associated with *field* in the hash stored at *key*.
 * **`field`**: the name of the *field* from which retrieve the value
 
 ##### Return value
-String reply: TODO (check if is correct)
-- the *value* if a value is stored in *field* at *key*
-- NULL if there's not value stored 
+String reply:
+- the *value* if a value is stored in *field* at *key*.
+- NULL if there's not value stored.
 
 ##### Example
 TODO
