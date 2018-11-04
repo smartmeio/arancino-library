@@ -5,8 +5,10 @@ Arancino Library allows to export/import data to/from the Linux enviroment using
 
 
 ## Getting Started
-TODO: how to import in Arduino IDE
-TODO: first example
+To start using Arancino Library, download the latest version from the repository `arancino-library` within the [SmartMe.IO Repository Management Site](https://download.smartme.io).
+
+### Arduino IDE
+Unzip _Arancino Library_ and open Arduino IDE and go to *Sketch* → *Include Library* → *Add .zip Library...* then open the just unzipped folder. *Arancino Library* will appears in *Sketch* → *Include Library* menu at the end, under the *Contributed* section. Examples will be under *File* → *Examples* → *Examples of Custom Libraries*.
 
 
 ## Arancino Library API
@@ -17,7 +19,7 @@ TODO: first example
 Start the communication with Arancino Module.
 
 ##### Parameters
-* **`timeout`**: rappresents the time each commands sent wait for a response. Otherwise commands will skipped. When `begin` is called w/o `timeout` it assume its default value: `100ms`.
+* **`timeout`**: rappresents the time each commands sent (via api call) will wait for a response. Otherwise a command will skipped. When `begin` is called w/o `timeout` it assume its default value: `100ms`.
 
 ##### Example
 ```c++
@@ -441,3 +443,4 @@ Debug messages are similar to those written above in the [Commands and Protocol]
 
 ## Credits
 Much of the documentation has been extrapolated from [Redis Command](https://redis.io/commands/)
+Redis and Arduino are trademarks of their respective owners.
