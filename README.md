@@ -195,9 +195,9 @@ void loop() {
 
 ___
 ### hset
-#####*int hset( String key, String field , String value )*
-#####*int hset( String key, String field , int value )*
-#####*int hset( String key, String field , float value )*
+##### *int hset( String key, String field , String value )*
+##### *int hset( String key, String field , int value )*
+##### *int hset( String key, String field , float value )*
 
 Sets *field* in the hash stored at *key* to *value*. If *key* does not exist, a new *key* holding a hash is created. If *field* already exists in the hash, it is overwritten.
 
@@ -212,7 +212,23 @@ int reply:
 - 0 if *field* already exists in the hash and the *value* was updated.
 
 ##### Example
-XXX TODO
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+
+  int resp = Arancino.hset("foo","bar","yeah");
+  //1
+  resp = Arancino.hset("foo","baz","whoo");
+  //0
+}
+
+void loop() {
+  //do something
+}
+
+```
 
 
 
@@ -352,16 +368,75 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | `205`             | **KO** - Invalid parameter number                  |
 | `206`             | **KO** - Generic Redis Error                       |
 
-TODO: describe protocol
+### Commands and Protocol
+As exaplained above, when make a call to api function, a command is sent over the `SerialUSB` and a response is recevied:
+In the next paragraphs, for semplicity we are considering each command returns OK response and even the following rappresentation for *Separator Codes*:
+- Command Sepatator → `4`  → `#`
+- End of transmission → `30`  →` @`
+
+
+#### begin
+- Command Sent: `START@
+- Response Received: `100@`
+
+#### set
+- Command Sent: `SET#<key>#<value>@`
+- Response Received: `100@`
+
+#### get
+- Command Sent: `GET#<key>@`
+- Response Received: `100#<value>@`
+
+#### del
+- Command Sent: `DEL#<key>@`
+- Response Received: `100#1@`
+
+#### keys
+- Command Sent: `KEYS#<pattern>@`
+- Response Received: `100[#<key-1>#<key-2>#<key-n>]@`
+
+#### hset
+- Command Sent: `HSET#<key>#<field>#<value>@`
+- Response Received: 101@
+
+#### hget
+- Command Sent: `HGET#<key>#<field>@`
+- Response Received: `100#<value>@`
+
+#### hgetall
+- Command Sent: `HGETALL#<key>#<field>@`
+- Response Received: `100[#<field-1>#<value-1>#<field-2>#<value-2>]@`
+
+#### hkeys
+- Command Sent: `HKEYS#<key>@`
+- Response Received: `100HKEYS#<key>@`
+
+#### hvals
+- Command Sent: `HVALS#<key>@`
+- Response Received: `100[#<value-1>#<value-2>]@`
+
+#### hdel
+- Command Sent: `HDEL#<key>#<field>@`
+- Response Received: `100#1@`
+
+#### KO Reponse common to all api function:
+- `200@`
+- `205@`
+- `206@`
+
 
 ## Debug 
 It's a feature introduced in version [0.0.3](https://git.smartme.io/smartme.io/arancino/arancino-library/milestones/1). Debug mode can be enabled in Arancino Board by setting the `GPIO PA31` - Pin number `26`; after setting the Debug GPIO, power on Arancino Board (or resetting the microtroller if previously powered on) Debug data will be sent over the 'Serial` and you can read it trough a serial console, like cu, screen or the Arduino IDE Serial Monitor.
 
-### Debug Message
-TODO
 
 ### Responde Code
-Each command sent via the API, will receive a response. Response contains the _Response Code_ and one or more _Response Value_.
+Each command sent via the API, will receive a response. Response contains the _Response Code_ and one or more _Response Value_. See [Commands and Protocol](#Commands and Protocol)
+
+### Debug Messages
+Debug messages are similar to those written above in the [Commands and Protocol](#Commands and Protocol) paragraph, but consider that the _Separator Chars_ are no-printable so a message will appears in a serial console like the following:
+
+- Command Sent: `GETkey`
+- Response Received:`100value`
 
 
 ## Credits
