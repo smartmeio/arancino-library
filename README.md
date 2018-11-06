@@ -1,14 +1,14 @@
 # Arancino Library
-Arancino Library works on Arancino boards, it's written in Arduino lang and can be imported in Arduino IDE. Arancino Library it's written to runs on SAMD21 Microcontroller over SAMD Arduino platform. Arancino Library uses the serial connection to communicate with Arancino Module which runs in the linux side of the Arancino board. It uses `SerialUSB` for communication with Arancino Module and `Serial` for debug.
+The following Library works on Arancino boards, it is written in Arduino lang and can be imported into the Arduino IDE. Arancino Library is written to run on SAMD21 Microcontroller over SAMD Arduino platform. It uses the serial connection to communicate with the Arancino Module which runs on the linux side of the Arancino board. It uses the `SerialUSB` library to communicate with the Arancino Module and the `Serial` library for debug.
 
-Arancino Library allows to export/import data to/from the Linux enviroment using Redis as database cache. Arancino Library API are modeled on Redis Commands.
+Arancino Library allows to export/import data to/from the Linux enviroment using Redis as database cache. The API are modelled on Redis standard Commands.
 
 
 ## Getting Started
 To start using Arancino Library, download the latest version from the repository `arancino-library` within the [SmartMe.IO Repository Management Site](https://download.smartme.io).
 
 ### Arduino IDE
-Unzip _Arancino Library_ and open Arduino IDE and go to *Sketch* → *Include Library* → *Add .zip Library...* then open the just unzipped folder. *Arancino Library* will appears in *Sketch* → *Include Library* menu at the end, under the *Contributed* section. Examples will be under *File* → *Examples* → *Examples of Custom Libraries*.
+Open the Arduino IDE, unzip the _Arancino Library_ and import the unzipped folder (*Sketch* → *Include Library* → *Add .zip Library...*). The library will appear under *Sketch* → *Include Library* menu at the end, under the *Contributed* section. Examples will be under *File* → *Examples* → *Examples of Custom Libraries*.
 
 
 ## Arancino Library API
@@ -16,10 +16,10 @@ Unzip _Arancino Library_ and open Arduino IDE and go to *Sketch* → *Include Li
 ### begin
 ##### *void begin(int timeout)* 
 ##### *void begin()* 
-Start the communication with Arancino Module.
+Start the communication with the Arancino Module.
 
 ##### Parameters
-* **`timeout`**: rappresents the time each commands sent (via api call) will wait for a response. Otherwise a command will skipped. When `begin` is called w/o `timeout` it assume its default value: `100ms`.
+* **`timeout`**: represents the time that each command sent (via API call) will wait for a response. Otherwise the delayed command will be skipped. When the `begin` function is called w/o `timeout` it is assumed `100ms` as default value of timeout.
 
 ##### Example
 ```c++
@@ -70,10 +70,10 @@ ___
 ### get
 ##### *String get( String key )*
 
-Get the *value* of *key*. If the *key* does not exist the special value NULL is returned.
+Get the *value* of *key*. If the *key* does not exist, the special value NULL is returned.
 
 #### Parameters
-* **`key`**: the name of the key from which retrieve the value
+* **`key`**: the name of the key from which the value is retrieved
 
 #### Return value
 String reply: 
@@ -146,7 +146,7 @@ void loop() {
 ___
 ### keys
 ##### *String\* keys(String pattern)*
-Returns all keys matching *pattern*.
+Returns all the keys matching the *pattern*.
 
 Supported glob-style patterns:
 
@@ -203,7 +203,7 @@ ___
 ##### *int hset( String key, String field , int value )*
 ##### *int hset( String key, String field , float value )*
 
-Sets *field* in the hash stored at *key* to *value*. If *key* does not exist, a new *key* holding a hash is created. If *field* already exists in the hash, it is overwritten.
+Sets *field* in the hash stored at *key* with the specified *value*. If *key* does not exist, a new *key* holding a hash is created. If *field* already exists in the hash, it is overwritten.
 
 ##### Parameters
 * **`key`**: the name of the *key* used to create the hash.
@@ -243,12 +243,12 @@ Returns the *value* associated with *field* in the hash stored at *key*.
 
 ##### Parameters
 * **`key`**: the name of the *key* which hold the hash.
-* **`field`**: the name of the *field* from which retrieve the value
+* **`field`**: the name of the *field* from which the value is retrieved
 
 ##### Return value
 String reply:
 - the *value* if a value is stored in *field* at *key*.
-- NULL if there's not value stored.
+- NULL if there isn't a value stored.
 
 ##### Example
 TODO
@@ -261,7 +261,7 @@ ___
 Returns all fields and values of the hash stored at *key*. In the returned value, every *field* name is followed by its *value*.
 
 ##### Parameters
-* **`key`**: the name of the *key* which hold the hash.
+* **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
 *String reply:
@@ -278,7 +278,7 @@ ___
 Returns all field names in the hash stored at key.
 
 ##### Parameters
-* **`key`**: the name of the *key* which hold the hash.
+* **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
 *String reply:
@@ -295,7 +295,7 @@ ___
 Returns all values in the hash stored at *key*.
 
 ##### Parameters
-* **`key`**: the name of the *key* which hold the hash.
+* **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
 *String reply:
@@ -309,13 +309,13 @@ TODO
 ___
 ### hdel
 ##### *int hdel( String key, String field )*
-Removes the specified *field* from the hash stored at *key*. ~If specified *field* that does not exist within this hash, this commands returns 0~. If key does not exist, it is treated as an empty hash and this command returns 0.
+Removes the specified *field* from the hash stored at *key*. If *field* is specified and it does not exist within this hash, this command returns 0. If the key does not exist, it is treated as an empty hash and this command returns 0.
 TODO check if correct
 
 
 
 ##### Parameters
-* **`key`**: the name of the *key* which hold the hash.
+* **`key`**: the name of the *key* which holds the hash.
 * **`field`**: the name of the *field* to delete.
 
 ##### Return value
@@ -327,10 +327,10 @@ TODO
 
 
 ## Cortex Protocol
-Arancino Library uses a simple protocol, called **Cortex**, to communicate with Arancino Module over serial connection. Cortex Protocol is designed to be easy to read and processed. Arancino Library, Arancino Module and Cortex Protocol are designed to be monodirectional and synchronous. In this scenario Arancino Library within the microcontoller acts as *master*, and Arancino Module as *slave*.
+Arancino Library uses a simple protocol, called **Cortex**, to communicate with the Arancino Module over serial connection. Cortex Protocol is designed to be easy to read and processed. Arancino Library, Arancino Module and Cortex Protocol are designed to be monodirectional and synchronous. In this scenario the Arancino Library within the microcontroller acts as *master*, and the Arancino Module as *slave*.
 
 
-Each command sent using Cortex Protocol is composed by a *command identifier* and one or more *parameters*. *Command identifiers* and *parameters* are separated by a separator char, and the command ends with and end chars. Each sent commands will receive a response, formed by a Response Code and one or more retuerned values. Each items are separated by the same separtor char and ends with the same end char. Commands receive Response within an timeout interval of `100ms`. If no Response are received, Command will be skipped.
+Each command sent using Cortex Protocol is composed by a *command identifier* and one or more *parameters*. *Command identifiers* and *parameters* are separated by a separator character, and the command ends with an end character. Each command sent will receive a response, formed by a Response Code and one or more returned values. All the items are separated by the same separtor character and ends with the same end character. The commands receive Response within a timeout interval of `100ms`. If no Response is received, the Command will be skipped.
 
 ### Commands identifier:
 
@@ -349,7 +349,7 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | [`hdel`](#hdel)    | HDEL          |
 
 ### Commands separator chars
-**Important**: Do not use these char codes to compose String values to pass to the API
+**Important**: Do not use these character codes to compose String values to pass to the API
 
 | Separator             | Char Code     |
 | --------------------- |:-------------:|
@@ -373,8 +373,8 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | `206`             | **KO** - Generic Redis Error                       |
 
 ### Commands and Protocol
-As exaplained above, when make a call to api function, a command is sent over the `SerialUSB` and a response is recevied:
-In the next paragraphs, for semplicity we are considering each command returns OK response and even the following rappresentation for *Separator Codes*:
+As exaplained above, when an API function is called, a command is sent over the `SerialUSB` and a response is received.
+In the next paragraphs, for simplicity we are considering each command returns an OK response and the following representation for *Separator Codes*:
 - Command Sepatator → `4`  → `#`
 - End of transmission → `30`  →` @`
 
@@ -430,7 +430,7 @@ In the next paragraphs, for semplicity we are considering each command returns O
 
 
 ## Debug 
-It's a feature introduced in version [0.0.3](https://git.smartme.io/smartme.io/arancino/arancino-library/milestones/1). Debug mode can be enabled in Arancino Board by setting the `GPIO PA31` - Pin number `26`; after setting the Debug GPIO, power on Arancino Board (or resetting the microtroller if previously powered on) Debug data will be sent over the 'Serial` and you can read it trough a serial console, like cu, screen or the Arduino IDE Serial Monitor.
+This feature was introduced in version [0.0.3](https://git.smartme.io/smartme.io/arancino/arancino-library/milestones/1) and can be enabled in the Arancino Board by setting the `GPIO PA31` - Pin number `26`; after setting the Debug GPIO, power on the Arancino Board (or resetting the microtroller if previously powered on), the Debug data will be sent over the 'Serial` and you can read it through a serial console, like cu, screen or the Arduino IDE Serial Monitor.
 
 
 ### Responde Code
@@ -444,5 +444,5 @@ Debug messages are similar to those written above in the [Commands and Protocol]
 
 
 ## Credits
-Much of the documentation has been extrapolated from [Redis Command](https://redis.io/commands/)
+Most of the documentation has been extrapolated from [Redis Command](https://redis.io/commands/)
 Redis and Arduino are trademarks of their respective owners.
