@@ -65,7 +65,7 @@ package_staging:
     - DATE="$(cat tmp/date.tmp)"
     - PKG_NAME=$CI_PROJECT_NAME-$DATE-$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8}
     - echo $PKG_NAME > tmp/pgk_name.tmp
-    - mv tmp/ ../ && cd ../
+    - mv tmp/ ../tmp && cd ../
     #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
     - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x"$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
     - mv tmp/ $CI_PROJECT_NAME/
@@ -99,7 +99,7 @@ package_release:
     - DATE="$(cat tmp/date.tmp)"
     - PKG_NAME=$CI_PROJECT_NAME-$CI_COMMIT_REF_NAME
     - echo $PKG_NAME > tmp/pgk_name.tmp
-    - mv tmp/ ../ && cd ../
+    - mv tmp/ ../tmp && cd ../
     #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
     - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
     - mv tmp/ $CI_PROJECT_NAME/
