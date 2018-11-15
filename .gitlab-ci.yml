@@ -65,6 +65,7 @@ package_staging:
     - DATE="$(cat tmp/date.tmp)"
     - PKG_NAME=$CI_PROJECT_NAME-$DATE-$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8}
     - echo $PKG_NAME > tmp/pgk_name.tmp
+    - echo $CI_PROJECT_NAME-snapshot > tmp/repo_name.tmp
     - mv tmp/ ../tmp && cd ../
     #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
     - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x"$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
@@ -99,6 +100,7 @@ package_release:
     - DATE="$(cat tmp/date.tmp)"
     - PKG_NAME=$CI_PROJECT_NAME-$CI_COMMIT_REF_NAME
     - echo $PKG_NAME > tmp/pgk_name.tmp
+    - echo $CI_PROJECT_NAME > tmp/repo_name.tmp
     - mv tmp/ ../tmp && cd ../
     #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
     - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
@@ -122,7 +124,7 @@ package_release:
 
 #######    Upload Staging    #######
 #carica sul repository manager
-upload_staging:
+upload:
 
   stage: upload
 
@@ -132,26 +134,30 @@ upload_staging:
   script: 
     - DATE="$(cat tmp/date.tmp)"
     - PKG_NAME="$(cat tmp/pgk_name.tmp)"
-    - REPO_NAME=$CI_PROJECT_NAME-staging
-    - REPO_DIR=$CI_PROJECT_NAME/staging
+    - REPO_NAME="$(cat tmp/repo_name.tmp)"
+    #- REPO_NAME=$CI_PROJECT_NAME
+    #- REPO_DIR=$CI_PROJECT_NAME/staging
     - apk add curl
-    - REPO_URL=$REPO_BASE_URL
-    - echo ${REPO_URL}
-    - echo ${REPO_BASE_URL}
-    - curl -X POST "${REPO_BASE_URL}/service/rest/v1/components?repository=${REPO_NAME}" -u $REPO_USR:$REPO_PWD -F raw.asset1=@tmp/$PKG_NAME.zip -F raw.asset1.filename=$PKG_NAME.zip -F raw.directory=$REPO_DIR
+    #- REPO_URL=$REPO_BASE_URL
+    #- echo ${REPO_URL}
+    #- echo ${REPO_BASE_URL}
+    # Nexus 3
+    #- curl -X POST "${REPO_BASE_URL}/service/rest/v1/components?repository=${REPO_NAME}" -u $REPO_USR:$REPO_PWD -F raw.asset1=@tmp/$PKG_NAME.zip -F raw.asset1.filename=$PKG_NAME.zip -F raw.directory=$REPO_DIR
+    # Artifactory
+    - curl -u $REPO_USR:$REPO_PWD -O "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${PKG_NAME}.zip"
 
   dependencies:
     - package_staging
 
   only:
     - branches
-  
-  except:
     - tags
+#  except:
+#    - tags
 
 #######    Upload Release    #######
 # carica sul repository manager
-upload_release:
+.upload_release:
 
   stage: upload
 
@@ -168,6 +174,9 @@ upload_release:
     - echo ${REPO_URL}
     - echo ${REPO_BASE_URL}
     - curl -X POST "${REPO_BASE_URL}/service/rest/v1/components?repository=${REPO_NAME}" -u $REPO_USR:$REPO_PWD -F raw.asset1=@tmp/$PKG_NAME.zip -F raw.asset1.filename=$PKG_NAME.zip -F raw.directory=$REPO_DIR
+
+
+
 
   dependencies:
     - package_release
