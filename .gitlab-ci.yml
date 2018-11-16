@@ -144,7 +144,10 @@ upload:
     # Nexus 3
     #- curl -X POST "${REPO_BASE_URL}/service/rest/v1/components?repository=${REPO_NAME}" -u $REPO_USR:$REPO_PWD -F raw.asset1=@tmp/$PKG_NAME.zip -F raw.asset1.filename=$PKG_NAME.zip -F raw.directory=$REPO_DIR
     # Artifactory
-    - curl -u $REPO_USR:$REPO_PWD -O "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${PKG_NAME}.zip"
+    # RESOLVE
+    # - curl -u $REPO_USR:$REPO_PWD -O "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${PKG_NAME}.zip"
+    # DOWNLOAD 
+    - curl -u $REPO_USR:$REPO_PWD -T tmp/$PKG_NAME.zip "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${PKG_NAME}.zip"
 
   dependencies:
     - package_staging
