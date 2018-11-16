@@ -42,7 +42,8 @@ start:
   
   script:
     - mkdir -p tmp
-    - echo `date +%Y-%m-%d-%H-%M-%S` > tmp/date.tmp
+    - echo `date +%Y-%m-%d` > tmp/date.tmp
+    - echo `date +%H-%M-%S` > tmp/time.tmp
   
   artifacts:
     paths:
@@ -63,9 +64,11 @@ package_staging:
   script:
     - apk add zip
     - DATE="$(cat tmp/date.tmp)"
-    - PKG_NAME=$CI_PROJECT_NAME-$DATE-$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8}
+    - TIME="$(cat tmp/time.tmp)"
+    - PKG_NAME=$CI_PROJECT_NAME-$DATE-$TIME-$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8}
     - echo $PKG_NAME > tmp/pgk_name.tmp
     - echo $CI_PROJECT_NAME-snapshot > tmp/repo_name.tmp
+    - echo $DATE/$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8} > tmp/target_path.tmp
     - mv tmp/ ../tmp && cd ../
     #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
     - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x"$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
@@ -97,10 +100,12 @@ package_release:
   
   script:
     - apk add zip
-    - DATE="$(cat tmp/date.tmp)"
+    #- DATE="$(cat tmp/date.tmp)"
     - PKG_NAME=$CI_PROJECT_NAME-$CI_COMMIT_REF_NAME
     - echo $PKG_NAME > tmp/pgk_name.tmp
     - echo $CI_PROJECT_NAME > tmp/repo_name.tmp
+    - echo $CI_PROJECT_NAME-snapshot > tmp/repo_name.tmp
+    - echo $CI_COMMIT_REF_NAME > tmp/target_path.tmp
     - mv tmp/ ../tmp && cd ../
     #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
     - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
@@ -133,8 +138,10 @@ upload:
 
   script: 
     - DATE="$(cat tmp/date.tmp)"
+    - TIME="$(cat tmp/time.tmp)"
     - PKG_NAME="$(cat tmp/pgk_name.tmp)"
     - REPO_NAME="$(cat tmp/repo_name.tmp)"
+    - TARGET_PATH="$(cat tmp/target_path.tmp)"
     #- REPO_NAME=$CI_PROJECT_NAME
     #- REPO_DIR=$CI_PROJECT_NAME/staging
     - apk add curl
@@ -147,7 +154,7 @@ upload:
     # RESOLVE
     # - curl -u $REPO_USR:$REPO_PWD -O "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${PKG_NAME}.zip"
     # DOWNLOAD 
-    - curl -u $REPO_USR:$REPO_PWD -T tmp/$PKG_NAME.zip "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${PKG_NAME}.zip"
+    - curl -u $REPO_USR:$REPO_PWD -T tmp/$PKG_NAME.zip "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${TARGET_PATH}/${PKG_NAME}.zip"
 
   dependencies:
     - package_staging
