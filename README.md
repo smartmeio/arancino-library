@@ -5,13 +5,13 @@ Arancino Library allows to export/import data to/from the Linux enviroment using
 
 
 ## Getting Started
-To start using Arancino Library, download the latest version from the repository `arancino-library` within the [SmartMe.IO Repository Management Site](https://download.smartme.io).
+To start using Arancino Library, download the latest version from the repository `arancino-library` within the [SmartMe.IO Repository Management Site](https://download.smartme.io/artifactory/arancino-library/).
 
 ### Arduino IDE
 Open the Arduino IDE, unzip the _Arancino Library_ and import the unzipped folder (*Sketch* → *Include Library* → *Add .zip Library...*). The library will appear under *Sketch* → *Include Library* menu at the end, under the *Contributed* section. Examples will be under *File* → *Examples* → *Examples of Custom Libraries*.
 
 
-## Arancino Library API
+## API
 
 ### begin
 ##### *void begin(int timeout)* 
@@ -427,6 +427,43 @@ In the next paragraphs, for simplicity we are considering each command returns a
 - `200@`
 - `205@`
 - `206@`
+
+
+## Reserved Keys
+Arancino Library uses some reserved keys to store environmental data into Redis. Values stored at those keys can used for multiple scopes in user space. By default the Arancino Library uses those reseverd keys to comunicate in a synchronous way but it can does in an asynchronous way. 
+
+Following the list of reserved keys
+
+| Reserved Key/Channel    | Version | Mode   | Description    |
+| ----------------------- | ------- | ------ | -------------- |
+| `___POWER___`           | ???     | Both   | Its value is `battery` or `power`, based on the power supply type. Very useful e.g. when switching to battery power and automatically softly shoutdown the system. It work only with specific hardwer module for Arancino Board.|
+| `___MONITOR___`         | >=v0.0.3| Both   | used by `print` and `println` API |
+| `__VERSION___`          | >=v0.0.3| Synch  | Arancino Library version |
+
+
+To access data stored at reserved keys you must be use the Redis `get` command for _Sync_ mode and Redis `Subscribe` for Asynch mode (in _Async_ mode the _key_ name represents the _channel_ name).
+
+By default Arancino Library use the _Sync_ mode, but you can change it to work in _Async_ mode or _Both_ (_Sync_ and _Asyncat the same time). To do that you must define a variable called `RSVD_COMM` at the beginning of your program, with three possible values:
+
+- `0` →  _Sync_
+- `1` →  _Async_
+- `2` →  _Both_
+
+Example:
+```c++
+#include <Arancino.h>
+
+#define RSVD_COMM 1
+
+void setup() {
+  //set up something
+}
+
+void loop() {
+  //do something
+}
+
+```
 
 
 ## Debug 
