@@ -23,8 +23,19 @@
 #define SERIAL_PORT SerialUSB
 #endif
 
-
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
+
+/*
+Reserved keys communication mode
+0 -> SYNC MODE (Default)
+1 -> ASYNC MODE
+2 -> BOTH (SYNC and ASYNC)
+
+to redifine the value in user space, use #define RSVD_COMM <new value> before #include <Arancino.h>
+*/
+#ifndef RSVD_COMM
+#define RSVD_COMM 0
+#endif
 
 class ArancinoClass {
 	public:
