@@ -430,20 +430,20 @@ In the next paragraphs, for simplicity we are considering each command returns a
 
 
 ## Reserved Keys
-Arancino Library uses some reserved keys to store environmental data into Redis. Values stored at those keys can used for multiple scopes in user space. By default the Arancino Library uses those reseverd keys to comunicate in a synchronous way but it can does in an asynchronous way. 
+Arancino Library uses some reserved keys to store environmental data into Redis. Values stored in those keys can be used for multiple scopes in user space. By default the Arancino Library uses those reserved keys to communicate in a synchronous way but it can do also in an asynchronous way. 
 
-Following the list of reserved keys
+Following the list of reserved keys:
 
 | Reserved Key/Channel    | Version | Mode   | Description    |
 | ----------------------- | ------- | ------ | -------------- |
-| `___POWER___`           | ???     | Both   | Its value is `battery` or `power`, based on the power supply type. Very useful e.g. when switching to battery power and automatically softly shoutdown the system. It work only with specific hardwer module for Arancino Board.|
+| `___POWER___`           | ???     | Both   | The value can be `battery` or `power`, based on the power supply type. Very useful e.g. when switching from power to battery and automatically softly shoutdown the system. It works only with the specific hardware module for the Arancino Board.|
 | `___MONITOR___`         | >=v0.0.3| Both   | used by `print` and `println` API |
 | `__VERSION___`          | >=v0.0.3| Synch  | Arancino Library version |
 
 
-To access data stored at reserved keys you must be use the Redis `get` command for _Sync_ mode and Redis `Subscribe` for Asynch mode (in _Async_ mode the _key_ name represents the _channel_ name).
+To access data stored at reserved keys you have to use the Redis `get` command for _Sync_ mode and Redis `Subscribe` for Asynch mode (in _Async_ mode the _key_ name represents the _channel_ name).
 
-By default Arancino Library use the _Sync_ mode, but you can change it to work in _Async_ mode or _Both_ (_Sync_ and _Asyncat the same time). To do that you must define a variable called `RSVD_COMM` at the beginning of your program, with three possible values:
+By default the Arancino Library uses the _Sync_ mode, but you can change it to work in _Async_ mode or _Both_ (_Sync_ and _Async_ at the same time). To do that you have to define a variable called `RSVD_COMM` at the beginning of your program, with three possible values:
 
 - `0` →  _Sync_
 - `1` →  _Async_
