@@ -44,6 +44,10 @@
 
 #define DBG_PIN						26		//pin used to Debug Message
 
+#define MONITOR_KEY				"___MONITOR___"
+#define VERSION_KEY				"___VERSION___"
+#define LIB_VERSION				"0.0.3"	//library version
+
 ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
   // Empty
@@ -71,10 +75,21 @@ void ArancinoClass::begin(int timeout) {
 		sendArancinoCommand(END_TX_CHAR);				//check if bridge python is running
 		start = stream.readStringUntil(END_TX_CHAR);
 	}while (start.toInt() != RSP_OK);
+	
+	sendArancinoCommand(SET_COMMAND);					// send library version
+	sendArancinoCommand(DATA_SPLIT_CHAR);
+	sendArancinoCommand(VERSION_KEY);
+	sendArancinoCommand(DATA_SPLIT_CHAR);
+	sendArancinoCommand(LIB_VERSION);
+	sendArancinoCommand(END_TX_CHAR);
+
 }
 
 String ArancinoClass::get( String key ) {
-
+	
+	if(checkReservedKey(key)){
+		return "";
+	}
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
@@ -89,7 +104,10 @@ String ArancinoClass::get( String key ) {
 }
 
 int ArancinoClass::del( String key ) {
-
+	
+	if(checkReservedKey(key)){
+		return NULL;
+	}
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
@@ -118,7 +136,10 @@ int ArancinoClass::del( String key ) {
 }*/
 
 void ArancinoClass::set( String key, String value ) {
-
+	
+	if(checkReservedKey(key)){
+		return;
+	}
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
@@ -147,6 +168,9 @@ void ArancinoClass::set( String key, double value ) {
 
 String ArancinoClass::hget( String key, String field ) {
 
+	if(checkReservedKey(key)){
+		return "";
+	}
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
@@ -165,7 +189,10 @@ String ArancinoClass::hget( String key, String field ) {
 }
 
 String* ArancinoClass::hgetall( String key) {
-
+	
+	if(checkReservedKey(key)){
+		return NULL;
+	}
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
@@ -182,6 +209,9 @@ String* ArancinoClass::hgetall( String key) {
 
 String* ArancinoClass::hkeys( String key) {
 
+	if(checkReservedKey(key)){
+		return NULL;
+	}
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
@@ -198,6 +228,8 @@ String* ArancinoClass::hkeys( String key) {
 
 String* ArancinoClass::hvals( String key) {
 
+	if(checkReservedKey(key))
+		return NULL;
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
@@ -232,6 +264,9 @@ String* ArancinoClass::keys(String pattern){
 
 int ArancinoClass::hset( String key, String field , String value) {
 
+	if(checkReservedKey(key)){
+		return NULL;
+	}
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
@@ -263,7 +298,9 @@ int ArancinoClass::hset( String key, String field, double value ) {
 
 
 int ArancinoClass::hdel( String key, String field ) {
-
+	
+	if(checkReservedKey(key))
+		return NULL;
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
@@ -281,6 +318,33 @@ int ArancinoClass::hdel( String key, String field ) {
 	return parse(message).toInt();
 }
 
+//============= DEBUG FUNCTIONS ======================
+
+void ArancinoClass::print(String value){
+	set(MONITOR_KEY,value);	
+}
+
+void ArancinoClass::print(int value) {
+	print(String(value));
+}
+
+void ArancinoClass::print(double value) {
+	print(String(value));
+}
+
+void ArancinoClass::println(String value){
+	print(value);	
+}
+
+void ArancinoClass::println(int value) {
+	print(String(value));
+}
+
+void ArancinoClass::println(double value) {
+	print(String(value));
+}
+
+//=================================================
 /*int ArancinoClass::hdel( String key, String* fields , int number) {
 
 	sendArancinoCommand(HDEL_COMMAND);					// send read request
@@ -358,6 +422,14 @@ void ArancinoClass::sendArancinoCommand(char command){
 	}
 }
 
+bool ArancinoClass::checkReservedKey(String key){
+	
+	if(key == MONITOR_KEY || key == VERSION_KEY)
+		return true;
+	else
+		return false;
+	
+}
 /*void ArancinoClass::dropAll() {
   while (stream.available() > 0) {
     stream.read();

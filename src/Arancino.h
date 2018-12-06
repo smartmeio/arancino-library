@@ -30,11 +30,11 @@ class ArancinoClass {
 	public:
 		//void begin();
 		void begin(int timeout);
-		String get (String value);
-		void set (String key, String value);
-		void set (String key, int value);
-		void set (String key, double value);
-		int del (String key);
+		String get(String value);
+		void set(String key, String value);
+		void set(String key, int value);
+		void set(String key, double value);
+		int del(String key);
 		//int del (String* key, int number);
 		int set(String key, String field, String value);
 		String* keys(String pattern="");
@@ -42,10 +42,17 @@ class ArancinoClass {
 		String* hgetall(String key);
 		String* hkeys(String key);
 		String* hvals(String key);
-		int hset( String Key, String field, String value);
-		int hset( String key, String field, int value);
-		int hset( String key, String field, double value);
-		int hdel( String key, String field);
+		int hset(String Key, String field, String value);
+		int hset(String key, String field, int value);
+		int hset(String key, String field, double value);
+		int hdel(String key, String field);
+		
+		void print(String value);
+		void print(int value);
+		void print(double value);
+		void println(String value);
+		void println(int value);
+		void println(double value);
 		//int hdel( String key, String* fields, int number);
 		ArancinoClass(Stream &_stream);
 		int arraySize=0;
@@ -58,6 +65,7 @@ class ArancinoClass {
 		void parseArray(String message);
 		void sendArancinoCommand(String command);
 		void sendArancinoCommand(char command);
+		bool checkReservedKey(String key);
 		Stream &stream;
 };
 
