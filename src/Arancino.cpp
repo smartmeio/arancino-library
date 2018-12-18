@@ -62,15 +62,19 @@ void ArancinoClass::begin(int timeout) {
 	String start;
   stream.setTimeout(timeout);			//response timeout
   //DEBUG
+  #if defined(__SAMD21G18A__)
   pinMode(DBG_PIN,INPUT);
   if(!digitalRead(DBG_PIN)){
   	Serial.begin(115200);
   }
+  #endif
   // Start communication with serial module on CPU
 	do{
+		#if defined(__SAMD21G18A__)
 		if(!digitalRead(DBG_PIN)){
 			Serial.print(SENT_STRING);
 		}
+		#endif
 		sendArancinoCommand(START_COMMAND);
 		sendArancinoCommand(END_TX_CHAR);				//check if bridge python is running
 		start = stream.readStringUntil(END_TX_CHAR);
@@ -90,9 +94,11 @@ String ArancinoClass::get( String key ) {
 	if(checkReservedKey(key)){
 		return "";
 	}
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
+	#endif
 	sendArancinoCommand(GET_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
@@ -108,9 +114,11 @@ int ArancinoClass::del( String key ) {
 	if(checkReservedKey(key)){
 		return NULL;
 	}
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
+	#endif
 	sendArancinoCommand(DEL_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
@@ -140,9 +148,11 @@ void ArancinoClass::set( String key, String value ) {
 	if(checkReservedKey(key)){
 		return;
 	}
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
+	#endif
 	sendArancinoCommand(SET_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
@@ -171,9 +181,11 @@ String ArancinoClass::hget( String key, String field ) {
 	if(checkReservedKey(key)){
 		return "";
 	}
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
+	#endif
 	sendArancinoCommand(HGET_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
@@ -193,9 +205,11 @@ String* ArancinoClass::hgetall( String key) {
 	if(checkReservedKey(key)){
 		return NULL;
 	}
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
+	#endif
 	sendArancinoCommand(HGETALL_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
@@ -212,9 +226,11 @@ String* ArancinoClass::hkeys( String key) {
 	if(checkReservedKey(key)){
 		return NULL;
 	}
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
+	#endif
 	sendArancinoCommand(HKEYS_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
@@ -230,9 +246,11 @@ String* ArancinoClass::hvals( String key) {
 
 	if(checkReservedKey(key))
 		return NULL;
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
+	#endif
 	sendArancinoCommand(HVALS_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
@@ -245,10 +263,11 @@ String* ArancinoClass::hvals( String key) {
 }
 
 String* ArancinoClass::keys(String pattern){
-
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
+	#endif
 	sendArancinoCommand(KEYS_COMMAND);					// send read request
 	if (pattern != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
@@ -267,9 +286,11 @@ int ArancinoClass::hset( String key, String field , String value) {
 	if(checkReservedKey(key)){
 		return NULL;
 	}
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
+	#endif
 	sendArancinoCommand(HSET_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
@@ -301,9 +322,11 @@ int ArancinoClass::hdel( String key, String field ) {
 	
 	if(checkReservedKey(key))
 		return NULL;
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
+	#endif
 	sendArancinoCommand(HDEL_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
@@ -395,31 +418,37 @@ String ArancinoClass::parse(String message){
 	if(statusIndex != -1)
 		value = message.substring(statusIndex+1);
 	//DEBUG
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(RCV_STRING);
 		Serial.print(status);
 		Serial.print(" ");
 		Serial.println(value);
 	}
+	#endif
 	return value;
 
 }
 
 void ArancinoClass::sendArancinoCommand(String command){
 	stream.print(command);
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(command);
 	}
+	#endif
 }
 
 void ArancinoClass::sendArancinoCommand(char command){
 	stream.print(command);
+	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		if(command == END_TX_CHAR)
 			Serial.println(command);
 		else
 			Serial.print(command);
 	}
+	#endif
 }
 
 bool ArancinoClass::checkReservedKey(String key){
@@ -437,6 +466,9 @@ bool ArancinoClass::checkReservedKey(String key){
 }*/
 
 // Arancino instance
+#if defined(__SAMD21G18A__)
 SerialArancinoClass Arancino(SerialUSB);
-
+#else
+SerialArancinoClass Arancino(Serial);
+#endif
 //#endif

@@ -21,6 +21,10 @@
 #define BAUDRATE 4000000
 #define TIMEOUT 100
 #define SERIAL_PORT SerialUSB
+#else
+#define BAUDRATE 256000
+#define TIMEOUT 100
+#define SERIAL_PORT Serial
 #endif
 
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
