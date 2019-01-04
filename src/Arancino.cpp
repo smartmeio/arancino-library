@@ -45,7 +45,7 @@
 #define DBG_PIN						26		//pin used to Debug Message
 
 #define MONITOR_KEY				"___MONITOR___"
-#define VERSION_KEY				"___VERSION___"
+#define VERSION_KEY				"___LIBVERS___"
 #define LIB_VERSION				"0.0.3"	//library version
 
 ArancinoClass::ArancinoClass(Stream &_stream):
@@ -60,6 +60,9 @@ ArancinoClass::ArancinoClass(Stream &_stream):
 void ArancinoClass::begin(int timeout) {
 
 	String start;
+	//reserved Key
+	reservedKey[0]=MONITOR_KEY;
+  reservedKey[1]=VERSION_KEY;
   stream.setTimeout(timeout);			//response timeout
   //DEBUG
   #if defined(__SAMD21G18A__)

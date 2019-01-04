@@ -81,6 +81,7 @@ class ArancinoClass {
 		void sendArancinoCommand(String command);
 		void sendArancinoCommand(char command);
 		bool checkReservedKey(String key);
+		String reservedKey[2];
 		Stream &stream;
 };
 
