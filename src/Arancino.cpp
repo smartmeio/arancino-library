@@ -46,6 +46,8 @@
 
 #define MONITOR_KEY				"___MONITOR___"
 #define VERSION_KEY				"___LIBVERS___"
+#define MODVERS_KEY				"___MODVERS___"
+#define POWER_KEY					"___POWER___"
 #define LIB_VERSION				"0.0.3"	//library version
 
 ArancinoClass::ArancinoClass(Stream &_stream):
@@ -63,6 +65,8 @@ void ArancinoClass::begin(int timeout) {
 	//reserved Key
 	reservedKey[0]=MONITOR_KEY;
   reservedKey[1]=VERSION_KEY;
+  reservedKey[2]=MODVERS_KEY;
+  reservedKey[3]=POWER_KEY;
   stream.setTimeout(timeout);			//response timeout
   //DEBUG
   #if defined(__SAMD21G18A__)
@@ -456,10 +460,11 @@ void ArancinoClass::sendArancinoCommand(char command){
 
 bool ArancinoClass::checkReservedKey(String key){
 	
-	if(key == MONITOR_KEY || key == VERSION_KEY)
-		return true;
-	else
-		return false;
+	for(int i=0;i<sizeof(reservedKey);i++){
+		if(reservedKey[i] == key)
+			return true;
+	}
+	return false;
 	
 }
 /*void ArancinoClass::dropAll() {
