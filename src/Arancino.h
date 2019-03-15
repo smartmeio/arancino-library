@@ -57,10 +57,11 @@ class ArancinoClass {
 		String* hgetall(String key);
 		String* hkeys(String key);
 		String* hvals(String key);
-		int hset(String Key, String field, String value);
+		int hset(String key, String field, String value);
 		int hset(String key, String field, int value);
 		int hset(String key, String field, double value);
 		int hdel(String key, String field);
+		int publish(String channel, String message);
 		
 		void print(String value);
 		void print(int value);
@@ -81,7 +82,7 @@ class ArancinoClass {
 		void sendArancinoCommand(String command);
 		void sendArancinoCommand(char command);
 		bool checkReservedKey(String key);
-		String reservedKey[2];
+		String reservedKey[4];
 		Stream &stream;
 };
 

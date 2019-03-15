@@ -93,6 +93,7 @@ void ArancinoClass::begin(int timeout) {
 	sendArancinoCommand(DATA_SPLIT_CHAR);
 	sendArancinoCommand(LIB_VERSION);
 	sendArancinoCommand(END_TX_CHAR);
+	stream.readStringUntil(END_TX_CHAR);
 
 }
 
@@ -348,6 +349,30 @@ int ArancinoClass::hdel( String key, String field ) {
 	return parse(message).toInt();
 }
 
+int ArancinoClass::publish( String channel, String message ) {
+	
+	if(checkReservedKey(key))
+		return NULL;
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+	sendArancinoCommand(PUBLISH_COMMAND);					// send read request
+	if (channel != ""){
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(channel);
+	}
+	if (message != ""){
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(message);
+	}
+	sendArancinoCommand(END_TX_CHAR);
+	String message = stream.readStringUntil(END_TX_CHAR);
+	return parse(message).toInt();
+}
+
+
 //============= DEBUG FUNCTIONS ======================
 
 void ArancinoClass::print(String value){
@@ -394,7 +419,7 @@ void ArancinoClass::println(double value) {
 }*/
 
 void ArancinoClass::parseArray(String data){
-	arraySize=0;																	//reset size array
+	arraySize=0;					//reset size array
   int idx=data.indexOf(DATA_SPLIT_CHAR);
   while(idx!=-1){
     idx=data.indexOf(DATA_SPLIT_CHAR,idx+1);		//split char recurrence in a command
@@ -422,8 +447,9 @@ String ArancinoClass::parse(String message){
 	int statusIndex = message.indexOf(DATA_SPLIT_CHAR);
 	//int valueIndex = message.indexOf(DATA_SPLIT_CHAR, statusIndex+1);
 	status = message.substring(0, statusIndex);				//message status (0: no message; 1:data ready; -1:error)
-	if(statusIndex != -1)
+	if(statusIndex != -1){
 		value = message.substring(statusIndex+1);
+	}
 	//DEBUG
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
