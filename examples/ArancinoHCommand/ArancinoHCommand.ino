@@ -3,6 +3,7 @@
 void setup() {
 
   Arancino.begin();
+  Serial.begin(115200);
 
 }
 
@@ -13,7 +14,13 @@ void loop() {
   hset_code = Arancino.hset("CAP","Roma","00100");
   delay(5000);
   String hget_value = Arancino.hget("CAP","Messina");
-  String* hgetall_value = Arancino.hgetall("CAP");
+  String* hgetall_val = Arancino.hgetall("CAP");
+  for(int i=0;i<Arancino.getArraySize(hgetall_val);i+=2){
+    Serial.print("key: ");
+    Serial.print(*(hgetall_val+i));
+    Serial.print(" | value: ");
+    Serial.println(*(hgetall_val+i+1));
+  }
   delay(5000);
   String* hkeys_value = Arancino.hkeys("CAP");
   String* hvals_value = Arancino.hvals("CAP");
