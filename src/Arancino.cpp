@@ -24,6 +24,8 @@
 #define HDEL_COMMAND			"HDEL"
 #define HSET_COMMAND			"HSET"
 #define HVALS_COMMAND			"HVALS"
+#define PUBLISH_COMMAND		"PUB"
+#define FLUSH_COMMAND			"FLUSH"
 
 #define SENT_STRING				"Sent Command: "
 #define RCV_STRING				"Received Response: "
@@ -349,9 +351,9 @@ int ArancinoClass::hdel( String key, String field ) {
 	return parse(message).toInt();
 }
 
-int ArancinoClass::publish( String channel, String message ) {
+int ArancinoClass::publish( String channel, String msg ) {
 	
-	if(checkReservedKey(key))
+	if(checkReservedKey(channel))
 		return NULL;
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
@@ -363,15 +365,44 @@ int ArancinoClass::publish( String channel, String message ) {
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(channel);
 	}
-	if (message != ""){
+	if (msg != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(message);
+		sendArancinoCommand(msg);
 	}
 	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
 
+int ArancinoClass::publish( int channel, String msg ) {
+	publish(String(channel), msg);
+}
+
+void ArancinoClass::flush() {
+	
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+	sendArancinoCommand(FLUSH_COMMAND);					// send read request
+	/*if (key != ""){
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
+	}
+	if (value != ""){
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(value);
+	}*/
+	sendArancinoCommand(END_TX_CHAR);
+	String message = stream.readStringUntil(END_TX_CHAR);
+	parse(message);
+
+}
+
+int ArancinoClass::getArraySize(String*){
+		return arraySize;
+}
 
 //============= DEBUG FUNCTIONS ======================
 

@@ -61,7 +61,9 @@ class ArancinoClass {
 		int hset(String key, String field, int value);
 		int hset(String key, String field, double value);
 		int hdel(String key, String field);
-		int publish(String channel, String message);
+		int publish(String channel, String msg);
+		int publish(int channel, String msg); 
+		void flush(void);
 		
 		void print(String value);
 		void print(int value);
@@ -69,10 +71,11 @@ class ArancinoClass {
 		void println(String value);
 		void println(int value);
 		void println(double value);
+		int getArraySize(String*);
 		//int hdel( String key, String* fields, int number);
 		ArancinoClass(Stream &_stream);
-		int arraySize=0;
 		String* arrayKey;
+		//int arraySize=0;
 
 	private:
 		//void dropAll();
@@ -84,6 +87,7 @@ class ArancinoClass {
 		bool checkReservedKey(String key);
 		String reservedKey[4];
 		Stream &stream;
+		int arraySize=0;
 };
 
 // This subclass uses a serial port Stream
