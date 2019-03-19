@@ -313,13 +313,10 @@ Removes the specified *field* from the hash stored at *key*. If *field* is speci
 TODO check if correct
 
 
-
-##### Parameters
-* **`key`**: the name of the *key* which holds the hash.
-* **`field`**: the name of the *field* to delete.
-
-##### Return value
-int reply: the number of fields that were removed from the hash.
+___
+### flush
+##### *void flush()*
+Delete all the keys.
 
 ##### Example
 TODO
@@ -374,7 +371,7 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 
 ### Commands and Protocol
 As exaplained above, when an API function is called, a command is sent over the `SerialUSB` and a response is received.
-In the next paragraphs, for simplicity we are considering each command returns an OK response and the following representation for *Separator Codes*:
+In the next paragraphs, for simplicity we are considering each command returns an *OK* response and using the following representation for *Separator Codes*:
 - Command Sepatator → `4`  → `#`
 - End of transmission → `30`  →` @`
 
@@ -423,13 +420,18 @@ In the next paragraphs, for simplicity we are considering each command returns a
 - Command Sent: `HDEL#<key>#<field>@`
 - Response Received: `100#1@`
 
-#### KO Reponse common to all api function:
-- `200@`
-- `205@`
-- `206@`
+#### flush
+- Command Sent: `FLUSH@`
+- Response Received: `100@`
+
 
 
 ## Reserved Keys
+
+**PAY ATTENTION: NOT EVERYTHING DESCRIBED BELLOW IN THIS PARAGRAPH IS YET AVAILABLE**
+
+
+
 Arancino Library uses some reserved keys to store environmental data into Redis. Values stored in those keys can be used for multiple scopes in user space. By default the Arancino Library uses those reserved keys to communicate in a synchronous way but it can do also in an asynchronous way.
 
 Following the list of reserved keys:
@@ -437,8 +439,8 @@ Following the list of reserved keys:
 | Reserved Key/Channel    | Version | Mode   | Description    |
 | ----------------------- | ------- | ------ | -------------- |
 | `___POWER___`           | ???     | Both   | The value can be `battery` or `power`, based on the power supply type. Very useful e.g. when switching from power to battery and automatically softly shoutdown the system. It works only with the specific hardware module for the Arancino Board.|
-| `___MONITOR___`         | >=v0.0.3| Both   | used by `print` and `println` API |
-| `__VERSION___`          | >=v0.0.3| Synch  | Arancino Library version |
+| `___MONITOR___`         | >=v0.1.0| Both   | used by `print` and `println` API |
+| `__VERSION___`          | >=v0.1.0| Synch  | Arancino Library version |
 
 
 To access data stored at reserved keys you have to use the Redis `get` command for _Sync_ mode and Redis `Subscribe` for Asynch mode (in _Async_ mode the _key_ name represents the _channel_ name).

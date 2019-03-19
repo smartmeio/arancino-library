@@ -1,14 +1,21 @@
 /*
-****************************************************************************
-* Copyright (c) 2018 SmartME.IO. All right reserved.
-*
-* File : Arancino.h
-* Date : 2018/07/19
-* Revision : 0.0.1 $
-* Author: andrea[at]smartme[dot]io
-*
-****************************************************************************
+SPDX-license-identifier: Apache-2.0
 
+Copyright (C) 2018 SmartMe.IO
+
+Authors:  Andrea Cannistrà <andrea@smartme.io>
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may
+not use this file except in compliance with the License. You may obtain
+a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License
 */
 
 #ifndef ARANCINO_H_
@@ -62,9 +69,9 @@ class ArancinoClass {
 		int hset(String key, String field, double value);
 		int hdel(String key, String field);
 		int publish(String channel, String msg);
-		int publish(int channel, String msg); 
+		int publish(int channel, String msg);
 		void flush(void);
-		
+
 		void print(String value);
 		void print(int value);
 		void print(double value);

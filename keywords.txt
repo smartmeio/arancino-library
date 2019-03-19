@@ -12,15 +12,16 @@ Arancino		KEYWORD3
 # Methods and Functions (KEYWORD2)
 #######################################
 
-begin					KEYWORD2
 available			KEYWORD2
-get						KEYWORD2
+begin					KEYWORD2
 set						KEYWORD2
+get						KEYWORD2
 del						KEYWORD2
 keys					KEYWORD2
 hset					KEYWORD2
 hget					KEYWORD2
-hdel					KEYWORD2
+hgetall				KEYWORD2
 hgetkeys			KEYWORD2
 hgetvals			KEYWORD2
-hgetall				KEYWORD2
+hdel					KEYWORD2
+flush					KEYWORD2

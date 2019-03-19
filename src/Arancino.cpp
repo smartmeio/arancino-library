@@ -1,14 +1,21 @@
 /*
-****************************************************************************
-* Copyright (c) 2018 SmartME.IO. All right reserved.
-*
-* File : Arancino.cpp
-* Date : 2018/07/19
-* Revision : 0.0.1 $
-* Author: andrea[at]smartme[dot]io
-*
-****************************************************************************
+SPDX-license-identifier: Apache-2.0
 
+Copyright (C) 2018 SmartMe.IO
+
+Authors:  Andrea Cannistrà <andrea@smartme.io>
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may
+not use this file except in compliance with the License. You may obtain
+a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License
 */
 
 #include "Arancino.h"
@@ -88,7 +95,7 @@ void ArancinoClass::begin(int timeout) {
 		sendArancinoCommand(END_TX_CHAR);				//check if bridge python is running
 		start = stream.readStringUntil(END_TX_CHAR);
 	}while (start.toInt() != RSP_OK);
-	
+
 	sendArancinoCommand(SET_COMMAND);					// send library version
 	sendArancinoCommand(DATA_SPLIT_CHAR);
 	sendArancinoCommand(VERSION_KEY);
@@ -100,7 +107,7 @@ void ArancinoClass::begin(int timeout) {
 }
 
 String ArancinoClass::get( String key ) {
-	
+
 	if(checkReservedKey(key)){
 		return "";
 	}
@@ -120,7 +127,7 @@ String ArancinoClass::get( String key ) {
 }
 
 int ArancinoClass::del( String key ) {
-	
+
 	if(checkReservedKey(key)){
 		return NULL;
 	}
@@ -154,7 +161,7 @@ int ArancinoClass::del( String key ) {
 }*/
 
 void ArancinoClass::set( String key, String value ) {
-	
+
 	if(checkReservedKey(key)){
 		return;
 	}
@@ -211,7 +218,7 @@ String ArancinoClass::hget( String key, String field ) {
 }
 
 String* ArancinoClass::hgetall( String key) {
-	
+
 	if(checkReservedKey(key)){
 		return NULL;
 	}
@@ -329,7 +336,7 @@ int ArancinoClass::hset( String key, String field, double value ) {
 
 
 int ArancinoClass::hdel( String key, String field ) {
-	
+
 	if(checkReservedKey(key))
 		return NULL;
 	#if defined(__SAMD21G18A__)
@@ -352,7 +359,7 @@ int ArancinoClass::hdel( String key, String field ) {
 }
 
 int ArancinoClass::publish( String channel, String msg ) {
-	
+
 	if(checkReservedKey(channel))
 		return NULL;
 	#if defined(__SAMD21G18A__)
@@ -379,7 +386,7 @@ int ArancinoClass::publish( int channel, String msg ) {
 }
 
 void ArancinoClass::flush() {
-	
+
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
@@ -407,7 +414,7 @@ int ArancinoClass::getArraySize(String*){
 //============= DEBUG FUNCTIONS ======================
 
 void ArancinoClass::print(String value){
-	set(MONITOR_KEY,value);	
+	set(MONITOR_KEY,value);
 }
 
 void ArancinoClass::print(int value) {
@@ -419,7 +426,7 @@ void ArancinoClass::print(double value) {
 }
 
 void ArancinoClass::println(String value){
-	print(value);	
+	print(value);
 }
 
 void ArancinoClass::println(int value) {
@@ -516,13 +523,13 @@ void ArancinoClass::sendArancinoCommand(char command){
 }
 
 bool ArancinoClass::checkReservedKey(String key){
-	
+
 	for(int i=0;i<sizeof(reservedKey);i++){
 		if(reservedKey[i] == key)
 			return true;
 	}
 	return false;
-	
+
 }
 /*void ArancinoClass::dropAll() {
   while (stream.available() > 0) {
