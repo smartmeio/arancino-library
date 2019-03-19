@@ -1,7 +1,7 @@
 # Arancino Library
 The following Library works on Arancino boards, it is written in Arduino lang and can be imported into the Arduino IDE. Arancino Library is written to run on SAMD21 Microcontroller over SAMD Arduino platform. It uses the serial connection to communicate with the Arancino Module which runs on the linux side of the Arancino board. It uses the `SerialUSB` library to communicate with the Arancino Module and the `Serial` library for debug.
 
-Arancino Library allows to export/import data to/from the Linux enviroment using Redis as database cache. The API are modelled on Redis standard Commands.
+Arancino Library allows to export/import data to/from the Linux environment using Redis as database cache. The API are modelled on Redis standard Commands.
 
 
 ## Getting Started
@@ -14,8 +14,8 @@ Open the Arduino IDE, unzip the _Arancino Library_ and import the unzipped folde
 ## API
 
 ### begin
-##### *void begin(int timeout)* 
-##### *void begin()* 
+##### *void begin(int timeout)*
+##### *void begin()*
 Start the communication with the Arancino Module.
 
 ##### Parameters
@@ -45,7 +45,7 @@ ___
 Set *key* to hold the string *value*. If *key* already holds a *value*, it is overwritten, regardless of its type.
 
 ##### Parameters
-* **`key`**: the *key* name 
+* **`key`**: the *key* name
 * **`value`**: the *value* for the specified *key*. can be String, int o float  
 
 ##### Example
@@ -76,8 +76,8 @@ Get the *value* of *key*. If the *key* does not exist, the special value NULL is
 * **`key`**: the name of the key from which the value is retrieved
 
 #### Return value
-String reply: 
-- the value of the passed *key*. 
+String reply:
+- the value of the passed *key*.
 - NULL if the *key* doesn't exist.
 
 ##### Example
@@ -96,7 +96,7 @@ void loop() {
     value = Arancino.get("foo");
     Serial.println("foo -> " value);
     //foo -> bar
-    
+
     delay(2000);
 
     Arancino.set("foo","baz");
@@ -115,7 +115,7 @@ ___
 Removes the specified *key*. A *key* is ignored if it does not exist.
 
 ##### Parameters
-* **`key`**: the name of the key to delete. 
+* **`key`**: the name of the key to delete.
 
 ##### Return value
 int reply: The number of keys that were removed.
@@ -177,7 +177,7 @@ void setup() {
   Arancino.set("temperature",24.4);
 
   String* key= Arancino.keys();
-  
+
   for(int i=0;i<Arancino.arraySize;i++){
     if(i!=0)
       Serial.println(keys[i]);  
@@ -430,7 +430,7 @@ In the next paragraphs, for simplicity we are considering each command returns a
 
 
 ## Reserved Keys
-Arancino Library uses some reserved keys to store environmental data into Redis. Values stored in those keys can be used for multiple scopes in user space. By default the Arancino Library uses those reserved keys to communicate in a synchronous way but it can do also in an asynchronous way. 
+Arancino Library uses some reserved keys to store environmental data into Redis. Values stored in those keys can be used for multiple scopes in user space. By default the Arancino Library uses those reserved keys to communicate in a synchronous way but it can do also in an asynchronous way.
 
 Following the list of reserved keys:
 
@@ -466,7 +466,7 @@ void loop() {
 ```
 
 
-## Debug 
+## Debug
 This feature was introduced in version [0.0.3](https://git.smartme.io/smartme.io/arancino/arancino-library/milestones/1) and can be enabled in the Arancino Board by setting the `GPIO PA31` - Pin number `26`; after setting the Debug GPIO, power on the Arancino Board (or resetting the microtroller if previously powered on), the Debug data will be sent over the 'Serial` and you can read it through a serial console, like cu, screen or the Arduino IDE Serial Monitor.
 
 
