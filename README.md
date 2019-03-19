@@ -92,17 +92,25 @@ void setup() {
 }
 
 void loop() {
-    Arancino.set("foo","bar");
-    value = Arancino.get("foo");
-    Serial.println("foo -> " value);
-    //foo -> bar
 
-    delay(2000);
+  //sets the value 'bar' into the 'foo' key
+  Arancino.set("foo","bar");
 
-    Arancino.set("foo","baz");
-    value = Arancino.get("foo");
-    Serial.println("foo -> " value);
-    //foo -> baz
+  //gets the value from the 'foo' key
+  value = Arancino.get("foo");
+  Serial.print("foo -> ");
+  Serial.println(value);
+  //foo -> bar
+
+  delay(2000);
+
+  Arancino.set("foo","baz");
+
+  //gets the value from the 'foo' key
+  value = Arancino.get("foo");
+  Serial.print("foo -> ");
+  Serial.println(value);
+  //foo -> baz
 }
 
 ```
