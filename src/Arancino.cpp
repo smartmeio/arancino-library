@@ -407,7 +407,7 @@ void ArancinoClass::flush() {
 
 }
 
-int ArancinoClass::getArraySize(String*){
+int ArancinoClass::getArraySize(){
 		return arraySize;
 }
 

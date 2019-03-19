@@ -78,7 +78,7 @@ class ArancinoClass {
 		void println(String value);
 		void println(int value);
 		void println(double value);
-		int getArraySize(String*);
+		int getArraySize();
 		//int hdel( String key, String* fields, int number);
 		ArancinoClass(Stream &_stream);
 		String* arrayKey;
