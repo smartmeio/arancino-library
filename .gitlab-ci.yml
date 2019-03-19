@@ -24,6 +24,7 @@
 
 image: alpine:latest
 
+
 stages:
   - start
   - package
