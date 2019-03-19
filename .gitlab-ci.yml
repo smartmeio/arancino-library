@@ -50,6 +50,8 @@ start:
       - tmp/
     expire_in: 1d
 
+  except:
+    - master
 
 #################################
 #######      PACKAGE      #######
@@ -84,9 +86,11 @@ package_staging:
   
   only:
     - branches
-  
+
   except:
+    - master
     - tags
+
 
 
 #######    Package Release    #######
@@ -161,9 +165,10 @@ upload:
 
   only:
     - branches
+
+  except:
     - tags
-#  except:
-#    - tags
+    - master
 
 #######    Upload Release    #######
 # carica sul repository manager
@@ -184,9 +189,6 @@ upload:
     - echo ${REPO_URL}
     - echo ${REPO_BASE_URL}
     - curl -X POST "${REPO_BASE_URL}/service/rest/v1/components?repository=${REPO_NAME}" -u $REPO_USR:$REPO_PWD -F raw.asset1=@tmp/$PKG_NAME.zip -F raw.asset1.filename=$PKG_NAME.zip -F raw.directory=$REPO_DIR
-
-
-
 
   dependencies:
     - package_release
