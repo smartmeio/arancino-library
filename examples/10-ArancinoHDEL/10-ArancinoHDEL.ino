@@ -19,7 +19,6 @@ under the License
 */
 
 /*
-
 Removes the specified field from the hash stored at key. 
 If field is specified and it does not exist within this hash, this command returns 0. 
 If the key does not exist, it is treated as an empty hash and this command returns 0.
@@ -28,14 +27,12 @@ If the key does not exist, it is treated as an empty hash and this command retur
 
 Parameters
 
-- key: the name of the key stored the hash.
-- field: the name of the field stored in the hash to delete.
-
+- key: the name of the key stored in the hash.
+- field: the name of the field stored in the hash at key to delete.
 
 Return value - int reply:
 - 1 if the field is removed.
 - 0 if the field or the key does not exist.
-
 */
 
 #include <Arancino.h>

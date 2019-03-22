@@ -19,7 +19,6 @@ under the License
 */
 
 /*
-
 Returns all field names in the hash stored at key.
 
 - String* hkeys( String key )
@@ -28,7 +27,7 @@ Parameters
 - key: the name of the key which holds the hash.
 
 Return value - *String reply:
-- ~list~ of field matching key.
+- list of fields matching key.
 
 */
 
@@ -38,19 +37,22 @@ void setup() {
 
   Arancino.begin();
   Serial.begin(115200);
-  int resp = Arancino.hset("foo","bar","yeah");
-  resp = Arancino.hset("foo","baz","whoo");
-  delay(5000);
+  
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
+
+}
+
+void loop() {
+
   String* fields = Arancino.hkeys("foo");
-  for(int i=0;i<Arancino.getArraySize();i++){
+  for(int i=0; i<Arancino.getArraySize(); i++){
     Serial.print("foo -> ");
     Serial.println(fields[i]);
     // foo -> bar
     // foo -> baz
   }
-}
 
-void loop() {
-  //do something
+  delay(5000); //wait 5 seconds
 }
 

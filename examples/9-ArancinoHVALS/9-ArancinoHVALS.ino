@@ -19,7 +19,6 @@ under the License
 */
 
 /*
-
 Returns all field names in the hash stored at key.
 
 - String* hvals( String key )
@@ -28,8 +27,7 @@ Parameters
 - key: the name of the key which holds the hash.
 
 Return value - *String reply:
-- ~list~ of value matching key.
-
+- list of values matching key.
 */
 
 #include <Arancino.h>
@@ -38,19 +36,22 @@ void setup() {
 
   Arancino.begin();
   Serial.begin(115200);
-  int resp = Arancino.hset("foo","bar","yeah");
-  resp = Arancino.hset("foo","baz","whoo");
-  delay(5000);
+  
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
+
+}
+
+void loop() {
+  
   String* values = Arancino.hkeys("foo");
-  for(int i=0;i<Arancino.getArraySize();i++){
+  for(int i=0; i<Arancino.getArraySize(); i++){
     Serial.print("foo -> ");
     Serial.println(values[i]);
     // foo -> yeah
     // foo -> whoo
   }
-}
 
-void loop() {
-  //do something
+  delay(5000); //wait 5 seconds
 }
 

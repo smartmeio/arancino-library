@@ -19,7 +19,6 @@ under the License
 */
 
 /*
-
 Returns all fields and values of the hash stored at key. In the returned value, every field name is followed by its value.
 
 - String* hgetall( String key )
@@ -28,8 +27,7 @@ Parameters
 - key: the name of the key which holds the hash.
 
 Return value - *String reply:
-- ~list~ of field and value matching key.
-
+- list of fields and values matching key.
 */
 
 #include <Arancino.h>
@@ -37,12 +35,18 @@ Return value - *String reply:
 void setup() {
 
   Arancino.begin();
+  
   Serial.begin(115200);
-  int resp = Arancino.hset("foo","bar","yeah");
-  resp = Arancino.hset("foo","baz","whoo");
-  delay(5000);
+  
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
+  
+}
+
+void loop() {
+
   String* values = Arancino.hgetall("foo");
-  for(int i=0;i<Arancino.getArraySize();i+=2){
+  for(int i=0; i<Arancino.getArraySize(); i+=2){
   	Serial.print("foo ");
   	Serial.print(values[i]);
   	Serial.print(" -> ");
@@ -51,9 +55,6 @@ void setup() {
   	// foo baz -> whoo
   }
 
-}
-
-void loop() {
-  //do something
+  delay(5000); //wait 5 seconds
 }
 

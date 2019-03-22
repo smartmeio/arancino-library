@@ -184,21 +184,21 @@ void setup() {
   Arancino.set("humidity",67.5);
   Arancino.set("temperature",24.4);
 
-  String* key= Arancino.keys();
-
-  for(int i=0;i<Arancino.arraySize;i++){
-    if(i!=0)
-      Serial.println(keys[i]);  
-  }
-  //pressure
-  //humidity
-  //temperature
-
-
 }
 
 void loop() {
-  //do something
+
+  String* key = Arancino.keys();
+  int key_size=Arancino.getArraySize();
+  for(int i=0;i<key_size;i++){
+      Serial.println(key[i]);  
+  }
+	//pressure
+	//humidity
+	//temperature
+
+  delay(5000); //wait 5 seconds
+  
 }
 
 ```
@@ -282,12 +282,18 @@ Returns all fields and values of the hash stored at *key*. In the returned value
 void setup() {
 
   Arancino.begin();
+  
   Serial.begin(115200);
-  int resp = Arancino.hset("foo","bar","yeah");
-  resp = Arancino.hset("foo","baz","whoo");
-  delay(5000);
+  
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
+  
+}
+
+void loop() {
+
   String* values = Arancino.hgetall("foo");
-  for(int i=0;i<Arancino.getArraySize();i+=2){
+  for(int i=0; i<Arancino.getArraySize(); i+=2){
   	Serial.print("foo ");
   	Serial.print(values[i]);
   	Serial.print(" -> ");
@@ -296,10 +302,7 @@ void setup() {
   	// foo baz -> whoo
   }
 
-}
-
-void loop() {
-  //do something
+  delay(5000); //wait 5 seconds
 }
 ```
 
@@ -317,8 +320,32 @@ Returns all field names in the hash stored at key.
 TODO
 
 ##### Example
-TODO
+```c++
+#include <Arancino.h>
 
+void setup() {
+
+  Arancino.begin();
+  Serial.begin(115200);
+  
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
+
+}
+
+void loop() {
+
+  String* fields = Arancino.hkeys("foo");
+  for(int i=0; i<Arancino.getArraySize(); i++){
+    Serial.print("foo -> ");
+    Serial.println(fields[i]);
+    // foo -> bar
+    // foo -> baz
+  }
+
+  delay(5000); //wait 5 seconds
+}
+```
 
 
 ___
@@ -334,7 +361,34 @@ Returns all values in the hash stored at *key*.
 TODO
 
 ##### Example
-TODO
+```c++
+#include <Arancino.h>
+
+void setup() {
+
+  Arancino.begin();
+  Serial.begin(115200);
+  
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
+
+}
+
+void loop() {
+  
+  String* values = Arancino.hkeys("foo");
+  for(int i=0; i<Arancino.getArraySize(); i++){
+    Serial.print("foo -> ");
+    Serial.println(values[i]);
+    // foo -> yeah
+    // foo -> whoo
+  }
+
+  delay(5000); //wait 5 seconds
+}
+
+
+```
 
 
 
@@ -343,6 +397,33 @@ ___
 ##### *int hdel( String key, String field )*
 Removes the specified *field* from the hash stored at *key*. If *field* is specified and it does not exist within this hash, this command returns 0. If the key does not exist, it is treated as an empty hash and this command returns 0.
 TODO check if correct
+
+##### Parameters
+TODO
+
+##### Return value
+TODO
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+
+  Arancino.begin();
+  int resp = Arancino.hset("foo","bar","yeah");
+  resp = Arancino.hset("foo","baz","whoo");
+  int value = Arancino.hdel("foo","bar");
+  //1
+  value = Arancino.hget("foo","baz");
+  //0
+
+}
+
+void loop() {
+  //do something
+}
+```
 
 
 ___

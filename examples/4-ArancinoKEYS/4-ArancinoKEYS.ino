@@ -37,7 +37,7 @@ Parameters
 
 
 Return value - String* reply: 
-- ~list~ of keys matching pattern.
+- list of keys matching pattern.
 */
 
 #include <Arancino.h>
@@ -49,7 +49,12 @@ void setup() {
   Arancino.set("pressure",1023);
   Arancino.set("humidity",67.5);
   Arancino.set("temperature",24.4);
-  String* key = Arancino.keys();  //questa funzione ritorna un array di stringhe es: ["temp","press","hum"]
+
+}
+
+void loop() {
+
+  String* key = Arancino.keys();
   int key_size=Arancino.getArraySize();
   for(int i=0;i<key_size;i++){
       Serial.println(key[i]);  
@@ -57,8 +62,7 @@ void setup() {
 	//pressure
 	//humidity
 	//temperature
-}
 
-void loop() {
-  //do something
+  delay(5000); //wait 5 seconds
+  
 }
