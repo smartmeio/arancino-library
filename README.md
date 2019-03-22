@@ -259,7 +259,8 @@ String reply:
 - NULL if there isn't a value stored.
 
 ##### Example
-TODO
+
+#include <Arancino.h>
 
 
 
@@ -272,12 +273,35 @@ Returns all fields and values of the hash stored at *key*. In the returned value
 * **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
-*String reply:
-TODO
+*String reply: ~list~ of field and value matching *key*.
 
 ##### Example
-TODO
+```c++
+#include <Arancino.h>
 
+void setup() {
+
+  Arancino.begin();
+  Serial.begin(115200);
+  int resp = Arancino.hset("foo","bar","yeah");
+  resp = Arancino.hset("foo","baz","whoo");
+  delay(5000);
+  String* values = Arancino.hgetall("foo");
+  for(int i=0;i<Arancino.getArraySize();i+=2){
+  	Serial.print("foo ");
+  	Serial.print(values[i]);
+  	Serial.print(" -> ");
+  	Serial.println(values[i+1];
+  	// foo bar -> yeah
+  	// foo baz -> whoo
+  }
+
+}
+
+void loop() {
+  //do something
+}
+```
 
 
 ___
