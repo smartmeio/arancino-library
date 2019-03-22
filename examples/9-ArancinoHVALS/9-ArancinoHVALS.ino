@@ -3,7 +3,7 @@ SPDX-license-identifier: Apache-2.0
 
 Copyright (C) 2019 SmartMe.IO
 
-Authors:  Sergio Tomasello <sergio@smartme.io>
+Authors:  Andrea Cannistra <andrea@smartme.io>
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -19,31 +19,38 @@ under the License
 */
 
 /*
-Removes the specified *key*. A *key* is ignored if it does not exist.
 
-- int del( String key )*
+Returns all field names in the hash stored at key.
 
+- String* hvals( String key )
 
 Parameters
-- key: the name of the key to delete.
+- key: the name of the key which holds the hash.
 
-Return value - int reply:
-The number of keys that were removed.
+Return value - *String reply:
+- ~list~ of value matching key.
+
 */
 
 #include <Arancino.h>
 
 void setup() {
-  Serial.begin(115200);
-  Arancino.begin();
-  Arancino.set("foo","bar");
 
-  int num = Arancino.del("baz");
-  //0
-  num = Arancino.del("foo");
-  //1
+  Arancino.begin();
+  Serial.begin(115200);
+  int resp = Arancino.hset("foo","bar","yeah");
+  resp = Arancino.hset("foo","baz","whoo");
+  delay(5000);
+  String* values = Arancino.hkeys("foo");
+  for(int i=0;i<Arancino.getArraySize();i++){
+    Serial.print("foo -> ");
+    Serial.println(values[i]);
+    // foo -> yeah
+    // foo -> whoo
+  }
 }
 
 void loop() {
   //do something
 }
+
