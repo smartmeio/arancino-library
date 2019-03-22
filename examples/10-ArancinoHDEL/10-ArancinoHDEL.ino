@@ -47,10 +47,8 @@ void setup() {
   resp = Arancino.hset("foo","baz","whoo");
   int value = Arancino.hdel("foo","bar");
   //1
-  hget_value = Arancino.hget("foo","baz");
-  Serial.print("foo baz -> ");
-  Serial.println(value);
-  //whoo
+  value = Arancino.hget("foo","baz");
+  //0
 
 }
 
