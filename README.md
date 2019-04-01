@@ -399,7 +399,8 @@ Removes the specified *field* from the hash stored at *key*. If *field* is speci
 TODO check if correct
 
 ##### Parameters
-TODO
+* **`key`**: the name of the *key* stored in the hash.
+* **`field`**: the name of the *field* stored in the hash at key to delete.
 
 ##### Return value
 TODO
