@@ -259,10 +259,34 @@ String reply:
 - NULL if there isn't a value stored.
 
 ##### Example
-
+```c++
 #include <Arancino.h>
 
+void setup() {
 
+  Arancino.begin();
+  Serial.begin(115200);
+  int resp = Arancino.hset("foo","bar","yeah");
+  resp = Arancino.hset("foo","baz","whoo");
+
+}
+
+void loop() {
+  
+  String value = Arancino.hget("foo","bar");
+  Serial.print("foo bar -> ");
+  Serial.println(value);
+  //foo bar -> yeah
+  
+  value = Arancino.hget("foo","baz");
+  Serial.print("foo baz -> ");
+  Serial.println(value);
+  //foo bar -> whoo
+
+  delay(5000); //wait 5 seconds
+
+}
+```
 
 ___
 ### hgetall
