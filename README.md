@@ -380,7 +380,7 @@ Returns all values in the hash stored at *key*.
 * **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
-*String reply: ~list~ of value matching *key*.
+*String reply: list of value matching *key*.
 
 ##### Example
 ```c++
