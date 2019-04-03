@@ -316,8 +316,7 @@ Returns all field names in the hash stored at key.
 * **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
-*String reply:
-TODO
+*String reply: ~list~ of field matching *key*.
 
 ##### Example
 ```c++
@@ -395,14 +394,16 @@ ___
 ### hdel
 ##### *int hdel( String key, String field )*
 Removes the specified *field* from the hash stored at *key*. If *field* is specified and it does not exist within this hash, this command returns 0. If the key does not exist, it is treated as an empty hash and this command returns 0.
-TODO check if correct
+
 
 ##### Parameters
 * **`key`**: the name of the *key* stored in the hash.
 * **`field`**: the name of the *field* stored in the hash at key to delete.
 
 ##### Return value
-TODO
+int reply:
+- 1 if the *field* is removed from hash.
+- 0 if the *field* or the key does not exist in the hash.
 
 ##### Example
 ```c++
@@ -432,8 +433,60 @@ ___
 Delete all the keys.
 
 ##### Example
-TODO
+```c++
+#include <Arancino.h>
 
+void setup() {
+
+  Arancino.begin();
+  Arancino.set("foo","bar");
+  Arancino.set("foo","baz");
+  //delete all the keys
+  Arancino.flush();
+
+}
+
+void loop() {
+  //do something
+}
+```
+___
+### publish
+##### *int publish(String channel, String message)*
+##### *int publish(int channel, String message)*
+Posts a message to the given channel.
+
+
+##### Parameters
+* **`channel`**: the name of the *channel* where message will be send.
+* **`message`**: *message* to send.
+
+##### Return value
+int reply: the number of clients that received the message.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+
+  Arancino.begin();
+  Serial.begin(115200);
+
+}
+
+void loop() {
+  
+  int resp = Arancino.publish(0,"hello from Arancino");
+  Serial.print("message send to ")
+  Serial.print(resp);
+  Serial.println(" client");
+  //message send to 0 client 
+  
+  delay(5000); //wait 5 seconds
+  
+}
+```
 
 
 ## Cortex Protocol
