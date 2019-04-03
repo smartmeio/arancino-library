@@ -170,7 +170,7 @@ Use \ to escape special characters if you want to match them verbatim.
 * **`pattern`**: the pattern used to find matching keys.
 
 ##### Return value
-String* reply: ~list~ of keys matching *pattern*.
+String* reply: list of keys matching *pattern*.
 
 ##### Example
 ```c++
@@ -297,7 +297,7 @@ Returns all fields and values of the hash stored at *key*. In the returned value
 * **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
-*String reply: ~list~ of field and value matching *key*.
+*String reply: list of field and value matching *key*.
 
 ##### Example
 ```c++
@@ -340,7 +340,7 @@ Returns all field names in the hash stored at key.
 * **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
-*String reply: ~list~ of field matching *key*.
+*String reply: list of field matching *key*.
 
 ##### Example
 ```c++
