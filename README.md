@@ -334,13 +334,13 @@ void loop() {
 ___
 ### hkeys
 ##### *String\* hkeys( String key )*
-Returns all field names in the hash stored at key.
+Returns all field names in the hash stored at *key*.
 
 ##### Parameters
 * **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
-*String reply: list of field matching *key*.
+String\* reply: list of *fields* matching *key*.
 
 ##### Example
 ```c++
@@ -380,7 +380,7 @@ Returns all values in the hash stored at *key*.
 * **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
-*String reply: list of value matching *key*.
+String\* reply: list of *values* matching *key*.
 
 ##### Example
 ```c++
@@ -408,8 +408,6 @@ void loop() {
 
   delay(5000); //wait 5 seconds
 }
-
-
 ```
 
 
@@ -482,7 +480,7 @@ Posts a message to the given channel.
 
 
 ##### Parameters
-* **`channel`**: the name of the *channel* where message will be send.
+* **`channel`**: the name of the *channel* where the message will be sent.
 * **`message`**: *message* to send.
 
 ##### Return value
@@ -501,16 +499,46 @@ void setup() {
 
 void loop() {
   
-  int resp = Arancino.publish(0,"hello from Arancino");
-  Serial.print("message send to ")
+  int resp = Arancino.publish(0,"Hello from Arancino");
+  Serial.print("Message sent to ")
   Serial.print(resp);
-  Serial.println(" client");
-  //message send to 0 client 
+  Serial.println(" clients");
+  //Message sent to 0 client 
   
   delay(5000); //wait 5 seconds
   
 }
 ```
+
+___
+### print
+##### *void print(String message)*
+Set the *message* as a *value* for the reserved *key* `___MONITOR____`. To do that it uses the `set` api under the hood.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+
+  Arancino.begin();
+  Serial.begin(115200);
+
+}
+
+void loop() {
+  
+  Arancino.print(0,"Hello from Arancino");
+  delay(5000); //wait 5 seconds
+  
+}
+```
+
+
+___
+### println
+##### *void println(String message)*
+Like [`print`](#print) but with a trailing *new line* char.
 
 
 ## Cortex Protocol
@@ -534,6 +562,8 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | [`hkeys`](#hkeys)  | HKEYS         |
 | [`hvals`](#hvals)  | HVALS         |
 | [`hdel`](#hdel)    | HDEL          |
+| [`flush`](#flush)  | FLUSH         |
+| [`pubblish`](#pubblish)    | PUB          |
 
 ### Commands separator chars
 **Important**: Do not use these character codes to compose String values to pass to the API

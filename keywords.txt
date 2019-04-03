@@ -25,3 +25,6 @@ hgetkeys			KEYWORD2
 hgetvals			KEYWORD2
 hdel					KEYWORD2
 flush					KEYWORD2
+publish            KEYWORD2
+print              KEYWORD2
+println            KEYWORD2
