@@ -100,22 +100,21 @@ package_release:
   
   stage: package
   
-  variables:
-    GIT_STRATEGY: none
-  
   script:
     - apk add zip
     #- DATE="$(cat tmp/date.tmp)"
     - PKG_NAME=$CI_PROJECT_NAME-$CI_COMMIT_REF_NAME
     - echo $PKG_NAME > tmp/pgk_name.tmp
     - echo $CI_PROJECT_NAME > tmp/repo_name.tmp
-    - echo $CI_PROJECT_NAME-snapshot > tmp/repo_name.tmp
     - echo $CI_COMMIT_REF_NAME > tmp/target_path.tmp
     - mv tmp/ ../tmp && cd ../
     #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
     - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
     - mv tmp/ $CI_PROJECT_NAME/
     - mv $PKG_NAME.zip $CI_PROJECT_NAME/tmp/
+  
+  dependencies:
+    - start  
   
   artifacts:
     paths:
@@ -132,7 +131,7 @@ package_release:
 #######       UPLOAD      #######
 #################################
 
-#######    Upload Staging    #######
+#######    Upload Staging and Release   #######
 #carica sul repository manager
 upload:
 
@@ -147,58 +146,16 @@ upload:
     - PKG_NAME="$(cat tmp/pgk_name.tmp)"
     - REPO_NAME="$(cat tmp/repo_name.tmp)"
     - TARGET_PATH="$(cat tmp/target_path.tmp)"
-    #- REPO_NAME=$CI_PROJECT_NAME
-    #- REPO_DIR=$CI_PROJECT_NAME/staging
     - apk add curl
-    #- REPO_URL=$REPO_BASE_URL
-    #- echo ${REPO_URL}
-    #- echo ${REPO_BASE_URL}
-    # Nexus 3
-    #- curl -X POST "${REPO_BASE_URL}/service/rest/v1/components?repository=${REPO_NAME}" -u $REPO_USR:$REPO_PWD -F raw.asset1=@tmp/$PKG_NAME.zip -F raw.asset1.filename=$PKG_NAME.zip -F raw.directory=$REPO_DIR
-    # Artifactory
-    # RESOLVE
-    # - curl -u $REPO_USR:$REPO_PWD -O "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${PKG_NAME}.zip"
-    # DOWNLOAD 
+    # Upload to Artifactory
     - curl -u $REPO_USR:$REPO_PWD -T tmp/$PKG_NAME.zip "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${TARGET_PATH}/${PKG_NAME}.zip"
 
-  dependencies:
-    - package_staging
-
   only:
     - branches
+    - tags
 
   except:
-    - tags
     - master
-
-#######    Upload Release    #######
-# carica sul repository manager
-.upload_release:
-
-  stage: upload
-
-  variables:
-    GIT_STRATEGY: none
-
-  script: 
-    - DATE="$(cat tmp/date.tmp)"
-    - PKG_NAME="$(cat tmp/pgk_name.tmp)"
-    - REPO_NAME=$CI_PROJECT_NAME-release
-    - REPO_DIR=$CI_PROJECT_NAME/release
-    - apk add curl
-    - REPO_URL=$REPO_BASE_URL
-    - echo ${REPO_URL}
-    - echo ${REPO_BASE_URL}
-    - curl -X POST "${REPO_BASE_URL}/service/rest/v1/components?repository=${REPO_NAME}" -u $REPO_USR:$REPO_PWD -F raw.asset1=@tmp/$PKG_NAME.zip -F raw.asset1.filename=$PKG_NAME.zip -F raw.directory=$REPO_DIR
-
-  dependencies:
-    - package_release
-
-  only:
-    - tags
-
-  except:
-    - branches
 
 #################################
 #######      CLEANUP      #######
