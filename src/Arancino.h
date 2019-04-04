@@ -48,11 +48,19 @@ to redifine the value in user space, use #define RSVD_COMM <new value> before #i
 // #define RSVD_COMM 0
 // #endif
 
+//Reserverd Communication Mode
 enum RSVD_COMM_MODE {
 	SYNCH = 0,
 	ASYNCH = 1,
 	BOTH = 2
 };
+
+//Power Mode
+enum POWER_MODE {
+	BATTERY = 0,
+	POWERSUPPLY = 1
+};
+
 //
 
 class ArancinoClass {

@@ -52,6 +52,7 @@ under the License
 #define ERR_REDIS					206		//Generic Redis Error
 
 #define DBG_PIN						26		//pin used to Debug Message
+//#define PWR_PIN					??		//pin used for Power Management
 
 #define MONITOR_KEY				"___MONITOR___"
 #define LIBVERS_KEY				"___LIBVERS___"
