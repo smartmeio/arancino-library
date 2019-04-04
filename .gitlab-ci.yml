@@ -1,0 +1,219 @@
+# Project:          Arancino Library - Serial Manager
+# Author:           Sergio Tomasello <sergio@smartme.io>
+# Created:          2018.10.11
+# Notes:            La pipeline esegue la creazione dell'archivio della libreria compatibile per Aduino IDE
+# Internal Vars:    Lista delle variabili definete internamente ed usate nella pipeline:
+#                   DATE:           data di esecuzione della pipeline
+#                   PKG_NAME:       nome del pacchetto
+#                   REPO_NAME:      nome del repository di produzione, composto da due parti:
+#                                   il nome del progetto -> $CI_PROJECT_NAME
+#                                   ambiente di lavoro: -> "staging" o "release"
+#                                   $CI_PROJECT_NAME-staging
+#                                   $CI_PROJECT_NAME-release
+#                   REPO_DIR:       nome della directory di upload del repository, composto da due parti:
+#                                   il nome del progetto -> $CI_PROJECT_NAME
+#                                   ambiente di lavoro: -> "staging" o "release"
+#                                   $CI_PROJECT_NAME/staging
+#                                   $CI_PROJECT_NAME/release
+#
+# External Vars:    Lista delle variabili definite estarnamente ed usate nella pipeline:
+#                   REPO_USR:       nome utente del associato a dev ops per effettuare upload dell'artefatto
+#                   REPO_PWD:       password associata all'utente dev ops
+#                   REPO_BASE_URL:  url di base del repository: https://download.smartme.io
+#                   
+
+image: alpine:latest
+
+
+stages:
+  - start
+  - package
+  - upload
+  - cleanup
+
+#################################
+#######       START       #######
+#################################
+
+start:
+  stage: start
+  
+  variables:
+    GIT_STRATEGY: none
+  
+  script:
+    - mkdir -p tmp
+    - echo `date +%Y-%m-%d` > tmp/date.tmp
+    - echo `date +%H-%M-%S` > tmp/time.tmp
+  
+  artifacts:
+    paths:
+      - tmp/
+    expire_in: 1d
+
+  except:
+    - master
+
+#################################
+#######      PACKAGE      #######
+#################################
+
+#######    Package Staging    #######
+#questo job esegue la compressione ad ogni commit su tutti i branch tranne master
+package_staging:
+  
+  stage: package
+  
+  script:
+    - apk add zip
+    - DATE="$(cat tmp/date.tmp)"
+    - TIME="$(cat tmp/time.tmp)"
+    - PKG_NAME=$CI_PROJECT_NAME-$DATE-$TIME-$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8}
+    - echo $PKG_NAME > tmp/pgk_name.tmp
+    - echo $CI_PROJECT_NAME-snapshot > tmp/repo_name.tmp
+    - echo $DATE/$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8} > tmp/target_path.tmp
+    - mv tmp/ ../tmp && cd ../
+    #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
+    - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x"$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
+    - mv tmp/ $CI_PROJECT_NAME/
+    - mv $PKG_NAME.zip $CI_PROJECT_NAME/tmp/
+    
+  dependencies:
+    - start  
+  
+  artifacts:
+    paths:
+      - tmp/
+  
+  only:
+    - branches
+
+  except:
+    - master
+    - tags
+
+
+
+#######    Package Release    #######
+#esegue la compressione del pacchetto quando viene creato un tag su master (ovvero ad ogni release)
+package_release:
+  
+  stage: package
+  
+  variables:
+    GIT_STRATEGY: none
+  
+  script:
+    - apk add zip
+    #- DATE="$(cat tmp/date.tmp)"
+    - PKG_NAME=$CI_PROJECT_NAME-$CI_COMMIT_REF_NAME
+    - echo $PKG_NAME > tmp/pgk_name.tmp
+    - echo $CI_PROJECT_NAME > tmp/repo_name.tmp
+    - echo $CI_PROJECT_NAME-snapshot > tmp/repo_name.tmp
+    - echo $CI_COMMIT_REF_NAME > tmp/target_path.tmp
+    - mv tmp/ ../tmp && cd ../
+    #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
+    - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
+    - mv tmp/ $CI_PROJECT_NAME/
+    - mv $PKG_NAME.zip $CI_PROJECT_NAME/tmp/
+  
+  artifacts:
+    paths:
+      - tmp/
+  
+  only:
+    - tags
+
+  except:
+    - branches
+
+
+#################################
+#######       UPLOAD      #######
+#################################
+
+#######    Upload Staging    #######
+#carica sul repository manager
+upload:
+
+  stage: upload
+
+  variables:
+    GIT_STRATEGY: none
+
+  script: 
+    - DATE="$(cat tmp/date.tmp)"
+    - TIME="$(cat tmp/time.tmp)"
+    - PKG_NAME="$(cat tmp/pgk_name.tmp)"
+    - REPO_NAME="$(cat tmp/repo_name.tmp)"
+    - TARGET_PATH="$(cat tmp/target_path.tmp)"
+    #- REPO_NAME=$CI_PROJECT_NAME
+    #- REPO_DIR=$CI_PROJECT_NAME/staging
+    - apk add curl
+    #- REPO_URL=$REPO_BASE_URL
+    #- echo ${REPO_URL}
+    #- echo ${REPO_BASE_URL}
+    # Nexus 3
+    #- curl -X POST "${REPO_BASE_URL}/service/rest/v1/components?repository=${REPO_NAME}" -u $REPO_USR:$REPO_PWD -F raw.asset1=@tmp/$PKG_NAME.zip -F raw.asset1.filename=$PKG_NAME.zip -F raw.directory=$REPO_DIR
+    # Artifactory
+    # RESOLVE
+    # - curl -u $REPO_USR:$REPO_PWD -O "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${PKG_NAME}.zip"
+    # DOWNLOAD 
+    - curl -u $REPO_USR:$REPO_PWD -T tmp/$PKG_NAME.zip "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${TARGET_PATH}/${PKG_NAME}.zip"
+
+  dependencies:
+    - package_staging
+
+  only:
+    - branches
+
+  except:
+    - tags
+    - master
+
+#######    Upload Release    #######
+# carica sul repository manager
+.upload_release:
+
+  stage: upload
+
+  variables:
+    GIT_STRATEGY: none
+
+  script: 
+    - DATE="$(cat tmp/date.tmp)"
+    - PKG_NAME="$(cat tmp/pgk_name.tmp)"
+    - REPO_NAME=$CI_PROJECT_NAME-release
+    - REPO_DIR=$CI_PROJECT_NAME/release
+    - apk add curl
+    - REPO_URL=$REPO_BASE_URL
+    - echo ${REPO_URL}
+    - echo ${REPO_BASE_URL}
+    - curl -X POST "${REPO_BASE_URL}/service/rest/v1/components?repository=${REPO_NAME}" -u $REPO_USR:$REPO_PWD -F raw.asset1=@tmp/$PKG_NAME.zip -F raw.asset1.filename=$PKG_NAME.zip -F raw.directory=$REPO_DIR
+
+  dependencies:
+    - package_release
+
+  only:
+    - tags
+
+  except:
+    - branches
+
+#################################
+#######      CLEANUP      #######
+#################################
+
+#######    Cleanup Job    #######
+cleanup:
+
+    stage: cleanup
+
+    variables:
+        GIT_STRATEGY: none
+    
+    script:
+        - echo "Cleaning up"
+        - rm -rf tmp/
+    
+    when: always
