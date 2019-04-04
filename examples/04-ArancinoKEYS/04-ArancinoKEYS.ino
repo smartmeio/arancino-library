@@ -55,12 +55,19 @@ void setup() {
 void loop() {
 
   String* key = Arancino.keys();
-  int key_size=Arancino.getArraySize();
-  for(int i=0;i<key_size;i++){
+  for(int i=0; i<Arancino.getArraySize() ;i++){
       Serial.println(key[i]);  
   }
 	//pressure
 	//humidity
+	//temperature
+
+  delay(5000); //wait 5 seconds
+  
+  key = Arancino.keys("temp*");  //return all the keys thath contains temp pattern
+  for(int i=0; i<Arancino.getArraySize() ;i++){
+      Serial.println(key[i]);  
+  }
 	//temperature
 
   delay(5000); //wait 5 seconds

@@ -22,7 +22,7 @@ under the License
 Set 'key' to hold the string 'value'. If 'key' already holds a 'value', it is overwritten, regardless of its type.
 
 - void set( String key, String value )
-- void set( String key,  int value )
+- void set( String key, int value )
 - void set( String key, float value )
 
 Parameters

@@ -19,11 +19,15 @@ under the License
 */
 
 /*
-Delete all the keys.
+Returns all fields and values of the hash stored at key. In the returned value, every field name is followed by its value.
 
-- void flush()
+- String* hgetall( String key )
 
-Return value - void reply
+Parameters
+- key: the name of the key which holds the hash.
+
+Return value - *String reply:
+- list of fields and values matching key.
 */
 
 #include <Arancino.h>
@@ -31,14 +35,26 @@ Return value - void reply
 void setup() {
 
   Arancino.begin();
-  Arancino.set("foo","bar");
-  Arancino.set("foo","baz");
-  //delete all the keys
-  Arancino.flush();
-
+  
+  Serial.begin(115200);
+  
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
+  
 }
 
 void loop() {
-  //do something
+
+  String* values = Arancino.hgetall("foo");
+  for(int i=0; i<Arancino.getArraySize(); i+=2){
+  	Serial.print("foo ");
+  	Serial.print(values[i]);
+  	Serial.print(" -> ");
+  	Serial.println(values[i+1]);
+  	// foo bar -> yeah
+  	// foo baz -> whoo
+  }
+
+  delay(5000); //wait 5 seconds
 }
 

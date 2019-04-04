@@ -19,9 +19,9 @@ under the License
 */
 
 /*
-Removes the specified *key*. A *key* is ignored if it does not exist.
+Removes the specified key. A key is ignored if it does not exist.
 
-- int del( String key )*
+- int del( String key )
 
 
 Parameters

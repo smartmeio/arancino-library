@@ -19,15 +19,21 @@ under the License
 */
 
 /*
-Returns all fields and values of the hash stored at key. In the returned value, every field name is followed by its value.
+Posts a message to the given channel.
 
-- String* hgetall( String key )
+- int publish(String channel, String message);
+- int publish(int channel, String message);
 
-Parameters
-- key: the name of the key which holds the hash.
+Parameters:
+- channel: channel where message will be send
+- message: message to send
 
-Return value - *String reply:
-- list of fields and values matching key.
+Return value - int reply: 
+- the number of clients that received the message.
+
+- void flush()
+
+Return value - void reply
 */
 
 #include <Arancino.h>
@@ -35,26 +41,19 @@ Return value - *String reply:
 void setup() {
 
   Arancino.begin();
-  
   Serial.begin(115200);
-  
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
-  
+
 }
 
 void loop() {
-
-  String* values = Arancino.hgetall("foo");
-  for(int i=0; i<Arancino.getArraySize(); i+=2){
-  	Serial.print("foo ");
-  	Serial.print(values[i]);
-  	Serial.print(" -> ");
-  	Serial.println(values[i+1];
-  	// foo bar -> yeah
-  	// foo baz -> whoo
-  }
-
+  
+  int resp = Arancino.publish(0,"hello from Arancino");
+  Serial.print("message send to ")
+  Serial.print(resp);
+  Serial.println(" client");
+  //message send to 0 client 
+  
   delay(5000); //wait 5 seconds
+  
 }
 

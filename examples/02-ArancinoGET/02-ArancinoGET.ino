@@ -19,16 +19,16 @@ under the License
 */
 
 /*
-Get the *value* of *key*. If the *key* does not exist, the special value NULL is returned.
+Get the value of key. If the key does not exist, the special value NULL is returned.
 
--String get( String key )*
+-String get( String key )
 
 Parameters
 - key: the name of the key from which the value is retrieved
 
 Return value - String reply:
-- the value of the passed *key*.
-- NULL if the *key* doesn't exist.
+- the value of the passed key.
+- NULL if the key doesn't exist.
 */
 
 #include <Arancino.h>
@@ -46,12 +46,12 @@ void loop() {
   Arancino.set("foo","bar");
 
   //gets the value from the 'foo' key
-  value = Arancino.get("foo");
+  String value = Arancino.get("foo");
   Serial.print("foo -> ");
   Serial.println(value);
   //foo -> bar
 
-  delay(2000);
+  delay(2000); //wait 2 seconds
 
   Arancino.set("foo","baz");
 
@@ -60,4 +60,6 @@ void loop() {
   Serial.print("foo -> ");
   Serial.println(value);
   //foo -> baz
+  
+  delay(2000); //wait 2 seconds
 }
