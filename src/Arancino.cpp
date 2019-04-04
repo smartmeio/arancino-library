@@ -54,7 +54,7 @@ under the License
 #define DBG_PIN						26		//pin used to Debug Message
 
 #define MONITOR_KEY				"___MONITOR___"
-#define VERSION_KEY				"___LIBVERS___"
+#define LIBVERS_KEY				"___LIBVERS___"
 #define MODVERS_KEY				"___MODVERS___"
 #define POWER_KEY					"___POWER___"
 #define LIB_VERSION				"0.1.1"	//library version
@@ -68,12 +68,14 @@ ArancinoClass::ArancinoClass(Stream &_stream):
 	begin(TIMEOUT);
 }*/
 
+//============= SETUP FUNCTIONS ======================
+
 void ArancinoClass::begin(int timeout) {
 
 	String start;
 	//reserved Key
 	reservedKey[0]=MONITOR_KEY;
-  reservedKey[1]=VERSION_KEY;
+  reservedKey[1]=LIBVERS_KEY;
   reservedKey[2]=MODVERS_KEY;
   reservedKey[3]=POWER_KEY;
   stream.setTimeout(timeout);			//response timeout
@@ -96,15 +98,23 @@ void ArancinoClass::begin(int timeout) {
 		start = stream.readStringUntil(END_TX_CHAR);
 	}while (start.toInt() != RSP_OK);
 
-	sendArancinoCommand(SET_COMMAND);					// send library version
-	sendArancinoCommand(DATA_SPLIT_CHAR);
-	sendArancinoCommand(VERSION_KEY);
-	sendArancinoCommand(DATA_SPLIT_CHAR);
-	sendArancinoCommand(LIB_VERSION);
-	sendArancinoCommand(END_TX_CHAR);
-	stream.readStringUntil(END_TX_CHAR);
+	// sendArancinoCommand(SET_COMMAND);					// send library version
+	// sendArancinoCommand(DATA_SPLIT_CHAR);
+	// sendArancinoCommand(LIBVERS_KEY);
+	// sendArancinoCommand(DATA_SPLIT_CHAR);
+	// sendArancinoCommand(LIB_VERSION);
+	// sendArancinoCommand(END_TX_CHAR);
+	// stream.readStringUntil(END_TX_CHAR);
+
+	sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
 
 }
+
+// void ArancinoClass::setReservedCommunicationMode(int mode){
+// 	COMM_MODE = mode;
+// }
+
+//============= API FUNCTIONS ======================
 
 String ArancinoClass::get( String key ) {
 
@@ -297,7 +307,6 @@ String* ArancinoClass::keys(String pattern){
 
 };
 
-
 int ArancinoClass::hset( String key, String field , String value) {
 
 	if(checkReservedKey(key)){
@@ -333,7 +342,6 @@ int ArancinoClass::hset( String key, String field, int value ) {
 int ArancinoClass::hset( String key, String field, double value ) {
 	hset(key, field, String(value));
 }
-
 
 int ArancinoClass::hdel( String key, String field ) {
 
@@ -414,7 +422,7 @@ int ArancinoClass::getArraySize(){
 //============= DEBUG FUNCTIONS ======================
 
 void ArancinoClass::print(String value){
-	set(MONITOR_KEY,value);
+	sendViaCOMM_MODE(MONITOR_KEY, value);
 }
 
 void ArancinoClass::print(int value) {
@@ -436,6 +444,28 @@ void ArancinoClass::println(int value) {
 void ArancinoClass::println(double value) {
 	print(String(value));
 }
+
+void ArancinoClass::sendViaCOMM_MODE(String key, String value){
+	switch (COMM_MODE) {
+		case ASYNCH:
+			set(key, value);
+		break;
+
+		case SYNCH:
+			publish(key, value);
+		break;
+
+		case BOTH:
+			publish(key, value);
+			set(key, value);
+		break;
+
+		default:
+			set(key, value);
+		break;
+	}
+}
+
 
 //=================================================
 /*int ArancinoClass::hdel( String key, String* fields , int number) {

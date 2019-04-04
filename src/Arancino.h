@@ -44,14 +44,23 @@ Reserved keys communication mode
 
 to redifine the value in user space, use #define RSVD_COMM <new value> before #include <Arancino.h>
 */
-#ifndef RSVD_COMM
-#define RSVD_COMM 0
-#endif
+// #ifndef RSVD_COMM
+// #define RSVD_COMM 0
+// #endif
+
+enum RSVD_COMM_MODE {
+	SYNCH = 0,
+	ASYNCH = 1,
+	BOTH = 2
+};
+//
 
 class ArancinoClass {
 	public:
 		//void begin();
 		void begin(int timeout);
+		void setReservedCommunicationMode(int mode);
+
 		String get(String value);
 		void set(String key, String value);
 		void set(String key, int value);
@@ -95,6 +104,8 @@ class ArancinoClass {
 		String reservedKey[4];
 		Stream &stream;
 		int arraySize=0;
+		int COMM_MODE = ASYNCH;
+		void sendViaCOMM_MODE(String key, String value);
 };
 
 // This subclass uses a serial port Stream
