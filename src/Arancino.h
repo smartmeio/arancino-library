@@ -108,12 +108,14 @@ class ArancinoClass {
 		void parseArray(String message);
 		void sendArancinoCommand(String command);
 		void sendArancinoCommand(char command);
-		bool checkReservedKey(String key);
+		bool isReservedKey(String key);
 		String reservedKey[4];
 		Stream &stream;
 		int arraySize=0;
 		int COMM_MODE = ASYNCH;
 		void sendViaCOMM_MODE(String key, String value);
+		void _set(String key, String value);
+		int _publish(String channel, String msg);
 };
 
 // This subclass uses a serial port Stream

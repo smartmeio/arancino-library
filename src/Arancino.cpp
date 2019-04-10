@@ -119,7 +119,7 @@ void ArancinoClass::begin(int timeout) {
 
 String ArancinoClass::get( String key ) {
 
-	if(checkReservedKey(key)){
+	if(isReservedKey(key)){
 		return "";
 	}
 	#if defined(__SAMD21G18A__)
@@ -139,8 +139,8 @@ String ArancinoClass::get( String key ) {
 
 int ArancinoClass::del( String key ) {
 
-	if(checkReservedKey(key)){
-		return NULL;
+	if(isReservedKey(key)){
+		return -1;
 	}
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
@@ -171,11 +171,7 @@ int ArancinoClass::del( String key ) {
 	return parse(message).toInt();
 }*/
 
-void ArancinoClass::set( String key, String value ) {
-
-	if(checkReservedKey(key)){
-		return;
-	}
+void ArancinoClass::_set( String key, String value ) {
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
@@ -193,6 +189,15 @@ void ArancinoClass::set( String key, String value ) {
 	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parse(message);
+}
+
+void ArancinoClass::set( String key, String value ) {
+
+	if(isReservedKey(key)){
+		//TODO maybe it's better to print a log
+		return;
+	}
+	_set(key, value);
 
 }
 
@@ -206,7 +211,7 @@ void ArancinoClass::set( String key, double value ) {
 
 String ArancinoClass::hget( String key, String field ) {
 
-	if(checkReservedKey(key)){
+	if(isReservedKey(key)){
 		return "";
 	}
 	#if defined(__SAMD21G18A__)
@@ -230,7 +235,7 @@ String ArancinoClass::hget( String key, String field ) {
 
 String* ArancinoClass::hgetall( String key) {
 
-	if(checkReservedKey(key)){
+	if(isReservedKey(key)){
 		return NULL;
 	}
 	#if defined(__SAMD21G18A__)
@@ -251,7 +256,7 @@ String* ArancinoClass::hgetall( String key) {
 
 String* ArancinoClass::hkeys( String key) {
 
-	if(checkReservedKey(key)){
+	if(isReservedKey(key)){
 		return NULL;
 	}
 	#if defined(__SAMD21G18A__)
@@ -272,7 +277,7 @@ String* ArancinoClass::hkeys( String key) {
 
 String* ArancinoClass::hvals( String key) {
 
-	if(checkReservedKey(key))
+	if(isReservedKey(key))
 		return NULL;
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
@@ -310,8 +315,8 @@ String* ArancinoClass::keys(String pattern){
 
 int ArancinoClass::hset( String key, String field , String value) {
 
-	if(checkReservedKey(key)){
-		return NULL;
+	if(isReservedKey(key)){
+		return -1;
 	}
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
@@ -346,8 +351,9 @@ int ArancinoClass::hset( String key, String field, double value ) {
 
 int ArancinoClass::hdel( String key, String field ) {
 
-	if(checkReservedKey(key))
-		return NULL;
+	if(isReservedKey(key))
+		return -1;
+
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
@@ -367,10 +373,7 @@ int ArancinoClass::hdel( String key, String field ) {
 	return parse(message).toInt();
 }
 
-int ArancinoClass::publish( String channel, String msg ) {
-
-	if(checkReservedKey(channel))
-		return NULL;
+int ArancinoClass::_publish( String channel, String msg ) {
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
@@ -388,6 +391,16 @@ int ArancinoClass::publish( String channel, String msg ) {
 	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
+}
+
+int ArancinoClass::publish( String channel, String msg ) {
+
+	if(isReservedKey(channel)){
+		//TODO maybe its better to log the error
+		return -1;
+	}
+	return _publish(channel, msg);
+
 }
 
 int ArancinoClass::publish( int channel, String msg ) {
@@ -435,34 +448,34 @@ void ArancinoClass::print(double value) {
 }
 
 void ArancinoClass::println(String value){
-	print(value);
+	print(value+String('\n'));
 }
 
 void ArancinoClass::println(int value) {
-	print(String(value));
+	println(String(value));
 }
 
 void ArancinoClass::println(double value) {
-	print(String(value));
+	println(String(value));
 }
 
 void ArancinoClass::sendViaCOMM_MODE(String key, String value){
 	switch (COMM_MODE) {
 		case ASYNCH:
-			set(key, value);
+			_set(key, value);
 		break;
 
 		case SYNCH:
-			publish(key, value);
+			_publish(key, value);
 		break;
 
 		case BOTH:
-			publish(key, value);
-			set(key, value);
+			_publish(key, value);
+			_set(key, value);
 		break;
 
 		default:
-			set(key, value);
+			_set(key, value);
 		break;
 	}
 }
@@ -553,7 +566,7 @@ void ArancinoClass::sendArancinoCommand(char command){
 	#endif
 }
 
-bool ArancinoClass::checkReservedKey(String key){
+bool ArancinoClass::isReservedKey(String key){
 
 	for(int i=0;i<sizeof(reservedKey);i++){
 		if(reservedKey[i] == key)
