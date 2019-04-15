@@ -209,6 +209,10 @@ void ArancinoClass::set( String key, double value ) {
 	set(key, String(value));
 }
 
+void ArancinoClass::set( String key, uint32_t value ) {
+	set(key, String(value));
+}
+
 String ArancinoClass::hget( String key, String field ) {
 
 	if(isReservedKey(key)){
@@ -346,6 +350,10 @@ int ArancinoClass::hset( String key, String field, int value ) {
 }
 
 int ArancinoClass::hset( String key, String field, double value ) {
+	hset(key, field, String(value));
+}
+
+int ArancinoClass::hset( String key, String field, uint32_t value ) {
 	hset(key, field, String(value));
 }
 
