@@ -68,12 +68,11 @@ class ArancinoClass {
 		//void begin();
 		void begin(int timeout);
 		void setReservedCommunicationMode(int mode);
-
 		String get(String value);
 		void set(String key, String value);
 		void set(String key, int value);
 		void set(String key, double value);
-		void set( String key, uint32_t value )
+		void set( String key, uint32_t value);
 		int del(String key);
 		//int del (String* key, int number);
 		int set(String key, String field, String value);
@@ -114,7 +113,7 @@ class ArancinoClass {
 		String reservedKey[4];
 		Stream &stream;
 		int arraySize=0;
-		int COMM_MODE = ASYNCH;
+		int COMM_MODE = SYNCH;
 		void sendViaCOMM_MODE(String key, String value);
 		void _set(String key, String value);
 		int _publish(String channel, String msg);

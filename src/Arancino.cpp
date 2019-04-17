@@ -111,9 +111,9 @@ void ArancinoClass::begin(int timeout) {
 
 }
 
-// void ArancinoClass::setReservedCommunicationMode(int mode){
-// 	COMM_MODE = mode;
-// }
+void ArancinoClass::setReservedCommunicationMode(int mode){
+	COMM_MODE = mode;
+}
 
 //============= API FUNCTIONS ======================
 
@@ -469,11 +469,11 @@ void ArancinoClass::println(double value) {
 
 void ArancinoClass::sendViaCOMM_MODE(String key, String value){
 	switch (COMM_MODE) {
-		case ASYNCH:
+		case SYNCH:
 			_set(key, value);
 		break;
 
-		case SYNCH:
+		case ASYNCH:
 			_publish(key, value);
 		break;
 
