@@ -58,7 +58,7 @@ under the License
 #define LIBVERS_KEY				"___LIBVERS___"
 #define MODVERS_KEY				"___MODVERS___"
 #define POWER_KEY					"___POWER___"
-#define LIB_VERSION				"0.1.1"	//library version
+#define LIB_VERSION				"0.1.2"	//library version
 
 ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {

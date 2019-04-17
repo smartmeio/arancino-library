@@ -20,7 +20,7 @@
 #                   REPO_USR:       nome utente del associato a dev ops per effettuare upload dell'artefatto
 #                   REPO_PWD:       password associata all'utente dev ops
 #                   REPO_BASE_URL:  url di base del repository: https://download.smartme.io
-#                   
+#
 
 image: alpine:latest
 
@@ -29,7 +29,7 @@ stages:
   - start
   - package
   - upload
-  #- push
+  - push
   - cleanup
 
 #################################
@@ -38,15 +38,15 @@ stages:
 
 start:
   stage: start
-  
+
   variables:
     GIT_STRATEGY: none
-  
+
   script:
     - mkdir -p tmp
     - echo `date +%Y-%m-%d` > tmp/date.tmp
     - echo `date +%H-%M-%S` > tmp/time.tmp
-  
+
   artifacts:
     paths:
       - tmp/
@@ -62,9 +62,9 @@ start:
 #######    Package Staging    #######
 #questo job esegue la compressione ad ogni commit su tutti i branch tranne master
 package_staging:
-  
+
   stage: package
-  
+
   script:
     - apk add zip
     - DATE="$(cat tmp/date.tmp)"
@@ -78,14 +78,14 @@ package_staging:
     - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x"$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
     - mv tmp/ $CI_PROJECT_NAME/
     - mv $PKG_NAME.zip $CI_PROJECT_NAME/tmp/
-    
+
   dependencies:
-    - start  
-  
+    - start
+
   artifacts:
     paths:
       - tmp/
-  
+
   only:
     - branches
 
@@ -98,9 +98,9 @@ package_staging:
 #######    Package Release    #######
 #esegue la compressione del pacchetto quando viene creato un tag su master (ovvero ad ogni release)
 package_release:
-  
+
   stage: package
-  
+
   script:
     - apk add zip
     #- DATE="$(cat tmp/date.tmp)"
@@ -113,14 +113,14 @@ package_release:
     - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
     - mv tmp/ $CI_PROJECT_NAME/
     - mv $PKG_NAME.zip $CI_PROJECT_NAME/tmp/
-  
+
   dependencies:
-    - start  
-  
+    - start
+
   artifacts:
     paths:
       - tmp/
-  
+
   only:
     - tags
 
@@ -141,7 +141,7 @@ upload:
   variables:
     GIT_STRATEGY: none
 
-  script: 
+  script:
     - DATE="$(cat tmp/date.tmp)"
     - TIME="$(cat tmp/time.tmp)"
     - PKG_NAME="$(cat tmp/pgk_name.tmp)"
@@ -159,21 +159,27 @@ upload:
     - master
 
 #################################
-#######       START       #######
+#######        PUSH       #######
 #################################
 
-.push:
+push:
   stage: push
-  
+
   allow_failure: true
 
   variables:
     GIT_STRATEGY: clone
-  
+
   script:
     - apk add git
-    - git push https://$GITHUB_BOT_USERNAME:$GITHUB_ACCESS_TOKEN@github.com/$GITHUB_DEST_REPO $CI_COMMIT_REF_NAME
-  
+    - git remote add github https://$GITHUB_BOT_USERNAME:$GITHUB_ACCESS_TOKEN@github.com/$GITHUB_DEST_REPO
+    #- git remote show github
+    #- git remote show origin
+    #- git branch -a
+    - git checkout $CI_COMMIT_REF_NAME
+    - git fetch github
+    - git push github $CI_COMMIT_REF_NAME --force
+
   only:
     - branches
     - tags
@@ -187,14 +193,19 @@ upload:
 
 #######    Cleanup Job    #######
 cleanup:
+  stage: cleanup
 
-    stage: cleanup
+  variables:
+    GIT_STRATEGY: none
 
-    variables:
-        GIT_STRATEGY: none
-    
-    script:
-        - echo "Cleaning up"
-        - rm -rf tmp/
-    
-    when: always
+  script:
+    - echo "Cleaning up"
+    - rm -rf tmp/
+
+  #when: always
+  only:
+    - branches
+    - tags
+
+  except:
+  - master
