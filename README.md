@@ -650,17 +650,15 @@ In the next paragraphs, for simplicity we are considering each command returns a
 
 **PAY ATTENTION: NOT EVERYTHING DESCRIBED BELLOW IN THIS PARAGRAPH IS YET AVAILABLE**
 
-
-
 Arancino Library uses some reserved keys to store environmental data into Redis. Values stored in those keys can be used for multiple scopes in user space. By default the Arancino Library uses those reserved keys to communicate in a synchronous way but it can do also in an asynchronous way.
 
 Following the list of reserved keys:
 
-| Reserved Key/Channel    | Version | Mode   | Description    |
-| ----------------------- | ------- | ------ | -------------- |
-| `___POWER___`           | ???     | Both   | The value can be `battery` or `power`, based on the power supply type. Very useful e.g. when switching from power to battery and automatically softly shoutdown the system. It works only with the specific hardware module for the Arancino Board.|
-| `___MONITOR___`         | >=v0.1.0| Both   | used by `print` and `println` API |
-| `__VERSION___`          | >=v0.1.0| Synch  | Arancino Library version |
+| Reserved Key/Channel    | Version | Description    |
+| ----------------------- | ------- | -------------- |
+| `___POWER___`           | N/A     | The value can be `battery` or `power`, based on the power supply type. Very useful e.g. when switching from power to battery and automatically softly shoutdown the system. It works only with the specific hardware module for the Arancino Board.|
+| `___MONITOR___`         | >=v0.1.0| used by `print` and `println` API |
+| `__LIBVERS___`          | >=v0.1.0| Arancino Library version |
 
 
 To access data stored at reserved keys you have to use the Redis `get` command for _Sync_ mode and Redis `Subscribe` for Asynch mode (in _Async_ mode the _key_ name represents the _channel_ name).
@@ -675,10 +673,9 @@ Example:
 ```c++
 #include <Arancino.h>
 
-#define RSVD_COMM 1
-
 void setup() {
-  //set up something
+  Arancino.begin();
+  Arancino.setReservedCommunicationMode(BOTH);
 }
 
 void loop() {

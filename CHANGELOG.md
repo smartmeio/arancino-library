@@ -1,5 +1,13 @@
 # Changelog
 
+#### v 0.1.1 - 2019.04.17
+* Fix: cannot set empty string #26
+* Fix: cannot use unint32_t variables #18
+* Fix: Rename checkReserverCommand function  #23
+* Fix: `print` e `println` does not work #21
+* add `setReservedCommunicationMode` API function - Communication Mode for Reserved Keys #17
+
+
 #### v 0.1.0 - 2019.04.04
 * add `print` and `println` API functions.
 * Introduce new reserved keys.

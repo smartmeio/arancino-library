@@ -29,6 +29,7 @@ stages:
   - start
   - package
   - upload
+  #- push
   - cleanup
 
 #################################
@@ -150,6 +151,29 @@ upload:
     # Upload to Artifactory
     - curl -u $REPO_USR:$REPO_PWD -T tmp/$PKG_NAME.zip "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${TARGET_PATH}/${PKG_NAME}.zip"
 
+  only:
+    - branches
+    - tags
+
+  except:
+    - master
+
+#################################
+#######       START       #######
+#################################
+
+.push:
+  stage: push
+  
+  allow_failure: true
+
+  variables:
+    GIT_STRATEGY: clone
+  
+  script:
+    - apk add git
+    - git push https://$GITHUB_BOT_USERNAME:$GITHUB_ACCESS_TOKEN@github.com/$GITHUB_DEST_REPO $CI_COMMIT_REF_NAME
+  
   only:
     - branches
     - tags

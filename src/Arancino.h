@@ -44,18 +44,35 @@ Reserved keys communication mode
 
 to redifine the value in user space, use #define RSVD_COMM <new value> before #include <Arancino.h>
 */
-#ifndef RSVD_COMM
-#define RSVD_COMM 0
-#endif
+// #ifndef RSVD_COMM
+// #define RSVD_COMM 0
+// #endif
+
+//Reserverd Communication Mode
+enum RSVD_COMM_MODE {
+	SYNCH = 0,
+	ASYNCH = 1,
+	BOTH = 2
+};
+
+//Power Mode
+enum POWER_MODE {
+	BATTERY = 0,
+	POWERSUPPLY = 1
+};
+
+//
 
 class ArancinoClass {
 	public:
 		//void begin();
 		void begin(int timeout);
+		void setReservedCommunicationMode(int mode);
 		String get(String value);
 		void set(String key, String value);
 		void set(String key, int value);
 		void set(String key, double value);
+		void set( String key, uint32_t value);
 		int del(String key);
 		//int del (String* key, int number);
 		int set(String key, String field, String value);
@@ -67,6 +84,7 @@ class ArancinoClass {
 		int hset(String key, String field, String value);
 		int hset(String key, String field, int value);
 		int hset(String key, String field, double value);
+		int hset(String key, String field, uint32_t value);
 		int hdel(String key, String field);
 		int publish(String channel, String msg);
 		int publish(int channel, String msg);
@@ -91,10 +109,14 @@ class ArancinoClass {
 		void parseArray(String message);
 		void sendArancinoCommand(String command);
 		void sendArancinoCommand(char command);
-		bool checkReservedKey(String key);
+		bool isReservedKey(String key);
 		String reservedKey[4];
 		Stream &stream;
 		int arraySize=0;
+		int COMM_MODE = SYNCH;
+		void sendViaCOMM_MODE(String key, String value);
+		void _set(String key, String value);
+		int _publish(String channel, String msg);
 };
 
 // This subclass uses a serial port Stream
