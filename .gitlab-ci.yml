@@ -29,13 +29,13 @@ stages:
   - start
   - package
   - upload
-  - push
   - cleanup
 
 #################################
 #######       START       #######
 #################################
 
+####### START
 start:
   stage: start
 
@@ -51,6 +51,33 @@ start:
     paths:
       - tmp/
     expire_in: 1d
+
+  except:
+    - master
+
+######## PUSH
+push:
+  stage: start
+
+  allow_failure: true
+
+  variables:
+    GIT_STRATEGY: clone
+
+  script:
+    - apk add git
+    - git remote add github https://$GITHUB_BOT_USERNAME:$GITHUB_ACCESS_TOKEN@github.com/$GITHUB_DEST_REPO
+    #- git remote show github
+    #- git remote show origin
+    #- git branch -a
+    - git checkout $CI_COMMIT_REF_NAME
+    - git fetch github
+    - git push github $CI_COMMIT_REF_NAME --force
+    - git push github --tags
+
+  only:
+    - branches
+    - tags
 
   except:
     - master
@@ -150,35 +177,6 @@ upload:
     - apk add curl
     # Upload to Artifactory
     - curl -u $REPO_USR:$REPO_PWD -T tmp/$PKG_NAME.zip "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${TARGET_PATH}/${PKG_NAME}.zip"
-
-  only:
-    - branches
-    - tags
-
-  except:
-    - master
-
-#################################
-#######        PUSH       #######
-#################################
-
-push:
-  stage: push
-
-  allow_failure: true
-
-  variables:
-    GIT_STRATEGY: clone
-
-  script:
-    - apk add git
-    - git remote add github https://$GITHUB_BOT_USERNAME:$GITHUB_ACCESS_TOKEN@github.com/$GITHUB_DEST_REPO
-    #- git remote show github
-    #- git remote show origin
-    #- git branch -a
-    - git checkout $CI_COMMIT_REF_NAME
-    - git fetch github
-    - git push github $CI_COMMIT_REF_NAME --force
 
   only:
     - branches
