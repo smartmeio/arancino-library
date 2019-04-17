@@ -28,3 +28,4 @@ flush	KEYWORD2
 publish	KEYWORD2
 print	KEYWORD2
 println	KEYWORD2
+setReservedCommunicationMode	KEYWORD2
