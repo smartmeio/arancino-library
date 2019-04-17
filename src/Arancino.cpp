@@ -182,10 +182,8 @@ void ArancinoClass::_set( String key, String value ) {
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(key);
 	}
-	if (value != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(value);
-	}
+	sendArancinoCommand(DATA_SPLIT_CHAR);
+	sendArancinoCommand(value);
 	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parse(message);
