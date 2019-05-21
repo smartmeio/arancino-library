@@ -24,6 +24,13 @@ under the License
 #include <Arduino.h>
 #include <Stream.h>
 
+#define USEFREERTOS
+#if defined(USEFREERTOS)
+extern "C" {
+#include <FreeRTOS_SAMD21.h>
+}
+#endif
+
 #if defined(__SAMD21G18A__)
 #define BAUDRATE 4000000
 #define TIMEOUT 100

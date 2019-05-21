@@ -60,10 +60,279 @@ under the License
 #define POWER_KEY					"___POWER___"
 #define LIB_VERSION				"0.1.2"	//library version
 
+#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+#define MAX_MSG_LENGTH 1024 //in char - not used
+#define MSG_MUTEX_TIMEOUT	100 //portMAX_DELAY 
+#define UART_MUTEX_TIMEOUT  portMAX_DELAY 
+
+#endif
+
 ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
   // Empty
 }
+
+#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+TaskHandle_t commTaskHandle, testTaskHandle;
+
+/*
+ * Element of the queue that contain the requests to be sent through the UART.
+ * One struct contain only one Arancino request and the task id from which it comes.
+ */
+typedef struct _msgItem
+{
+    String msg;
+    uint32_t taskID;
+    _msgItem *next = NULL;
+} msgItem;
+
+/*
+ * Element that defines the Arancino requests queue.
+ * The struct contains the head of the queue and the count of the requests ready to be sent
+ */
+typedef struct
+{
+    uint32_t msgCount;
+    _msgItem *head;
+} msgQueue;
+
+void initRqstQueue(msgQueue *);
+int insertRequest(uint16_t, uint32_t, String);
+String getRequest(uint16_t);
+void printQueue(msgQueue *);
+int getRqstCount(uint16_t);
+
+/*
+ * Vector of queues that will contain the requests to be sent via uart.
+ * The length of the vector is defined by the number of priorities allowed for FreeRTOS tasks.
+ */
+msgQueue msgByPriority[configMAX_PRIORITIES];
+
+
+SemaphoreHandle_t msgQueueMutex; //Mutex used for the secure access to the requests queue
+SemaphoreHandle_t uartMutex;    //Mutex used for the secure access to the uart
+
+#endif
+
+#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+
+/*
+ * Once the scheduler is launched, this should be the only task that can write to the uart (stream).
+ * The reading/writing on the uart is regulated by the uartMutex.
+ * Between one request and another there is a 50 millisecond delay, during which the task is suspended.
+ * The serial port used is passed as parameter during the task initialization (on begin).
+ */
+void commTask( void *pvParameters )
+{
+	Stream *stream = (Stream *)pvParameters;
+	
+    for (int i = 0; i < configMAX_PRIORITIES; i++)
+    {
+        initRqstQueue(&msgByPriority[i]);
+    }
+    
+    int temp = -1;
+    String start;
+	
+    while(1)
+    {
+		if (getRqstCount(tskIDLE_PRIORITY + 2) > 0)
+		{
+			String rqst = getRequest(tskIDLE_PRIORITY + 2);
+            
+            if ( xSemaphoreTake( uartMutex, ( TickType_t ) UART_MUTEX_TIMEOUT ) == pdTRUE )
+            {
+                for (int i = 0; i < rqst.length(); i++)
+                {
+                    (*stream).print(rqst[i]);
+                }
+                xSemaphoreGive(uartMutex);   
+            }
+		}
+		vTaskDelay( 50 / portTICK_PERIOD_MS );	
+
+    }
+}
+
+void initRqstQueue(msgQueue *queue)
+{
+    queue->msgCount = 0;
+    queue->head = NULL;
+}
+
+/*
+ * Function that insert a string/character in the uart write queue.
+ * The parameters are:
+ *  priority of the calling task;
+ *  ID of the calling task;
+ *  msg that will be insert in queue;
+ * 
+ * The priority indicates the position on the queues vector.
+ * taskID is used to group the strings that come from the same task. 
+ * For request with the same task id, once the END_TX_CHAR character is received, 
+ *  all subsequent characters are inserted into a new element.
+ * 
+ */
+int insertRequest(uint16_t priority, uint32_t taskID, String msg)
+{
+	if( xSemaphoreTake( msgQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+	{
+		
+		msgItem *selectedMsg = NULL;
+		
+		if (msgByPriority[priority].head == NULL)
+		{
+			msgByPriority[priority].head = new msgItem;
+			if (msgByPriority[priority].head != NULL) //successfully allocated
+			{
+				(msgByPriority[priority].head)->taskID = taskID;
+				(msgByPriority[priority].head)->next = NULL;
+				selectedMsg = (msgByPriority[priority].head);
+			}
+			else
+			{
+				return -1; //error
+			}
+		}
+		else
+		{
+			msgItem *prevMsg = NULL;
+			msgItem *currMsg = msgByPriority[priority].head;
+			
+			while (currMsg != NULL && (currMsg->taskID != taskID || (currMsg->msg)[(currMsg->msg).length() - 1] == END_TX_CHAR))
+			{
+				prevMsg = currMsg;
+				currMsg = currMsg->next;
+			}
+			
+			if (currMsg == NULL) //coda terminata
+			{
+				msgItem *temp = new msgItem;
+				temp->taskID = taskID;
+				temp->next = NULL;
+				prevMsg->next = temp;
+				selectedMsg = prevMsg->next;
+			}
+			else
+			{
+				selectedMsg = currMsg;
+			}
+		}
+		
+		if (selectedMsg != NULL && msg != "")
+		{
+			int index = msg.indexOf(END_TX_CHAR); //-1 = carattere non trovato				
+				
+			if (index > -1)
+			{
+				selectedMsg->msg += msg.substring(0, index + 1);
+				++(msgByPriority[priority].msgCount);
+				insertRequest(priority, taskID, msg.substring(index + 1));
+			}
+			else
+			{
+				selectedMsg->msg += msg;
+			}
+		}
+		xSemaphoreGive(msgQueueMutex);
+	}
+return 0;
+
+}
+
+/*
+ * return the request count of the selected queue.
+ */
+int getRqstCount(uint16_t priority)
+{
+	int retVal = -1;
+	if( xSemaphoreTake( msgQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+	{
+		retVal = msgByPriority[priority].msgCount;
+		xSemaphoreGive(msgQueueMutex);
+	}
+	return retVal;
+}
+
+
+/*
+ * Function that return the string of the oldest request for the selected priority.
+ */
+String getRequest(uint16_t priority)
+{
+	String retStr = "";
+	if( xSemaphoreTake( msgQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+	{
+		
+		if (msgByPriority[priority].head == NULL || msgByPriority[priority].msgCount == 0)
+		{
+			retStr = "";
+		}
+		else
+		{	
+			msgItem *prevMsg = NULL;
+			msgItem *currMsg = msgByPriority[priority].head;
+			
+			while(currMsg != NULL && (currMsg->msg)[(currMsg->msg).length() - 1] != END_TX_CHAR)
+			{
+				prevMsg = currMsg;
+				currMsg = currMsg->next;
+			}
+			
+			if (currMsg != NULL)
+			{
+				retStr = currMsg->msg;
+				
+				if (currMsg == msgByPriority[priority].head)
+				{
+					msgByPriority[priority].head = currMsg->next;
+				}
+				else
+				{
+					prevMsg->next = currMsg->next;
+				}
+				
+				delete currMsg;
+				--(msgByPriority[priority].msgCount);
+			}
+			
+		}
+		xSemaphoreGive(msgQueueMutex);
+	}
+	
+	return retStr;
+}
+
+/*
+ * only for debugging purposes!
+ * example: printQueue(&msgByPriority[pxGetCurrentTaskPriority()]);
+ */
+void printQueue(msgQueue *queue)
+{
+	if( xSemaphoreTake( msgQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+	{
+		Serial.print("msgCount in queue: ");
+		Serial.println(queue->msgCount);
+		Serial.println("------------------");
+		int i = 0;
+		msgItem *msg = queue->head;
+		while (msg != NULL)
+		{
+			Serial.print("[");
+			Serial.print(i++);
+			Serial.print("] : taskID = ");
+			Serial.print(msg->taskID);
+			Serial.print(" msg = ");
+			Serial.print(msg->msg);
+			Serial.print(" next = ");
+			Serial.println((long)msg->next);
+			msg = msg->next;
+		}
+		Serial.println("fine coda\n\n");
+		xSemaphoreGive(msgQueueMutex);
+	}
+}
+#endif
 
 /*void ArancinoClass::begin() {
 	begin(TIMEOUT);
@@ -109,6 +378,13 @@ void ArancinoClass::begin(int timeout) {
 
 	sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
 
+#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    vSetErrorLed(LED_BUILTIN, HIGH);
+    xTaskCreate(commTask,     "Communication task",       256, (void *)&stream, configMAX_PRIORITIES - 1, &commTaskHandle);
+	msgQueueMutex = xSemaphoreCreateMutex();
+    uartMutex = xSemaphoreCreateMutex();
+    vTaskStartScheduler();
+#endif
 }
 
 void ArancinoClass::setReservedCommunicationMode(int mode){
@@ -552,7 +828,21 @@ String ArancinoClass::parse(String message){
 }
 
 void ArancinoClass::sendArancinoCommand(String command){
+	
+#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		insertRequest(pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
+		//stream.print(command); //only for debug
+	}
+	else
+	{
+		stream.print(command);
+	}
+#else
 	stream.print(command);
+#endif
+
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(command);
@@ -561,7 +851,21 @@ void ArancinoClass::sendArancinoCommand(String command){
 }
 
 void ArancinoClass::sendArancinoCommand(char command){
+	
+#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		insertRequest(pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
+		//stream.print(command); //only for debug
+	}
+	else
+	{
+		stream.print(command);
+	}
+#else
 	stream.print(command);
+#endif
+
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		if(command == END_TX_CHAR)
