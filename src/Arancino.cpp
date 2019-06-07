@@ -96,20 +96,34 @@ typedef struct
     _msgItem *head;
 } msgQueue;
 
-void initRqstQueue(msgQueue *);
+void initQueue(msgQueue *);
+
 int insertRequest(uint16_t, uint32_t, String);
-String getRequest(uint16_t);
-void printQueue(msgQueue *);
+//String getRequest(uint16_t);
+msgItem getRequest(uint16_t);
 int getRqstCount(uint16_t);
+
+int insertResponse(uint16_t, uint32_t, String);
+String getResponse(uint16_t, uint16_t);
+int getResponseCount(uint16_t, uint16_t);
+
+void printQueue(msgQueue *);
 
 /*
  * Vector of queues that will contain the requests to be sent via uart.
  * The length of the vector is defined by the number of priorities allowed for FreeRTOS tasks.
  */
-msgQueue msgByPriority[configMAX_PRIORITIES];
+msgQueue rqstByPriority[configMAX_PRIORITIES];
 
+/*
+ * Vector of queues that will contain the responses received via uart.
+ * The length of the vector is defined by the number of priorities allowed for FreeRTOS tasks.
+ */
+msgQueue responseByPriority[configMAX_PRIORITIES];
 
-SemaphoreHandle_t msgQueueMutex; //Mutex used for the secure access to the requests queue
+SemaphoreHandle_t rqstQueueMutex; //Mutex used for the secure access to the requests queue
+SemaphoreHandle_t responseQueueMutex; //Mutex used for the secure access to the response queue
+
 SemaphoreHandle_t uartMutex;    //Mutex used for the secure access to the uart
 
 #endif
@@ -128,7 +142,8 @@ void commTask( void *pvParameters )
 	
     for (int i = 0; i < configMAX_PRIORITIES; i++)
     {
-        initRqstQueue(&msgByPriority[i]);
+        initQueue(&rqstByPriority[i]);
+        initQueue(&responseByPriority[i]);        
     }
     
     int temp = -1;
@@ -136,25 +151,35 @@ void commTask( void *pvParameters )
 	
     while(1)
     {
+
 		if (getRqstCount(tskIDLE_PRIORITY + 2) > 0)
 		{
-			String rqst = getRequest(tskIDLE_PRIORITY + 2);
+			//String rqst = getRequest(tskIDLE_PRIORITY + 2);
+            msgItem rqst = getRequest(tskIDLE_PRIORITY + 2);
             
-            if ( xSemaphoreTake( uartMutex, ( TickType_t ) UART_MUTEX_TIMEOUT ) == pdTRUE )
+            //if ( xSemaphoreTake( uartMutex, ( TickType_t ) UART_MUTEX_TIMEOUT ) == pdTRUE )
             {
-                for (int i = 0; i < rqst.length(); i++)
+                for (int i = 0; i < (rqst.msg).length(); i++)
                 {
-                    (*stream).print(rqst[i]);
+                    (*stream).print((rqst.msg)[i]);
+                    Serial.print((rqst.msg)[i]);
                 }
-                xSemaphoreGive(uartMutex);   
+                Serial.println("");
+                //insert response
+                String response = (*stream).readStringUntil(END_TX_CHAR);
+                insertResponse(tskIDLE_PRIORITY + 2, rqst.taskID, response);
+                //xSemaphoreGive(uartMutex);
             }
 		}
-		vTaskDelay( 50 / portTICK_PERIOD_MS );	
+		Serial.print("freeHeap: ");
+        Serial.println( xPortGetFreeHeapSize() );
+
+		vTaskDelay( 100 / portTICK_PERIOD_MS );	
 
     }
 }
 
-void initRqstQueue(msgQueue *queue)
+void initQueue(msgQueue *queue)
 {
     queue->msgCount = 0;
     queue->head = NULL;
@@ -175,19 +200,20 @@ void initRqstQueue(msgQueue *queue)
  */
 int insertRequest(uint16_t priority, uint32_t taskID, String msg)
 {
-	if( xSemaphoreTake( msgQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+	//if( xSemaphoreTake( rqstQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+    vTaskSuspendAll();
 	{
 		
 		msgItem *selectedMsg = NULL;
 		
-		if (msgByPriority[priority].head == NULL)
+		if (rqstByPriority[priority].head == NULL)
 		{
-			msgByPriority[priority].head = new msgItem;
-			if (msgByPriority[priority].head != NULL) //successfully allocated
+			rqstByPriority[priority].head = new msgItem;
+			if (rqstByPriority[priority].head != NULL) //successfully allocated
 			{
-				(msgByPriority[priority].head)->taskID = taskID;
-				(msgByPriority[priority].head)->next = NULL;
-				selectedMsg = (msgByPriority[priority].head);
+				(rqstByPriority[priority].head)->taskID = taskID;
+				(rqstByPriority[priority].head)->next = NULL;
+				selectedMsg = (rqstByPriority[priority].head);
 			}
 			else
 			{
@@ -197,7 +223,7 @@ int insertRequest(uint16_t priority, uint32_t taskID, String msg)
 		else
 		{
 			msgItem *prevMsg = NULL;
-			msgItem *currMsg = msgByPriority[priority].head;
+			msgItem *currMsg = rqstByPriority[priority].head;
 			
 			while (currMsg != NULL && (currMsg->taskID != taskID || (currMsg->msg)[(currMsg->msg).length() - 1] == END_TX_CHAR))
 			{
@@ -226,7 +252,7 @@ int insertRequest(uint16_t priority, uint32_t taskID, String msg)
 			if (index > -1)
 			{
 				selectedMsg->msg += msg.substring(0, index + 1);
-				++(msgByPriority[priority].msgCount);
+				++(rqstByPriority[priority].msgCount);
 				insertRequest(priority, taskID, msg.substring(index + 1));
 			}
 			else
@@ -234,11 +260,84 @@ int insertRequest(uint16_t priority, uint32_t taskID, String msg)
 				selectedMsg->msg += msg;
 			}
 		}
-		xSemaphoreGive(msgQueueMutex);
+		xSemaphoreGive(rqstQueueMutex);
 	}
-return 0;
+    xTaskResumeAll();
 
+return 0;
 }
+
+
+/*
+ * Function that insert a string/character in the uart write queue.
+ * The parameters are:
+ *  priority of the calling task;
+ *  ID of the calling task;
+ *  msg that will be insert in queue;
+ * 
+ * The priority indicates the position on the queues vector.
+ * taskID is used to group the strings that come from the same task. 
+ * For request with the same task id, once the END_TX_CHAR character is received, 
+ *  all subsequent characters are inserted into a new element.
+ * 
+ */
+int insertResponse(uint16_t priority, uint32_t taskID, String msg)
+{
+	//if( xSemaphoreTake( responseQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+    vTaskSuspendAll();
+	{
+		
+		msgItem *selectedMsg = NULL;
+		
+		if (responseByPriority[priority].head == NULL)
+		{
+			responseByPriority[priority].head = new msgItem;
+			if (responseByPriority[priority].head != NULL) //successfully allocated
+			{
+				(responseByPriority[priority].head)->taskID = taskID;
+				(responseByPriority[priority].head)->next = NULL;
+				selectedMsg = (responseByPriority[priority].head);
+			}
+			else
+			{
+				return -1; //error
+			}
+		}
+		else
+		{
+			msgItem *currMsg = responseByPriority[priority].head;
+
+            while(currMsg->next != NULL)
+            {
+                currMsg = currMsg->next;
+            }
+			
+			if (currMsg->next == NULL) //coda terminata
+			{
+				msgItem *temp = new msgItem;
+				temp->taskID = taskID;
+				temp->next = NULL;
+				currMsg->next = temp;
+				selectedMsg = currMsg->next;
+			}
+			else
+			{
+				selectedMsg = currMsg;
+			}
+		}
+		
+		if (selectedMsg != NULL && msg != "")
+		{
+            selectedMsg->msg = msg;
+            ++(responseByPriority[priority].msgCount);
+		}
+		xSemaphoreGive(responseQueueMutex);
+	}
+    xTaskResumeAll();
+
+return 0;
+}
+
 
 /*
  * return the request count of the selected queue.
@@ -246,11 +345,33 @@ return 0;
 int getRqstCount(uint16_t priority)
 {
 	int retVal = -1;
-	if( xSemaphoreTake( msgQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+	if( xSemaphoreTake( rqstQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
 	{
-		retVal = msgByPriority[priority].msgCount;
-		xSemaphoreGive(msgQueueMutex);
+		retVal = rqstByPriority[priority].msgCount;
+		xSemaphoreGive(rqstQueueMutex);
 	}
+	return retVal;
+}
+
+/*
+ * return the request count of the selected queue.
+ */
+int getResponseCount(uint16_t priority, uint16_t taskID)
+{
+	int retVal = 0;
+    vTaskSuspendAll();
+	//if( xSemaphoreTake( responseQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+	{
+        msgItem *response = responseByPriority[priority].head;
+        while (response != NULL)
+        {
+            if (response->taskID == taskID)
+                ++retVal;
+            response = response->next;
+        }
+		//xSemaphoreGive(responseQueueMutex);
+	}
+	xTaskResumeAll();
 	return retVal;
 }
 
@@ -258,20 +379,23 @@ int getRqstCount(uint16_t priority)
 /*
  * Function that return the string of the oldest request for the selected priority.
  */
-String getRequest(uint16_t priority)
+//String getRequest(uint16_t priority)
+msgItem getRequest(uint16_t priority)
 {
 	String retStr = "";
-	if( xSemaphoreTake( msgQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+    msgItem retMsgItem;
+	//if( xSemaphoreTake( rqstQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+    vTaskSuspendAll();
 	{
 		
-		if (msgByPriority[priority].head == NULL || msgByPriority[priority].msgCount == 0)
+		if (rqstByPriority[priority].head == NULL || rqstByPriority[priority].msgCount == 0)
 		{
 			retStr = "";
 		}
 		else
 		{	
 			msgItem *prevMsg = NULL;
-			msgItem *currMsg = msgByPriority[priority].head;
+			msgItem *currMsg = rqstByPriority[priority].head;
 			
 			while(currMsg != NULL && (currMsg->msg)[(currMsg->msg).length() - 1] != END_TX_CHAR)
 			{
@@ -282,10 +406,12 @@ String getRequest(uint16_t priority)
 			if (currMsg != NULL)
 			{
 				retStr = currMsg->msg;
-				
-				if (currMsg == msgByPriority[priority].head)
+                
+                retMsgItem = *currMsg;
+                
+				if (currMsg == rqstByPriority[priority].head)
 				{
-					msgByPriority[priority].head = currMsg->next;
+					rqstByPriority[priority].head = currMsg->next;
 				}
 				else
 				{
@@ -293,23 +419,76 @@ String getRequest(uint16_t priority)
 				}
 				
 				delete currMsg;
-				--(msgByPriority[priority].msgCount);
+				--(rqstByPriority[priority].msgCount);
 			}
 			
 		}
-		xSemaphoreGive(msgQueueMutex);
+		xSemaphoreGive(rqstQueueMutex);
 	}
-	
-	return retStr;
+	xTaskResumeAll();
+	//return retStr;
+    return retMsgItem;
 }
+
+
+/*
+ * Function that return the string of the oldest response for the selected priority.
+ */
+String getResponse(uint16_t priority, uint16_t taskID)
+{
+	String retStr = "";
+	//if( xSemaphoreTake( rqstQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+    vTaskSuspendAll();
+	{
+		
+		if (responseByPriority[priority].head == NULL || responseByPriority[priority].msgCount == 0)
+		{
+			retStr = "";
+		}
+		else
+		{	
+			msgItem *prevMsg = NULL;
+			msgItem *currMsg = responseByPriority[priority].head;
+			
+			while(currMsg != NULL && currMsg->taskID != taskID)
+			{
+				prevMsg = currMsg;
+				currMsg = currMsg->next;
+			}
+			
+			if (currMsg != NULL)
+			{
+				retStr = currMsg->msg;
+                                
+				if (currMsg == responseByPriority[priority].head)
+				{
+					responseByPriority[priority].head = currMsg->next;
+				}
+				else
+				{
+					prevMsg->next = currMsg->next;
+				}
+				
+				delete currMsg;
+				--(responseByPriority[priority].msgCount);
+			}
+			
+		}
+		//xSemaphoreGive(rqstQueueMutex);
+	}
+	xTaskResumeAll();
+
+    return retStr;
+}
+
 
 /*
  * only for debugging purposes!
- * example: printQueue(&msgByPriority[pxGetCurrentTaskPriority()]);
+ * example: printQueue(&rqstByPriority[pxGetCurrentTaskPriority()]);
  */
 void printQueue(msgQueue *queue)
 {
-	if( xSemaphoreTake( msgQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+	if( xSemaphoreTake( rqstQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
 	{
 		Serial.print("msgCount in queue: ");
 		Serial.println(queue->msgCount);
@@ -329,7 +508,7 @@ void printQueue(msgQueue *queue)
 			msg = msg->next;
 		}
 		Serial.println("fine coda\n\n");
-		xSemaphoreGive(msgQueueMutex);
+		xSemaphoreGive(rqstQueueMutex);
 	}
 }
 #endif
@@ -381,7 +560,8 @@ void ArancinoClass::begin(int timeout) {
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     vSetErrorLed(LED_BUILTIN, HIGH);
     xTaskCreate(commTask,     "Communication task",       256, (void *)&stream, configMAX_PRIORITIES - 1, &commTaskHandle);
-	msgQueueMutex = xSemaphoreCreateMutex();
+	rqstQueueMutex = xSemaphoreCreateMutex();
+    responseQueueMutex = xSemaphoreCreateMutex();
     uartMutex = xSemaphoreCreateMutex();
     vTaskStartScheduler();
 #endif
@@ -527,8 +707,15 @@ String* ArancinoClass::hgetall( String key) {
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	parseArray(parse(message));
+    //String message = stream.readStringUntil(END_TX_CHAR);
+    uint16_t taskID = pxGetCurrentTaskNumber();
+    while (getResponseCount(tskIDLE_PRIORITY + 2, taskID) == 0);
+    
+    String message = getResponse(tskIDLE_PRIORITY + 2, taskID);
+    Serial.print("REC: ");
+    Serial.println(message);
+    Serial.println("");
+    parseArray(parse(message));
 	return arrayKey;
 }
 
@@ -549,7 +736,9 @@ String* ArancinoClass::hkeys( String key) {
 	}
 	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
-	parseArray(parse(message));
+    //while (getResponseCount(tskIDLE_PRIORITY + 2, pxGetCurrentTaskNumber()) == 0);
+    //String message = getResponse(tskIDLE_PRIORITY + 2);
+    parseArray(parse(message));
 	return arrayKey;
 }
 
