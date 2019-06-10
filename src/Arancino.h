@@ -116,6 +116,7 @@ class ArancinoClass {
 		void parseArray(String message);
 		void sendArancinoCommand(String command);
 		void sendArancinoCommand(char command);
+        String receiveArancinoResponse(char terminator);
 		bool isReservedKey(String key);
 		String reservedKey[4];
 		Stream &stream;

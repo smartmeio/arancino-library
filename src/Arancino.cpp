@@ -18,6 +18,8 @@ License for the specific language governing permissions and limitations
 under the License
 */
 
+//TODO: replace multiple priority queue with a single priority queue
+
 #include "Arancino.h"
 
 #define START_COMMAND 		"START"
@@ -151,20 +153,20 @@ void commTask( void *pvParameters )
 	
     while(1)
     {
-
+        
 		if (getRqstCount(tskIDLE_PRIORITY + 2) > 0)
 		{
-			//String rqst = getRequest(tskIDLE_PRIORITY + 2);
             msgItem rqst = getRequest(tskIDLE_PRIORITY + 2);
             
             //if ( xSemaphoreTake( uartMutex, ( TickType_t ) UART_MUTEX_TIMEOUT ) == pdTRUE )
             {
-                for (int i = 0; i < (rqst.msg).length(); i++)
+                (*stream).print(rqst.msg);
+                
+                //BUG: sembra che le stringhe inviate un carattere per volta vengono troncate (e quindi viene ricevuto un compando parziale)
+                /*for (int i = 0; i < (rqst.msg).length(); i++)
                 {
                     (*stream).print((rqst.msg)[i]);
-                    Serial.print((rqst.msg)[i]);
-                }
-                Serial.println("");
+                }*/
                 //insert response
                 String response = (*stream).readStringUntil(END_TX_CHAR);
                 insertResponse(tskIDLE_PRIORITY + 2, rqst.taskID, response);
@@ -174,7 +176,7 @@ void commTask( void *pvParameters )
 		Serial.print("freeHeap: ");
         Serial.println( xPortGetFreeHeapSize() );
 
-		vTaskDelay( 100 / portTICK_PERIOD_MS );	
+		vTaskDelay( 50 / portTICK_PERIOD_MS );	
 
     }
 }
@@ -379,20 +381,12 @@ int getResponseCount(uint16_t priority, uint16_t taskID)
 /*
  * Function that return the string of the oldest request for the selected priority.
  */
-//String getRequest(uint16_t priority)
 msgItem getRequest(uint16_t priority)
 {
-	String retStr = "";
     msgItem retMsgItem;
-	//if( xSemaphoreTake( rqstQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
     vTaskSuspendAll();
 	{
-		
-		if (rqstByPriority[priority].head == NULL || rqstByPriority[priority].msgCount == 0)
-		{
-			retStr = "";
-		}
-		else
+		if (rqstByPriority[priority].head != NULL && rqstByPriority[priority].msgCount > 0)
 		{	
 			msgItem *prevMsg = NULL;
 			msgItem *currMsg = rqstByPriority[priority].head;
@@ -404,9 +398,7 @@ msgItem getRequest(uint16_t priority)
 			}
 			
 			if (currMsg != NULL)
-			{
-				retStr = currMsg->msg;
-                
+			{                
                 retMsgItem = *currMsg;
                 
 				if (currMsg == rqstByPriority[priority].head)
@@ -426,21 +418,19 @@ msgItem getRequest(uint16_t priority)
 		xSemaphoreGive(rqstQueueMutex);
 	}
 	xTaskResumeAll();
-	//return retStr;
+
     return retMsgItem;
 }
 
 
 /*
- * Function that return the string of the oldest response for the selected priority.
+ * Function that return the string of the oldest response for the selected priority and taskID.
  */
 String getResponse(uint16_t priority, uint16_t taskID)
 {
 	String retStr = "";
-	//if( xSemaphoreTake( rqstQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
     vTaskSuspendAll();
 	{
-		
 		if (responseByPriority[priority].head == NULL || responseByPriority[priority].msgCount == 0)
 		{
 			retStr = "";
@@ -474,7 +464,6 @@ String getResponse(uint16_t priority, uint16_t taskID)
 			}
 			
 		}
-		//xSemaphoreGive(rqstQueueMutex);
 	}
 	xTaskResumeAll();
 
@@ -589,8 +578,8 @@ String ArancinoClass::get( String key ) {
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	return parse(message);
+    String message = receiveArancinoResponse(END_TX_CHAR);
+    return parse(message);
 }
 
 int ArancinoClass::del( String key ) {
@@ -609,7 +598,8 @@ int ArancinoClass::del( String key ) {
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);
+
 	return parse(message).toInt();
 }
 
@@ -623,7 +613,8 @@ int ArancinoClass::del( String key ) {
 		}
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);
+
 	return parse(message).toInt();
 }*/
 
@@ -641,7 +632,8 @@ void ArancinoClass::_set( String key, String value ) {
 	sendArancinoCommand(DATA_SPLIT_CHAR);
 	sendArancinoCommand(value);
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);
+
 	parse(message);
 }
 
@@ -687,7 +679,8 @@ String ArancinoClass::hget( String key, String field ) {
 		sendArancinoCommand(field);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);
+
 	return parse(message);
 }
 
@@ -707,14 +700,7 @@ String* ArancinoClass::hgetall( String key) {
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-    //String message = stream.readStringUntil(END_TX_CHAR);
-    uint16_t taskID = pxGetCurrentTaskNumber();
-    while (getResponseCount(tskIDLE_PRIORITY + 2, taskID) == 0);
-    
-    String message = getResponse(tskIDLE_PRIORITY + 2, taskID);
-    Serial.print("REC: ");
-    Serial.println(message);
-    Serial.println("");
+    String message = receiveArancinoResponse(END_TX_CHAR);
     parseArray(parse(message));
 	return arrayKey;
 }
@@ -735,7 +721,8 @@ String* ArancinoClass::hkeys( String key) {
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);
+
     //while (getResponseCount(tskIDLE_PRIORITY + 2, pxGetCurrentTaskNumber()) == 0);
     //String message = getResponse(tskIDLE_PRIORITY + 2);
     parseArray(parse(message));
@@ -757,7 +744,8 @@ String* ArancinoClass::hvals( String key) {
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);
+
 	parseArray(parse(message));
 	return arrayKey;
 }
@@ -774,7 +762,8 @@ String* ArancinoClass::keys(String pattern){
 		sendArancinoCommand(pattern);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);
+
 	parseArray(parse(message));
 	return arrayKey;
 
@@ -804,7 +793,7 @@ int ArancinoClass::hset( String key, String field , String value) {
 		sendArancinoCommand(value);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+    String message = receiveArancinoResponse(END_TX_CHAR);
 	return parse(message).toInt();
 }
 
@@ -840,7 +829,7 @@ int ArancinoClass::hdel( String key, String field ) {
 		sendArancinoCommand(field);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+    String message = receiveArancinoResponse(END_TX_CHAR);
 	return parse(message).toInt();
 }
 
@@ -860,7 +849,8 @@ int ArancinoClass::_publish( String channel, String msg ) {
 		sendArancinoCommand(msg);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);
+
 	return parse(message).toInt();
 }
 
@@ -895,7 +885,8 @@ void ArancinoClass::flush() {
 		sendArancinoCommand(value);
 	}*/
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);
+
 	parse(message);
 
 }
@@ -967,7 +958,8 @@ void ArancinoClass::sendViaCOMM_MODE(String key, String value){
 		}
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);
+
 	return parse(message).toInt();
 }*/
 
@@ -1016,6 +1008,7 @@ String ArancinoClass::parse(String message){
 
 }
 
+
 void ArancinoClass::sendArancinoCommand(String command){
 	
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -1063,6 +1056,33 @@ void ArancinoClass::sendArancinoCommand(char command){
 			Serial.print(command);
 	}
 	#endif
+}
+
+/*
+ * 'terminator' char is used only for non-freeRTOS implementations.
+ * For freeRTOS implementations is always used END_TX_CHAR as terminator char (see commTask()).
+ */
+String ArancinoClass::receiveArancinoResponse(char terminator)
+{
+
+    String response = "";
+ #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+        uint16_t taskID = pxGetCurrentTaskNumber();
+        //TODO: replace while() with a system that suspend the task (and be resumed from commTask when the response is received)
+        //TODO: fix the priority
+        while (getResponseCount(tskIDLE_PRIORITY + 2, taskID) == 0);
+        response = getResponse(tskIDLE_PRIORITY + 2, taskID);
+    }
+    else
+    {
+        response = stream.readStringUntil(terminator);
+    }
+#else
+    response = stream.readStringUntil(terminator);
+#endif  
+    return response;
 }
 
 bool ArancinoClass::isReservedKey(String key){
