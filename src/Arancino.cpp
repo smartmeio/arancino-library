@@ -63,9 +63,11 @@ under the License
 #define LIB_VERSION				"0.1.2"	//library version
 
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+#define DEBUG 1
 #define MAX_MSG_LENGTH 1024 //in char - not used
 #define MSG_MUTEX_TIMEOUT	100 //portMAX_DELAY 
 #define UART_MUTEX_TIMEOUT  portMAX_DELAY 
+#define USE_PRIORITIES 0
 
 #endif
 
@@ -101,7 +103,6 @@ typedef struct
 void initQueue(msgQueue *);
 
 int insertRequest(uint16_t, uint32_t, String);
-//String getRequest(uint16_t);
 msgItem getRequest(uint16_t);
 int getRqstCount(uint16_t);
 
@@ -115,13 +116,21 @@ void printQueue(msgQueue *);
  * Vector of queues that will contain the requests to be sent via uart.
  * The length of the vector is defined by the number of priorities allowed for FreeRTOS tasks.
  */
+#if defined(USE_PRIORITIES) && USE_PRIORITIES == 1
 msgQueue rqstByPriority[configMAX_PRIORITIES];
+#else
+msgQueue rqstByPriority[1];
+#endif
 
 /*
  * Vector of queues that will contain the responses received via uart.
  * The length of the vector is defined by the number of priorities allowed for FreeRTOS tasks.
  */
+#if defined(USE_PRIORITIES) && USE_PRIORITIES == 1
 msgQueue responseByPriority[configMAX_PRIORITIES];
+#else
+msgQueue responseByPriority[1];
+#endif
 
 SemaphoreHandle_t rqstQueueMutex; //Mutex used for the secure access to the requests queue
 SemaphoreHandle_t responseQueueMutex; //Mutex used for the secure access to the response queue
@@ -153,29 +162,23 @@ void commTask( void *pvParameters )
 	
     while(1)
     {
-        
-		if (getRqstCount(tskIDLE_PRIORITY + 2) > 0)
+        //Priorities system currently not implemented
+		if (getRqstCount(USE_PRIORITIES) > 0)
 		{
-            msgItem rqst = getRequest(tskIDLE_PRIORITY + 2);
-            
-            //if ( xSemaphoreTake( uartMutex, ( TickType_t ) UART_MUTEX_TIMEOUT ) == pdTRUE )
+            msgItem rqst = getRequest(USE_PRIORITIES);
+            (*stream).print(rqst.msg);
+            //BUG: sembra che le stringhe inviate un carattere per volta vengono troncate (e quindi viene ricevuto un compando parziale)
+            /*for (int i = 0; i < (rqst.msg).length(); i++)
             {
-                (*stream).print(rqst.msg);
-                
-                //BUG: sembra che le stringhe inviate un carattere per volta vengono troncate (e quindi viene ricevuto un compando parziale)
-                /*for (int i = 0; i < (rqst.msg).length(); i++)
-                {
-                    (*stream).print((rqst.msg)[i]);
-                }*/
-                //insert response
-                String response = (*stream).readStringUntil(END_TX_CHAR);
-                insertResponse(tskIDLE_PRIORITY + 2, rqst.taskID, response);
-                //xSemaphoreGive(uartMutex);
-            }
+                (*stream).print((rqst.msg)[i]);
+            }*/
+            String response = (*stream).readStringUntil(END_TX_CHAR);
+            insertResponse(USE_PRIORITIES, rqst.taskID, response);
 		}
+#if defined(DEBUG) && DEBUG == 1
 		Serial.print("freeHeap: ");
         Serial.println( xPortGetFreeHeapSize() );
-
+#endif
 		vTaskDelay( 50 / portTICK_PERIOD_MS );	
 
     }
@@ -202,68 +205,64 @@ void initQueue(msgQueue *queue)
  */
 int insertRequest(uint16_t priority, uint32_t taskID, String msg)
 {
-	//if( xSemaphoreTake( rqstQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
     vTaskSuspendAll();
-	{
-		
-		msgItem *selectedMsg = NULL;
-		
-		if (rqstByPriority[priority].head == NULL)
-		{
-			rqstByPriority[priority].head = new msgItem;
-			if (rqstByPriority[priority].head != NULL) //successfully allocated
-			{
-				(rqstByPriority[priority].head)->taskID = taskID;
-				(rqstByPriority[priority].head)->next = NULL;
-				selectedMsg = (rqstByPriority[priority].head);
-			}
-			else
-			{
-				return -1; //error
-			}
-		}
-		else
-		{
-			msgItem *prevMsg = NULL;
-			msgItem *currMsg = rqstByPriority[priority].head;
-			
-			while (currMsg != NULL && (currMsg->taskID != taskID || (currMsg->msg)[(currMsg->msg).length() - 1] == END_TX_CHAR))
-			{
-				prevMsg = currMsg;
-				currMsg = currMsg->next;
-			}
-			
-			if (currMsg == NULL) //coda terminata
-			{
-				msgItem *temp = new msgItem;
-				temp->taskID = taskID;
-				temp->next = NULL;
-				prevMsg->next = temp;
-				selectedMsg = prevMsg->next;
-			}
-			else
-			{
-				selectedMsg = currMsg;
-			}
-		}
-		
-		if (selectedMsg != NULL && msg != "")
-		{
-			int index = msg.indexOf(END_TX_CHAR); //-1 = carattere non trovato				
-				
-			if (index > -1)
-			{
-				selectedMsg->msg += msg.substring(0, index + 1);
-				++(rqstByPriority[priority].msgCount);
-				insertRequest(priority, taskID, msg.substring(index + 1));
-			}
-			else
-			{
-				selectedMsg->msg += msg;
-			}
-		}
-		xSemaphoreGive(rqstQueueMutex);
-	}
+    msgItem *selectedMsg = NULL;
+    
+    if (rqstByPriority[priority].head == NULL)
+    {
+        rqstByPriority[priority].head = new msgItem;
+        if (rqstByPriority[priority].head != NULL) //successfully allocated
+        {
+            (rqstByPriority[priority].head)->taskID = taskID;
+            (rqstByPriority[priority].head)->next = NULL;
+            selectedMsg = (rqstByPriority[priority].head);
+        }
+        else
+        {
+            return -1; //error
+        }
+    }
+    else
+    {
+        msgItem *prevMsg = NULL;
+        msgItem *currMsg = rqstByPriority[priority].head;
+        
+        while (currMsg != NULL && (currMsg->taskID != taskID || (currMsg->msg)[(currMsg->msg).length() - 1] == END_TX_CHAR))
+        {
+            prevMsg = currMsg;
+            currMsg = currMsg->next;
+        }
+        
+        if (currMsg == NULL) //coda terminata
+        {
+            msgItem *temp = new msgItem;
+            temp->taskID = taskID;
+            temp->next = NULL;
+            prevMsg->next = temp;
+            selectedMsg = prevMsg->next;
+        }
+        else
+        {
+            selectedMsg = currMsg;
+        }
+    }
+    
+    if (selectedMsg != NULL && msg != "")
+    {
+        int index = msg.indexOf(END_TX_CHAR); //-1 = carattere non trovato				
+            
+        if (index > -1)
+        {
+            selectedMsg->msg += msg.substring(0, index + 1);
+            ++(rqstByPriority[priority].msgCount);
+            insertRequest(priority, taskID, msg.substring(index + 1));
+        }
+        else
+        {
+            selectedMsg->msg += msg;
+        }
+    }
+
     xTaskResumeAll();
 
 return 0;
@@ -722,9 +721,6 @@ String* ArancinoClass::hkeys( String key) {
 	}
 	sendArancinoCommand(END_TX_CHAR);
 	String message = receiveArancinoResponse(END_TX_CHAR);
-
-    //while (getResponseCount(tskIDLE_PRIORITY + 2, pxGetCurrentTaskNumber()) == 0);
-    //String message = getResponse(tskIDLE_PRIORITY + 2);
     parseArray(parse(message));
 	return arrayKey;
 }
@@ -745,7 +741,6 @@ String* ArancinoClass::hvals( String key) {
 	}
 	sendArancinoCommand(END_TX_CHAR);
 	String message = receiveArancinoResponse(END_TX_CHAR);
-
 	parseArray(parse(message));
 	return arrayKey;
 }
@@ -763,7 +758,6 @@ String* ArancinoClass::keys(String pattern){
 	}
 	sendArancinoCommand(END_TX_CHAR);
 	String message = receiveArancinoResponse(END_TX_CHAR);
-
 	parseArray(parse(message));
 	return arrayKey;
 
@@ -1014,7 +1008,7 @@ void ArancinoClass::sendArancinoCommand(String command){
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
-		insertRequest(pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
+		insertRequest(USE_PRIORITIES && pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
 		//stream.print(command); //only for debug
 	}
 	else
@@ -1037,7 +1031,7 @@ void ArancinoClass::sendArancinoCommand(char command){
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
-		insertRequest(pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
+		insertRequest(USE_PRIORITIES && pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
 		//stream.print(command); //only for debug
 	}
 	else
@@ -1071,9 +1065,8 @@ String ArancinoClass::receiveArancinoResponse(char terminator)
 	{
         uint16_t taskID = pxGetCurrentTaskNumber();
         //TODO: replace while() with a system that suspend the task (and be resumed from commTask when the response is received)
-        //TODO: fix the priority
-        while (getResponseCount(tskIDLE_PRIORITY + 2, taskID) == 0);
-        response = getResponse(tskIDLE_PRIORITY + 2, taskID);
+        while (getResponseCount(USE_PRIORITIES && pxGetCurrentTaskPriority(), taskID) == 0);
+        response = getResponse(USE_PRIORITIES && pxGetCurrentTaskPriority(), taskID);
     }
     else
     {
