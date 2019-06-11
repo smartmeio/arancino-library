@@ -87,6 +87,7 @@ typedef struct _msgItem
 {
     String msg;
     uint32_t taskID;
+    TaskHandle_t taskHandle = NULL;
     _msgItem *next = NULL;
 } msgItem;
 
@@ -167,13 +168,14 @@ void commTask( void *pvParameters )
 		{
             msgItem rqst = getRequest(USE_PRIORITIES);
             (*stream).print(rqst.msg);
-            //BUG: sembra che le stringhe inviate un carattere per volta vengono troncate (e quindi viene ricevuto un compando parziale)
+            //BUG: sembra che le stringhe inviate un carattere per volta vengono troncate (e quindi viene ricevuto un comando parziale)
             /*for (int i = 0; i < (rqst.msg).length(); i++)
             {
                 (*stream).print((rqst.msg)[i]);
             }*/
             String response = (*stream).readStringUntil(END_TX_CHAR);
             insertResponse(USE_PRIORITIES, rqst.taskID, response);
+            vTaskResume(rqst.taskHandle); //waking up the task that made the request
 		}
 #if defined(DEBUG) && DEBUG == 1
 		Serial.print("freeHeap: ");
@@ -205,6 +207,8 @@ void initQueue(msgQueue *queue)
  */
 int insertRequest(uint16_t priority, uint32_t taskID, String msg)
 {
+    int toBeSuspended = 0;
+    
     vTaskSuspendAll();
     msgItem *selectedMsg = NULL;
     
@@ -249,10 +253,13 @@ int insertRequest(uint16_t priority, uint32_t taskID, String msg)
     
     if (selectedMsg != NULL && msg != "")
     {
-        int index = msg.indexOf(END_TX_CHAR); //-1 = carattere non trovato				
+        int index = msg.indexOf(END_TX_CHAR); //-1 = carattere non trovato
             
         if (index > -1)
         {
+            toBeSuspended = 1;
+            //flag the task as toBeSuspended
+            selectedMsg->taskHandle = xTaskGetCurrentTaskHandle();;
             selectedMsg->msg += msg.substring(0, index + 1);
             ++(rqstByPriority[priority].msgCount);
             insertRequest(priority, taskID, msg.substring(index + 1));
@@ -264,7 +271,12 @@ int insertRequest(uint16_t priority, uint32_t taskID, String msg)
     }
 
     xTaskResumeAll();
-
+    //task must be suspended here
+    if (toBeSuspended)
+    {
+        vTaskSuspend(NULL);  // Suspend ourselves.
+    }
+    
 return 0;
 }
 
@@ -284,10 +296,8 @@ return 0;
  */
 int insertResponse(uint16_t priority, uint32_t taskID, String msg)
 {
-	//if( xSemaphoreTake( responseQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
     vTaskSuspendAll();
 	{
-		
 		msgItem *selectedMsg = NULL;
 		
 		if (responseByPriority[priority].head == NULL)
@@ -332,7 +342,6 @@ int insertResponse(uint16_t priority, uint32_t taskID, String msg)
             selectedMsg->msg = msg;
             ++(responseByPriority[priority].msgCount);
 		}
-		xSemaphoreGive(responseQueueMutex);
 	}
     xTaskResumeAll();
 
@@ -346,11 +355,11 @@ return 0;
 int getRqstCount(uint16_t priority)
 {
 	int retVal = -1;
-	if( xSemaphoreTake( rqstQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
+    vTaskSuspendAll();
 	{
 		retVal = rqstByPriority[priority].msgCount;
-		xSemaphoreGive(rqstQueueMutex);
 	}
+    xTaskResumeAll();
 	return retVal;
 }
 
@@ -476,8 +485,8 @@ String getResponse(uint16_t priority, uint16_t taskID)
  */
 void printQueue(msgQueue *queue)
 {
-	if( xSemaphoreTake( rqstQueueMutex, ( TickType_t ) MSG_MUTEX_TIMEOUT ) == pdTRUE )
-	{
+    vTaskSuspendAll();
+    {
 		Serial.print("msgCount in queue: ");
 		Serial.println(queue->msgCount);
 		Serial.println("------------------");
@@ -496,8 +505,8 @@ void printQueue(msgQueue *queue)
 			msg = msg->next;
 		}
 		Serial.println("fine coda\n\n");
-		xSemaphoreGive(rqstQueueMutex);
 	}
+	xTaskResumeAll();
 }
 #endif
 
@@ -1008,7 +1017,7 @@ void ArancinoClass::sendArancinoCommand(String command){
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
-		insertRequest(USE_PRIORITIES && pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
+		insertRequest(USE_PRIORITIES * pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
 		//stream.print(command); //only for debug
 	}
 	else
@@ -1031,7 +1040,7 @@ void ArancinoClass::sendArancinoCommand(char command){
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
-		insertRequest(USE_PRIORITIES && pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
+		insertRequest(USE_PRIORITIES * pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
 		//stream.print(command); //only for debug
 	}
 	else
@@ -1064,8 +1073,6 @@ String ArancinoClass::receiveArancinoResponse(char terminator)
     if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
         uint16_t taskID = pxGetCurrentTaskNumber();
-        //TODO: replace while() with a system that suspend the task (and be resumed from commTask when the response is received)
-        while (getResponseCount(USE_PRIORITIES && pxGetCurrentTaskPriority(), taskID) == 0);
         response = getResponse(USE_PRIORITIES && pxGetCurrentTaskPriority(), taskID);
     }
     else
