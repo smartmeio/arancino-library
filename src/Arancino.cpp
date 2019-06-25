@@ -21,63 +21,11 @@ under the License
 //TODO: replace multiple priority queue with a single priority queue
 
 #include "Arancino.h"
+//#include "ThreadSafeUART.h"
 
-#define START_COMMAND 		"START"
-#define SET_COMMAND 			"SET"
-#define GET_COMMAND 			"GET"
-#define DEL_COMMAND 			"DEL"
-#define KEYS_COMMAND			"KEYS"
-#define HGET_COMMAND			"HGET"
-#define HGETALL_COMMAND		"HGETALL"
-#define HKEYS_COMMAND			"HKEYS"
-#define HDEL_COMMAND			"HDEL"
-#define HSET_COMMAND			"HSET"
-#define HVALS_COMMAND			"HVALS"
-#define PUBLISH_COMMAND		"PUB"
-#define FLUSH_COMMAND			"FLUSH"
-
-#define SENT_STRING				"Sent Command: "
-#define RCV_STRING				"Received Response: "
-
-#define END_TX_CHAR				(char)4 //'@' //
-#define DATA_SPLIT_CHAR		(char)30 //'#' //
-
-#define RSP_OK						100
-#define RSP_HSET_NEW			101
-#define RSP_HSET_UPD			102
-#define ERR								200		//Generic Error
-#define ERR_NULL					201		//Null value
-#define ERR_SET						202		//Error during SET
-#define ERR_CMD_NOT_FND		203		//Command Not Found
-#define ERR_CMD_NOT_RCV		204		//Command Not Received
-#define ERR_CMD_PRM_NUM		205		//Invalid parameter number
-#define ERR_REDIS					206		//Generic Redis Error
-
-#define DBG_PIN						26		//pin used to Debug Message
-//#define PWR_PIN					??		//pin used for Power Management
-
-#define MONITOR_KEY				"___MONITOR___"
-#define LIBVERS_KEY				"___LIBVERS___"
-#define MODVERS_KEY				"___MODVERS___"
-#define POWER_KEY					"___POWER___"
-#define LIB_VERSION				"0.1.2"	//library version
-
-#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-#define DEBUG 1
+#define DEBUG 0
 #define MAX_MSG_LENGTH 1024 //in char - not used
-#define MSG_MUTEX_TIMEOUT	100 //portMAX_DELAY 
-#define UART_MUTEX_TIMEOUT  portMAX_DELAY 
 #define USE_PRIORITIES 0
-
-#endif
-
-ArancinoClass::ArancinoClass(Stream &_stream):
-	stream(_stream), started(false) {
-  // Empty
-}
-
-#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-TaskHandle_t commTaskHandle, testTaskHandle;
 
 /*
  * Element of the queue that contain the requests to be sent through the UART.
@@ -113,6 +61,7 @@ int getResponseCount(uint16_t, uint16_t);
 
 void printQueue(msgQueue *);
 
+
 /*
  * Vector of queues that will contain the requests to be sent via uart.
  * The length of the vector is defined by the number of priorities allowed for FreeRTOS tasks.
@@ -132,15 +81,6 @@ msgQueue responseByPriority[configMAX_PRIORITIES];
 #else
 msgQueue responseByPriority[1];
 #endif
-
-SemaphoreHandle_t rqstQueueMutex; //Mutex used for the secure access to the requests queue
-SemaphoreHandle_t responseQueueMutex; //Mutex used for the secure access to the response queue
-
-SemaphoreHandle_t uartMutex;    //Mutex used for the secure access to the uart
-
-#endif
-
-#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 
 /*
  * Once the scheduler is launched, this should be the only task that can write to the uart (stream).
@@ -181,7 +121,7 @@ void commTask( void *pvParameters )
 		Serial.print("freeHeap: ");
         Serial.println( xPortGetFreeHeapSize() );
 #endif
-		vTaskDelay( 50 / portTICK_PERIOD_MS );	
+		vTaskDelay( 25 / portTICK_PERIOD_MS );	
 
     }
 }
@@ -423,7 +363,6 @@ msgItem getRequest(uint16_t priority)
 			}
 			
 		}
-		xSemaphoreGive(rqstQueueMutex);
 	}
 	xTaskResumeAll();
 
@@ -508,7 +447,13 @@ void printQueue(msgQueue *queue)
 	}
 	xTaskResumeAll();
 }
-#endif
+ 
+
+
+ArancinoClass::ArancinoClass(Stream &_stream):
+	stream(_stream), started(false) {
+  // Empty
+}
 
 /*void ArancinoClass::begin() {
 	begin(TIMEOUT);
@@ -554,15 +499,20 @@ void ArancinoClass::begin(int timeout) {
 
 	sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
 
+}
+
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+extern void commTask(void *pvParameters);
+static TaskHandle_t commTaskHandle;
+
+void ArancinoClass::startScheduler() {
     vSetErrorLed(LED_BUILTIN, HIGH);
     xTaskCreate(commTask,     "Communication task",       256, (void *)&stream, configMAX_PRIORITIES - 1, &commTaskHandle);
-	rqstQueueMutex = xSemaphoreCreateMutex();
-    responseQueueMutex = xSemaphoreCreateMutex();
-    uartMutex = xSemaphoreCreateMutex();
+
     vTaskStartScheduler();
-#endif
 }
+#endif
+
 
 void ArancinoClass::setReservedCommunicationMode(int mode){
 	COMM_MODE = mode;
@@ -1013,12 +963,10 @@ String ArancinoClass::parse(String message){
 
 
 void ArancinoClass::sendArancinoCommand(String command){
-	
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
 		insertRequest(USE_PRIORITIES * pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
-		//stream.print(command); //only for debug
 	}
 	else
 	{
@@ -1028,20 +976,18 @@ void ArancinoClass::sendArancinoCommand(String command){
 	stream.print(command);
 #endif
 
-	#if defined(__SAMD21G18A__)
+#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(command);
 	}
-	#endif
+#endif
 }
 
 void ArancinoClass::sendArancinoCommand(char command){
-	
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
 		insertRequest(USE_PRIORITIES * pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
-		//stream.print(command); //only for debug
 	}
 	else
 	{
@@ -1051,14 +997,14 @@ void ArancinoClass::sendArancinoCommand(char command){
 	stream.print(command);
 #endif
 
-	#if defined(__SAMD21G18A__)
+#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		if(command == END_TX_CHAR)
 			Serial.println(command);
 		else
 			Serial.print(command);
 	}
-	#endif
+#endif
 }
 
 /*
@@ -1067,7 +1013,6 @@ void ArancinoClass::sendArancinoCommand(char command){
  */
 String ArancinoClass::receiveArancinoResponse(char terminator)
 {
-
     String response = "";
  #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)

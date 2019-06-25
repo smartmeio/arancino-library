@@ -14,6 +14,7 @@ Arancino	KEYWORD3
 
 available	KEYWORD2
 begin	KEYWORD2
+startScheduler	KEYWORD2
 set	KEYWORD2
 get	KEYWORD2
 del	KEYWORD2
