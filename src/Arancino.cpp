@@ -26,6 +26,7 @@ under the License
 #define DEBUG 0
 #define MAX_MSG_LENGTH 1024 //in char - not used
 #define USE_PRIORITIES 0
+#define STOP(x) Serial.println(x); delay(1000)
 
 /*
  * Element of the queue that contain the requests to be sent through the UART.
@@ -33,7 +34,7 @@ under the License
  */
 typedef struct _msgItem
 {
-    String msg;
+    char* msg;
     uint32_t taskID;
     TaskHandle_t taskHandle = NULL;
     _msgItem *next = NULL;
@@ -51,12 +52,12 @@ typedef struct
 
 void initQueue(msgQueue *);
 
-int insertRequest(uint16_t, uint32_t, String);
+int insertRequest(uint16_t, uint32_t, char*);
 msgItem getRequest(uint16_t);
 int getRqstCount(uint16_t);
 
-int insertResponse(uint16_t, uint32_t, String);
-String getResponse(uint16_t, uint16_t);
+int insertResponse(uint16_t, uint32_t, char*);
+char* getResponse(uint16_t, uint16_t);
 int getResponseCount(uint16_t, uint16_t);
 
 void printQueue(msgQueue *);
@@ -100,7 +101,8 @@ void commTask( void *pvParameters )
     
     int temp = -1;
     String start;
-	
+	char* response = NULL;
+
     while(1)
     {
         //Priorities system currently not implemented
@@ -108,18 +110,78 @@ void commTask( void *pvParameters )
 		{
             msgItem rqst = getRequest(USE_PRIORITIES);
             (*stream).print(rqst.msg);
-            //BUG: sembra che le stringhe inviate un carattere per volta vengono troncate (e quindi viene ricevuto un comando parziale)
-            /*for (int i = 0; i < (rqst.msg).length(); i++)
+            free(rqst.msg);
+        
+            if (response != NULL)
             {
-                (*stream).print((rqst.msg)[i]);
-            }*/
-            String response = (*stream).readStringUntil(END_TX_CHAR);
+                //free(response);
+                response = NULL;
+            }
+            
+            long previousMillis = millis();
+            
+            while (millis() - previousMillis < TIMEOUT)
+            {
+                //Serial.println("rec");
+                if ((*stream).available())
+                {
+                    char c = (*stream).read();
+                    
+                    //BEGIN DEBUG----------------
+                    /*Serial.print("rec: ");
+                    if (c < 32)
+                    {
+                        Serial.print("|");
+                        Serial.print(c, DEC);
+                        Serial.print("|");
+                    }
+                    else
+                        Serial.print(c);*/
+                    //END DEBUG------------------
+                    
+                    if (c == END_TX_CHAR)
+                        break;    
+                    
+                    if (response == NULL)
+                    {
+                        response = (char *)calloc(2, sizeof(char));
+                        response[0] = c;
+                        response[1] = '\0';
+                    }
+                    else
+                    {
+                        int oldLength = strlen(response);
+                        char* temp = (char *)calloc((oldLength + 1), sizeof(char));
+                        strcpy(temp, response);
+                        free(response);
+                        response = temp;
+                        response[oldLength] = c;
+                        response[oldLength + 1] = '\0';
+                    }
+                    
+                }
+            }
+#if defined(DEBUG)
+            /*Serial.print("received response: ");
+            for (int i = 0; i < strlen(response); i++)
+            {
+                if (response[i] < 32)
+                {
+                    Serial.print("|");
+                    Serial.print(response[i], DEC);
+                    Serial.print("|");
+                }
+                else
+                    Serial.print(response[i]);
+            }
+            Serial.println("");*/
+#endif
             insertResponse(USE_PRIORITIES, rqst.taskID, response);
             vTaskResume(rqst.taskHandle); //waking up the task that made the request
 		}
-#if defined(DEBUG) && DEBUG == 1
-		Serial.print("freeHeap: ");
-        Serial.println( xPortGetFreeHeapSize() );
+#if defined(DEBUG)
+		//Serial.print("freeHeap: ");
+        //Serial.println( xPortGetFreeHeapSize() );
 #endif
 		vTaskDelay( 25 / portTICK_PERIOD_MS );	
 
@@ -145,7 +207,7 @@ void initQueue(msgQueue *queue)
  *  all subsequent characters are inserted into a new element.
  * 
  */
-int insertRequest(uint16_t priority, uint32_t taskID, String msg)
+int insertRequest(uint16_t priority, uint32_t taskID, char* msg)
 {
     int toBeSuspended = 0;
     
@@ -157,6 +219,7 @@ int insertRequest(uint16_t priority, uint32_t taskID, String msg)
         rqstByPriority[priority].head = new msgItem;
         if (rqstByPriority[priority].head != NULL) //successfully allocated
         {
+            (rqstByPriority[priority].head)->msg = NULL;
             (rqstByPriority[priority].head)->taskID = taskID;
             (rqstByPriority[priority].head)->next = NULL;
             selectedMsg = (rqstByPriority[priority].head);
@@ -171,7 +234,7 @@ int insertRequest(uint16_t priority, uint32_t taskID, String msg)
         msgItem *prevMsg = NULL;
         msgItem *currMsg = rqstByPriority[priority].head;
         
-        while (currMsg != NULL && (currMsg->taskID != taskID || (currMsg->msg)[(currMsg->msg).length() - 1] == END_TX_CHAR))
+        while (currMsg != NULL && (currMsg->taskID != taskID || (currMsg->msg)[strlen(currMsg->msg) - 1] == END_TX_CHAR))
         {
             prevMsg = currMsg;
             currMsg = currMsg->next;
@@ -180,6 +243,7 @@ int insertRequest(uint16_t priority, uint32_t taskID, String msg)
         if (currMsg == NULL) //coda terminata
         {
             msgItem *temp = new msgItem;
+            temp->msg = NULL;
             temp->taskID = taskID;
             temp->next = NULL;
             prevMsg->next = temp;
@@ -193,20 +257,123 @@ int insertRequest(uint16_t priority, uint32_t taskID, String msg)
     
     if (selectedMsg != NULL && msg != "")
     {
-        int index = msg.indexOf(END_TX_CHAR); //-1 = carattere non trovato
-            
+        //int index = msg.indexOf(END_TX_CHAR); //-1 = carattere non trovato
+        int index;
+        char* charAddr = strchr(msg, END_TX_CHAR); //address (in ram) of the END_TX_CHAR in msg string 
+        
+        if (charAddr != NULL)
+        {
+            index = charAddr - msg;
+        }
+        else
+        {
+            index = -1;   
+        }
+    
         if (index > -1)
         {
             toBeSuspended = 1;
             //flag the task as toBeSuspended
-            selectedMsg->taskHandle = xTaskGetCurrentTaskHandle();;
-            selectedMsg->msg += msg.substring(0, index + 1);
+            selectedMsg->taskHandle = xTaskGetCurrentTaskHandle();
+            
+            int oldLength = -1;
+            if (selectedMsg->msg != NULL)
+            {
+                while((selectedMsg->msg)[++oldLength] != '\0');
+                //oldLength = strlen(selectedMsg->msg);
+            }
+            else
+            {
+                (selectedMsg->msg) = (char*)malloc(sizeof(char));
+                *(selectedMsg->msg) = '\0';   
+                oldLength = 0;
+            }
+
+            
+            char* newStr = (char *)calloc((oldLength + index + 2), sizeof(char));
+            if (selectedMsg->msg != NULL)
+            {
+                strncpy(newStr, selectedMsg->msg, oldLength);
+                newStr[oldLength] = '\0';
+            }
+            strncpy(&newStr[oldLength] , msg, index + 1);
+            newStr[oldLength + index + 1] = '\0';
+            
+            free(selectedMsg->msg);
+            selectedMsg->msg = newStr;
+
+#if defined(DEBUG)           
+            Serial.print("newStr: ");
+            for (int i = 0; i < strlen(newStr); i++)
+            {
+                if (newStr[i] < 32)
+                {
+                    Serial.print("|");
+                    Serial.print(newStr[i], DEC);
+                    Serial.print("|");
+                }
+                else
+                    Serial.print(newStr[i]);
+            }
+            Serial.println("");
+#endif
+            
             ++(rqstByPriority[priority].msgCount);
-            insertRequest(priority, taskID, msg.substring(index + 1));
+            insertRequest(priority, taskID, &msg[index + 1]);
         }
         else
         {
-            selectedMsg->msg += msg;
+            int oldLength = -1;
+            if (selectedMsg->msg != NULL)
+            {
+                //while((selectedMsg->msg)[++oldLength] != '\0');
+                oldLength = strlen(selectedMsg->msg);
+            }
+            else
+            {
+                (selectedMsg->msg) = (char*)malloc(sizeof(char));
+                *(selectedMsg->msg) = '\0';   
+                oldLength = 0;
+            }
+            
+            int newLength = -1;
+            if (msg != NULL)
+            {
+                //while(msg[++newLength] != '\0');
+                newLength = strlen(msg);
+            }
+            
+            char* newStr = (char *)calloc((oldLength + newLength + 2), sizeof(char));
+            
+            //char* newStr = (char *)malloc(sizeof(char) * (strlen(selectedMsg->msg) + strlen(msg) + 1 ));
+            //memcpy(newStr, selectedMsg->msg, strlen(selectedMsg->msg));
+            if (selectedMsg->msg != NULL)
+            {
+                strncpy(newStr, selectedMsg->msg, oldLength);
+                newStr[oldLength] = '\0';
+            }
+
+            strncpy(&newStr[oldLength], msg, newLength);
+            newStr[oldLength + newLength] = '\0';
+            
+            free(selectedMsg->msg);
+            selectedMsg->msg = newStr;
+
+#if defined(DEBUG)           
+            Serial.print("newStr: ");
+            for (int i = 0; i < strlen(newStr); i++)
+            {
+                if (newStr[i] < 32)
+                {
+                    Serial.print("|");
+                    Serial.print(newStr[i], DEC);
+                    Serial.print("|");
+                }
+                else
+                    Serial.print(newStr[i]);
+            }
+            Serial.println("");
+#endif
         }
     }
 
@@ -234,7 +401,7 @@ return 0;
  *  all subsequent characters are inserted into a new element.
  * 
  */
-int insertResponse(uint16_t priority, uint32_t taskID, String msg)
+int insertResponse(uint16_t priority, uint32_t taskID, char* msg)
 {
     vTaskSuspendAll();
 	{
@@ -277,9 +444,9 @@ int insertResponse(uint16_t priority, uint32_t taskID, String msg)
 			}
 		}
 		
-		if (selectedMsg != NULL && msg != "")
+		if (selectedMsg != NULL && strcmp(msg, "") != 0)
 		{
-            selectedMsg->msg = msg;
+            selectedMsg->msg = msg; //caller must free
             ++(responseByPriority[priority].msgCount);
 		}
 	}
@@ -339,7 +506,7 @@ msgItem getRequest(uint16_t priority)
 			msgItem *prevMsg = NULL;
 			msgItem *currMsg = rqstByPriority[priority].head;
 			
-			while(currMsg != NULL && (currMsg->msg)[(currMsg->msg).length() - 1] != END_TX_CHAR)
+			while(currMsg != NULL && (currMsg->msg)[strlen(currMsg->msg) - 1] != END_TX_CHAR)
 			{
 				prevMsg = currMsg;
 				currMsg = currMsg->next;
@@ -358,6 +525,7 @@ msgItem getRequest(uint16_t priority)
 					prevMsg->next = currMsg->next;
 				}
 				
+#warning "da controllare delete"
 				delete currMsg;
 				--(rqstByPriority[priority].msgCount);
 			}
@@ -373,14 +541,14 @@ msgItem getRequest(uint16_t priority)
 /*
  * Function that return the string of the oldest response for the selected priority and taskID.
  */
-String getResponse(uint16_t priority, uint16_t taskID)
+char* getResponse(uint16_t priority, uint16_t taskID)
 {
-	String retStr = "";
+	char* retStr = NULL;
     vTaskSuspendAll();
 	{
 		if (responseByPriority[priority].head == NULL || responseByPriority[priority].msgCount == 0)
 		{
-			retStr = "";
+			retStr = NULL;
 		}
 		else
 		{	
@@ -465,10 +633,14 @@ void ArancinoClass::begin(int timeout) {
 
 	String start;
 	//reserved Key
-	reservedKey[0]=MONITOR_KEY;
-  reservedKey[1]=LIBVERS_KEY;
-  reservedKey[2]=MODVERS_KEY;
-  reservedKey[3]=POWER_KEY;
+    /*reservedKey[0]=MONITOR_KEY;
+    reservedKey[1]=LIBVERS_KEY;
+    reservedKey[2]=MODVERS_KEY;
+    reservedKey[3]=POWER_KEY;*/
+    strcpy(reservedKey[0], MONITOR_KEY);
+    strcpy(reservedKey[1], LIBVERS_KEY);
+    strcpy(reservedKey[2], MODVERS_KEY);
+    strcpy(reservedKey[3], POWER_KEY);
   stream.setTimeout(timeout);			//response timeout
   //DEBUG
   #if defined(__SAMD21G18A__)
@@ -488,14 +660,6 @@ void ArancinoClass::begin(int timeout) {
 		sendArancinoCommand(END_TX_CHAR);				//check if bridge python is running
 		start = stream.readStringUntil(END_TX_CHAR);
 	}while (start.toInt() != RSP_OK);
-
-	// sendArancinoCommand(SET_COMMAND);					// send library version
-	// sendArancinoCommand(DATA_SPLIT_CHAR);
-	// sendArancinoCommand(LIBVERS_KEY);
-	// sendArancinoCommand(DATA_SPLIT_CHAR);
-	// sendArancinoCommand(LIB_VERSION);
-	// sendArancinoCommand(END_TX_CHAR);
-	// stream.readStringUntil(END_TX_CHAR);
 
 	sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
 
@@ -520,10 +684,15 @@ void ArancinoClass::setReservedCommunicationMode(int mode){
 
 //============= API FUNCTIONS ======================
 
-String ArancinoClass::get( String key ) {
+/*String ArancinoClass::get( String key ) {
+
+}*/
+
+char* ArancinoClass::get( char* key ) { //BUG BUG BUG BUG BUG BUG
+    vTaskSuspendAll();
 
 	if(isReservedKey(key)){
-		return "";
+		return NULL;
 	}
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
@@ -531,16 +700,20 @@ String ArancinoClass::get( String key ) {
 	}
 	#endif
 	sendArancinoCommand(GET_COMMAND);					// send read request
-	if (key != ""){
+	if (strcmp(key, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(key);
 	}
+	STOP("rec mess: ");
 	sendArancinoCommand(END_TX_CHAR);
-    String message = receiveArancinoResponse(END_TX_CHAR);
+    STOP("END_TX_CHAR");
+    char* message = receiveArancinoResponse(END_TX_CHAR);
+    STOP(message);
+    xTaskResumeAll();
     return parse(message);
 }
 
-int ArancinoClass::del( String key ) {
+int ArancinoClass::del( char* key ) {
 
 	if(isReservedKey(key)){
 		return -1;
@@ -551,15 +724,21 @@ int ArancinoClass::del( String key ) {
 	}
 	#endif
 	sendArancinoCommand(DEL_COMMAND);					// send read request
-	if (key != ""){
+	if (strcmp(key, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = receiveArancinoResponse(END_TX_CHAR);
+    char* message = receiveArancinoResponse(END_TX_CHAR); //freed by parse()
+    char* messageParsed = parse(message);
 
-	return parse(message).toInt();
+    int result = atoi(messageParsed);
+    free(messageParsed);
+
+	return result;
 }
+
+
 
 /*int ArancinoClass::del( String* key , int number) {
 
@@ -576,26 +755,27 @@ int ArancinoClass::del( String key ) {
 	return parse(message).toInt();
 }*/
 
-void ArancinoClass::_set( String key, String value ) {
+void ArancinoClass::_set( char* key, char* value ) {
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
 	sendArancinoCommand(SET_COMMAND);					// send read request
-	if (key != ""){
+	if (strcmp(key, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(DATA_SPLIT_CHAR);
 	sendArancinoCommand(value);
 	sendArancinoCommand(END_TX_CHAR);
-	String message = receiveArancinoResponse(END_TX_CHAR);
+
+	char* message = receiveArancinoResponse(END_TX_CHAR);
 
 	parse(message);
 }
 
-void ArancinoClass::set( String key, String value ) {
+void ArancinoClass::set( char* key, char* value ) {
 
 	if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
@@ -605,19 +785,26 @@ void ArancinoClass::set( String key, String value ) {
 
 }
 
-void ArancinoClass::set( String key, int value ) {
-	set(key, String(value));
+void ArancinoClass::set( char* key, int value ) {
+    char str[20] = "";
+    sprintf(str, "%d", value);
+	set(key, str);
 }
 
-void ArancinoClass::set( String key, double value ) {
-	set(key, String(value));
+void ArancinoClass::set( char* key, double value ) {
+    char str[50] = "";
+    snprintf(str, 40, "%f", value); //TODO - BUG
+    delay(1000);
+	set(key, str);
 }
 
-void ArancinoClass::set( String key, uint32_t value ) {
-	set(key, String(value));
+void ArancinoClass::set( char* key, uint32_t value ) {
+    char str[20] = "";
+    sprintf(str, "%d", value);
+	set(key, str);
 }
 
-String ArancinoClass::hget( String key, String field ) {
+char* ArancinoClass::hget( char* key, char* field ) {
 
 	if(isReservedKey(key)){
 		return "";
@@ -628,16 +815,16 @@ String ArancinoClass::hget( String key, String field ) {
 	}
 	#endif
 	sendArancinoCommand(HGET_COMMAND);					// send read request
-	if (key != ""){
+	if (strcmp(key, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(key);
 	}
-	if (field != ""){
+	if (strcmp(field, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(field);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = receiveArancinoResponse(END_TX_CHAR);
+	char* message = receiveArancinoResponse(END_TX_CHAR);
 
 	return parse(message);
 }
@@ -722,7 +909,7 @@ String* ArancinoClass::keys(String pattern){
 
 };
 
-int ArancinoClass::hset( String key, String field , String value) {
+/*int ArancinoClass::hset( String key, String field , String value) {
 
 	if(isReservedKey(key)){
 		return -1;
@@ -748,21 +935,59 @@ int ArancinoClass::hset( String key, String field , String value) {
 	sendArancinoCommand(END_TX_CHAR);
     String message = receiveArancinoResponse(END_TX_CHAR);
 	return parse(message).toInt();
+}*/
+
+int ArancinoClass::hset( char* key, char* field , char* value) {
+
+	if(isReservedKey(key)){
+		return -1;
+	}
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+	sendArancinoCommand(HSET_COMMAND);					// send read request
+	if (strcmp(key, "") != 0){
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(key);
+	}
+	if (strcmp(field, "") != 0){
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(field);
+	}
+	if (strcmp(value, "") != 0){
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(value);
+	}
+	sendArancinoCommand(END_TX_CHAR);
+    char* message = receiveArancinoResponse(END_TX_CHAR); //freed by parse()
+    char* messageParsed = parse(message);
+
+    int result = atoi(messageParsed);
+    free(messageParsed);
+
+	return result;
 }
 
-int ArancinoClass::hset( String key, String field, int value ) {
-	hset(key, field, String(value));
+
+int ArancinoClass::hset( char* key, char* field, int value ) {
+    char str[20]; 
+    sprintf(str, "%d", value);
+    hset(key, field, str);
 }
 
-int ArancinoClass::hset( String key, String field, double value ) {
-	hset(key, field, String(value));
+int ArancinoClass::hset( char* key, char* field, double value ) {
+	//hset(key, field, String(value)); //BUG - TODO
 }
 
-int ArancinoClass::hset( String key, String field, uint32_t value ) {
-	hset(key, field, String(value));
+int ArancinoClass::hset( char* key, char* field, uint32_t value ) {
+    char str[20]; 
+    sprintf(str, "%d", value);
+    hset(key, field, str);
 }
 
-int ArancinoClass::hdel( String key, String field ) {
+int ArancinoClass::hdel( char* key, char* field ) {
 
 	if(isReservedKey(key))
 		return -1;
@@ -773,41 +998,51 @@ int ArancinoClass::hdel( String key, String field ) {
 	}
 	#endif
 	sendArancinoCommand(HDEL_COMMAND);					// send read request
-	if (key != ""){
+	if (strcmp(key, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(key);
 	}
-	if (field != ""){
+	if (strcmp(field, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(field);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-    String message = receiveArancinoResponse(END_TX_CHAR);
-	return parse(message).toInt();
+    char* message = receiveArancinoResponse(END_TX_CHAR); //freed by parse()
+    char* messageParsed = parse(message);
+
+    int result = atoi(messageParsed);
+    free(messageParsed);
+
+	return result;
 }
 
-int ArancinoClass::_publish( String channel, String msg ) {
+int ArancinoClass::_publish( char* channel, char* msg ) {
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
 	sendArancinoCommand(PUBLISH_COMMAND);					// send read request
-	if (channel != ""){
+	if (strcmp(channel, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(channel);
 	}
-	if (msg != ""){
+	if (strcmp(msg, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(msg);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = receiveArancinoResponse(END_TX_CHAR);
+    
+    char* message = receiveArancinoResponse(END_TX_CHAR); //freed by parse()
+    char* messageParsed = parse(message);
 
-	return parse(message).toInt();
+    int result = atoi(messageParsed);
+    free(messageParsed);
+
+	return result;
 }
 
-int ArancinoClass::publish( String channel, String msg ) {
+int ArancinoClass::publish( char* channel, char* msg ) {
 
 	if(isReservedKey(channel)){
 		//TODO maybe its better to log the error
@@ -817,8 +1052,10 @@ int ArancinoClass::publish( String channel, String msg ) {
 
 }
 
-int ArancinoClass::publish( int channel, String msg ) {
-	publish(String(channel), msg);
+int ArancinoClass::publish( int channel, char* msg ) {
+    char str[20] = "";
+    sprintf(str, "%d", channel);
+	publish(str, msg);
 }
 
 void ArancinoClass::flush() {
@@ -838,7 +1075,7 @@ void ArancinoClass::flush() {
 		sendArancinoCommand(value);
 	}*/
 	sendArancinoCommand(END_TX_CHAR);
-	String message = receiveArancinoResponse(END_TX_CHAR);
+	char* message = receiveArancinoResponse(END_TX_CHAR);
 
 	parse(message);
 
@@ -850,8 +1087,12 @@ int ArancinoClass::getArraySize(){
 
 //============= DEBUG FUNCTIONS ======================
 
-void ArancinoClass::print(String value){
+void ArancinoClass::print(char* value){
 	sendViaCOMM_MODE(MONITOR_KEY, value);
+}
+
+void ArancinoClass::print(String value){
+	sendViaCOMM_MODE(MONITOR_KEY, value.begin());
 }
 
 void ArancinoClass::print(int value) {
@@ -874,7 +1115,7 @@ void ArancinoClass::println(double value) {
 	println(String(value));
 }
 
-void ArancinoClass::sendViaCOMM_MODE(String key, String value){
+void ArancinoClass::sendViaCOMM_MODE(char* key, char* value){
 	switch (COMM_MODE) {
 		case SYNCH:
 			_set(key, value);
@@ -938,7 +1179,60 @@ void ArancinoClass::parseArray(String data){
 	}
 }
 
-String ArancinoClass::parse(String message){
+
+char* ArancinoClass::parse(char* message){
+
+	char* status = NULL;
+	char* value = NULL;
+    int DSCIndex; //DATA_SPLIT_CHAR index
+    char* charAddr = strchr(message, DATA_SPLIT_CHAR); //address of DATA_SPLIT_CHAR
+
+    if (charAddr != NULL)
+    {
+      DSCIndex = charAddr - message; //index of DATA_SPLIT_CHAR on message string
+    }
+    else
+    {
+      DSCIndex = -1; //DATA_SPLIT_CHAR not found --> received only 'status'
+    }
+    
+	int messageLength = strlen(message);
+    
+	if (DSCIndex == -1)
+    {
+        status = (char *)calloc(messageLength + 1, sizeof(char)); //response = [STATUS] + # + [VALUE] + @
+        strncpy(status, message, messageLength);
+        Serial.print("status: ");
+        Serial.println(status);
+        status[messageLength] = '\0'; //replace END_TX_CHAR with '\0'
+    }
+    else
+    {
+        status = (char *)calloc(DSCIndex + 1, sizeof(char)); //response = [STATUS] + # + [VALUE] + @
+        strncpy(status, message, DSCIndex);
+        status[DSCIndex] = '\0'; //replace DATA_SPLIT_CHAR with '\0'
+        
+        value = (char *)calloc(messageLength - DSCIndex, sizeof(char));
+        strncpy(value, &message[DSCIndex + 1], messageLength - (DSCIndex + 1));
+        value[messageLength - (DSCIndex + 1)] = '\0';
+    }
+
+	//DEBUG
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(RCV_STRING);
+		Serial.print(status);
+		Serial.print(" ");
+		Serial.println(value);
+	}
+	#endif
+    free(message);
+	free(status);
+	return value;
+
+}
+
+/*String ArancinoClass::parse(String message){
 
 	String status;
 	String value = "";
@@ -959,14 +1253,14 @@ String ArancinoClass::parse(String message){
 	#endif
 	return value;
 
-}
+}*/
 
 
 void ArancinoClass::sendArancinoCommand(String command){
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
-		insertRequest(USE_PRIORITIES * pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
+		insertRequest(USE_PRIORITIES * pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), command.begin());
 	}
 	else
 	{
@@ -983,11 +1277,13 @@ void ArancinoClass::sendArancinoCommand(String command){
 #endif
 }
 
-void ArancinoClass::sendArancinoCommand(char command){
+
+void ArancinoClass::sendArancinoCommand(char* command){
+    //command must terminate with '\0'!
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
-		insertRequest(USE_PRIORITIES * pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), (String)command);
+		insertRequest(USE_PRIORITIES * pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), command);
 	}
 	else
 	{
@@ -999,7 +1295,7 @@ void ArancinoClass::sendArancinoCommand(char command){
 
 #if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
-		if(command == END_TX_CHAR)
+		if(command[strlen(command) - 1] == END_TX_CHAR)
 			Serial.println(command);
 		else
 			Serial.print(command);
@@ -1007,37 +1303,91 @@ void ArancinoClass::sendArancinoCommand(char command){
 #endif
 }
 
+
+void ArancinoClass::sendArancinoCommand(char command){
+    char* c = (char *)malloc(sizeof(char)*2);
+    c[0] = command;
+    c[1] = '\0';
+    sendArancinoCommand(c);
+    free(c);
+}
+
+
 /*
  * 'terminator' char is used only for non-freeRTOS implementations.
  * For freeRTOS implementations is always used END_TX_CHAR as terminator char (see commTask()).
  */
-String ArancinoClass::receiveArancinoResponse(char terminator)
+char* ArancinoClass::receiveArancinoResponse(char terminator)
 {
-    String response = "";
+    char* response = NULL; //must be freed
+
  #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+
     if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
         uint16_t taskID = pxGetCurrentTaskNumber();
-        response = getResponse(USE_PRIORITIES && pxGetCurrentTaskPriority(), taskID);
+        response = getResponse(USE_PRIORITIES * pxGetCurrentTaskPriority(), taskID);
     }
     else
     {
-        response = stream.readStringUntil(terminator);
+#endif
+        //BEGIN read from uart
+        long previousMillis = millis();
+        
+        while (millis() - previousMillis < TIMEOUT)
+        {
+            if ((stream).available())
+            {
+                char c = (stream).read();
+                if (c == terminator)
+                    break;    
+                
+                if (response == NULL)
+                {
+                    response = (char *)calloc(2, sizeof(char));
+                    response[0] = c;
+                    response[1] = '\0';
+                }
+                else
+                {
+                    int oldLength = strlen(response);
+                    char* temp = (char *)calloc((oldLength + 1), sizeof(char));
+                    strcpy(temp, response);
+                    free(response);
+                    response = temp;
+                    response[oldLength] = c;
+                    response[oldLength + 1] = '\0';
+                }
+                
+            }
+        }
+        //END read from uart
+
+#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     }
-#else
-    response = stream.readStringUntil(terminator);
 #endif  
     return response;
 }
 
-bool ArancinoClass::isReservedKey(String key){
-
+/*bool ArancinoClass::isReservedKey(String key){
+    STOP("isreserved: ");
+    STOP(key);
 	for(int i=0;i<sizeof(reservedKey);i++){
 		if(reservedKey[i] == key)
 			return true;
 	}
 	return false;
 
+}*/
+
+bool ArancinoClass::isReservedKey(char* key){
+    int keyCount = sizeof(reservedKey) / sizeof(reservedKey[0]);
+	for(int i = 0; i < keyCount; i++)
+    {
+		if(strcmp(reservedKey[i], key) == 0) 
+			return true;
+	}
+	return false;
 }
 /*void ArancinoClass::dropAll() {
   while (stream.available() > 0) {

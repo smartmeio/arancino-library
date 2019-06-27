@@ -23,6 +23,8 @@ under the License
 
 #include <Arduino.h>
 #include <Stream.h>
+#include <stdlib.h>
+
 
 #define USEFREERTOS
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -116,29 +118,31 @@ class ArancinoClass {
 		void begin(int timeout);
         void startScheduler();
 		void setReservedCommunicationMode(int mode);
-		String get(String value);
-		void set(String key, String value);
-		void set(String key, int value);
-		void set(String key, double value);
-		void set( String key, uint32_t value);
-		int del(String key);
+        char* get(char* value);
+		void set(char* key, char* value);
+		void set(char* key, int value);
+		void set(char* key, double value); //TODO - BUG
+		void set(char* key, uint32_t value);
+		int del(char* key);
 		//int del (String* key, int number);
-		int set(String key, String field, String value);
+		//int set(String key, String field, String value);
 		String* keys(String pattern="");
-		String hget(String key, String field);
+		char* hget(char* key, char* field);
 		String* hgetall(String key);
 		String* hkeys(String key);
 		String* hvals(String key);
-		int hset(String key, String field, String value);
-		int hset(String key, String field, int value);
-		int hset(String key, String field, double value);
-		int hset(String key, String field, uint32_t value);
-		int hdel(String key, String field);
-		int publish(String channel, String msg);
-		int publish(int channel, String msg);
+		//int hset(String key, String field, String value);
+		int hset(char* key, char* field, char* value);
+		int hset(char* key, char* field, int value);
+		int hset(char* key, char* field, double value); //TODO - BUG
+		int hset(char* key, char* field, uint32_t value);
+		int hdel(char* key, char* field);
+		int publish(char* channel, char* msg);
+		int publish(int channel, char* msg);
 		void flush(void);
 
 		void print(String value);
+		void print(char* value);
 		void print(int value);
 		void print(double value);
 		void println(String value);
@@ -153,19 +157,22 @@ class ArancinoClass {
 	private:
 		//void dropAll();
 		bool started;
+		char* parse(char* message);
 		String parse(String message);
 		void parseArray(String message);
 		void sendArancinoCommand(String command);
+		void sendArancinoCommand(char* command);
 		void sendArancinoCommand(char command);
-        String receiveArancinoResponse(char terminator);
+        char* receiveArancinoResponse(char terminator);
 		bool isReservedKey(String key);
-		String reservedKey[4];
+        bool isReservedKey(char* key);
+		char reservedKey[4][11]; //max 10 char for key
 		Stream &stream;
 		int arraySize=0;
 		int COMM_MODE = SYNCH;
-		void sendViaCOMM_MODE(String key, String value);
-		void _set(String key, String value);
-		int _publish(String channel, String msg);
+		void sendViaCOMM_MODE(char* key, char* value);
+		void _set(char* key, char* value);
+        int _publish(char* channel, char* msg);
 };
 
 // This subclass uses a serial port Stream
