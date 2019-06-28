@@ -128,7 +128,8 @@ class ArancinoClass {
 		//int set(String key, String field, String value);
 		String* keys(String pattern="");
 		char* hget(char* key, char* field);
-		String* hgetall(String key);
+		//String* hgetall(String key);
+		char** hgetall(char* key);
 		String* hkeys(String key);
 		String* hvals(String key);
 		//int hset(String key, String field, String value);
@@ -148,7 +149,8 @@ class ArancinoClass {
 		void println(String value);
 		void println(int value);
 		void println(double value);
-		int getArraySize();
+        int getArraySize(char** _array);
+        void freeArray(char** _array);
 		//int hdel( String key, String* fields, int number);
 		ArancinoClass(Stream &_stream);
 		String* arrayKey;
@@ -159,7 +161,8 @@ class ArancinoClass {
 		bool started;
 		char* parse(char* message);
 		String parse(String message);
-		void parseArray(String message);
+		char** parseArray(char* message);
+        String* parseArray(String message);
 		void sendArancinoCommand(String command);
 		void sendArancinoCommand(char* command);
 		void sendArancinoCommand(char command);

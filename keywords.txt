@@ -27,6 +27,8 @@ hgetvals	KEYWORD2
 hdel	KEYWORD2
 flush	KEYWORD2
 publish	KEYWORD2
+getArraySize	KEYWORD2
+freeArray	KEYWORD2
 print	KEYWORD2
 println	KEYWORD2
 setReservedCommunicationMode	KEYWORD2

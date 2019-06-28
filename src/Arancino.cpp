@@ -126,19 +126,6 @@ void commTask( void *pvParameters )
                 {
                     char c = (*stream).read();
                     
-                    //BEGIN DEBUG----------------
-                    Serial.print("rec: ");
-                    if (c < 32)
-                    {
-                        Serial.print("|");
-                        Serial.print(c, DEC);
-                        Serial.print("|");
-                    }
-                    else
-                        Serial.print(c);
-                    //END DEBUG------------------
-                     
-                    
                     if (response == NULL)
                     {
                         response = (char *)calloc(2, sizeof(char));
@@ -147,8 +134,8 @@ void commTask( void *pvParameters )
                     }
                     else
                     {
-                        int oldLength = strlen(response);
-                        char* temp = (char *)calloc((oldLength + 2), sizeof(char));
+                        int oldLength = strlen(response); //'\0' non included
+                        char* temp = (char *)calloc((oldLength + 2), sizeof(char)); // 2 = new char + '\0'
                         strcpy(temp, response);
                         free(response);
                         response = temp;
@@ -161,7 +148,7 @@ void commTask( void *pvParameters )
                     
                 }
             }
-#if defined(DEBUG)
+#if defined(DEBUG) && DEBUG == 1
             Serial.print("received response: ");
             for (int i = 0; i < strlen(response); i++)
             {
@@ -832,7 +819,7 @@ char* ArancinoClass::hget( char* key, char* field ) {
 	return parse(message);
 }
 
-String* ArancinoClass::hgetall( String key) {
+char** ArancinoClass::hgetall(char* key) {
 
 	if(isReservedKey(key)){
 		return NULL;
@@ -843,14 +830,14 @@ String* ArancinoClass::hgetall( String key) {
 	}
 	#endif
 	sendArancinoCommand(HGETALL_COMMAND);					// send read request
-	if (key != ""){
+	if (strcmp(key, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-    String message = receiveArancinoResponse(END_TX_CHAR);
-    parseArray(parse(message));
-	return arrayKey;
+    char* message = receiveArancinoResponse(END_TX_CHAR);
+    
+	return parseArray(parse(message));
 }
 
 String* ArancinoClass::hkeys( String key) {
@@ -1084,8 +1071,20 @@ void ArancinoClass::flush() {
 
 }
 
-int ArancinoClass::getArraySize(){
-		return arraySize;
+
+int ArancinoClass::getArraySize(char** _array)
+{
+  char** dummy = (_array != NULL) ? _array - sizeof(char) : NULL;
+  return dummy != NULL ? (int)(*dummy) : 0;
+}
+
+void ArancinoClass::freeArray(char** _array)
+{
+  char** dummy = (_array != NULL) ? _array - sizeof(char) : NULL;
+  if (*_array != NULL)
+    free(*_array);
+  if (dummy != NULL)
+    free(dummy);
 }
 
 //============= DEBUG FUNCTIONS ======================
@@ -1160,7 +1159,7 @@ void ArancinoClass::sendViaCOMM_MODE(char* key, char* value){
 	return parse(message).toInt();
 }*/
 
-void ArancinoClass::parseArray(String data){
+/*void ArancinoClass::parseArray(String data){
 	arraySize=0;					//reset size array
   int idx=data.indexOf(DATA_SPLIT_CHAR);
   while(idx!=-1){
@@ -1180,7 +1179,76 @@ void ArancinoClass::parseArray(String data){
 		arrayKey[i++]=data.substring(idx,idx_temp);
 		idx=idx_temp+1;
 	}
+}*/
+
+char** ArancinoClass::parseArray(char* data)
+{
+    char** arrayParsed = NULL;
+    char* tempArray;
+
+    char* previousDSCIndex = NULL;
+    char* DSCIndex = data;
+    
+    int fieldCount = data != NULL;
+    int maxLength = 0;
+    
+    //get the key count
+    while (DSCIndex != NULL)
+    {
+        previousDSCIndex = DSCIndex;
+        DSCIndex = strchr(DSCIndex + 1, DATA_SPLIT_CHAR);
+
+        if (DSCIndex != NULL)
+        {
+            ++fieldCount;
+            if (DSCIndex - previousDSCIndex > maxLength) //get the max key length
+                maxLength = DSCIndex - previousDSCIndex;
+        }
+        else
+        {
+            maxLength = strlen(previousDSCIndex);
+        }
+    }
+
+    if (data != NULL) {
+        /*
+         * Alloco un elemento in più (fieldCount + 1). 
+         * Nel primo elemento inserisco la lunghezza del vettore;
+         * Il valore di ritorno della funzione sarà l'elemento 1 del vettore (e non l'elemento 0)
+         */
+        arrayParsed = (char **)malloc((fieldCount + 1) * sizeof(char*)); //user must free!
+        tempArray = (char *)malloc((fieldCount + 1) * (maxLength + 1) * sizeof(char)); //user must free!
+        arrayParsed[0] = (char*)fieldCount;
+        
+    }
+    
+    previousDSCIndex = data;
+
+    for (int i = 1; i < (fieldCount + 1); ++i)
+    {
+        arrayParsed[i] = tempArray + ((i - 1) * (maxLength + 1));
+        DSCIndex = strchr(previousDSCIndex + 1, DATA_SPLIT_CHAR);
+        
+        if (DSCIndex != NULL)
+        {
+            strncpy(arrayParsed[i], previousDSCIndex, DSCIndex - previousDSCIndex);
+            arrayParsed[i][DSCIndex - previousDSCIndex] = '\0';  
+            previousDSCIndex = DSCIndex;
+        }
+        else
+        {
+            strcpy(arrayParsed[i], previousDSCIndex);
+        }        
+    }
+
+    if (data != NULL) {
+        free(data);
+    }
+
+    return (arrayParsed != NULL) ? &arrayParsed[1] : NULL;
 }
+
+
 
 
 char* ArancinoClass::parse(char* message){
@@ -1232,30 +1300,6 @@ char* ArancinoClass::parse(char* message){
 	return value;
 
 }
-
-/*String ArancinoClass::parse(String message){
-
-	String status;
-	String value = "";
-	int statusIndex = message.indexOf(DATA_SPLIT_CHAR);
-	//int valueIndex = message.indexOf(DATA_SPLIT_CHAR, statusIndex+1);
-	status = message.substring(0, statusIndex);				//message status (0: no message; 1:data ready; -1:error)
-	if(statusIndex != -1){
-		value = message.substring(statusIndex+1);
-	}
-	//DEBUG
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(RCV_STRING);
-		Serial.print(status);
-		Serial.print(" ");
-		Serial.println(value);
-	}
-	#endif
-	return value;
-
-}*/
-
 
 void ArancinoClass::sendArancinoCommand(String command){
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -1330,8 +1374,7 @@ char* ArancinoClass::receiveArancinoResponse(char terminator)
         uint16_t taskID = pxGetCurrentTaskNumber();
         while (getResponseCount(taskPriority, taskID) == 0)
         {
-            Serial.println("no response");
-            vTaskDelay(50 / portTICK_PERIOD_MS);
+            vTaskDelay(50 / portTICK_PERIOD_MS); //TODO trovare una soluzione a questo obbrobrio
         }
         response = getResponse(taskPriority, taskID);
         
@@ -1360,7 +1403,7 @@ char* ArancinoClass::receiveArancinoResponse(char terminator)
                 else
                 {
                     int oldLength = strlen(response);
-                    char* temp = (char *)calloc((oldLength + 1), sizeof(char));
+                    char* temp = (char *)calloc((oldLength + 2), sizeof(char));
                     strcpy(temp, response);
                     free(response);
                     response = temp;
@@ -1377,17 +1420,6 @@ char* ArancinoClass::receiveArancinoResponse(char terminator)
 #endif  
     return response;
 }
-
-/*bool ArancinoClass::isReservedKey(String key){
-    STOP("isreserved: ");
-    STOP(key);
-	for(int i=0;i<sizeof(reservedKey);i++){
-		if(reservedKey[i] == key)
-			return true;
-	}
-	return false;
-
-}*/
 
 bool ArancinoClass::isReservedKey(char* key){
     int keyCount = sizeof(reservedKey) / sizeof(reservedKey[0]);
