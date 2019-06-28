@@ -122,13 +122,12 @@ void commTask( void *pvParameters )
             
             while (millis() - previousMillis < TIMEOUT)
             {
-                //Serial.println("rec");
                 if ((*stream).available())
                 {
                     char c = (*stream).read();
                     
                     //BEGIN DEBUG----------------
-                    /*Serial.print("rec: ");
+                    Serial.print("rec: ");
                     if (c < 32)
                     {
                         Serial.print("|");
@@ -136,11 +135,9 @@ void commTask( void *pvParameters )
                         Serial.print("|");
                     }
                     else
-                        Serial.print(c);*/
+                        Serial.print(c);
                     //END DEBUG------------------
-                    
-                    if (c == END_TX_CHAR)
-                        break;    
+                     
                     
                     if (response == NULL)
                     {
@@ -151,7 +148,7 @@ void commTask( void *pvParameters )
                     else
                     {
                         int oldLength = strlen(response);
-                        char* temp = (char *)calloc((oldLength + 1), sizeof(char));
+                        char* temp = (char *)calloc((oldLength + 2), sizeof(char));
                         strcpy(temp, response);
                         free(response);
                         response = temp;
@@ -159,10 +156,13 @@ void commTask( void *pvParameters )
                         response[oldLength + 1] = '\0';
                     }
                     
+                    if (c == END_TX_CHAR)
+                        break;   
+                    
                 }
             }
 #if defined(DEBUG)
-            /*Serial.print("received response: ");
+            Serial.print("received response: ");
             for (int i = 0; i < strlen(response); i++)
             {
                 if (response[i] < 32)
@@ -174,10 +174,12 @@ void commTask( void *pvParameters )
                 else
                     Serial.print(response[i]);
             }
-            Serial.println("");*/
+            Serial.println("");
 #endif
+            delay(100); //BUG TODO why?
             insertResponse(USE_PRIORITIES, rqst.taskID, response);
-            vTaskResume(rqst.taskHandle); //waking up the task that made the request
+            //vTaskResume(rqst.taskHandle); //waking up the task that made the request BUG -> not used
+            //xTaskResumeAll();
 		}
 #if defined(DEBUG)
 		//Serial.print("freeHeap: ");
@@ -255,7 +257,7 @@ int insertRequest(uint16_t priority, uint32_t taskID, char* msg)
         }
     }
     
-    if (selectedMsg != NULL && msg != "")
+    if (selectedMsg != NULL && strcmp(msg, "") != 0)
     {
         //int index = msg.indexOf(END_TX_CHAR); //-1 = carattere non trovato
         int index;
@@ -275,12 +277,12 @@ int insertRequest(uint16_t priority, uint32_t taskID, char* msg)
             toBeSuspended = 1;
             //flag the task as toBeSuspended
             selectedMsg->taskHandle = xTaskGetCurrentTaskHandle();
-            
+
             int oldLength = -1;
             if (selectedMsg->msg != NULL)
             {
-                while((selectedMsg->msg)[++oldLength] != '\0');
-                //oldLength = strlen(selectedMsg->msg);
+               // while((selectedMsg->msg)[++oldLength] != '\0');
+                oldLength = strlen(selectedMsg->msg);
             }
             else
             {
@@ -303,7 +305,7 @@ int insertRequest(uint16_t priority, uint32_t taskID, char* msg)
             selectedMsg->msg = newStr;
 
 #if defined(DEBUG)           
-            Serial.print("newStr: ");
+            /*Serial.print("+newStr: ");
             for (int i = 0; i < strlen(newStr); i++)
             {
                 if (newStr[i] < 32)
@@ -315,11 +317,13 @@ int insertRequest(uint16_t priority, uint32_t taskID, char* msg)
                 else
                     Serial.print(newStr[i]);
             }
-            Serial.println("");
+            Serial.println("");*/
 #endif
-            
             ++(rqstByPriority[priority].msgCount);
-            insertRequest(priority, taskID, &msg[index + 1]);
+            if (msg[index + 1] != '\0')
+            {
+                insertRequest(priority, taskID, &msg[index + 1]);
+            }
         }
         else
         {
@@ -360,7 +364,7 @@ int insertRequest(uint16_t priority, uint32_t taskID, char* msg)
             selectedMsg->msg = newStr;
 
 #if defined(DEBUG)           
-            Serial.print("newStr: ");
+            /*Serial.print("_newStr: ");
             for (int i = 0; i < strlen(newStr); i++)
             {
                 if (newStr[i] < 32)
@@ -372,19 +376,24 @@ int insertRequest(uint16_t priority, uint32_t taskID, char* msg)
                 else
                     Serial.print(newStr[i]);
             }
-            Serial.println("");
+            Serial.println("");*/
 #endif
         }
     }
-
     xTaskResumeAll();
     //task must be suspended here
+
     if (toBeSuspended)
     {
-        vTaskSuspend(NULL);  // Suspend ourselves.
+    /*
+     * BUG il task viene sospeso nel momento sbagliato!
+     * dopo xTaskResumeAll(); viene immediatamente eseguito commTask() che invia la richiesta sulla seriale e, una volta ricevuta la risposta,
+     * sblocca il task corrente. Il problema è che con la prossima riga il task viene di nuovo bloccato e mai più sbloccato!
+     */
+        //vTaskSuspend(NULL);  // Suspend ourselves.
     }
-    
-return 0;
+
+    return 0;
 }
 
 
@@ -671,7 +680,7 @@ static TaskHandle_t commTaskHandle;
 
 void ArancinoClass::startScheduler() {
     vSetErrorLed(LED_BUILTIN, HIGH);
-    xTaskCreate(commTask,     "Communication task",       256, (void *)&stream, configMAX_PRIORITIES - 1, &commTaskHandle);
+    xTaskCreate(commTask,     "Communication task",       1024, (void *)&stream, configMAX_PRIORITIES - 1, &commTaskHandle);
 
     vTaskStartScheduler();
 }
@@ -688,9 +697,7 @@ void ArancinoClass::setReservedCommunicationMode(int mode){
 
 }*/
 
-char* ArancinoClass::get( char* key ) { //BUG BUG BUG BUG BUG BUG
-    vTaskSuspendAll();
-
+char* ArancinoClass::get( char* key ) {
 	if(isReservedKey(key)){
 		return NULL;
 	}
@@ -704,12 +711,8 @@ char* ArancinoClass::get( char* key ) { //BUG BUG BUG BUG BUG BUG
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(key);
 	}
-	STOP("rec mess: ");
 	sendArancinoCommand(END_TX_CHAR);
-    STOP("END_TX_CHAR");
     char* message = receiveArancinoResponse(END_TX_CHAR);
-    STOP(message);
-    xTaskResumeAll();
     return parse(message);
 }
 
@@ -1200,10 +1203,8 @@ char* ArancinoClass::parse(char* message){
     
 	if (DSCIndex == -1)
     {
-        status = (char *)calloc(messageLength + 1, sizeof(char)); //response = [STATUS] + # + [VALUE] + @
+        status = (char *)calloc(messageLength + 1, sizeof(char)); //response = [STATUS] + @
         strncpy(status, message, messageLength);
-        Serial.print("status: ");
-        Serial.println(status);
         status[messageLength] = '\0'; //replace END_TX_CHAR with '\0'
     }
     else
@@ -1325,8 +1326,16 @@ char* ArancinoClass::receiveArancinoResponse(char terminator)
 
     if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
+        uint16_t taskPriority = USE_PRIORITIES * pxGetCurrentTaskPriority();
         uint16_t taskID = pxGetCurrentTaskNumber();
-        response = getResponse(USE_PRIORITIES * pxGetCurrentTaskPriority(), taskID);
+        while (getResponseCount(taskPriority, taskID) == 0)
+        {
+            Serial.println("no response");
+            vTaskDelay(50 / portTICK_PERIOD_MS);
+        }
+        response = getResponse(taskPriority, taskID);
+        
+        
     }
     else
     {
