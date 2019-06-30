@@ -798,7 +798,8 @@ char** ArancinoClass::hgetall(char* key) {
 	return parseArray(parse(message));
 }
 
-String* ArancinoClass::hkeys( String key) {
+
+char** ArancinoClass::hkeys(char* key) {
 
 	if(isReservedKey(key)){
 		return NULL;
@@ -809,17 +810,18 @@ String* ArancinoClass::hkeys( String key) {
 	}
 	#endif
 	sendArancinoCommand(HKEYS_COMMAND);					// send read request
-	if (key != ""){
+	if (strcmp(key, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = receiveArancinoResponse(END_TX_CHAR);
-    parseArray(parse(message));
-	return arrayKey;
+	char* message = receiveArancinoResponse(END_TX_CHAR);
+    
+	return parseArray(parse(message));
 }
 
-String* ArancinoClass::hvals( String key) {
+
+char** ArancinoClass::hvals(char* key) {
 
 	if(isReservedKey(key))
 		return NULL;
@@ -829,34 +831,34 @@ String* ArancinoClass::hvals( String key) {
 	}
 	#endif
 	sendArancinoCommand(HVALS_COMMAND);					// send read request
-	if (key != ""){
+	if (strcmp(key, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = receiveArancinoResponse(END_TX_CHAR);
-	parseArray(parse(message));
-	return arrayKey;
+	char* message = receiveArancinoResponse(END_TX_CHAR);
+	
+	return parseArray(parse(message));
 }
 
-String* ArancinoClass::keys(String pattern){
+
+char** ArancinoClass::keys(char* pattern){
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
 	sendArancinoCommand(KEYS_COMMAND);					// send read request
-	if (pattern != ""){
+	if (strcmp(pattern, "") != 0){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(pattern);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = receiveArancinoResponse(END_TX_CHAR);
-	parseArray(parse(message));
-	return arrayKey;
+	char* message = receiveArancinoResponse(END_TX_CHAR);
+	
+	return parseArray(parse(message));
 
-};
-
+}
 
 int ArancinoClass::hset( char* key, char* field , char* value) {
 
@@ -1219,10 +1221,10 @@ void ArancinoClass::sendArancinoCommand(String command){
 	}
 	else
 	{
+#endif
 		stream.print(command);
+#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	}
-#else
-	stream.print(command);
 #endif
 
 #if defined(__SAMD21G18A__)
@@ -1242,10 +1244,10 @@ void ArancinoClass::sendArancinoCommand(char* command){
 	}
 	else
 	{
+#endif
 		stream.print(command);
+#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	}
-#else
-	stream.print(command);
 #endif
 
 #if defined(__SAMD21G18A__)
@@ -1301,9 +1303,7 @@ char* ArancinoClass::receiveArancinoResponse(char terminator)
             if ((stream).available())
             {
                 char c = (stream).read();
-                if (c == terminator)
-                    break;    
-                
+
                 if (response == NULL)
                 {
                     response = (char *)calloc(2, sizeof(char));
@@ -1321,6 +1321,8 @@ char* ArancinoClass::receiveArancinoResponse(char terminator)
                     response[oldLength + 1] = '\0';
                 }
                 
+                if (c == terminator)
+                    break;
             }
         }
         //END read from uart

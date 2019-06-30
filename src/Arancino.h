@@ -126,13 +126,11 @@ class ArancinoClass {
 		int del(char* key);
 		//int del (String* key, int number);
 		//int set(String key, String field, String value);
-		String* keys(String pattern="");
+		char** keys(char* pattern="");
 		char* hget(char* key, char* field);
-		//String* hgetall(String key);
 		char** hgetall(char* key);
-		String* hkeys(String key);
-		String* hvals(String key);
-		//int hset(String key, String field, String value);
+		char** hkeys(char* key);
+		char** hvals(char* key);
 		int hset(char* key, char* field, char* value);
 		int hset(char* key, char* field, int value);
 		int hset(char* key, char* field, double value); //TODO - BUG
@@ -153,16 +151,12 @@ class ArancinoClass {
         void freeArray(char** _array);
 		//int hdel( String key, String* fields, int number);
 		ArancinoClass(Stream &_stream);
-		String* arrayKey;
-		//int arraySize=0;
 
 	private:
 		//void dropAll();
 		bool started;
 		char* parse(char* message);
-		String parse(String message);
 		char** parseArray(char* message);
-        String* parseArray(String message);
 		void sendArancinoCommand(String command);
 		void sendArancinoCommand(char* command);
 		void sendArancinoCommand(char command);
