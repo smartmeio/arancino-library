@@ -26,7 +26,7 @@ under the License
 #define DEBUG 0
 #define MAX_MSG_LENGTH 1024 //in char - not used
 #define USE_PRIORITIES 0
-#define STOP(x) Serial.println(x); delay(1000)
+#define STOP(x) Serial.println(x); delay(100)
 
 /*
  * Element of the queue that contain the requests to be sent through the UART.
@@ -720,11 +720,11 @@ void ArancinoClass::_set( char* key, char* value ) {
 
 	char* message = receiveArancinoResponse(END_TX_CHAR);
 
-	parse(message);
+    parse(message);
 }
 
 void ArancinoClass::set( char* key, char* value ) {
-
+    
 	if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return;
@@ -735,20 +735,19 @@ void ArancinoClass::set( char* key, char* value ) {
 
 void ArancinoClass::set( char* key, int value ) {
     char str[20] = "";
-    sprintf(str, "%d", value);
+    itoa(value, str, 10);
 	set(key, str);
 }
 
 void ArancinoClass::set( char* key, double value ) {
-    char str[50] = "";
-    snprintf(str, 40, "%f", value); //TODO - BUG
-    delay(1000);
-	set(key, str);
+    char str[20] = "";
+    doubleToString(value, 4, str);
+    set(key, str);
 }
 
 void ArancinoClass::set( char* key, uint32_t value ) {
     char str[20] = "";
-    sprintf(str, "%d", value);
+    itoa(value, str, 10);
 	set(key, str);
 }
 
@@ -896,17 +895,60 @@ int ArancinoClass::hset( char* key, char* field , char* value) {
 
 int ArancinoClass::hset( char* key, char* field, int value ) {
     char str[20]; 
-    sprintf(str, "%d", value);
+    itoa(value, str, 10);
     hset(key, field, str);
 }
 
+int ArancinoClass::getDigit(long value)
+{
+    int digit = 0;
+    long _val = value;
+    while(abs(_val) > 0)
+    {
+        ++digit;
+        _val /= 10;
+    }
+    return digit;
+}
+
+void ArancinoClass::doubleToString(double value, unsigned int _nDecimal, char* str) //truncation!
+{
+    uint8_t sign = (value < 0);
+    uint8_t dot = (_nDecimal > 0);
+    long integer = ( sign ? ceil(value) : floor(value) );
+    double _decimal = (value - integer); //without integer part
+    integer = abs(integer);
+    
+    for (int i = 0; i < _nDecimal; i++)
+        _decimal *= 10;
+
+    long decimal = (_decimal < 0) ? ceil(_decimal - 0.5) : floor(_decimal + 0.5);
+    decimal = abs(decimal);
+    
+    int integerDigit = integer != 0 ? getDigit(integer) : 1;
+    int decimalDigit = _nDecimal;
+    
+    str[0] = '-';
+    ltoa(integer, &str[sign], 10);
+    if (dot)
+    {
+        str[sign + integerDigit] = '.';
+        ltoa(decimal, &str[sign + integerDigit + 1], 10);
+        for (int i = 1; decimal == 0 && i < decimalDigit; i++)
+            ltoa(decimal, &str[sign + integerDigit + i + 1], 10);
+    }
+    str[sign + integerDigit + dot + decimalDigit] = '\0';
+}
+
 int ArancinoClass::hset( char* key, char* field, double value ) {
-	//hset(key, field, String(value)); //BUG - TODO
+    char str[20] = "";
+    doubleToString(value, 4, str);
+    hset(key, field, str);    
 }
 
 int ArancinoClass::hset( char* key, char* field, uint32_t value ) {
     char str[20]; 
-    sprintf(str, "%d", value);
+    itoa(value, str, 10);
     hset(key, field, str);
 }
 
@@ -1031,23 +1073,23 @@ void ArancinoClass::print(String value){
 }
 
 void ArancinoClass::print(int value) {
-	print(String(value));
+	print(String(value)); //TODO
 }
 
 void ArancinoClass::print(double value) {
-	print(String(value));
+	print(String(value)); //TODO
 }
 
 void ArancinoClass::println(String value){
-	print(value+String('\n'));
+	print(value+String('\n')); //TODO
 }
 
 void ArancinoClass::println(int value) {
-	println(String(value));
+	println(String(value)); //TODO
 }
 
 void ArancinoClass::println(double value) {
-	println(String(value));
+	println(String(value)); //TODO
 }
 
 void ArancinoClass::sendViaCOMM_MODE(char* key, char* value){
@@ -1098,31 +1140,34 @@ char** ArancinoClass::parseArray(char* data)
     char** arrayParsed = NULL;
     char* tempArray;
 
-    char* previousDSCIndex = NULL;
+    char* previousDSCIndex = data;
     char* DSCIndex = data;
     
-    int fieldCount = data != NULL;
+    int fieldCount = data != NULL; //at least 1 field
     int maxLength = 0;
     
-    //get the key count
-    while (DSCIndex != NULL)
-    {
-        previousDSCIndex = DSCIndex;
-        DSCIndex = strchr(DSCIndex + 1, DATA_SPLIT_CHAR);
-
-        if (DSCIndex != NULL)
-        {
-            ++fieldCount;
-            if (DSCIndex - previousDSCIndex > maxLength) //get the max key length
-                maxLength = DSCIndex - previousDSCIndex;
-        }
-        else
-        {
-            maxLength = strlen(previousDSCIndex);
-        }
-    }
-
     if (data != NULL) {
+    
+        //get the key count
+        do
+        {
+            DSCIndex = strchr(previousDSCIndex, DATA_SPLIT_CHAR);
+            
+            if (DSCIndex != NULL)
+            {
+                ++fieldCount;
+                if (DSCIndex - previousDSCIndex > maxLength)
+                    maxLength = DSCIndex - previousDSCIndex;
+            }
+            else if (strlen(previousDSCIndex) > maxLength)
+            {
+                maxLength =  strlen(previousDSCIndex);
+            }
+            previousDSCIndex = DSCIndex + 1;
+            
+            
+        } while(DSCIndex != NULL);
+    
         /*
          * Alloco un elemento in più (fieldCount + 1). 
          * Nel primo elemento inserisco la lunghezza del vettore;
@@ -1135,7 +1180,7 @@ char** ArancinoClass::parseArray(char* data)
     }
     
     previousDSCIndex = data;
-
+    
     for (int i = 1; i < (fieldCount + 1); ++i)
     {
         arrayParsed[i] = tempArray + ((i - 1) * (maxLength + 1));
@@ -1156,7 +1201,7 @@ char** ArancinoClass::parseArray(char* data)
     if (data != NULL) {
         free(data);
     }
-
+    
     return (arrayParsed != NULL) ? &arrayParsed[1] : NULL;
 }
 
@@ -1207,11 +1252,13 @@ char* ArancinoClass::parse(char* message){
 		Serial.println(value);
 	}
 	#endif
-    free(message);
+
+	free(message);
 	free(status);
 	return value;
 
 }
+
 
 void ArancinoClass::sendArancinoCommand(String command){
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)

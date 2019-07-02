@@ -24,6 +24,7 @@ under the License
 #include <Arduino.h>
 #include <Stream.h>
 #include <stdlib.h>
+#include <avr/dtostrf.h>
 
 
 #define USEFREERTOS
@@ -165,8 +166,9 @@ class ArancinoClass {
         bool isReservedKey(char* key);
 		char reservedKey[4][11]; //max 10 char for key
 		Stream &stream;
-		int arraySize=0;
-		int COMM_MODE = SYNCH;
+        void doubleToString(double value, unsigned int _nDecimal, char* str); //truncation!
+        int getDigit(long value);
+        int COMM_MODE = SYNCH;
 		void sendViaCOMM_MODE(char* key, char* value);
 		void _set(char* key, char* value);
         int _publish(char* channel, char* msg);
