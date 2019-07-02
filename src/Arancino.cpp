@@ -1073,23 +1073,31 @@ void ArancinoClass::print(String value){
 }
 
 void ArancinoClass::print(int value) {
-	print(String(value)); //TODO
+    char str[20] = "";
+    itoa(value, str, 10);
+	print(str);
 }
 
 void ArancinoClass::print(double value) {
-	print(String(value)); //TODO
+    char str[20] = "";
+    doubleToString(value, 4, str);
+	print(str);
 }
 
 void ArancinoClass::println(String value){
-	print(value+String('\n')); //TODO
+	print(value+String('\n'));
 }
 
 void ArancinoClass::println(int value) {
-	println(String(value)); //TODO
+	print(String(value));
+    print("\n");
 }
 
 void ArancinoClass::println(double value) {
-	println(String(value)); //TODO
+    char str[20] = "";
+    doubleToString(value, 4, str);
+	print(str);
+    print("\n");
 }
 
 void ArancinoClass::sendViaCOMM_MODE(char* key, char* value){
