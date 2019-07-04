@@ -22,69 +22,18 @@ under the License
 #define ARANCINO_H_
 
 #include <Arduino.h>
+#include <ArancinoConfig.h>
 #include <Stream.h>
 #include <stdlib.h>
-#include <avr/dtostrf.h>
-
 
 #define USEFREERTOS
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+#include <ThreadSafeUART.h>
 extern "C" {
 #include <FreeRTOS_SAMD21.h>
 }
 #endif
 
-#if defined(__SAMD21G18A__)
-#define BAUDRATE 4000000
-#define TIMEOUT 100
-#define SERIAL_PORT SerialUSB
-#else
-#define BAUDRATE 256000
-#define TIMEOUT 100
-#define SERIAL_PORT Serial
-#endif
-
-#define SERIAL_TRANSPORT typeof(SERIAL_PORT)
-
-#define START_COMMAND 		"START"
-#define SET_COMMAND 			"SET"
-#define GET_COMMAND 			"GET"
-#define DEL_COMMAND 			"DEL"
-#define KEYS_COMMAND			"KEYS"
-#define HGET_COMMAND			"HGET"
-#define HGETALL_COMMAND		"HGETALL"
-#define HKEYS_COMMAND			"HKEYS"
-#define HDEL_COMMAND			"HDEL"
-#define HSET_COMMAND			"HSET"
-#define HVALS_COMMAND			"HVALS"
-#define PUBLISH_COMMAND		"PUB"
-#define FLUSH_COMMAND			"FLUSH"
-
-#define SENT_STRING				"Sent Command: "
-#define RCV_STRING				"Received Response: "
-
-#define END_TX_CHAR				(char)4 //'@' //
-#define DATA_SPLIT_CHAR		(char)30 //'#' //
-
-#define RSP_OK						100
-#define RSP_HSET_NEW			101
-#define RSP_HSET_UPD			102
-#define ERR								200		//Generic Error
-#define ERR_NULL					201		//Null value
-#define ERR_SET						202		//Error during SET
-#define ERR_CMD_NOT_FND		203		//Command Not Found
-#define ERR_CMD_NOT_RCV		204		//Command Not Received
-#define ERR_CMD_PRM_NUM		205		//Invalid parameter number
-#define ERR_REDIS					206		//Generic Redis Error
-
-#define DBG_PIN						26		//pin used to Debug Message
-//#define PWR_PIN					??		//pin used for Power Management
-
-#define MONITOR_KEY				"___MONITOR___"
-#define LIBVERS_KEY				"___LIBVERS___"
-#define MODVERS_KEY				"___MODVERS___"
-#define POWER_KEY					"___POWER___"
-#define LIB_VERSION				"0.1.2"	//library version
 
 /*
 Reserved keys communication mode
@@ -120,10 +69,10 @@ class ArancinoClass {
         void startScheduler();
 		void setReservedCommunicationMode(int mode);
         char* get(char* value);
-		void set(char* key, char* value);
-		void set(char* key, int value);
-		void set(char* key, double value); //TODO - BUG
-		void set(char* key, uint32_t value);
+		int set(char* key, char* value);
+		int set(char* key, int value);
+		int set(char* key, double value);
+		int set(char* key, uint32_t value);
 		int del(char* key);
 		//int del (String* key, int number);
 		//int set(String key, String field, String value);
@@ -134,7 +83,7 @@ class ArancinoClass {
 		char** hvals(char* key);
 		int hset(char* key, char* field, char* value);
 		int hset(char* key, char* field, int value);
-		int hset(char* key, char* field, double value); //TODO - BUG
+		int hset(char* key, char* field, double value);
 		int hset(char* key, char* field, uint32_t value);
 		int hdel(char* key, char* field);
 		int publish(char* channel, char* msg);
@@ -156,6 +105,7 @@ class ArancinoClass {
 	private:
 		//void dropAll();
 		bool started;
+        int getStatus(char* data);
 		char* parse(char* message);
 		char** parseArray(char* message);
 		void sendArancinoCommand(String command);
@@ -170,7 +120,7 @@ class ArancinoClass {
         int getDigit(long value);
         int COMM_MODE = SYNCH;
 		void sendViaCOMM_MODE(char* key, char* value);
-		void _set(char* key, char* value);
+		int _set(char* key, char* value);
         int _publish(char* channel, char* msg);
 };
 

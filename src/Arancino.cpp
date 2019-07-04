@@ -18,13 +18,10 @@ License for the specific language governing permissions and limitations
 under the License
 */
 
-//TODO: replace multiple priority queue with a single priority queue
-
 #include "Arancino.h"
-//#include "ThreadSafeUART.h"
+
 
 #define DEBUG 0
-#define MAX_MSG_LENGTH 1024 //in char - not used
 #define USE_PRIORITIES 0
 #define STOP(x) Serial.println(x); delay(100)
 
@@ -63,6 +60,7 @@ int getResponseCount(uint16_t, uint16_t);
 void printQueue(msgQueue *);
 
 
+
 /*
  * Vector of queues that will contain the requests to be sent via uart.
  * The length of the vector is defined by the number of priorities allowed for FreeRTOS tasks.
@@ -83,6 +81,7 @@ msgQueue responseByPriority[configMAX_PRIORITIES];
 msgQueue responseByPriority[1];
 #endif
 
+
 /*
  * Once the scheduler is launched, this should be the only task that can write to the uart (stream).
  * The reading/writing on the uart is regulated by the uartMutex.
@@ -100,7 +99,6 @@ void commTask( void *pvParameters )
     }
     
     int temp = -1;
-    String start;
 	char* response = NULL;
 
     while(1)
@@ -575,7 +573,6 @@ void printQueue(msgQueue *queue)
 }
  
 
-
 ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
   // Empty
@@ -703,7 +700,7 @@ int ArancinoClass::del( char* key ) {
 	return parse(message).toInt();
 }*/
 
-void ArancinoClass::_set( char* key, char* value ) {
+int ArancinoClass::_set( char* key, char* value ) {
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
@@ -720,35 +717,43 @@ void ArancinoClass::_set( char* key, char* value ) {
 
 	char* message = receiveArancinoResponse(END_TX_CHAR);
 
-    parse(message);
+    int status = -1;
+    if (message != NULL)
+    {
+        status = getStatus(message);
+        char* messageParsed = parse(message);
+        free(messageParsed);
+    }
+
+	return status;
 }
 
-void ArancinoClass::set( char* key, char* value ) {
+int ArancinoClass::set( char* key, char* value ) {
     
 	if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-		return;
+		return -1;
 	}
-	_set(key, value);
+	return _set(key, value);
 
 }
 
-void ArancinoClass::set( char* key, int value ) {
+int ArancinoClass::set( char* key, int value ) {
     char str[20] = "";
     itoa(value, str, 10);
-	set(key, str);
+	return set(key, str);
 }
 
-void ArancinoClass::set( char* key, double value ) {
+int ArancinoClass::set( char* key, double value ) {
     char str[20] = "";
     doubleToString(value, 4, str);
-    set(key, str);
+    return set(key, str);
 }
 
-void ArancinoClass::set( char* key, uint32_t value ) {
+int ArancinoClass::set( char* key, uint32_t value ) {
     char str[20] = "";
     itoa(value, str, 10);
-	set(key, str);
+	return set(key, str);
 }
 
 char* ArancinoClass::hget( char* key, char* field ) {
@@ -884,12 +889,16 @@ int ArancinoClass::hset( char* key, char* field , char* value) {
 	}
 	sendArancinoCommand(END_TX_CHAR);
     char* message = receiveArancinoResponse(END_TX_CHAR); //freed by parse()
-    char* messageParsed = parse(message);
+    
+    int status = -1;
+    if (message != NULL)
+    {
+        status = getStatus(message);
+        char* messageParsed = parse(message);
+        free(messageParsed);
+    }
 
-    int result = atoi(messageParsed);
-    free(messageParsed);
-
-	return result;
+	return status;
 }
 
 
@@ -1185,35 +1194,78 @@ char** ArancinoClass::parseArray(char* data)
         tempArray = (char *)malloc((fieldCount + 1) * (maxLength + 1) * sizeof(char)); //user must free!
         arrayParsed[0] = (char*)fieldCount;
         
-    }
     
-    previousDSCIndex = data;
-    
-    for (int i = 1; i < (fieldCount + 1); ++i)
-    {
-        arrayParsed[i] = tempArray + ((i - 1) * (maxLength + 1));
-        DSCIndex = strchr(previousDSCIndex + 1, DATA_SPLIT_CHAR);
+        previousDSCIndex = data;
         
-        if (DSCIndex != NULL)
+        for (int i = 1; i < (fieldCount + 1); ++i)
         {
-            strncpy(arrayParsed[i], previousDSCIndex, DSCIndex - previousDSCIndex);
-            arrayParsed[i][DSCIndex - previousDSCIndex] = '\0';  
-            previousDSCIndex = DSCIndex + 1;
+            arrayParsed[i] = tempArray + ((i - 1) * (maxLength + 1));
+            DSCIndex = strchr(previousDSCIndex + 1, DATA_SPLIT_CHAR);
+            
+            if (DSCIndex != NULL)
+            {
+                strncpy(arrayParsed[i], previousDSCIndex, DSCIndex - previousDSCIndex);
+                arrayParsed[i][DSCIndex - previousDSCIndex] = '\0';  
+                previousDSCIndex = DSCIndex + 1;
+            }
+            else
+            {
+                strcpy(arrayParsed[i], previousDSCIndex);
+            }        
         }
-        else
-        {
-            strcpy(arrayParsed[i], previousDSCIndex);
-        }        
-    }
 
-    if (data != NULL) {
-        free(data);
+        if (data != NULL) {
+            free(data);
+        }
     }
     
-    return (arrayParsed != NULL) ? &arrayParsed[1] : NULL;
+    return (data != NULL && arrayParsed != NULL) ? &arrayParsed[1] : NULL;
 }
 
 
+int ArancinoClass::getStatus(char* message)
+{
+    int value = -1;
+    int separatorIndex = -1;
+    char* temp = NULL;
+    char* charAddr = strchr(message, DATA_SPLIT_CHAR); //address of DATA_SPLIT_CHAR
+    if (charAddr == NULL) //NO DATA_SPLIT_CHAR 
+    {
+        charAddr = strchr(message, END_TX_CHAR); //-> search for END_TX_CHAR
+    }
+    
+    if (charAddr != NULL)
+    {
+      separatorIndex = charAddr - message; //index of DATA_SPLIT_CHAR/END_TX_CHAR on message string
+      temp = (char *)calloc(separatorIndex + 1, sizeof(char));
+      strncpy(temp, message, separatorIndex + 1);
+      temp[separatorIndex] = '\0'; //replace separator with null-character
+      
+                  Serial.print("received response: ");
+            for (int i = 0; i < strlen(temp); i++)
+            {
+                if (temp[i] < 32)
+                {
+                    Serial.print("|");
+                    Serial.print(temp[i], DEC);
+                    Serial.print("|");
+                }
+                else
+                    Serial.print(temp[i]);
+            }
+            Serial.println("");
+            
+            
+      value = atoi(temp);
+      free(temp);
+    }
+    else
+    {
+        value = -1; //error
+    }
+    
+    return value;
+}
 
 
 char* ArancinoClass::parse(char* message){
@@ -1238,7 +1290,7 @@ char* ArancinoClass::parse(char* message){
     {
         status = (char *)calloc(messageLength + 1, sizeof(char)); //response = [STATUS] + @
         strncpy(status, message, messageLength);
-        status[messageLength] = '\0'; //replace END_TX_CHAR with '\0'
+        status[messageLength] = '\0'; //replace END_TX_CHAR with '\0'        
     }
     else
     {
@@ -1341,7 +1393,7 @@ char* ArancinoClass::receiveArancinoResponse(char terminator)
         uint16_t taskID = pxGetCurrentTaskNumber();
         while (getResponseCount(taskPriority, taskID) == 0)
         {
-            vTaskDelay(10 / portTICK_PERIOD_MS); //TODO trovare una soluzione a questo obbrobrio
+            vTaskDelay(50 / portTICK_PERIOD_MS); //TODO find a better solution (such suspend the task)
         }
         response = getResponse(taskPriority, taskID);
         
