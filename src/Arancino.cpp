@@ -104,10 +104,11 @@ void commTask( void *pvParameters )
     while(1)
     {
         //Priorities system currently not implemented
+
 		if (getRqstCount(USE_PRIORITIES) > 0)
 		{
             msgItem rqst = getRequest(USE_PRIORITIES);
-            (*stream).print(rqst.msg);
+            (*stream).write(rqst.msg);
             free(rqst.msg);
         
             if (response != NULL)
@@ -585,6 +586,7 @@ ArancinoClass::ArancinoClass(Stream &_stream):
 //============= SETUP FUNCTIONS ======================
 
 void ArancinoClass::begin(int timeout) {
+    while(!SERIAL_PORT); //wait for UART communication established
     
     String start;
     //reserved Key
@@ -602,6 +604,7 @@ void ArancinoClass::begin(int timeout) {
     #endif
     // Start communication with serial module on CPU
     do{
+        delay(300);
         #if defined(__SAMD21G18A__)
         if(!digitalRead(DBG_PIN)){
             Serial.print(SENT_STRING);
@@ -1241,21 +1244,6 @@ int ArancinoClass::getStatus(char* message)
       strncpy(temp, message, separatorIndex + 1);
       temp[separatorIndex] = '\0'; //replace separator with null-character
       
-                  Serial.print("received response: ");
-            for (int i = 0; i < strlen(temp); i++)
-            {
-                if (temp[i] < 32)
-                {
-                    Serial.print("|");
-                    Serial.print(temp[i], DEC);
-                    Serial.print("|");
-                }
-                else
-                    Serial.print(temp[i]);
-            }
-            Serial.println("");
-            
-            
       value = atoi(temp);
       free(temp);
     }
@@ -1352,7 +1340,7 @@ void ArancinoClass::sendArancinoCommand(char* command){
 	else
 	{
 #endif
-		stream.print(command);
+		stream.write(command, strlen(command)); //excluded '\0'
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	}
 #endif
@@ -1360,7 +1348,11 @@ void ArancinoClass::sendArancinoCommand(char* command){
 #if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		if(command[strlen(command) - 1] == END_TX_CHAR)
+        {
 			Serial.println(command);
+            //Serial.println("-------------------------------fine");
+            //delay(500);
+        }
 		else
 			Serial.print(command);
 	}
@@ -1369,7 +1361,7 @@ void ArancinoClass::sendArancinoCommand(char* command){
 
 
 void ArancinoClass::sendArancinoCommand(char command){
-    char* c = (char *)malloc(sizeof(char)*2);
+    char* c = (char *)calloc(2, sizeof(char));
     c[0] = command;
     c[1] = '\0';
     sendArancinoCommand(c);
@@ -1401,16 +1393,31 @@ char* ArancinoClass::receiveArancinoResponse(char terminator)
     }
     else
     {
-#endif
+#endif        
         //BEGIN read from uart
+#if defined(DEBUG) && DEBUG == 1
+        Serial.println("reading from UART");
+#endif
         long previousMillis = millis();
+        char c = 0;
         
         while (millis() - previousMillis < TIMEOUT)
         {
             if ((stream).available())
             {
-                char c = (stream).read();
-
+                (stream).readBytes(&c, 1);
+#if defined(DEBUG) && DEBUG == 1
+                //BEGIN DEBUG
+                if (c < 32)
+                {
+                    Serial.print("|");
+                    Serial.print(c, DEC);
+                    Serial.print("|");
+                }
+                else
+                    Serial.print(c);
+                //END DEBUG
+#endif
                 if (response == NULL)
                 {
                     response = (char *)calloc(2, sizeof(char));
@@ -1429,9 +1436,15 @@ char* ArancinoClass::receiveArancinoResponse(char terminator)
                 }
                 
                 if (c == terminator)
+                {
                     break;
+                }
             }
+            
         }
+#if defined(DEBUG) && DEBUG == 1
+        Serial.println("");
+#endif
         //END read from uart
 
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
