@@ -108,7 +108,7 @@ void commTask( void *pvParameters )
 		if (getRqstCount(USE_PRIORITIES) > 0)
 		{
             msgItem rqst = getRequest(USE_PRIORITIES);
-            (*stream).write(rqst.msg);
+            (*stream).write(rqst.msg, strlen(rqst.msg)); //excluded '\0'
             free(rqst.msg);
         
             if (response != NULL)
