@@ -59,6 +59,9 @@ int getResponseCount(uint16_t, uint16_t);
 
 void printQueue(msgQueue *);
 
+extern void commTask(void *pvParameters);
+TaskHandle_t commTaskHandle;
+
 
 
 /*
@@ -87,6 +90,8 @@ msgQueue responseByPriority[1];
  * The reading/writing on the uart is regulated by the uartMutex.
  * Between one request and another there is a 50 millisecond delay, during which the task is suspended.
  * The serial port used is passed as parameter during the task initialization (on begin).
+ * 
+ * Stack used: 64 bytes
  */
 void commTask( void *pvParameters )
 {
@@ -167,6 +172,8 @@ void commTask( void *pvParameters )
             //xTaskResumeAll();
 		}
 #if defined(DEBUG) && DEBUG == 1
+        Serial.print("Stack: ");
+        Serial.println(uxTaskGetStackHighWaterMark(commTaskHandle));
 		Serial.print("freeHeap: ");
         Serial.println( xPortGetFreeHeapSize() );
 #endif
@@ -620,12 +627,9 @@ void ArancinoClass::begin(int timeout) {
 }
 
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-extern void commTask(void *pvParameters);
-static TaskHandle_t commTaskHandle;
-
 void ArancinoClass::startScheduler() {
     vSetErrorLed(LED_BUILTIN, HIGH);
-    xTaskCreate(commTask,     "Communication task",       1024, (void *)&stream, configMAX_PRIORITIES - 1, &commTaskHandle);
+    xTaskCreate(commTask,     "Communication task",       128, (void *)&stream, configMAX_PRIORITIES - 1, &commTaskHandle);
 
     vTaskStartScheduler();
 }
