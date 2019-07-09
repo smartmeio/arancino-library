@@ -39,8 +39,10 @@ void setup() {
   Arancino.set("foo","bar");
 
   int num = Arancino.del("baz");
+  Serial.println(num ? "Key deleted" : "Key not found");
   //0
   num = Arancino.del("foo");
+  Serial.println(num ? "Key deleted" : "Key not found");
   //1
 }
 

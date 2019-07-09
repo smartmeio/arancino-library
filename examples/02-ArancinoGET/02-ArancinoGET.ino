@@ -21,7 +21,7 @@ under the License
 /*
 Get the value of key. If the key does not exist, the special value NULL is returned.
 
--String get( String key )
+-char* get( char* key )
 
 Parameters
 - key: the name of the key from which the value is retrieved
@@ -46,10 +46,11 @@ void loop() {
   Arancino.set("foo","bar");
 
   //gets the value from the 'foo' key
-  String value = Arancino.get("foo");
+  char* value = Arancino.get("foo");
   Serial.print("foo -> ");
   Serial.println(value);
   //foo -> bar
+  free(value); //delete the string from memory
 
   delay(2000); //wait 2 seconds
 
@@ -60,6 +61,7 @@ void loop() {
   Serial.print("foo -> ");
   Serial.println(value);
   //foo -> baz
+  free(value); //delete the string from memory
   
   delay(2000); //wait 2 seconds
 }

@@ -21,7 +21,7 @@ under the License
 /*
 Returns the value associated with field in the hash stored at key.
 
-- String hget( String key, String field )
+- char* hget( char* key, char* field )
 
 Parameters
 
@@ -29,7 +29,7 @@ Parameters
 - field: the name of the field from which the value is retrieved
 
 
-Return value - String reply:
+Return value - char* reply:
 - the value if a value is stored in field at key.
 - NULL if there isn't a value stored.
 */
@@ -40,24 +40,25 @@ void setup() {
 
   Arancino.begin();
   Serial.begin(115200);
-  int resp = Arancino.hset("foo","bar","yeah");
-  resp = Arancino.hset("foo","baz","whoo");
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
 
 }
 
 void loop() {
   
-  String value = Arancino.hget("foo","bar");
+  char* value = Arancino.hget("foo","bar");
   Serial.print("foo bar -> ");
   Serial.println(value);
   //foo bar -> yeah
+  free(value);
   
   value = Arancino.hget("foo","baz");
   Serial.print("foo baz -> ");
   Serial.println(value);
   //foo bar -> whoo
+  free(value);
 
   delay(5000); //wait 5 seconds
 
 }
-

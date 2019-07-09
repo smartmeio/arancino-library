@@ -19,8 +19,6 @@ under the License
 */
 
 #include "Arancino.h"
-
-
 #define DEBUG 0
 #define USE_PRIORITIES 0
 #define STOP(x) Serial.println(x); delay(100)
@@ -58,11 +56,9 @@ char* getResponse(uint16_t, uint16_t);
 int getResponseCount(uint16_t, uint16_t);
 
 void printQueue(msgQueue *);
+extern TaskHandle_t commTaskHandle;
 
-extern void commTask(void *pvParameters);
-TaskHandle_t commTaskHandle;
-
-
+void commTask(void *pvParameters);
 
 /*
  * Vector of queues that will contain the requests to be sent via uart.
@@ -83,7 +79,6 @@ msgQueue responseByPriority[configMAX_PRIORITIES];
 #else
 msgQueue responseByPriority[1];
 #endif
-
 
 /*
  * Once the scheduler is launched, this should be the only task that can write to the uart (stream).
@@ -181,6 +176,8 @@ void commTask( void *pvParameters )
 
     }
 }
+
+
 
 void initQueue(msgQueue *queue)
 {
@@ -579,7 +576,7 @@ void printQueue(msgQueue *queue)
 	}
 	xTaskResumeAll();
 }
- 
+
 
 ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
@@ -626,7 +623,10 @@ void ArancinoClass::begin(int timeout) {
     
 }
 
+
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+TaskHandle_t commTaskHandle;
+
 void ArancinoClass::startScheduler() {
     vSetErrorLed(LED_BUILTIN, HIGH);
     xTaskCreate(commTask,     "Communication task",       128, (void *)&stream, configMAX_PRIORITIES - 1, &commTaskHandle);
@@ -912,7 +912,7 @@ int ArancinoClass::hset( char* key, char* field , char* value) {
 int ArancinoClass::hset( char* key, char* field, int value ) {
     char str[20]; 
     itoa(value, str, 10);
-    hset(key, field, str);
+    return hset(key, field, str);
 }
 
 int ArancinoClass::getDigit(long value)
@@ -959,13 +959,13 @@ void ArancinoClass::doubleToString(double value, unsigned int _nDecimal, char* s
 int ArancinoClass::hset( char* key, char* field, double value ) {
     char str[20] = "";
     doubleToString(value, 4, str);
-    hset(key, field, str);    
+    return hset(key, field, str);    
 }
 
 int ArancinoClass::hset( char* key, char* field, uint32_t value ) {
     char str[20]; 
     itoa(value, str, 10);
-    hset(key, field, str);
+    return hset(key, field, str);
 }
 
 int ArancinoClass::hdel( char* key, char* field ) {

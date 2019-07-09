@@ -21,13 +21,18 @@ under the License
 /*
 Set 'key' to hold the string 'value'. If 'key' already holds a 'value', it is overwritten, regardless of its type.
 
-- void set( String key, String value )
-- void set( String key, int value )
-- void set( String key, float value )
+- int set( char* key, char* value )
+- int set( char* key, int value )
+- int set( char* key, float value )
 
-Parameters
+
+Parameters:
 - key: the key name
-- value: the value for the specified key. can be String, int o float
+- value: the value for the specified key. can be char*, int o float
+
+Return value - int reply (Response code -> https://git.smartme.io/smartme.io/arancino/arancino-library#response-codes)
+- 101 = OK - Setted value into a new field.
+- 102 = OK - Setted value into an existing field.
 */
 
 
@@ -37,7 +42,36 @@ void setup() {
   Arancino.begin();
 
   //sets the value 'bar' into the 'foo' key
-  Arancino.set("foo","bar");
+  Arancino.set("foo", "bar");
+  
+  //(char*, char*) example ----------------
+  /*char* key = "foo";
+  char* value = "bar";
+  //sets the value 'bar' into the 'foo' key
+  Arancino.set(key, value);*/
+  //---------------------------------------
+
+  //(char*, int) example ------------------
+  /*char* key = "foo";
+  int value = 123;
+  //sets the value 'bar' into the 'foo' key
+  Arancino.set(key, value);*/
+  //---------------------------------------
+
+  //(char*, double) example ---------------
+  /*char* key = "foo";
+  double value = 123.456;
+  //sets the value 'bar' into the 'foo' key
+  Arancino.set(key, value);*/
+  //---------------------------------------
+
+  //(String, String) example --------------
+  /*String key = "foo";
+  String value = "bar";
+  //sets the value 'bar' into the 'foo' key
+  Arancino.set(key.begin(), value.begin());*/
+  //---------------------------------------
+  
 }
 
 void loop() {

@@ -23,7 +23,7 @@ Removes the specified field from the hash stored at key.
 If field is specified and it does not exist within this hash, this command returns 0. 
 If the key does not exist, it is treated as an empty hash and this command returns 0.
 
-- String hdel( String key, String field )
+- char* hdel( char* key, char* field )
 
 Parameters
 
@@ -40,16 +40,16 @@ Return value - int reply:
 void setup() {
 
   Arancino.begin();
-  int resp = Arancino.hset("foo","bar","yeah");
-  resp = Arancino.hset("foo","baz","whoo");
-  int value = Arancino.hdel("foo","bar");
-  //1
-  value = Arancino.hget("foo","baz");
-  //0
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
+  int value = Arancino.hdel("foo","bar"); //return 1
+  char* str = Arancino.hget("foo","bar"); //return NULL
+  Serial.print("hget: ");
+  Serial.println(str);
+  free(str);
 
 }
 
 void loop() {
   //do something
 }
-
