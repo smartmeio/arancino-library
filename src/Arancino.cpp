@@ -629,6 +629,13 @@ TaskHandle_t commTaskHandle;
 
 void ArancinoClass::startScheduler() {
     vSetErrorLed(LED_BUILTIN, HIGH);
+    
+    /*
+     * Uncomment this if you want run loop() as a dedicated task.
+     * If loop() doesn't run as dedicated task, should not contain blocking code.
+     */
+    //runLoopAsTask(256, tskIDLE_PRIORITY);
+
     xTaskCreate(commTask,     "Communication task",       128, (void *)&stream, configMAX_PRIORITIES - 1, &commTaskHandle);
 
     vTaskStartScheduler();
