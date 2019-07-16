@@ -82,8 +82,7 @@ msgQueue responseByPriority[1];
 
 /*
  * Once the scheduler is launched, this should be the only task that can write to the uart (stream).
- * The reading/writing on the uart is regulated by the uartMutex.
- * Between one request and another there is a 50 millisecond delay, during which the task is suspended.
+ * Between one request and another there is a 25 millisecond delay, during which the task is suspended.
  * The serial port used is passed as parameter during the task initialization (on begin).
  * 
  * Stack used: 64 bytes
@@ -164,7 +163,6 @@ void commTask( void *pvParameters )
 #endif
             insertResponse(USE_PRIORITIES, rqst.taskID, response);
             //vTaskResume(rqst.taskHandle); //waking up the task that made the request BUG -> not used
-            //xTaskResumeAll();
 		}
 #if defined(DEBUG) && DEBUG == 1
         Serial.print("Stack: ");

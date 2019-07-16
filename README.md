@@ -38,15 +38,18 @@ void loop() {
 
 ___
 ### set
-##### *void set( String key, String value )*
-##### *void set( String key,  int value )*
-##### *void set( String key, float value )*
+##### *int set(char&ast; key, char&ast; value )*
+##### *int set(char&ast; key,  int value )*
+##### *int set(char&ast; key, float value )*
 
 Set *key* to hold the string *value*. If *key* already holds a *value*, it is overwritten, regardless of its type.
 
 ##### Parameters
 * **`key`**: the *key* name
 * **`value`**: the *value* for the specified *key*. can be String, int o float  
+
+##### Return value
+int reply: the [*response code*](#response-codes) value.
 
 ##### Example
 
@@ -68,19 +71,19 @@ void loop() {
 
 ___
 ### get
-##### *String get( String key )*
+##### *char&ast; get(char&ast; key)*
 
 Get the *value* of *key*. If the *key* does not exist, the special value NULL is returned.
 
-#### Parameters
+##### Parameters
 * **`key`**: the name of the key from which the value is retrieved
 
-#### Return value
-String reply:
-- the value of the passed *key*.
+##### Return value
+char&ast; reply:
+- string that contains the value of selected *key*.
 - NULL if the *key* doesn't exist.
 
-##### Example
+###### Example
 ```c++
 #include <Arancino.h>
 
@@ -97,12 +100,13 @@ void loop() {
   Arancino.set("foo","bar");
 
   //gets the value from the 'foo' key
-  value = Arancino.get("foo");
+  char* value = Arancino.get("foo");
   Serial.print("foo -> ");
   Serial.println(value);
   //foo -> bar
+  free(value); //delete the string from memory
 
-  delay(2000);
+  delay(2000); //wait 2 seconds
 
   Arancino.set("foo","baz");
 
@@ -111,14 +115,18 @@ void loop() {
   Serial.print("foo -> ");
   Serial.println(value);
   //foo -> baz
+  free(value); //delete the string from memory
+
+  delay(2000); //wait 2 seconds
 }
+
 
 ```
 
 
 ___
 ### del
-##### *int del( String key )*
+##### *int del(char&ast; key )*
 
 Removes the specified *key*. A *key* is ignored if it does not exist.
 
@@ -138,10 +146,13 @@ void setup() {
   Arancino.set("foo","bar");
 
   int num = Arancino.del("baz");
+  Serial.println(num ? "Key deleted" : "Key not found");
   //0
   num = Arancino.del("foo");
+  Serial.println(num ? "Key deleted" : "Key not found");
   //1
 }
+
 
 void loop() {
   //do something
@@ -153,7 +164,7 @@ void loop() {
 
 ___
 ### keys
-##### *String\* keys(String pattern)*
+##### *char&ast;&ast; keys(char&ast; pattern)*
 Returns all the keys matching the *pattern*.
 
 Supported glob-style patterns:
@@ -170,7 +181,7 @@ Use \ to escape special characters if you want to match them verbatim.
 * **`pattern`**: the pattern used to find matching keys.
 
 ##### Return value
-String* reply: list of keys matching *pattern*.
+char&ast;&ast; reply: list of keys matching *pattern*.
 
 ##### Example
 ```c++
@@ -188,18 +199,26 @@ void setup() {
 
 void loop() {
 
-  String* key = Arancino.keys();
-  int key_size=Arancino.getArraySize();
-  for(int i=0;i<key_size;i++){
-      Serial.println(key[i]);  
+  char** key = Arancino.keys();
+  for (int i = 0; i < Arancino.getArraySize(key); i++) {
+    Serial.println(key[i]);
   }
-	//pressure
-	//humidity
-	//temperature
+  //pressure
+  //humidity
+  //temperature
+  Arancino.freeArray(key); //delete the array from memory
 
-  delay(5000); //wait 5 seconds
-  
+  delay(1000); //wait 1 seconds
+
+  key = Arancino.keys("temp*");  //return all the keys that contains temp pattern
+  for (int i = 0; i < Arancino.getArraySize(key) ; i++) {
+    Serial.println(key[i]);   //temperature
+  }
+  Arancino.freeArray(key); //delete the array from memory
+
+  delay(1000); //wait 1 seconds
 }
+
 
 ```
 
@@ -207,9 +226,9 @@ void loop() {
 
 ___
 ### hset
-##### *int hset( String key, String field , String value )*
-##### *int hset( String key, String field , int value )*
-##### *int hset( String key, String field , float value )*
+##### *int hset(char&ast; key, char&ast; field , char&ast; value )*
+##### *int hset(char&ast; key, char&ast; field , int value )*
+##### *int hset(char&ast; key, char&ast; field , float value )*
 
 Sets *field* in the hash stored at *key* with the specified *value*. If *key* does not exist, a new *key* holding a hash is created. If *field* already exists in the hash, it is overwritten.
 
@@ -219,9 +238,7 @@ Sets *field* in the hash stored at *key* with the specified *value*. If *key* do
 * **`value`**: the value to store in the hash with the specified field.
 
 ##### Return value
-int reply:
-- 1 if *field* is a new field in the hash and *value* was set.
-- 0 if *field* already exists in the hash and the *value* was updated.
+int reply: the [*response code*](#response-codes) value.
 
 ##### Example
 ```c++
@@ -230,11 +247,15 @@ int reply:
 void setup() {
   Arancino.begin();
 
-  int resp = Arancino.hset("foo","bar","yeah");
-  //1
-  resp = Arancino.hset("foo","baz","whoo");
-  //0
+  int resp = Arancino.hset("foo","bar","yeah"); //return 101
+  Serial.print("Response code: ");
+  Serial.println(resp);
+
+  resp = Arancino.hset("foo","bar","whoo"); //return 102
+  Serial.print("Response code: ");
+  Serial.println(resp);
 }
+
 
 void loop() {
   //do something
@@ -246,7 +267,7 @@ void loop() {
 
 ___
 ### hget
-##### *String hget( String key, String field ) {*
+##### *char&ast; hget(char&ast; key, char&ast; field ) {*
 Returns the *value* associated with *field* in the hash stored at *key*.
 
 ##### Parameters
@@ -254,7 +275,7 @@ Returns the *value* associated with *field* in the hash stored at *key*.
 * **`field`**: the name of the *field* from which the value is retrieved
 
 ##### Return value
-String reply:
+char&ast; reply:
 - the *value* if a value is stored in *field* at *key*.
 - NULL if there isn't a value stored.
 
@@ -266,81 +287,80 @@ void setup() {
 
   Arancino.begin();
   Serial.begin(115200);
-  int resp = Arancino.hset("foo","bar","yeah");
-  resp = Arancino.hset("foo","baz","whoo");
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
 
 }
 
 void loop() {
-  
-  String value = Arancino.hget("foo","bar");
+
+  char* value = Arancino.hget("foo","bar");
   Serial.print("foo bar -> ");
   Serial.println(value);
   //foo bar -> yeah
-  
+  free(value);
+
   value = Arancino.hget("foo","baz");
   Serial.print("foo baz -> ");
   Serial.println(value);
   //foo bar -> whoo
+  free(value);
 
   delay(5000); //wait 5 seconds
-
 }
+
 ```
 
 ___
 ### hgetall
-##### *String\* hgetall( String key )*
+##### *char&ast;&ast; hgetall(char&ast; key )*
 Returns all fields and values of the hash stored at *key*. In the returned value, every *field* name is followed by its *value*.
 
 ##### Parameters
 * **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
-*String reply: list of field and value matching *key*.
+char&ast;&ast; reply: string array of field and value matching *key*.
 
 ##### Example
 ```c++
 #include <Arancino.h>
 
 void setup() {
-
   Arancino.begin();
-  
   Serial.begin(115200);
-  
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
-  
+  Arancino.hset("foo", "bar", "yeah");
+  Arancino.hset("foo", "baz", "whoo");
 }
 
 void loop() {
-
-  String* values = Arancino.hgetall("foo");
-  for(int i=0; i<Arancino.getArraySize(); i+=2){
-  	Serial.print("foo ");
-  	Serial.print(values[i]);
-  	Serial.print(" -> ");
-  	Serial.println(values[i+1];
-  	// foo bar -> yeah
-  	// foo baz -> whoo
+  char** values = Arancino.hgetall("foo");
+  int arraySize = Arancino.getArraySize(values);
+  for (int i = 0; i < arraySize; i += 2)
+  {
+    Serial.print("foo ");
+    Serial.print(values[i]);
+    Serial.print(" = ");
+    Serial.println(values[i + 1]);
   }
+  Arancino.freeArray(values); //delete the array from memory
 
   delay(5000); //wait 5 seconds
 }
+
 ```
 
 
 ___
 ### hkeys
-##### *String\* hkeys( String key )*
+##### *char&ast;&ast; hkeys( String key )*
 Returns all field names in the hash stored at *key*.
 
 ##### Parameters
 * **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
-String\* reply: list of *fields* matching *key*.
+char&ast;&ast; reply: string array of *fields* matching *key*.
 
 ##### Example
 ```c++
@@ -350,7 +370,7 @@ void setup() {
 
   Arancino.begin();
   Serial.begin(115200);
-  
+
   Arancino.hset("foo","bar","yeah");
   Arancino.hset("foo","baz","whoo");
 
@@ -358,13 +378,14 @@ void setup() {
 
 void loop() {
 
-  String* fields = Arancino.hkeys("foo");
-  for(int i=0; i<Arancino.getArraySize(); i++){
+  char** fields = Arancino.hkeys("foo");
+  for (int i = 0; i < Arancino.getArraySize(fields); i++) {
     Serial.print("foo -> ");
     Serial.println(fields[i]);
     // foo -> bar
     // foo -> baz
   }
+  Arancino.freeArray(fields);
 
   delay(5000); //wait 5 seconds
 }
@@ -373,14 +394,14 @@ void loop() {
 
 ___
 ### hvals
-##### *String\* hvals( String key )*
+##### *char&ast;&ast; hvals(char&ast; key )*
 Returns all values in the hash stored at *key*.
 
 ##### Parameters
 * **`key`**: the name of the *key* which holds the hash.
 
 ##### Return value
-String\* reply: list of *values* matching *key*.
+char&ast;&ast; reply: string array of *values* matching *key*.
 
 ##### Example
 ```c++
@@ -390,21 +411,23 @@ void setup() {
 
   Arancino.begin();
   Serial.begin(115200);
-  
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
+
+  Arancino.hset("foo", "bar", "yeah");
+  Arancino.hset("foo", "baz", "whoo");
 
 }
 
 void loop() {
-  
-  String* values = Arancino.hkeys("foo");
-  for(int i=0; i<Arancino.getArraySize(); i++){
+
+  char** values = Arancino.hvals("foo");
+  for (int i = 0; i < Arancino.getArraySize(values); i++) {
     Serial.print("foo -> ");
     Serial.println(values[i]);
     // foo -> yeah
     // foo -> whoo
   }
+  Arancino.freeArray(values);
+
 
   delay(5000); //wait 5 seconds
 }
@@ -414,7 +437,7 @@ void loop() {
 
 ___
 ### hdel
-##### *int hdel( String key, String field )*
+##### *int hdel(char&ast; key, char&ast; field )*
 Removes the specified *field* from the hash stored at *key*. If *field* is specified and it does not exist within this hash, this command returns 0. If the key does not exist, it is treated as an empty hash and this command returns 0.
 
 
@@ -434,18 +457,19 @@ int reply:
 void setup() {
 
   Arancino.begin();
-  int resp = Arancino.hset("foo","bar","yeah");
-  resp = Arancino.hset("foo","baz","whoo");
-  int value = Arancino.hdel("foo","bar");
-  //1
-  value = Arancino.hget("foo","baz");
-  //0
-
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
+  int value = Arancino.hdel("foo","bar"); //return 1
+  char* str = Arancino.hget("foo","bar"); //return NULL
+  Serial.print("hget: ");
+  Serial.println(str);
+  free(str);
 }
 
 void loop() {
   //do something
 }
+
 ```
 
 
@@ -474,8 +498,8 @@ void loop() {
 ```
 ___
 ### publish
-##### *int publish(String channel, String message)*
-##### *int publish(int channel, String message)*
+##### *int publish(char&ast; channel, char&ast; message)*
+##### *int publish(int channel, char&ast; message)*
 Posts a message to the given channel.
 
 
@@ -498,21 +522,21 @@ void setup() {
 }
 
 void loop() {
-  
+
   int resp = Arancino.publish(0,"Hello from Arancino");
   Serial.print("Message sent to ")
   Serial.print(resp);
   Serial.println(" clients");
-  //Message sent to 0 client 
-  
+  //Message sent to 0 client
+
   delay(5000); //wait 5 seconds
-  
+
 }
 ```
 
 ___
 ### print
-##### *void print(String message)*
+##### *void print(char&ast; message)*
 Set the *message* as a *value* for the reserved *key* `___MONITOR____`. To do that it uses the `set` api under the hood.
 
 ##### Example
@@ -527,19 +551,81 @@ void setup() {
 }
 
 void loop() {
-  
+
   Arancino.print(0,"Hello from Arancino");
   delay(5000); //wait 5 seconds
-  
+
 }
 ```
 
 
 ___
 ### println
-##### *void println(String message)*
+##### *void println(char&ast; message)*
 Like [`print`](#print) but with a trailing *new line* char.
 
+___
+### getArraySize
+##### *int getArraySize(char&ast;&ast; array)*
+Return the *array* string count.
+##### Parameters
+* **`array`**: pointer to string array.
+
+##### Return value
+int reply: string count.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Serial.begin(115200);
+  Arancino.begin();
+
+  Arancino.set("pressure",1023);
+  Arancino.set("humidity",67.5);
+  Arancino.set("temperature",24.4);
+
+}
+
+void loop() {
+  char** key = Arancino.keys();
+  int count = Arancino.getArraySize(key);
+  Serial.print("Key count: ");
+  Serial.println(count);
+  Arancino.freeArray(key);
+}
+```
+___
+### freeArray
+##### *void freeArray(char&ast;&ast; array)*
+frees the memory used by *array*
+##### Parameters
+* **`array`**: pointer to string array.
+
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Serial.begin(115200);
+  Arancino.begin();
+
+  Arancino.set("pressure",1023);
+  Arancino.set("humidity",67.5);
+  Arancino.set("temperature",24.4);
+
+}
+
+void loop() {
+  char** key = Arancino.keys();
+  int count = Arancino.getArraySize(key);
+  Serial.print("Key count: ");
+  Serial.println(count);
+  Arancino.freeArray(key);
+}
+```
 
 ## Cortex Protocol
 Arancino Library uses a simple protocol, called **Cortex**, to communicate with the Arancino Module over serial connection. Cortex Protocol is designed to be easy to read and processed. Arancino Library, Arancino Module and Cortex Protocol are designed to be monodirectional and synchronous. In this scenario the Arancino Library within the microcontroller acts as *master*, and the Arancino Module as *slave*.
@@ -566,7 +652,7 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | [`pubblish`](#pubblish)    | PUB          |
 
 ### Commands separator chars
-**Important**: Do not use these character codes to compose String values to pass to the API
+**Important**: Do not use these character codes to compose string values to pass to the API
 
 | Separator             | Char Code     |
 | --------------------- |:-------------:|
@@ -580,7 +666,7 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | ----------------- |:---------------------:|
 | `100`             | **OK** - Generic operation successfully completed. |
 | `101`             | **OK** - Setted value into a new field.            |
-| `102`             | **OK** - Setted value into an nexistingew field    |
+| `102`             | **OK** - Setted value into an existing field    |
 | `200`             | **KO** - Generic Error                             |
 | `201`             | **KO** - Retrieved NULL value                      |
 | `202`             | **KO** - Error during *SET* command                |
@@ -698,7 +784,206 @@ Debug messages are similar to those written above in the [Commands and Protocol]
 - Command Sent: `GETkey`
 - Response Received:`100value`
 
+## FreeRTOS implementation
+The following section concern the use of FreeRTOS, already implemented in the Arancino Library; will be illustrated the Arancino-related FreeRTOS APIs and some basic FreeRTOS functions. For more advanced features, please see the official [FreeRTOS Documentation](https://www.freertos.org/Documentation/RTOS_book.html).
+
+### FreeRTOS library
+The Arancino library use a [FreeRTOS porting](https://github.com/BriscoeTech/Arduino-FreeRTOS-SAMD21) for SAMD architecture that can be installed directly from the official Arduino library repository through the library manager. __User must install the correct FreeRTOS library__; the correct fuction it's not guaranteed with other FreeRTOS libraries. User doesn't have to include the FreeRTOS library because it is already included in Arancino library.
+
+___
+### startScheduler
+##### *void startScheduler*
+Configure the `LED_BUILTIN` for debug and start the FreeRTOS scheduler. When a fatal FreeRTOS error occur, the `LED_BUILTIN` will blink following this codes:
+
+-    3 blinks - Fatal Rtos Error, something bad happened. Think really hard about what you just changed.
+-    2 blinks  - Stack overflow, task needs more bytes defined for its stack.
+-    1 blink - Malloc failed, probably ran out of heap.
+
+**IMPORTANT**: `Arancino.startScheduler()` never return, so **MUST be** the last instruction of Arduino begin() function.
+
+##### Example:
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+  Arancino.startScheduler();
+}
+
+void loop() {
+    //do something
+}
+```
+
+### Basic FreeRTOS APIs
+___
+### xTaskCreate
+##### BaseType_t xTaskCreate(TaskFunction_t pvTaskCode, const char &ast;pcName, configSTACK_DEPTH_TYPE usStackDepth, void &ast;pvParameters, UBaseType_t uxPriority, TaskHandle_t &ast; pxCreatedTask);
+
+Create a new task and add it to the list of tasks that are ready to run.
+
+##### Parameters
+* **`pvTaskCode`**: Pointer to the task entry function (just the name of the function that implements the task, see the example below).
+Tasks are normally implemented as an infinite loop, and must never attempt to return or exit from their implementing function. Tasks can however [delete themselves](https://www.freertos.org/a00126.html).
+
+* **`pcName`**:	A descriptive name for the task. This is mainly used to facilitate debugging, but can also be used to [obtain a task handle](https://www.freertos.org/a00021.html#xTaskGetHandle).
+The maximum length of a task’s name is set using the configMAX_TASK_NAME_LEN parameter in `FreeRTOSConfig.h`.
+
+* **`usStackDepth`**:	The number of words (not bytes!) to allocate for use as the task’s stack. For example, if the stack is 16-bits wide and usStackDepth is 100, then 200 bytes will be allocated for use as the task’s stack. As another example, if the stack is 32-bits wide and usStackDepth is 400 then 1600 bytes will be allocated for use as the task’s stack.
+The stack depth multiplied by the stack width must not exceed the maximum value that can be contained in a variable of type size_t. See the FAQ [How big should the stack be?](https://www.freertos.org/FAQMem.html#StackSize).
+
+* **`pvParameters`**:	A value that will passed into the created task as the task’s parameter.
+If pvParameters is set to the address of a variable then the variable must still exist when the created task executes – so it is not valid to pass the address of a stack variable.
+
+* **`uxPriority`**:	The [priority](https://www.freertos.org/RTOS-task-priority.html) at which the created task will execute.
+
+* **`pxCreatedTask`**: Used to pass a [handle](https://www.freertos.org/a00019.html#xTaskHandle) to the created task out of the xTaskCreate() function. pxCreatedTask is optional and can be set to NULL.
+
+##### Return value
+BaseType_t return: If the task was created successfully then `pdPASS` is returned. Otherwise `errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY` is returned.
+
+##### Example
+```c++
+#include <Arancino.h>
+TaskHandle_t loop2Handle;
+
+void loop2(void *pvPramaters)
+{
+  while (1)
+  {
+    Arancino.set("foo", "bar");
+    vTaskDelay(2000); //wait 2 seconds (non-blocking delay)
+  }
+}
+
+void setup() {
+  Arancino.begin();
+  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(115200);
+
+  xTaskCreate(loop2,     "Loop 2",       256, NULL, tskIDLE_PRIORITY, &loop2Handle);
+  Arancino.startScheduler();
+}
+
+void loop() {
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(1000);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(1000);
+}
+```
+___
+### vTaskDelay
+##### void vTaskDelay(const TickType_t xTicksToDelay);
+Delay a task for a given number of ticks. The actual time that the task remains blocked depends on the tick rate. The constant `portTICK_PERIOD_MS` can be used to calculate real time from the tick rate – with the resolution of one tick period.
+
+##### Parameters
+* **`xTicksToDelay`**: The amount of time, in tick periods, that the calling task should block. If, as in this implementation, the tick rate is 1000hz, the `portTICK_PERIOD_MS` is `1` so `xTicksToDelay` corresponds to milliseconds.
+
+##### Example
+```c++
+#include <Arancino.h>
+TaskHandle_t loop2Handle;
+
+void loop2(void *pvPramaters)
+{
+  while (1)
+  {
+    vTaskDelay(1000); //wait 1 second (non-blocking delay)
+  }
+}
+
+void setup() {
+  Arancino.begin();
+  xTaskCreate(loop2,     "Loop 2",       256, NULL, tskIDLE_PRIORITY, &loop2Handle);
+  Arancino.startScheduler();
+}
+
+void loop() {
+  //do something
+}
+```
+___
+### vTaskSuspend
+##### void vTaskSuspend(TaskHandle_t xTaskToSuspend);
+Suspend any task. When suspended a task will never get any microcontroller processing time, no matter what its priority. Calls to vTaskSuspend are not accumulative – i.e. calling vTaskSuspend() twice on the same task still only requires one call to vTaskResume() to ready the suspended task.
+
+##### Parameters
+* **`xTaskToSuspend`**: Handle to the task being suspended. Passing a NULL handle will cause the calling task to be suspended.
+
+##### Example
+```c++
+#include <Arancino.h>
+TaskHandle_t loop2Handle;
+
+void loop2(void *pvPramaters)
+{
+  while (1)
+  {
+    vTaskSuspend(loop2Handle); //executed only once - never resumed.
+  }
+}
+
+void setup() {
+  Arancino.begin();
+  xTaskCreate(loop2,     "Loop 2",       256, NULL, tskIDLE_PRIORITY, &loop2Handle);
+  Arancino.startScheduler();
+}
+
+void loop() {
+  //do something
+}
+```
+
+___
+### vTaskResume
+##### void vTaskResume(TaskHandle_t xTaskToResume);
+Resumes a suspended task. A task that has been suspended by one or more calls to vTaskSuspend () will be made available for running again by a single call to vTaskResume ().
+
+##### Parameters
+* **`xTaskToSuspend`**: Handle to the task being readied.
+
+##### Example
+```c++
+#include <Arancino.h>
+TaskHandle_t loop2Handle;
+int state = 0;
+
+void loop2(void *pvPramaters)
+{
+  while (1)
+  {
+    state = !state;
+    digitalWrite(LED_BUILTIN, state); //blink
+    vTaskSuspend(loop2Handle);
+  }
+}
+
+void loop3(void *pvPramaters)
+{
+  while (1)
+  {
+    vTaskResume(loop2Handle);
+    vTaskDelay(1000);
+  }
+}
+
+void setup() {
+  Arancino.begin();
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  xTaskCreate(loop2,     "Loop 2",       256, NULL, tskIDLE_PRIORITY, &loop2Handle);
+  xTaskCreate(loop3,     "Loop 3",       256, NULL, tskIDLE_PRIORITY, NULL);
+  Arancino.startScheduler();
+}
+
+void loop() {
+  //do something
+}
+```
 
 ## Credits
 Most of the documentation has been extrapolated from [Redis Command](https://redis.io/commands/)
 Redis and Arduino are trademarks of their respective owners.
+
+FreeRTOS documentation is based on the official [FreeRTOS quick start guide](https://www.freertos.org/FreeRTOS-quick-start-guide.html). FreeRTOS(TM), FreeRTOS.org(TM) and the FreeRTOS logo are trademarks of Real Time Engineers Ltd.
