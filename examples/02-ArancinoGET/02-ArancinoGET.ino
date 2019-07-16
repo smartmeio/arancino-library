@@ -33,8 +33,6 @@ Return value - String reply:
 
 #include <Arancino.h>
 
-String value = "";
-
 void setup() {
   Arancino.begin();
   Serial.begin(115200);
