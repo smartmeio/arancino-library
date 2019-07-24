@@ -1029,35 +1029,6 @@ char* ArancinoClass::parse(char* message){
 
 }
 
-
-void ArancinoClass::sendArancinoCommand(String command){
-    //command must terminate with '\0'!
-#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-	{
-		vTaskSuspendAll();
-	}
-	else
-	{
-#endif
-		stream.print(command);
-#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-	}
-#endif
-
-#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		if(command[command.length() - 1] == END_TX_CHAR)
-        {
-			Serial.println(command);
-        }
-		else
-			Serial.print(command);
-	}
-#endif
-}
-
-
 void ArancinoClass::sendArancinoCommand(char* command){
     //command must terminate with '\0'!
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -1065,14 +1036,8 @@ void ArancinoClass::sendArancinoCommand(char* command){
 	{
 		vTaskSuspendAll();
 	}
-	else
-	{
 #endif
 		stream.write(command, strlen(command)); //excluded '\0'
-#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-	}
-#endif
-
 #if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		if(command[strlen(command) - 1] == END_TX_CHAR)
