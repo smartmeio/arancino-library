@@ -98,10 +98,10 @@ class ArancinoClass {
 		ArancinoPacket hset(char* key, char* field, int value);
 		ArancinoPacket hset(char* key, char* field, double value);
 		ArancinoPacket hset(char* key, char* field, uint32_t value);
-		int hdel(char* key, char* field);
-		int publish(char* channel, char* msg);
-		int publish(int channel, char* msg);
-		void flush(void);
+		ArancinoPacket hdel(char* key, char* field);
+		ArancinoPacket publish(char* channel, char* msg);
+		ArancinoPacket publish(int channel, char* msg);
+		ArancinoPacket flush(void);
 
 		void print(String value);
 		void print(char* value);
@@ -134,7 +134,7 @@ class ArancinoClass {
         int COMM_MODE = SYNCH;
 		void sendViaCOMM_MODE(char* key, char* value);
 		ArancinoPacket _set(char* key, char* value);
-        int _publish(char* channel, char* msg);
+        ArancinoPacket _publish(char* channel, char* msg);
         const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
         const char endTXStr[2] = {END_TX_CHAR, '\0'};
 };

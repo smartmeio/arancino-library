@@ -682,16 +682,9 @@ ArancinoPacket ArancinoClass::get( char* key ) {
 	}
 	strcat(str, endTXStr);
     
-    //TODO stop scheduler
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-    
-    #endif    
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     
-    #endif
-    //TODO restart scheduler
     free(str);
 
     ArancinoPacket packet;
@@ -742,18 +735,11 @@ ArancinoPacket ArancinoClass::del( char* key ) {
         strcat(str, dataSplitStr);
         strcat(str, key);
 	}
-	strcat(str, endTXStr);	
-	
-    //TODO stop scheduler
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	strcat(str, endTXStr);
     
-    #endif    
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     
-    #endif
-    //TODO restart scheduler
     free(str);
     
     ArancinoPacket packet;
@@ -821,20 +807,16 @@ ArancinoPacket ArancinoClass::_set( char* key, char* value ) {
         strcat(str, dataSplitStr);
         strcat(str, key);
 	}
-    strcat(str, dataSplitStr);
-	strcat(str, value);
+	if (strcmp(value, "") != 0)
+    {
+        strcat(str, dataSplitStr);
+        strcat(str, value);
+    }
 	strcat(str, endTXStr);
     
-    //TODO stop scheduler
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-    
-    #endif    
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     
-    #endif
-    //TODO restart scheduler
     free(str);
 
     ArancinoPacket packet;
@@ -913,17 +895,10 @@ ArancinoPacket ArancinoClass::hget( char* key, char* field ) {
         strcat(str, field);
     }
 	strcat(str, endTXStr);
-    
-    //TODO stop scheduler
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-    
-    #endif    
+       
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     
-    #endif
-    //TODO restart scheduler
     free(str);
 
     ArancinoPacket packet;
@@ -975,17 +950,10 @@ ArancinoPacket ArancinoClass::hgetall(char* key) {
         strcat(str, key);
 	}
 	strcat(str, endTXStr);
-	
-    //TODO stop scheduler
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-    
-    #endif    
+	   
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     
-    #endif
-    //TODO restart scheduler
     free(str);
     
     ArancinoPacket packet;
@@ -1039,17 +1007,9 @@ ArancinoPacket ArancinoClass::hkeys(char* key) {
 	}
 	strcat(str, endTXStr);	
 	
-    
-    //TODO stop scheduler
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-    
-    #endif    
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     
-    #endif
-    //TODO restart scheduler
     free(str);
     
     ArancinoPacket packet;
@@ -1101,19 +1061,11 @@ ArancinoPacket ArancinoClass::hvals(char* key) {
         strcat(str, dataSplitStr);
         strcat(str, key);
 	}
-	strcat(str, endTXStr);	
-	
+	strcat(str, endTXStr);
     
-    //TODO stop scheduler
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-    
-    #endif    
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     
-    #endif
-    //TODO restart scheduler
     free(str);
     
     ArancinoPacket packet;
@@ -1156,17 +1108,10 @@ ArancinoPacket ArancinoClass::keys(char* pattern){
         strcat(str, pattern);
 	}
 	strcat(str, endTXStr);
-
-    //TODO stop scheduler
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     
-    #endif    
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     
-    #endif
-    //TODO restart scheduler
     free(str);
 
     ArancinoPacket packet;
@@ -1226,17 +1171,10 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
         strcat(str, value);
     }
 	strcat(str, endTXStr);
-
-    //TODO stop scheduler
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     
-    #endif    
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     
-    #endif
-    //TODO restart scheduler
     free(str);
 
     ArancinoPacket packet;
@@ -1320,97 +1258,182 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field, uint32_t value ) {
     return hset(key, field, str);
 }
 
-int ArancinoClass::hdel( char* key, char* field ) {
+ArancinoPacket ArancinoClass::hdel( char* key, char* field ) {
+    if(isReservedKey(key)){
+		//TODO maybe it's better to print a log
+		ArancinoPacket errorPacket;
+        errorPacket.isError = 1; 
+        errorPacket.responseCode = ERROR;
+        errorPacket.responseType = ERROR;
+        errorPacket.response.string = NULL;
+        return errorPacket;
+	}
 
-	if(isReservedKey(key))
-		return -1;
-
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
-	sendArancinoCommand(HDEL_COMMAND);					// send read request
-	if (strcmp(key, "") != 0){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
-	}
-	if (strcmp(field, "") != 0){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(field);
-	}
-	sendArancinoCommand(END_TX_CHAR);
-    char* message = receiveArancinoResponse(END_TX_CHAR); //freed by parse()
-    char* messageParsed = parse(message);
-
-    int result = atoi(messageParsed);
-    free(messageParsed);
-
-	return result;
-}
-
-int ArancinoClass::_publish( char* channel, char* msg ) {
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
-	sendArancinoCommand(PUBLISH_COMMAND);					// send read request
-	if (strcmp(channel, "") != 0){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(channel);
-	}
-	if (strcmp(msg, "") != 0){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(msg);
-	}
-	sendArancinoCommand(END_TX_CHAR);
+    int commandLength = strlen(HDEL_COMMAND);
+    int keyLength = strlen(key);
+    int fieldLength = strlen(field);
+    int strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + 1;
     
-    char* message = receiveArancinoResponse(END_TX_CHAR); //freed by parse()
-    char* messageParsed = parse(message);
-
-    int result = atoi(messageParsed);
-    free(messageParsed);
-
-	return result;
-}
-
-int ArancinoClass::publish( char* channel, char* msg ) {
-
-	if(isReservedKey(channel)){
-		//TODO maybe its better to log the error
-		return -1;
+    char* str = (char *)calloc(strLength, sizeof(char));
+    
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
 	}
-	return _publish(channel, msg);
+	#endif
+	
+    strcpy(str, HDEL_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
+	}
+	if (strcmp(field, "") != 0)
+    {
+        strcat(str, dataSplitStr);
+        strcat(str, field);
+    }
+	strcat(str, endTXStr);
+    
+    sendArancinoCommand(str);
+	char* message = receiveArancinoResponse(END_TX_CHAR);
+    
+    free(str);
 
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        packet.isError = 0; 
+        packet.responseCode = getStatus(message);
+        packet.responseType = INT;
+        char* messageParsed = parse(message);
+        packet.response.value = atoi(messageParsed);
+        free(messageParsed);
+    }
+    else
+    {
+        packet.isError = 1; 
+        packet.responseCode = ERROR;
+        packet.responseType = ERROR;
+        packet.response.string = NULL;
+    }
+
+	return packet; 
 }
 
-int ArancinoClass::publish( int channel, char* msg ) {
+ArancinoPacket ArancinoClass::_publish( char* channel, char* msg ) {
+    if(isReservedKey(channel)){
+        //TODO maybe it's better to print a log
+        ArancinoPacket errorPacket;
+        errorPacket.isError = 1; 
+        errorPacket.responseCode = ERROR;
+        errorPacket.responseType = ERROR;
+        errorPacket.response.string = NULL;
+        return errorPacket;
+	}
+	
+    int commandLength = strlen(PUBLISH_COMMAND);
+    int channelLength = strlen(channel);
+    int msgLength = strlen(msg);
+    int strLength = commandLength + 1 + channelLength + 1 + msgLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));  
+    
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+	
+    strcpy(str, PUBLISH_COMMAND);
+	if (strcmp(channel, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, channel);
+	}
+	if (strcmp(msg, "") != 0)
+    {
+        strcat(str, dataSplitStr);
+        strcat(str, msg);
+    }
+	strcat(str, endTXStr);
+    
+    sendArancinoCommand(str);
+	char* message = receiveArancinoResponse(END_TX_CHAR);
+    
+    free(str);
+
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        packet.isError = 0; 
+        Serial.print("message: ");
+        Serial.println(message);
+        packet.responseCode = getStatus(message);
+        packet.responseType = INT;
+        char* messageParsed = parse(message);
+        packet.response.value = atoi(messageParsed);
+        free(messageParsed);
+    }
+    else
+    {
+        packet.isError = 1; 
+        packet.responseCode = ERROR;
+        packet.responseType = ERROR;
+        packet.response.string = NULL;
+    }
+
+	return packet;
+}
+
+ArancinoPacket ArancinoClass::publish( char* channel, char* msg ) {
+	return _publish(channel, msg);
+}
+
+ArancinoPacket ArancinoClass::publish( int channel, char* msg ) {
     char str[20] = "";
     sprintf(str, "%d", channel);
 	publish(str, msg);
 }
 
-void ArancinoClass::flush() {
-
+ArancinoPacket ArancinoClass::flush() {
+    int commandLength = strlen(FLUSH_COMMAND);
+    int strLength = commandLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));  
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
-	sendArancinoCommand(FLUSH_COMMAND);					// send read request
-	/*if (key != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
-	}
-	if (value != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(value);
-	}*/
-	sendArancinoCommand(END_TX_CHAR);
-	char* message = receiveArancinoResponse(END_TX_CHAR);
 
-	parse(message);
+    strcpy(str, FLUSH_COMMAND);
+	strcat(str, endTXStr);
+    
+    sendArancinoCommand(str);
+	char* message = receiveArancinoResponse(END_TX_CHAR);
+    
+    free(str);
+
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        packet.isError = 0;
+        packet.responseCode = getStatus(message);
+        packet.responseType = INT;
+        packet.response.string = NULL;
+        free(message);
+    }
+    else
+    {
+        packet.isError = 1; 
+        packet.responseCode = ERROR;
+        packet.responseType = ERROR;
+        packet.response.string = NULL;
+    }
+
+	return packet;
 
 }
 
@@ -1665,10 +1688,11 @@ char* ArancinoClass::parse(char* message){
 
 
 void ArancinoClass::sendArancinoCommand(String command){
+    //command must terminate with '\0'!
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
-		insertRequest(USE_PRIORITIES * pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), command.begin());
+		vTaskSuspendAll();
 	}
 	else
 	{
@@ -1680,7 +1704,12 @@ void ArancinoClass::sendArancinoCommand(String command){
 
 #if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
-		Serial.print(command);
+		if(command[command.length() - 1] == END_TX_CHAR)
+        {
+			Serial.println(command);
+        }
+		else
+			Serial.print(command);
 	}
 #endif
 }
@@ -1691,7 +1720,7 @@ void ArancinoClass::sendArancinoCommand(char* command){
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
-		insertRequest(USE_PRIORITIES * pxGetCurrentTaskPriority(), pxGetCurrentTaskNumber(), command);
+		vTaskSuspendAll();
 	}
 	else
 	{
@@ -1706,8 +1735,6 @@ void ArancinoClass::sendArancinoCommand(char* command){
 		if(command[strlen(command) - 1] == END_TX_CHAR)
         {
 			Serial.println(command);
-            //Serial.println("-------------------------------fine");
-            //delay(500);
         }
 		else
 			Serial.print(command);
@@ -1732,80 +1759,66 @@ void ArancinoClass::sendArancinoCommand(char command){
 char* ArancinoClass::receiveArancinoResponse(char terminator)
 {
     char* response = NULL; //must be freed
-
- #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-
-    if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-	{
-        uint16_t taskPriority = USE_PRIORITIES * pxGetCurrentTaskPriority();
-        uint16_t taskID = pxGetCurrentTaskNumber();
-        while (getResponseCount(taskPriority, taskID) == 0)
-        {
-            vTaskDelay(50 / portTICK_PERIOD_MS); //TODO find a better solution (such suspend the task)
-        }
-        response = getResponse(taskPriority, taskID);
-        
-        
-    }
-    else
+    
+    //BEGIN read from uart
+    #if defined(DEBUG) && DEBUG == 1
+    Serial.println("reading from UART");
+    #endif
+    long previousMillis = millis();
+    char c = 0;
+    
+    while (millis() - previousMillis < TIMEOUT)
     {
-#endif        
-        //BEGIN read from uart
-#if defined(DEBUG) && DEBUG == 1
-        Serial.println("reading from UART");
-#endif
-        long previousMillis = millis();
-        char c = 0;
-        
-        while (millis() - previousMillis < TIMEOUT)
+        if ((stream).available())
         {
-            if ((stream).available())
+            (stream).readBytes(&c, 1);
+            #if defined(DEBUG) && DEBUG == 1
+            //BEGIN DEBUG
+            if (c < 32)
             {
-                (stream).readBytes(&c, 1);
-#if defined(DEBUG) && DEBUG == 1
-                //BEGIN DEBUG
-                if (c < 32)
-                {
-                    Serial.print("|");
-                    Serial.print(c, DEC);
-                    Serial.print("|");
-                }
-                else
-                    Serial.print(c);
-                //END DEBUG
-#endif
-                if (response == NULL)
-                {
-                    response = (char *)calloc(2, sizeof(char));
-                    response[0] = c;
-                    response[1] = '\0';
-                }
-                else
-                {
-                    int oldLength = strlen(response);
-                    char* temp = (char *)calloc((oldLength + 2), sizeof(char));
-                    strcpy(temp, response);
-                    free(response);
-                    response = temp;
-                    response[oldLength] = c;
-                    response[oldLength + 1] = '\0';
-                }
-                
-                if (c == terminator)
-                {
-                    break;
-                }
+                Serial.print("|");
+                Serial.print(c, DEC);
+                Serial.print("|");
+            }
+            else
+                Serial.print(c);
+            //END DEBUG
+            #endif
+            if (response == NULL)
+            {
+                response = (char *)calloc(2, sizeof(char));
+                response[0] = c;
+                response[1] = '\0';
+            }
+            else
+            {
+                int oldLength = strlen(response);
+                char* temp = (char *)calloc((oldLength + 2), sizeof(char));
+                strcpy(temp, response);
+                free(response);
+                response = temp;
+                response[oldLength] = c;
+                response[oldLength + 1] = '\0';
             }
             
+            if (c == terminator)
+            {
+                break;
+            }
         }
-#if defined(DEBUG) && DEBUG == 1
-        Serial.println("");
-#endif
-        //END read from uart
-
-#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+        
     }
-#endif  
+    #if defined(DEBUG) && DEBUG == 1
+    Serial.println("");
+    #endif
+    //END read from uart
+    
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
     return response;
 }
 
