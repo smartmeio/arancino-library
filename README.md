@@ -5,11 +5,15 @@ Arancino Library allows to export/import data to/from the Linux environment usin
 
 
 ## Getting Started
-To start using Arancino Library, download the latest version from the repository `arancino-library` within the [SmartMe.IO Repository Management Site](https://download.smartme.io/artifactory/arancino-library/).
+To get started with Arancino Library you can download the latest version from the repository `arancino-library` within the [SmartMe.IO Repository Management Site] or directly from Arduino Library Manager.
 
 ### Arduino IDE
+
+#### from a zip file
 Open the Arduino IDE, unzip the _Arancino Library_ and import the unzipped folder (*Sketch* → *Include Library* → *Add .zip Library...*). The library will appear under *Sketch* → *Include Library* menu at the end, under the *Contributed* section. Examples will be under *File* → *Examples* → *Examples of Custom Libraries*.
 
+#### from Arduino Library Manager
+Open the Arduino IDE and go to *Sketch* → *Include Library* → *Manage Libraries*, the Arduino Library Manager window will be shown. Using the text box, type _Arancino_; finally selecte the Arancino Library item within the result list and click install. Be sure to select the latest version available.
 
 ## API
 
@@ -788,7 +792,7 @@ Debug messages are similar to those written above in the [Commands and Protocol]
 The following section concern the use of FreeRTOS, already implemented in the Arancino Library; will be illustrated the Arancino-related FreeRTOS APIs and some basic FreeRTOS functions. For more advanced features, please see the official [FreeRTOS Documentation](https://www.freertos.org/Documentation/RTOS_book.html).
 
 ### FreeRTOS library
-The Arancino library use a [FreeRTOS porting](https://github.com/BriscoeTech/Arduino-FreeRTOS-SAMD21) for SAMD architecture that can be installed directly from the official Arduino library repository through the library manager. __User must install the correct FreeRTOS library__; the correct fuction it's not guaranteed with other FreeRTOS libraries. User doesn't have to include the FreeRTOS library because it is already included in Arancino library.
+The Arancino library use a [FreeRTOS porting](https://github.com/BriscoeTech/Arduino-FreeRTOS-SAMD21) for SAMD architecture that can be installed directly from the official Arduino library repository through the library manager. __User must install the correct FreeRTOS library__; the correct function it's not guaranteed with other FreeRTOS libraries. User doesn't have to include the FreeRTOS library because it is already included in Arancino library.
 
 ___
 ### startScheduler
@@ -799,7 +803,7 @@ Configure the `LED_BUILTIN` for debug and start the FreeRTOS scheduler. When a f
 -    2 blinks  - Stack overflow, task needs more bytes defined for its stack.
 -    1 blink - Malloc failed, probably ran out of heap.
 
-**IMPORTANT**: `Arancino.startScheduler()` never return, so **MUST be** the last instruction of Arduino begin() function.
+> **IMPORTANT**: `Arancino.startScheduler()` never return, so **MUST be** the last instruction of Arduino begin() function.
 
 ##### Example:
 ```c++
@@ -827,13 +831,13 @@ Create a new task and add it to the list of tasks that are ready to run.
 Tasks are normally implemented as an infinite loop, and must never attempt to return or exit from their implementing function. Tasks can however [delete themselves](https://www.freertos.org/a00126.html).
 
 * **`pcName`**:	A descriptive name for the task. This is mainly used to facilitate debugging, but can also be used to [obtain a task handle](https://www.freertos.org/a00021.html#xTaskGetHandle).
-The maximum length of a task’s name is set using the configMAX_TASK_NAME_LEN parameter in `FreeRTOSConfig.h`.
+The maximum length of a task’s name is set using the config `MAX_TASK_NAME_LEN` parameter in `FreeRTOSConfig.h`.
 
-* **`usStackDepth`**:	The number of words (not bytes!) to allocate for use as the task’s stack. For example, if the stack is 16-bits wide and usStackDepth is 100, then 200 bytes will be allocated for use as the task’s stack. As another example, if the stack is 32-bits wide and usStackDepth is 400 then 1600 bytes will be allocated for use as the task’s stack.
-The stack depth multiplied by the stack width must not exceed the maximum value that can be contained in a variable of type size_t. See the FAQ [How big should the stack be?](https://www.freertos.org/FAQMem.html#StackSize).
+* **`usStackDepth`**:	The number of words (not bytes!) to allocate for use as the task’s stack. For example, if the stack is 16-bits wide and _usStackDepth_ is 100, then 200 bytes will be allocated for use as the task’s stack. As another example, if the stack is 32-bits wide and _usStackDepth_ is 400 then 1600 bytes will be allocated for use as the task’s stack.
+The stack depth multiplied by the stack width must not exceed the maximum value that can be contained in a variable of type `size_t`. See the FAQ [How big should the stack be?](https://www.freertos.org/FAQMem.html#StackSize).
 
 * **`pvParameters`**:	A value that will passed into the created task as the task’s parameter.
-If pvParameters is set to the address of a variable then the variable must still exist when the created task executes – so it is not valid to pass the address of a stack variable.
+If _pvParameters_ is set to the address of a variable then the variable must still exist when the created task executes – so it is not valid to pass the address of a stack variable.
 
 * **`uxPriority`**:	The [priority](https://www.freertos.org/RTOS-task-priority.html) at which the created task will execute.
 
@@ -983,7 +987,6 @@ void loop() {
 ```
 
 ## Credits
-Most of the documentation has been extrapolated from [Redis Command](https://redis.io/commands/)
-Redis and Arduino are trademarks of their respective owners.
+Most of this documentation has been extrapolated from [Redis Command](https://redis.io/commands/), and [FreeRTOS quick start guide](https://www.freertos.org/FreeRTOS-quick-start-guide.html).
 
-FreeRTOS documentation is based on the official [FreeRTOS quick start guide](https://www.freertos.org/FreeRTOS-quick-start-guide.html). FreeRTOS(TM), FreeRTOS.org(TM) and the FreeRTOS logo are trademarks of Real Time Engineers Ltd.
+Redis, Arduino and FreeRTOS are trademarks of their respective owners.
