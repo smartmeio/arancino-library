@@ -682,7 +682,6 @@ ArancinoPacket ArancinoClass::get( char* key ) {
 	}
 	strcat(str, endTXStr);
     
-    
     //TODO stop scheduler
     #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     
@@ -715,29 +714,68 @@ ArancinoPacket ArancinoClass::get( char* key ) {
 	return packet;
 }
 
-int ArancinoClass::del( char* key ) {
-
-	if(isReservedKey(key)){
-		return -1;
+ArancinoPacket ArancinoClass::del( char* key ) {
+    if(isReservedKey(key)){
+		//TODO maybe it's better to print a log
+		ArancinoPacket errorPacket;
+        errorPacket.isError = 1; 
+        errorPacket.responseCode = ERROR;
+        errorPacket.responseType = ERROR;
+        errorPacket.response.string = NULL;
+        return errorPacket;
 	}
+	
+	int commandLength = strlen(DEL_COMMAND);
+    int keyLength = strlen(key);
+    int strLength = commandLength + 1 + keyLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
+    
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
-	sendArancinoCommand(DEL_COMMAND);					// send read request
+	
+	strcpy(str, DEL_COMMAND);
 	if (strcmp(key, "") != 0){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
+        strcat(str, dataSplitStr);
+        strcat(str, key);
 	}
-	sendArancinoCommand(END_TX_CHAR);
-    char* message = receiveArancinoResponse(END_TX_CHAR); //freed by parse()
-    char* messageParsed = parse(message);
+	strcat(str, endTXStr);	
+	
+    //TODO stop scheduler
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    
+    #endif    
+    sendArancinoCommand(str);
+	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    
+    #endif
+    //TODO restart scheduler
+    free(str);
+    
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        packet.isError = 0; 
+        packet.responseCode = getStatus(message);
+        packet.responseType = INT;
+        char* messageParsed = parse(message);
+        packet.response.value = atoi(messageParsed);
+        free(messageParsed);
+    }
+    else
+    {
+        packet.isError = 1; 
+        packet.responseCode = ERROR;
+        packet.responseType = ERROR;
+        packet.response.string = NULL;
+    }
 
-    int result = atoi(messageParsed);
-    free(messageParsed);
-
-	return result;
+	return packet;
 }
 
 
@@ -786,23 +824,6 @@ ArancinoPacket ArancinoClass::_set( char* key, char* value ) {
     strcat(str, dataSplitStr);
 	strcat(str, value);
 	strcat(str, endTXStr);
-    
-    /*
-    //BEGIN DEBUG
-    Serial.print("STR: ");
-    for (int i = 0; i < strLength; i++)
-    {
-        if (str[i] < 32)
-        {
-            Serial.print("|");
-            Serial.print(str[i], DEC);
-            Serial.print("|");
-        }
-        else
-            Serial.print(str[i]);
-    }
-    Serial.println("");
-    //END DEBUG */
     
     //TODO stop scheduler
     #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -860,93 +881,259 @@ ArancinoPacket ArancinoClass::set( char* key, uint32_t value ) {
 	return set(key, str);
 }
 
-char* ArancinoClass::hget( char* key, char* field ) {
-
-	if(isReservedKey(key)){
-		return "";
+ArancinoPacket ArancinoClass::hget( char* key, char* field ) {
+    if(isReservedKey(key)){
+		//TODO maybe it's better to print a log
+		ArancinoPacket errorPacket;
+        errorPacket.isError = 1; 
+        errorPacket.responseCode = ERROR;
+        errorPacket.responseType = ERROR;
+        errorPacket.response.string = NULL;
+        return errorPacket;
 	}
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
-	sendArancinoCommand(HGET_COMMAND);					// send read request
-	if (strcmp(key, "") != 0){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
-	}
-	if (strcmp(field, "") != 0){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(field);
-	}
-	sendArancinoCommand(END_TX_CHAR);
-	char* message = receiveArancinoResponse(END_TX_CHAR);
-
-	return parse(message);
-}
-
-char** ArancinoClass::hgetall(char* key) {
-
-	if(isReservedKey(key)){
-		return NULL;
-	}
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
-	sendArancinoCommand(HGETALL_COMMAND);					// send read request
-	if (strcmp(key, "") != 0){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
-	}
-	sendArancinoCommand(END_TX_CHAR);
-    char* message = receiveArancinoResponse(END_TX_CHAR);
+    int commandLength = strlen(HGET_COMMAND);
+    int keyLength = strlen(key);
+    int fieldLength = strlen(field);
+    int strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + 1;
     
-	return parseArray(parse(message));
-}
-
-
-char** ArancinoClass::hkeys(char* key) {
-
-	if(isReservedKey(key)){
-		return NULL;
-	}
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
-	sendArancinoCommand(HKEYS_COMMAND);					// send read request
-	if (strcmp(key, "") != 0){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
-	}
-	sendArancinoCommand(END_TX_CHAR);
-	char* message = receiveArancinoResponse(END_TX_CHAR);
-    
-	return parseArray(parse(message));
-}
-
-
-char** ArancinoClass::hvals(char* key) {
-
-	if(isReservedKey(key))
-		return NULL;
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
-	sendArancinoCommand(HVALS_COMMAND);					// send read request
-	if (strcmp(key, "") != 0){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
-	}
-	sendArancinoCommand(END_TX_CHAR);
-	char* message = receiveArancinoResponse(END_TX_CHAR);
+    char* str = (char *)calloc(strLength, sizeof(char));
 	
-	return parseArray(parse(message));
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+    strcpy(str, HGET_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
+	}
+    if (strcmp(field, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, field);
+    }
+	strcat(str, endTXStr);
+    
+    //TODO stop scheduler
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    
+    #endif    
+    sendArancinoCommand(str);
+	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    
+    #endif
+    //TODO restart scheduler
+    free(str);
+
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        packet.isError = 0; 
+        packet.responseCode = getStatus(message);
+        packet.responseType = STRING;
+        packet.response.string = parse(message);
+    }
+    else
+    {
+        packet.isError = 1; 
+        packet.responseCode = ERROR;
+        packet.responseType = ERROR;
+        packet.response.string = NULL;
+    }
+
+	return packet;
+}
+
+ArancinoPacket ArancinoClass::hgetall(char* key) {
+    if(isReservedKey(key)){
+		//TODO maybe it's better to print a log
+		ArancinoPacket errorPacket;
+        errorPacket.isError = 1; 
+        errorPacket.responseCode = ERROR;
+        errorPacket.responseType = ERROR;
+        errorPacket.response.string = NULL;
+        return errorPacket;
+	}
+	
+    int commandLength = strlen(HGETALL_COMMAND);
+    int keyLength = strlen(key);
+    int strLength = commandLength + 1 + keyLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
+	
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+	
+    strcpy(str, HGETALL_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
+	}
+	strcat(str, endTXStr);
+	
+    //TODO stop scheduler
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    
+    #endif    
+    sendArancinoCommand(str);
+	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    
+    #endif
+    //TODO restart scheduler
+    free(str);
+    
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        packet.isError = 0; 
+        packet.responseCode = getStatus(message);
+        packet.responseType = STRING_ARRAY;
+        packet.response.stringArray = parseArray(parse(message));
+    }
+    else
+    {
+        packet.isError = 1; 
+        packet.responseCode = ERROR;
+        packet.responseType = ERROR;
+        packet.response.string = NULL;
+    }
+
+	return packet;
+}
+
+
+ArancinoPacket ArancinoClass::hkeys(char* key) {
+    if(isReservedKey(key)){
+		//TODO maybe it's better to print a log
+		ArancinoPacket errorPacket;
+        errorPacket.isError = 1; 
+        errorPacket.responseCode = ERROR;
+        errorPacket.responseType = ERROR;
+        errorPacket.response.string = NULL;
+        return errorPacket;
+	}
+	
+    int commandLength = strlen(HKEYS_COMMAND);
+    int keyLength = strlen(key);
+    int strLength = commandLength + 1 + keyLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
+    
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+	
+    strcpy(str, HKEYS_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
+	}
+	strcat(str, endTXStr);	
+	
+    
+    //TODO stop scheduler
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    
+    #endif    
+    sendArancinoCommand(str);
+	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    
+    #endif
+    //TODO restart scheduler
+    free(str);
+    
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        packet.isError = 0; 
+        packet.responseCode = getStatus(message);
+        packet.responseType = STRING_ARRAY;
+        packet.response.stringArray = parseArray(parse(message));
+    }
+    else
+    {
+        packet.isError = 1; 
+        packet.responseCode = ERROR;
+        packet.responseType = ERROR;
+        packet.response.string = NULL;
+    }
+
+	return packet;
+}
+
+
+ArancinoPacket ArancinoClass::hvals(char* key) {
+    if(isReservedKey(key)){
+		//TODO maybe it's better to print a log
+		ArancinoPacket errorPacket;
+        errorPacket.isError = 1; 
+        errorPacket.responseCode = ERROR;
+        errorPacket.responseType = ERROR;
+        errorPacket.response.string = NULL;
+        return errorPacket;
+	}
+	
+    int commandLength = strlen(HVALS_COMMAND);
+    int keyLength = strlen(key);
+    int strLength = commandLength + 1 + keyLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
+    
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+	
+    strcpy(str, HVALS_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
+	}
+	strcat(str, endTXStr);	
+	
+    
+    //TODO stop scheduler
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    
+    #endif    
+    sendArancinoCommand(str);
+	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    
+    #endif
+    //TODO restart scheduler
+    free(str);
+    
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        packet.isError = 0; 
+        packet.responseCode = getStatus(message);
+        packet.responseType = STRING_ARRAY;
+        packet.response.stringArray = parseArray(parse(message));
+    }
+    else
+    {
+        packet.isError = 1; 
+        packet.responseCode = ERROR;
+        packet.responseType = ERROR;
+        packet.response.string = NULL;
+    }
+
+	return packet;
 }
 
 
