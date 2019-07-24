@@ -28,10 +28,10 @@ under the License
 
 #define USEFREERTOS
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-#include <ThreadSafeUART.h>
 extern "C" {
 #include <FreeRTOS_SAMD21.h>
 }
+#include <ThreadSafeUART.h>
 #endif
 
 
@@ -60,6 +60,19 @@ enum POWER_MODE {
 	POWERSUPPLY = 1
 };
 
+typedef union {
+  int value;
+  char* string;
+  char** stringArray;
+} ArancinoResponse;
+
+typedef struct {
+  bool isError;
+  int responseCode;
+  int responseType;
+  ArancinoResponse response;
+} ArancinoPacket;
+
 //
 
 class ArancinoClass {
@@ -68,23 +81,23 @@ class ArancinoClass {
 		void begin(int timeout);
         void startScheduler();
 		void setReservedCommunicationMode(int mode);
-        char* get(char* value);
-		int set(char* key, char* value);
-		int set(char* key, int value);
-		int set(char* key, double value);
-		int set(char* key, uint32_t value);
+        ArancinoPacket get(char* value);
+		ArancinoPacket set(char* key, char* value);
+		ArancinoPacket set(char* key, int value);
+		ArancinoPacket set(char* key, double value);
+		ArancinoPacket set(char* key, uint32_t value);
 		int del(char* key);
 		//int del (String* key, int number);
 		//int set(String key, String field, String value);
-		char** keys(char* pattern="");
+		ArancinoPacket keys(char* pattern="");
 		char* hget(char* key, char* field);
 		char** hgetall(char* key);
 		char** hkeys(char* key);
 		char** hvals(char* key);
-		int hset(char* key, char* field, char* value);
-		int hset(char* key, char* field, int value);
-		int hset(char* key, char* field, double value);
-		int hset(char* key, char* field, uint32_t value);
+		ArancinoPacket hset(char* key, char* field, char* value);
+		ArancinoPacket hset(char* key, char* field, int value);
+		ArancinoPacket hset(char* key, char* field, double value);
+		ArancinoPacket hset(char* key, char* field, uint32_t value);
 		int hdel(char* key, char* field);
 		int publish(char* channel, char* msg);
 		int publish(int channel, char* msg);
@@ -120,8 +133,10 @@ class ArancinoClass {
         int getDigit(long value);
         int COMM_MODE = SYNCH;
 		void sendViaCOMM_MODE(char* key, char* value);
-		int _set(char* key, char* value);
+		ArancinoPacket _set(char* key, char* value);
         int _publish(char* channel, char* msg);
+        const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
+        const char endTXStr[2] = {END_TX_CHAR, '\0'};
 };
 
 // This subclass uses a serial port Stream

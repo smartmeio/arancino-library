@@ -70,3 +70,10 @@ under the License
 #define MODVERS_KEY				"___MODVERS___"
 #define POWER_KEY					"___POWER___"
 #define LIB_VERSION				"0.1.2"	//library version 
+
+//RESPONSE TYPE
+#define ERROR           -1
+#define VOID            0
+#define INT             1
+#define STRING          2
+#define STRING_ARRAY    3
