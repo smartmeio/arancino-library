@@ -20,562 +20,8 @@ under the License
 
 #include "Arancino.h"
 #define DEBUG 0
-#define USE_PRIORITIES 0
-#define STOP(x) Serial.println(x); delay(100)
 
-/*
- * Element of the queue that contain the requests to be sent through the UART.
- * One struct contain only one Arancino request and the task id from which it comes.
- */
-typedef struct _msgItem
-{
-    char* msg;
-    uint32_t taskID;
-    TaskHandle_t taskHandle = NULL;
-    _msgItem *next = NULL;
-} msgItem;
-
-/*
- * Element that defines the Arancino requests queue.
- * The struct contains the head of the queue and the count of the requests ready to be sent
- */
-typedef struct
-{
-    uint32_t msgCount;
-    _msgItem *head;
-} msgQueue;
-
-void initQueue(msgQueue *);
-
-int insertRequest(uint16_t, uint32_t, char*);
-msgItem getRequest(uint16_t);
-int getRqstCount(uint16_t);
-
-int insertResponse(uint16_t, uint32_t, char*);
-char* getResponse(uint16_t, uint16_t);
-int getResponseCount(uint16_t, uint16_t);
-
-void printQueue(msgQueue *);
-extern TaskHandle_t commTaskHandle;
-
-void commTask(void *pvParameters);
-
-/*
- * Vector of queues that will contain the requests to be sent via uart.
- * The length of the vector is defined by the number of priorities allowed for FreeRTOS tasks.
- */
-#if defined(USE_PRIORITIES) && USE_PRIORITIES == 1
-msgQueue rqstByPriority[configMAX_PRIORITIES];
-#else
-msgQueue rqstByPriority[1];
-#endif
-
-/*
- * Vector of queues that will contain the responses received via uart.
- * The length of the vector is defined by the number of priorities allowed for FreeRTOS tasks.
- */
-#if defined(USE_PRIORITIES) && USE_PRIORITIES == 1
-msgQueue responseByPriority[configMAX_PRIORITIES];
-#else
-msgQueue responseByPriority[1];
-#endif
-
-
-
-/*
- * Once the scheduler is launched, this should be the only task that can write to the uart (stream).
- * Between one request and another there is a 25 millisecond delay, during which the task is suspended.
- * The serial port used is passed as parameter during the task initialization (on begin).
- * 
- * Stack used: 64 bytes
- */
-void commTask( void *pvParameters )
-{
-	Stream *stream = (Stream *)pvParameters;
-	
-    for (int i = 0; i < configMAX_PRIORITIES; i++)
-    {
-        initQueue(&rqstByPriority[i]);
-        initQueue(&responseByPriority[i]);        
-    }
-    
-    int temp = -1;
-	char* response = NULL;
-
-    while(1)
-    {
-        //Priorities system currently not implemented
-
-		if (getRqstCount(USE_PRIORITIES) > 0)
-		{
-            msgItem rqst = getRequest(USE_PRIORITIES);
-            (*stream).write(rqst.msg, strlen(rqst.msg)); //excluded '\0'
-            free(rqst.msg);
-        
-            if (response != NULL)
-            {
-                //free(response);
-                response = NULL;
-            }
-            
-            long previousMillis = millis();
-            
-            while (millis() - previousMillis < TIMEOUT)
-            {
-                if ((*stream).available())
-                {
-                    char c = (*stream).read();
-                    
-                    if (response == NULL)
-                    {
-                        response = (char *)calloc(2, sizeof(char));
-                        response[0] = c;
-                        response[1] = '\0';
-                    }
-                    else
-                    {
-                        int oldLength = strlen(response); //'\0' non included
-                        char* temp = (char *)calloc((oldLength + 2), sizeof(char)); // 2 = new char + '\0'
-                        strcpy(temp, response);
-                        free(response);
-                        response = temp;
-                        response[oldLength] = c;
-                        response[oldLength + 1] = '\0';
-                    }
-                    
-                    if (c == END_TX_CHAR)
-                        break;   
-                    
-                }
-            }
-#if defined(DEBUG) && DEBUG == 1
-            Serial.print("received response: ");
-            for (int i = 0; i < strlen(response); i++)
-            {
-                if (response[i] < 32)
-                {
-                    Serial.print("|");
-                    Serial.print(response[i], DEC);
-                    Serial.print("|");
-                }
-                else
-                    Serial.print(response[i]);
-            }
-            Serial.println("");
-#endif
-            insertResponse(USE_PRIORITIES, rqst.taskID, response);
-            //vTaskResume(rqst.taskHandle); //waking up the task that made the request BUG -> not used
-		}
-#if defined(DEBUG) && DEBUG == 1
-        Serial.print("Stack: ");
-        Serial.println(uxTaskGetStackHighWaterMark(commTaskHandle));
-		Serial.print("freeHeap: ");
-        Serial.println( xPortGetFreeHeapSize() );
-#endif
-		vTaskDelay( 25 / portTICK_PERIOD_MS );	
-
-    }
-}
-
-
-
-void initQueue(msgQueue *queue)
-{
-    queue->msgCount = 0;
-    queue->head = NULL;
-}
-
-/*
- * Function that insert a string/character in the uart write queue.
- * The parameters are:
- *  priority of the calling task;
- *  ID of the calling task;
- *  msg that will be insert in queue;
- * 
- * The priority indicates the position on the queues vector.
- * taskID is used to group the strings that come from the same task. 
- * For request with the same task id, once the END_TX_CHAR character is received, 
- *  all subsequent characters are inserted into a new element.
- * 
- */
-int insertRequest(uint16_t priority, uint32_t taskID, char* msg)
-{
-    int toBeSuspended = 0;
-    
-    vTaskSuspendAll();
-    msgItem *selectedMsg = NULL;
-    
-    if (rqstByPriority[priority].head == NULL)
-    {
-        rqstByPriority[priority].head = new msgItem;
-        if (rqstByPriority[priority].head != NULL) //successfully allocated
-        {
-            (rqstByPriority[priority].head)->msg = NULL;
-            (rqstByPriority[priority].head)->taskID = taskID;
-            (rqstByPriority[priority].head)->next = NULL;
-            selectedMsg = (rqstByPriority[priority].head);
-        }
-        else
-        {
-            return -1; //error
-        }
-    }
-    else
-    {
-        msgItem *prevMsg = NULL;
-        msgItem *currMsg = rqstByPriority[priority].head;
-        
-        while (currMsg != NULL && (currMsg->taskID != taskID || (currMsg->msg)[strlen(currMsg->msg) - 1] == END_TX_CHAR))
-        {
-            prevMsg = currMsg;
-            currMsg = currMsg->next;
-        }
-        
-        if (currMsg == NULL) //coda terminata
-        {
-            msgItem *temp = new msgItem;
-            temp->msg = NULL;
-            temp->taskID = taskID;
-            temp->next = NULL;
-            prevMsg->next = temp;
-            selectedMsg = prevMsg->next;
-        }
-        else
-        {
-            selectedMsg = currMsg;
-        }
-    }
-    
-    if (selectedMsg != NULL && strcmp(msg, "") != 0)
-    {
-        //int index = msg.indexOf(END_TX_CHAR); //-1 = carattere non trovato
-        int index;
-        char* charAddr = strchr(msg, END_TX_CHAR); //address (in ram) of the END_TX_CHAR in msg string 
-        
-        if (charAddr != NULL)
-        {
-            index = charAddr - msg;
-        }
-        else
-        {
-            index = -1;   
-        }
-    
-        if (index > -1)
-        {
-            toBeSuspended = 1;
-            //flag the task as toBeSuspended
-            selectedMsg->taskHandle = xTaskGetCurrentTaskHandle();
-
-            int oldLength = -1;
-            if (selectedMsg->msg != NULL)
-            {
-               // while((selectedMsg->msg)[++oldLength] != '\0');
-                oldLength = strlen(selectedMsg->msg);
-            }
-            else
-            {
-                (selectedMsg->msg) = (char*)malloc(sizeof(char));
-                *(selectedMsg->msg) = '\0';   
-                oldLength = 0;
-            }
-
-            
-            char* newStr = (char *)calloc((oldLength + index + 2), sizeof(char));
-            if (selectedMsg->msg != NULL)
-            {
-                strncpy(newStr, selectedMsg->msg, oldLength);
-                newStr[oldLength] = '\0';
-            }
-            strncpy(&newStr[oldLength] , msg, index + 1);
-            newStr[oldLength + index + 1] = '\0';
-            
-            free(selectedMsg->msg);
-            selectedMsg->msg = newStr;
-
-            ++(rqstByPriority[priority].msgCount);
-            if (msg[index + 1] != '\0')
-            {
-                insertRequest(priority, taskID, &msg[index + 1]);
-            }
-        }
-        else
-        {
-            int oldLength = -1;
-            if (selectedMsg->msg != NULL)
-            {
-                oldLength = strlen(selectedMsg->msg);
-            }
-            else
-            {
-                (selectedMsg->msg) = (char*)malloc(sizeof(char));
-                *(selectedMsg->msg) = '\0';   
-                oldLength = 0;
-            }
-            
-            int newLength = -1;
-            if (msg != NULL)
-            {
-                newLength = strlen(msg);
-            }
-            
-            char* newStr = (char *)calloc((oldLength + newLength + 2), sizeof(char));
-            
-            if (selectedMsg->msg != NULL)
-            {
-                strncpy(newStr, selectedMsg->msg, oldLength);
-                newStr[oldLength] = '\0';
-            }
-
-            strncpy(&newStr[oldLength], msg, newLength);
-            newStr[oldLength + newLength] = '\0';
-            
-            free(selectedMsg->msg);
-            selectedMsg->msg = newStr;
-        }
-    }
-    xTaskResumeAll();
-    //task must be suspended here
-
-    if (toBeSuspended)
-    {
-    /*
-     * BUG il task viene sospeso nel momento sbagliato!
-     * dopo xTaskResumeAll(); viene immediatamente eseguito commTask() che invia la richiesta sulla seriale e, una volta ricevuta la risposta,
-     * sblocca il task corrente. Il problema è che con la prossima riga il task viene di nuovo bloccato e mai più sbloccato!
-     */
-        //vTaskSuspend(NULL);  // Suspend ourselves.
-    }
-
-    return 0;
-}
-
-
-/*
- * Function that insert a string/character in the uart write queue.
- * The parameters are:
- *  priority of the calling task;
- *  ID of the calling task;
- *  msg that will be insert in queue;
- * 
- * The priority indicates the position on the queues vector.
- * taskID is used to group the strings that come from the same task. 
- * For request with the same task id, once the END_TX_CHAR character is received, 
- *  all subsequent characters are inserted into a new element.
- * 
- */
-int insertResponse(uint16_t priority, uint32_t taskID, char* msg)
-{
-    vTaskSuspendAll();
-	{
-		msgItem *selectedMsg = NULL;
-		
-		if (responseByPriority[priority].head == NULL)
-		{
-			responseByPriority[priority].head = new msgItem;
-			if (responseByPriority[priority].head != NULL) //successfully allocated
-			{
-				(responseByPriority[priority].head)->taskID = taskID;
-				(responseByPriority[priority].head)->next = NULL;
-				selectedMsg = (responseByPriority[priority].head);
-			}
-			else
-			{
-				return -1; //error
-			}
-		}
-		else
-		{
-			msgItem *currMsg = responseByPriority[priority].head;
-
-            while(currMsg->next != NULL)
-            {
-                currMsg = currMsg->next;
-            }
-			
-			if (currMsg->next == NULL) //coda terminata
-			{
-				msgItem *temp = new msgItem;
-				temp->taskID = taskID;
-				temp->next = NULL;
-				currMsg->next = temp;
-				selectedMsg = currMsg->next;
-			}
-			else
-			{
-				selectedMsg = currMsg;
-			}
-		}
-		
-		if (selectedMsg != NULL && strcmp(msg, "") != 0)
-		{
-            selectedMsg->msg = msg; //caller must free
-            ++(responseByPriority[priority].msgCount);
-		}
-	}
-    xTaskResumeAll();
-
-return 0;
-}
-
-
-/*
- * return the request count of the selected queue.
- */
-int getRqstCount(uint16_t priority)
-{
-	int retVal = -1;
-    vTaskSuspendAll();
-	{
-		retVal = rqstByPriority[priority].msgCount;
-	}
-    xTaskResumeAll();
-	return retVal;
-}
-
-/*
- * return the request count of the selected queue.
- */
-int getResponseCount(uint16_t priority, uint16_t taskID)
-{
-	int retVal = 0;
-    vTaskSuspendAll();
-	{
-        msgItem *response = responseByPriority[priority].head;
-        while (response != NULL)
-        {
-            if (response->taskID == taskID)
-                ++retVal;
-            response = response->next;
-        }
-	}
-	xTaskResumeAll();
-	return retVal;
-}
-
-
-/*
- * Function that return the string of the oldest request for the selected priority.
- */
-msgItem getRequest(uint16_t priority)
-{
-    msgItem retMsgItem;
-    vTaskSuspendAll();
-	{
-		if (rqstByPriority[priority].head != NULL && rqstByPriority[priority].msgCount > 0)
-		{	
-			msgItem *prevMsg = NULL;
-			msgItem *currMsg = rqstByPriority[priority].head;
-			
-			while(currMsg != NULL && (currMsg->msg)[strlen(currMsg->msg) - 1] != END_TX_CHAR)
-			{
-				prevMsg = currMsg;
-				currMsg = currMsg->next;
-			}
-			
-			if (currMsg != NULL)
-			{                
-                retMsgItem = *currMsg;
-                
-				if (currMsg == rqstByPriority[priority].head)
-				{
-					rqstByPriority[priority].head = currMsg->next;
-				}
-				else
-				{
-					prevMsg->next = currMsg->next;
-				}
-				
-#warning "da controllare delete"
-				delete currMsg;
-				--(rqstByPriority[priority].msgCount);
-			}
-			
-		}
-	}
-	xTaskResumeAll();
-
-    return retMsgItem;
-}
-
-
-/*
- * Function that return the string of the oldest response for the selected priority and taskID.
- */
-char* getResponse(uint16_t priority, uint16_t taskID)
-{
-	char* retStr = NULL;
-    vTaskSuspendAll();
-	{
-		if (responseByPriority[priority].head == NULL || responseByPriority[priority].msgCount == 0)
-		{
-			retStr = NULL;
-		}
-		else
-		{	
-			msgItem *prevMsg = NULL;
-			msgItem *currMsg = responseByPriority[priority].head;
-			
-			while(currMsg != NULL && currMsg->taskID != taskID)
-			{
-				prevMsg = currMsg;
-				currMsg = currMsg->next;
-			}
-			
-			if (currMsg != NULL)
-			{
-				retStr = currMsg->msg;
-                                
-				if (currMsg == responseByPriority[priority].head)
-				{
-					responseByPriority[priority].head = currMsg->next;
-				}
-				else
-				{
-					prevMsg->next = currMsg->next;
-				}
-				
-				delete currMsg;
-				--(responseByPriority[priority].msgCount);
-			}
-			
-		}
-	}
-	xTaskResumeAll();
-
-    return retStr;
-}
-
-
-/*
- * only for debugging purposes!
- * example: printQueue(&rqstByPriority[pxGetCurrentTaskPriority()]);
- */
-void printQueue(msgQueue *queue)
-{
-    vTaskSuspendAll();
-    {
-		Serial.print("msgCount in queue: ");
-		Serial.println(queue->msgCount);
-		Serial.println("------------------");
-		int i = 0;
-		msgItem *msg = queue->head;
-		while (msg != NULL)
-		{
-			Serial.print("[");
-			Serial.print(i++);
-			Serial.print("] : taskID = ");
-			Serial.print(msg->taskID);
-			Serial.print(" msg = ");
-			Serial.print(msg->msg);
-			Serial.print(" next = ");
-			Serial.println((long)msg->next);
-			msg = msg->next;
-		}
-		Serial.println("fine coda\n\n");
-	}
-	xTaskResumeAll();
-}
+ArancinoPacket errorPacket = {true, ERROR, ERROR, {.string = NULL}}; //default error packet
 
 
 ArancinoClass::ArancinoClass(Stream &_stream):
@@ -636,8 +82,6 @@ void ArancinoClass::startScheduler() {
      */
     //runLoopAsTask(256, tskIDLE_PRIORITY);
 
-    xTaskCreate(commTask,     "Communication task",       128, (void *)&stream, configMAX_PRIORITIES - 1, &commTaskHandle);
-
     vTaskStartScheduler();
 }
 #endif
@@ -656,11 +100,6 @@ void ArancinoClass::setReservedCommunicationMode(int mode){
 ArancinoPacket ArancinoClass::get( char* key ) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-		ArancinoPacket errorPacket;
-        errorPacket.isError = 1; 
-        errorPacket.responseCode = ERROR;
-        errorPacket.responseType = ERROR;
-        errorPacket.response.string = NULL;
         return errorPacket;
 	}
 	
@@ -691,17 +130,12 @@ ArancinoPacket ArancinoClass::get( char* key ) {
     
     if (message != NULL)
     {
-        packet.isError = 0; 
-        packet.responseCode = getStatus(message);
-        packet.responseType = STRING;
-        packet.response.string = parse(message);
+        ArancinoPacket temp = {false, getStatus(message), STRING, {.string = parse(message)}};
+        packet = temp;
     }
     else
     {
-        packet.isError = 1; 
-        packet.responseCode = ERROR;
-        packet.responseType = ERROR;
-        packet.response.string = NULL;
+        packet = errorPacket;
     }
 
 	return packet;
@@ -710,11 +144,6 @@ ArancinoPacket ArancinoClass::get( char* key ) {
 ArancinoPacket ArancinoClass::del( char* key ) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-		ArancinoPacket errorPacket;
-        errorPacket.isError = 1; 
-        errorPacket.responseCode = ERROR;
-        errorPacket.responseType = ERROR;
-        errorPacket.response.string = NULL;
         return errorPacket;
 	}
 	
@@ -746,19 +175,14 @@ ArancinoPacket ArancinoClass::del( char* key ) {
     
     if (message != NULL)
     {
-        packet.isError = 0; 
-        packet.responseCode = getStatus(message);
-        packet.responseType = INT;
         char* messageParsed = parse(message);
-        packet.response.value = atoi(messageParsed);
+        ArancinoPacket temp = {false, getStatus(message), INT, {.value = atoi(messageParsed)}};
+        packet = temp;
         free(messageParsed);
     }
     else
     {
-        packet.isError = 1; 
-        packet.responseCode = ERROR;
-        packet.responseType = ERROR;
-        packet.response.string = NULL;
+        packet = errorPacket;
     }
 
 	return packet;
@@ -784,11 +208,6 @@ ArancinoPacket ArancinoClass::del( char* key ) {
 ArancinoPacket ArancinoClass::_set( char* key, char* value ) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-		ArancinoPacket errorPacket;
-        errorPacket.isError = 1; 
-        errorPacket.responseCode = ERROR;
-        errorPacket.responseType = ERROR;
-        errorPacket.response.string = NULL;
         return errorPacket;
 	}
     int commandLength = strlen(SET_COMMAND);
@@ -866,11 +285,6 @@ ArancinoPacket ArancinoClass::set( char* key, uint32_t value ) {
 ArancinoPacket ArancinoClass::hget( char* key, char* field ) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-		ArancinoPacket errorPacket;
-        errorPacket.isError = 1; 
-        errorPacket.responseCode = ERROR;
-        errorPacket.responseType = ERROR;
-        errorPacket.response.string = NULL;
         return errorPacket;
 	}
     int commandLength = strlen(HGET_COMMAND);
@@ -905,17 +319,12 @@ ArancinoPacket ArancinoClass::hget( char* key, char* field ) {
     
     if (message != NULL)
     {
-        packet.isError = 0; 
-        packet.responseCode = getStatus(message);
-        packet.responseType = STRING;
-        packet.response.string = parse(message);
+        ArancinoPacket temp = {false, getStatus(message), STRING, {.string = parse(message)}};
+        packet = temp;
     }
     else
     {
-        packet.isError = 1; 
-        packet.responseCode = ERROR;
-        packet.responseType = ERROR;
-        packet.response.string = NULL;
+        packet = errorPacket;
     }
 
 	return packet;
@@ -924,11 +333,6 @@ ArancinoPacket ArancinoClass::hget( char* key, char* field ) {
 ArancinoPacket ArancinoClass::hgetall(char* key) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-		ArancinoPacket errorPacket;
-        errorPacket.isError = 1; 
-        errorPacket.responseCode = ERROR;
-        errorPacket.responseType = ERROR;
-        errorPacket.response.string = NULL;
         return errorPacket;
 	}
 	
@@ -960,17 +364,12 @@ ArancinoPacket ArancinoClass::hgetall(char* key) {
     
     if (message != NULL)
     {
-        packet.isError = 0; 
-        packet.responseCode = getStatus(message);
-        packet.responseType = STRING_ARRAY;
-        packet.response.stringArray = parseArray(parse(message));
+        ArancinoPacket temp = {false, getStatus(message), STRING_ARRAY, {.stringArray = parseArray(parse(message))}};
+        packet = temp;
     }
     else
     {
-        packet.isError = 1; 
-        packet.responseCode = ERROR;
-        packet.responseType = ERROR;
-        packet.response.string = NULL;
+        packet = errorPacket;
     }
 
 	return packet;
@@ -980,11 +379,6 @@ ArancinoPacket ArancinoClass::hgetall(char* key) {
 ArancinoPacket ArancinoClass::hkeys(char* key) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-		ArancinoPacket errorPacket;
-        errorPacket.isError = 1; 
-        errorPacket.responseCode = ERROR;
-        errorPacket.responseType = ERROR;
-        errorPacket.response.string = NULL;
         return errorPacket;
 	}
 	
@@ -1016,17 +410,12 @@ ArancinoPacket ArancinoClass::hkeys(char* key) {
     
     if (message != NULL)
     {
-        packet.isError = 0; 
-        packet.responseCode = getStatus(message);
-        packet.responseType = STRING_ARRAY;
-        packet.response.stringArray = parseArray(parse(message));
+        ArancinoPacket temp = {false, getStatus(message), STRING_ARRAY, {.stringArray = parseArray(parse(message))}};
+        packet = temp;
     }
     else
     {
-        packet.isError = 1; 
-        packet.responseCode = ERROR;
-        packet.responseType = ERROR;
-        packet.response.string = NULL;
+        packet = errorPacket;
     }
 
 	return packet;
@@ -1036,11 +425,6 @@ ArancinoPacket ArancinoClass::hkeys(char* key) {
 ArancinoPacket ArancinoClass::hvals(char* key) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-		ArancinoPacket errorPacket;
-        errorPacket.isError = 1; 
-        errorPacket.responseCode = ERROR;
-        errorPacket.responseType = ERROR;
-        errorPacket.response.string = NULL;
         return errorPacket;
 	}
 	
@@ -1072,17 +456,12 @@ ArancinoPacket ArancinoClass::hvals(char* key) {
     
     if (message != NULL)
     {
-        packet.isError = 0; 
-        packet.responseCode = getStatus(message);
-        packet.responseType = STRING_ARRAY;
-        packet.response.stringArray = parseArray(parse(message));
+        ArancinoPacket temp = {false, getStatus(message), STRING_ARRAY, {.stringArray = parseArray(parse(message))}};
+        packet = temp;
     }
     else
     {
-        packet.isError = 1; 
-        packet.responseCode = ERROR;
-        packet.responseType = ERROR;
-        packet.response.string = NULL;
+        packet = errorPacket;
     }
 
 	return packet;
@@ -1118,17 +497,12 @@ ArancinoPacket ArancinoClass::keys(char* pattern){
     
     if (message != NULL)
     {
-        packet.isError = 0; 
-        packet.responseCode = getStatus(message);
-        packet.responseType = STRING_ARRAY;
-        packet.response.stringArray = parseArray(parse(message));
+        ArancinoPacket temp = {false, getStatus(message), STRING_ARRAY, {.stringArray = parseArray(parse(message))}};
+        packet = temp;
     }
     else
     {
-        packet.isError = 1; 
-        packet.responseCode = ERROR;
-        packet.responseType = ERROR;
-        packet.response.string = NULL;
+        packet = errorPacket;
     }
 
 	return packet;
@@ -1138,11 +512,6 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-		ArancinoPacket errorPacket;
-        errorPacket.isError = 1; 
-        errorPacket.responseCode = ERROR;
-        errorPacket.responseType = ERROR;
-        errorPacket.response.string = NULL;
         return errorPacket;
 	}
     int commandLength = strlen(HSET_COMMAND);
@@ -1261,11 +630,6 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field, uint32_t value ) {
 ArancinoPacket ArancinoClass::hdel( char* key, char* field ) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-		ArancinoPacket errorPacket;
-        errorPacket.isError = 1; 
-        errorPacket.responseCode = ERROR;
-        errorPacket.responseType = ERROR;
-        errorPacket.response.string = NULL;
         return errorPacket;
 	}
 
@@ -1303,19 +667,14 @@ ArancinoPacket ArancinoClass::hdel( char* key, char* field ) {
     
     if (message != NULL)
     {
-        packet.isError = 0; 
-        packet.responseCode = getStatus(message);
-        packet.responseType = INT;
         char* messageParsed = parse(message);
-        packet.response.value = atoi(messageParsed);
+        ArancinoPacket temp = {false, getStatus(message), INT, {.value = atoi(messageParsed)}};
+        packet = temp;
         free(messageParsed);
     }
     else
     {
-        packet.isError = 1; 
-        packet.responseCode = ERROR;
-        packet.responseType = ERROR;
-        packet.response.string = NULL;
+        packet = errorPacket;
     }
 
 	return packet; 
@@ -1324,11 +683,6 @@ ArancinoPacket ArancinoClass::hdel( char* key, char* field ) {
 ArancinoPacket ArancinoClass::_publish( char* channel, char* msg ) {
     if(isReservedKey(channel)){
         //TODO maybe it's better to print a log
-        ArancinoPacket errorPacket;
-        errorPacket.isError = 1; 
-        errorPacket.responseCode = ERROR;
-        errorPacket.responseType = ERROR;
-        errorPacket.response.string = NULL;
         return errorPacket;
 	}
 	
@@ -1366,21 +720,14 @@ ArancinoPacket ArancinoClass::_publish( char* channel, char* msg ) {
     
     if (message != NULL)
     {
-        packet.isError = 0; 
-        Serial.print("message: ");
-        Serial.println(message);
-        packet.responseCode = getStatus(message);
-        packet.responseType = INT;
         char* messageParsed = parse(message);
-        packet.response.value = atoi(messageParsed);
+        ArancinoPacket temp = {false, getStatus(message), INT, {.value = atoi(messageParsed)}};
+        packet = temp;
         free(messageParsed);
     }
     else
     {
-        packet.isError = 1; 
-        packet.responseCode = ERROR;
-        packet.responseType = ERROR;
-        packet.response.string = NULL;
+        packet = errorPacket;
     }
 
 	return packet;
@@ -1419,18 +766,14 @@ ArancinoPacket ArancinoClass::flush() {
     
     if (message != NULL)
     {
-        packet.isError = 0;
-        packet.responseCode = getStatus(message);
-        packet.responseType = INT;
-        packet.response.string = NULL;
-        free(message);
+        char* messageParsed = parse(message);
+        ArancinoPacket temp = {false, getStatus(message), VOID, {.string = NULL}};
+        packet = temp;
+        free(messageParsed);
     }
     else
     {
-        packet.isError = 1; 
-        packet.responseCode = ERROR;
-        packet.responseType = ERROR;
-        packet.response.string = NULL;
+        packet = errorPacket;
     }
 
 	return packet;

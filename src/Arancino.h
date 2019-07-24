@@ -73,7 +73,6 @@ typedef struct {
   ArancinoResponse response;
 } ArancinoPacket;
 
-//
 
 class ArancinoClass {
 	public:
