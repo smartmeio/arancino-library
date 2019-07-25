@@ -31,7 +31,6 @@ under the License
 extern "C" {
 #include <FreeRTOS_SAMD21.h>
 }
-#include <ThreadSafeUART.h>
 #endif
 
 
@@ -77,7 +76,7 @@ typedef struct {
 class ArancinoClass {
 	public:
 		//void begin();
-		void begin(int timeout);
+		void begin(int timeout = TIMEOUT);
         void startScheduler();
 		void setReservedCommunicationMode(int mode);
         ArancinoPacket get(char* value);
@@ -112,7 +111,7 @@ class ArancinoClass {
         int getArraySize(char** _array);
         void freeArray(char** _array);
 		//int hdel( String key, String* fields, int number);
-		ArancinoClass(Stream &_stream);
+		//ArancinoClass(Stream &_stream);
 
 	private:
 		//void dropAll();
@@ -127,35 +126,18 @@ class ArancinoClass {
 		bool isReservedKey(String key);
         bool isReservedKey(char* key);
 		char reservedKey[4][11]; //max 10 char for key
-		Stream &stream;
+		//Stream &stream;
         void doubleToString(double value, unsigned int _nDecimal, char* str); //truncation!
         int getDigit(long value);
         int COMM_MODE = SYNCH;
-		void sendViaCOMM_MODE(char* key, char* value);
+		ArancinoPacket sendViaCOMM_MODE(char* key, char* value);
 		ArancinoPacket _set(char* key, char* value);
         ArancinoPacket _publish(char* channel, char* msg);
         const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
         const char endTXStr[2] = {END_TX_CHAR, '\0'};
 };
 
-// This subclass uses a serial port Stream
-class SerialArancinoClass : public ArancinoClass {
-	public:
-		SerialArancinoClass(SERIAL_TRANSPORT &_serial)
-			: ArancinoClass(_serial), serial(_serial){
-			// Empty
-		}
-		//void begin(int timeout=TIMEOUT, unsigned long baudrate = BAUDRATE) {
-		void begin(int timeout=TIMEOUT) {
-			serial.begin(BAUDRATE);
-			ArancinoClass::begin(timeout);
-		}
-	private:
-		SERIAL_TRANSPORT &serial;
-
-};
-
-extern SerialArancinoClass Arancino;
+extern ArancinoClass Arancino;
 
 
 #endif /* ARANCINO_H_ */

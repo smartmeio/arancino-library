@@ -24,10 +24,10 @@ under the License
 ArancinoPacket errorPacket = {true, ERROR, ERROR, {.string = NULL}}; //default error packet
 
 
-ArancinoClass::ArancinoClass(Stream &_stream):
+/*ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
   // Empty
-}
+}*/
 
 /*void ArancinoClass::begin() {
 	begin(TIMEOUT);
@@ -36,15 +36,18 @@ ArancinoClass::ArancinoClass(Stream &_stream):
 //============= SETUP FUNCTIONS ======================
 
 void ArancinoClass::begin(int timeout) {
-    while(!SERIAL_PORT); //wait for UART communication established
+    SERIAL_PORT.begin(BAUDRATE);
+    SERIAL_PORT.setTimeout(TIMEOUT);
+
+    int commandLength = strlen(START_COMMAND);
+    int strLength = commandLength + 1 + 1;
+    char* str = (char *)calloc(strLength, sizeof(char));
     
-    String start;
     //reserved Key
     strcpy(reservedKey[0], MONITOR_KEY);
     strcpy(reservedKey[1], LIBVERS_KEY);
     strcpy(reservedKey[2], MODVERS_KEY);
     strcpy(reservedKey[3], POWER_KEY);
-    stream.setTimeout(timeout);			//response timeout
     //DEBUG
     #if defined(__SAMD21G18A__)
     pinMode(DBG_PIN,INPUT);
@@ -52,21 +55,39 @@ void ArancinoClass::begin(int timeout) {
         Serial.begin(115200);
     }
     #endif
+    
+    strcpy(str, START_COMMAND);
+	strcat(str, endTXStr);
+    
+    ArancinoPacket packet;
     // Start communication with serial module on CPU
     do{
-        delay(300);
         #if defined(__SAMD21G18A__)
         if(!digitalRead(DBG_PIN)){
             Serial.print(SENT_STRING);
         }
         #endif
-        sendArancinoCommand(START_COMMAND);
-        sendArancinoCommand(END_TX_CHAR);				//check if bridge python is running
-        start = stream.readStringUntil(END_TX_CHAR);
-    }while (start.toInt() != RSP_OK);
-    
+        
+        
+        sendArancinoCommand(str); //scheduler suspended
+        char* message = receiveArancinoResponse(END_TX_CHAR); //scheduler resumed
+        
+        if (message != NULL)
+        {
+            ArancinoPacket temp = {false, getStatus(message), VOID, {.string = NULL}};
+            packet = temp;
+        }
+        else
+        {
+            packet = errorPacket;
+        }
+        free(message);
+        delay(1000);
+    }while (packet.isError == true || packet.responseCode != RSP_OK);
+    free(str);
+
     sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
-    
+
 }
 
 
@@ -242,18 +263,13 @@ ArancinoPacket ArancinoClass::_set( char* key, char* value ) {
     
     if (message != NULL)
     {
-        packet.isError = 0; 
-        packet.responseCode = getStatus(message);
-        packet.responseType = VOID;
-        packet.response.string = NULL;
+        ArancinoPacket temp = {false, getStatus(message), VOID, {.string = NULL}};
+        packet = temp;
         free(message);
     }
     else
     {
-        packet.isError = 1; 
-        packet.responseCode = ERROR;
-        packet.responseType = ERROR;
-        packet.response.string = NULL;
+        packet = errorPacket;
     }
 
 	return packet;
@@ -834,23 +850,23 @@ void ArancinoClass::println(double value) {
     print("\n");
 }
 
-void ArancinoClass::sendViaCOMM_MODE(char* key, char* value){
+ArancinoPacket ArancinoClass::sendViaCOMM_MODE(char* key, char* value){
 	switch (COMM_MODE) {
 		case SYNCH:
-			_set(key, value);
+			return _set(key, value);
 		break;
 
 		case ASYNCH:
-			_publish(key, value);
+			return _publish(key, value);
 		break;
 
 		case BOTH:
-			_publish(key, value);
-			_set(key, value);
+			return _publish(key, value);
+			return _set(key, value);
 		break;
 
 		default:
-			_set(key, value);
+			return _set(key, value);
 		break;
 	}
 }
@@ -1037,7 +1053,7 @@ void ArancinoClass::sendArancinoCommand(char* command){
 		vTaskSuspendAll();
 	}
 #endif
-		stream.write(command, strlen(command)); //excluded '\0'
+		SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
 #if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		if(command[strlen(command) - 1] == END_TX_CHAR)
@@ -1075,47 +1091,15 @@ char* ArancinoClass::receiveArancinoResponse(char terminator)
     long previousMillis = millis();
     char c = 0;
     
-    while (millis() - previousMillis < TIMEOUT)
+    String str = SERIAL_PORT.readString();
+    int responseLength = strlen(str.begin());
+    if (responseLength > 0)
     {
-        if ((stream).available())
-        {
-            (stream).readBytes(&c, 1);
-            #if defined(DEBUG) && DEBUG == 1
-            //BEGIN DEBUG
-            if (c < 32)
-            {
-                Serial.print("|");
-                Serial.print(c, DEC);
-                Serial.print("|");
-            }
-            else
-                Serial.print(c);
-            //END DEBUG
-            #endif
-            if (response == NULL)
-            {
-                response = (char *)calloc(2, sizeof(char));
-                response[0] = c;
-                response[1] = '\0';
-            }
-            else
-            {
-                int oldLength = strlen(response);
-                char* temp = (char *)calloc((oldLength + 2), sizeof(char));
-                strcpy(temp, response);
-                free(response);
-                response = temp;
-                response[oldLength] = c;
-                response[oldLength + 1] = '\0';
-            }
-            
-            if (c == terminator)
-            {
-                break;
-            }
-        }
-        
+        response = (char *)calloc(responseLength + 1, sizeof(char));
+        strcpy(response, str.begin());
+        response[responseLength] = '\0';
     }
+    
     #if defined(DEBUG) && DEBUG == 1
     Serial.println("");
     #endif
@@ -1145,10 +1129,4 @@ bool ArancinoClass::isReservedKey(char* key){
   }
 }*/
 
-// Arancino instance
-#if defined(__SAMD21G18A__)
-SerialArancinoClass Arancino(SerialUSB);
-#else
-SerialArancinoClass Arancino(Serial);
-#endif
-//#endif
+ArancinoClass Arancino;
