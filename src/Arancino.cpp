@@ -82,7 +82,6 @@ void ArancinoClass::begin(int timeout) {
             packet = errorPacket;
         }
         free(message);
-        delay(1000);
     }while (packet.isError == true || packet.responseCode != RSP_OK);
     free(str);
 
@@ -1082,28 +1081,16 @@ void ArancinoClass::sendArancinoCommand(char command){
  */
 char* ArancinoClass::receiveArancinoResponse(char terminator)
 {
-    char* response = NULL; //must be freed
-    
-    //BEGIN read from uart
-    #if defined(DEBUG) && DEBUG == 1
-    Serial.println("reading from UART");
-    #endif
-    long previousMillis = millis();
-    char c = 0;
-    
-    String str = SERIAL_PORT.readString();
+    char* response = NULL; //must be freed    
+    String str = SERIAL_PORT.readStringUntil(terminator);
     int responseLength = strlen(str.begin());
     if (responseLength > 0)
     {
-        response = (char *)calloc(responseLength + 1, sizeof(char));
+        response = (char *)calloc(responseLength + 1 + 1, sizeof(char));
         strcpy(response, str.begin());
-        response[responseLength] = '\0';
+        response[responseLength] = END_TX_CHAR;
+        response[responseLength + 1] = '\0';
     }
-    
-    #if defined(DEBUG) && DEBUG == 1
-    Serial.println("");
-    #endif
-    //END read from uart
     
     #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
     if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
