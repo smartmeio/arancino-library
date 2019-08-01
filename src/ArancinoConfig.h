@@ -71,8 +71,12 @@ under the License
 #define POWER_KEY					"___POWER___"
 #define LIB_VERSION				"0.1.2"	//library version 
 
+//RESPONSE CODE
+#define RESERVED_KEY_ERROR  -3
+#define COMMUNICATION_ERROR      -2
+#define GENERIC_ERROR           -1
+
 //RESPONSE TYPE
-#define ERROR           -1
 #define VOID            0
 #define INT             1
 #define STRING          2

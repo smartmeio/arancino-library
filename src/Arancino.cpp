@@ -21,7 +21,8 @@ under the License
 #include "Arancino.h"
 #define DEBUG 0
 
-ArancinoPacket errorPacket = {true, ERROR, ERROR, {.string = NULL}}; //default error packet
+ArancinoPacket reservedKeyErrorPacket = {true, RESERVED_KEY_ERROR, RESERVED_KEY_ERROR, {.string = NULL}}; //default reserved key error packet
+ArancinoPacket communicationErrorPacket = {true, COMMUNICATION_ERROR, COMMUNICATION_ERROR, {.string = NULL}}; //default reserved key error packet
 
 
 /*ArancinoClass::ArancinoClass(Stream &_stream):
@@ -69,17 +70,17 @@ void ArancinoClass::begin(int timeout) {
         #endif
         
         
-        sendArancinoCommand(str); //scheduler suspended
-        char* message = receiveArancinoResponse(END_TX_CHAR); //scheduler resumed
+        sendArancinoCommand(str);
+        char* message = receiveArancinoResponse(END_TX_CHAR);
         
         if (message != NULL)
         {
-            ArancinoPacket temp = {false, getStatus(message), VOID, {.string = NULL}};
+            ArancinoPacket temp = {false, getResponseCode(message), VOID, {.string = NULL}};
             packet = temp;
         }
         else
         {
-            packet = errorPacket;
+            packet = communicationErrorPacket;
         }
         free(message);
     }while (packet.isError == true || packet.responseCode != RSP_OK);
@@ -117,10 +118,10 @@ void ArancinoClass::setReservedCommunicationMode(int mode){
 
 }*/
 
-ArancinoPacket ArancinoClass::get( char* key ) {
+ArancinoPacket ArancinoClass::getPacket( char* key ) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-        return errorPacket;
+        return reservedKeyErrorPacket;
 	}
 	
     int commandLength = strlen(GET_COMMAND);
@@ -141,30 +142,57 @@ ArancinoPacket ArancinoClass::get( char* key ) {
 	}
 	strcat(str, endTXStr);
     
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
-    
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
     free(str);
 
     ArancinoPacket packet;
     
     if (message != NULL)
     {
-        ArancinoPacket temp = {false, getStatus(message), STRING, {.string = parse(message)}};
+        ArancinoPacket temp = {false, getResponseCode(message), STRING, {.string = parse(message)}};
         packet = temp;
     }
     else
     {
-        packet = errorPacket;
+        packet = communicationErrorPacket;
     }
 
 	return packet;
 }
 
-ArancinoPacket ArancinoClass::del( char* key ) {
+String ArancinoClass::get( char* key ) {
+    ArancinoPacket packet = getPacket(key);
+    String retString;
+    if (!packet.isError)
+    {
+        retString = packet.response.string;
+    }
+    else
+    {
+        retString = "";
+    }
+    freePacket(packet);
+    return retString;
+}
+
+
+ArancinoPacket ArancinoClass::delPacket( char* key ) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-        return errorPacket;
+        return reservedKeyErrorPacket;
 	}
 	
 	int commandLength = strlen(DEL_COMMAND);
@@ -186,8 +214,20 @@ ArancinoPacket ArancinoClass::del( char* key ) {
 	}
 	strcat(str, endTXStr);
     
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
     
     free(str);
     
@@ -196,16 +236,26 @@ ArancinoPacket ArancinoClass::del( char* key ) {
     if (message != NULL)
     {
         char* messageParsed = parse(message);
-        ArancinoPacket temp = {false, getStatus(message), INT, {.value = atoi(messageParsed)}};
+        ArancinoPacket temp = {false, getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
         packet = temp;
         free(messageParsed);
     }
     else
     {
-        packet = errorPacket;
+        packet = communicationErrorPacket;
     }
 
 	return packet;
+}
+
+int ArancinoClass::del( char* key ) {
+    ArancinoPacket packet = delPacket(key);
+    int retValue = 0;
+    if (!packet.isError)
+    {
+        retValue = packet.response.integer;
+    }
+    return retValue;
 }
 
 
@@ -228,7 +278,7 @@ ArancinoPacket ArancinoClass::del( char* key ) {
 ArancinoPacket ArancinoClass::_set( char* key, char* value ) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-        return errorPacket;
+        return reservedKeyErrorPacket;
 	}
     int commandLength = strlen(SET_COMMAND);
     int keyLength = strlen(key);
@@ -253,8 +303,20 @@ ArancinoPacket ArancinoClass::_set( char* key, char* value ) {
     }
 	strcat(str, endTXStr);
     
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
     
     free(str);
 
@@ -262,13 +324,13 @@ ArancinoPacket ArancinoClass::_set( char* key, char* value ) {
     
     if (message != NULL)
     {
-        ArancinoPacket temp = {false, getStatus(message), VOID, {.string = NULL}};
+        ArancinoPacket temp = {false, getResponseCode(message), VOID, {.string = NULL}};
         packet = temp;
         free(message);
     }
     else
     {
-        packet = errorPacket;
+        packet = communicationErrorPacket;
     }
 
 	return packet;
@@ -297,10 +359,10 @@ ArancinoPacket ArancinoClass::set( char* key, uint32_t value ) {
 	return set(key, str);
 }
 
-ArancinoPacket ArancinoClass::hget( char* key, char* field ) {
+ArancinoPacket ArancinoClass::hgetPacket( char* key, char* field ) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-        return errorPacket;
+        return reservedKeyErrorPacket;
 	}
     int commandLength = strlen(HGET_COMMAND);
     int keyLength = strlen(key);
@@ -325,8 +387,20 @@ ArancinoPacket ArancinoClass::hget( char* key, char* field ) {
     }
 	strcat(str, endTXStr);
        
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
     
     free(str);
 
@@ -334,21 +408,21 @@ ArancinoPacket ArancinoClass::hget( char* key, char* field ) {
     
     if (message != NULL)
     {
-        ArancinoPacket temp = {false, getStatus(message), STRING, {.string = parse(message)}};
+        ArancinoPacket temp = {false, getResponseCode(message), STRING, {.string = parse(message)}}; //TODO getStatus to getResponseCode
         packet = temp;
     }
     else
     {
-        packet = errorPacket;
+        packet = communicationErrorPacket;
     }
 
 	return packet;
 }
 
-ArancinoPacket ArancinoClass::hgetall(char* key) {
+ArancinoPacket ArancinoClass::hgetallPacket(char* key) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-        return errorPacket;
+        return reservedKeyErrorPacket;
 	}
 	
     int commandLength = strlen(HGETALL_COMMAND);
@@ -370,8 +444,20 @@ ArancinoPacket ArancinoClass::hgetall(char* key) {
 	}
 	strcat(str, endTXStr);
 	   
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
     
     free(str);
     
@@ -379,22 +465,22 @@ ArancinoPacket ArancinoClass::hgetall(char* key) {
     
     if (message != NULL)
     {
-        ArancinoPacket temp = {false, getStatus(message), STRING_ARRAY, {.stringArray = parseArray(parse(message))}};
+        ArancinoPacket temp = {false, getResponseCode(message), STRING_ARRAY, {.stringArray = parseArray(parse(message))}};
         packet = temp;
     }
     else
     {
-        packet = errorPacket;
+        packet = communicationErrorPacket;
     }
 
 	return packet;
 }
 
 
-ArancinoPacket ArancinoClass::hkeys(char* key) {
+ArancinoPacket ArancinoClass::hkeysPacket(char* key) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-        return errorPacket;
+        return reservedKeyErrorPacket;
 	}
 	
     int commandLength = strlen(HKEYS_COMMAND);
@@ -416,8 +502,20 @@ ArancinoPacket ArancinoClass::hkeys(char* key) {
 	}
 	strcat(str, endTXStr);	
 	
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
     
     free(str);
     
@@ -425,22 +523,22 @@ ArancinoPacket ArancinoClass::hkeys(char* key) {
     
     if (message != NULL)
     {
-        ArancinoPacket temp = {false, getStatus(message), STRING_ARRAY, {.stringArray = parseArray(parse(message))}};
+        ArancinoPacket temp = {false, getResponseCode(message), STRING_ARRAY, {.stringArray = parseArray(parse(message))}};
         packet = temp;
     }
     else
     {
-        packet = errorPacket;
+        packet = communicationErrorPacket;
     }
 
 	return packet;
 }
 
 
-ArancinoPacket ArancinoClass::hvals(char* key) {
+ArancinoPacket ArancinoClass::hvalsPacket(char* key) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-        return errorPacket;
+        return reservedKeyErrorPacket;
 	}
 	
     int commandLength = strlen(HVALS_COMMAND);
@@ -462,8 +560,20 @@ ArancinoPacket ArancinoClass::hvals(char* key) {
 	}
 	strcat(str, endTXStr);
     
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif
     
     free(str);
     
@@ -471,19 +581,19 @@ ArancinoPacket ArancinoClass::hvals(char* key) {
     
     if (message != NULL)
     {
-        ArancinoPacket temp = {false, getStatus(message), STRING_ARRAY, {.stringArray = parseArray(parse(message))}};
+        ArancinoPacket temp = {false, getResponseCode(message), STRING_ARRAY, {.stringArray = parseArray(parse(message))}};
         packet = temp;
     }
     else
     {
-        packet = errorPacket;
+        packet = communicationErrorPacket;
     }
 
 	return packet;
 }
 
 
-ArancinoPacket ArancinoClass::keys(char* pattern){
+ArancinoPacket ArancinoClass::keysPacket(char* pattern){
     int commandLength = strlen(KEYS_COMMAND);
     int patternLength = strlen(pattern);
     int strLength = commandLength + 1 + patternLength + 1 + 1;
@@ -503,8 +613,20 @@ ArancinoPacket ArancinoClass::keys(char* pattern){
 	}
 	strcat(str, endTXStr);
     
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
     
     free(str);
 
@@ -512,22 +634,38 @@ ArancinoPacket ArancinoClass::keys(char* pattern){
     
     if (message != NULL)
     {
-        ArancinoPacket temp = {false, getStatus(message), STRING_ARRAY, {.stringArray = parseArray(parse(message))}};
+        ArancinoPacket temp = {false, getResponseCode(message), STRING_ARRAY, {.stringArray = parseArray(parse(message))}};
         packet = temp;
     }
     else
     {
-        packet = errorPacket;
+        packet = communicationErrorPacket;
     }
 
 	return packet;
 }
 
+String* ArancinoClass::keys(char* pattern){
+    ArancinoPacket packet = keysPacket(pattern);
+    int arraySize = getArraySize(packet.response.stringArray);
+    
+    String* retArray = new String[arraySize + 1];
+    retArray[0] = arraySize;
+    for (int i = 0; i < arraySize; i++)
+    {
+        retArray[i + 1] = packet.response.stringArray[i];
+    }
+    freePacket(packet);
+    return &retArray[1];
+    
+}
+
+
 ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-        return errorPacket;
+        return reservedKeyErrorPacket;
 	}
     int commandLength = strlen(HSET_COMMAND);
     int keyLength = strlen(key);
@@ -556,8 +694,20 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
     }
 	strcat(str, endTXStr);
     
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
     
     free(str);
 
@@ -566,17 +716,14 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
     if (message != NULL)
     {
         packet.isError = 0; 
-        packet.responseCode = getStatus(message);
+        packet.responseCode = getResponseCode(message);
         packet.responseType = VOID;
         packet.response.string = NULL;
         free(message);
     }
     else
     {
-        packet.isError = 1; 
-        packet.responseCode = ERROR;
-        packet.responseType = ERROR;
-        packet.response.string = NULL;
+        packet = communicationErrorPacket;
     }
 
 	return packet;
@@ -642,10 +789,10 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field, uint32_t value ) {
     return hset(key, field, str);
 }
 
-ArancinoPacket ArancinoClass::hdel( char* key, char* field ) {
+ArancinoPacket ArancinoClass::hdelPacket( char* key, char* field ) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
-        return errorPacket;
+        return reservedKeyErrorPacket;
 	}
 
     int commandLength = strlen(HDEL_COMMAND);
@@ -673,8 +820,20 @@ ArancinoPacket ArancinoClass::hdel( char* key, char* field ) {
     }
 	strcat(str, endTXStr);
     
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
     
     free(str);
 
@@ -683,13 +842,13 @@ ArancinoPacket ArancinoClass::hdel( char* key, char* field ) {
     if (message != NULL)
     {
         char* messageParsed = parse(message);
-        ArancinoPacket temp = {false, getStatus(message), INT, {.value = atoi(messageParsed)}};
+        ArancinoPacket temp = {false, getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
         packet = temp;
         free(messageParsed);
     }
     else
     {
-        packet = errorPacket;
+        packet = communicationErrorPacket;
     }
 
 	return packet; 
@@ -698,7 +857,7 @@ ArancinoPacket ArancinoClass::hdel( char* key, char* field ) {
 ArancinoPacket ArancinoClass::_publish( char* channel, char* msg ) {
     if(isReservedKey(channel)){
         //TODO maybe it's better to print a log
-        return errorPacket;
+        return reservedKeyErrorPacket;
 	}
 	
     int commandLength = strlen(PUBLISH_COMMAND);
@@ -726,8 +885,20 @@ ArancinoPacket ArancinoClass::_publish( char* channel, char* msg ) {
     }
 	strcat(str, endTXStr);
     
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
     
     free(str);
 
@@ -736,13 +907,13 @@ ArancinoPacket ArancinoClass::_publish( char* channel, char* msg ) {
     if (message != NULL)
     {
         char* messageParsed = parse(message);
-        ArancinoPacket temp = {false, getStatus(message), INT, {.value = atoi(messageParsed)}};
+        ArancinoPacket temp = {false, getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
         packet = temp;
         free(messageParsed);
     }
     else
     {
-        packet = errorPacket;
+        packet = communicationErrorPacket;
     }
 
 	return packet;
@@ -772,8 +943,20 @@ ArancinoPacket ArancinoClass::flush() {
     strcpy(str, FLUSH_COMMAND);
 	strcat(str, endTXStr);
     
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
     sendArancinoCommand(str);
 	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
     
     free(str);
 
@@ -782,13 +965,13 @@ ArancinoPacket ArancinoClass::flush() {
     if (message != NULL)
     {
         char* messageParsed = parse(message);
-        ArancinoPacket temp = {false, getStatus(message), VOID, {.string = NULL}};
+        ArancinoPacket temp = {false, getResponseCode(message), VOID, {.string = NULL}};
         packet = temp;
         free(messageParsed);
     }
     else
     {
-        packet = errorPacket;
+        packet = communicationErrorPacket;
     }
 
 	return packet;
@@ -802,6 +985,35 @@ int ArancinoClass::getArraySize(char** _array)
   return dummy != NULL ? (int)(*dummy) : 0;
 }
 
+int ArancinoClass::getArraySize(String* _array)
+{
+    String* dummy = (_array != NULL) ? _array - 1 : NULL;
+    return (dummy[0] != "") ? dummy[0].toInt() : 0;
+}
+
+
+void ArancinoClass::freePacket(ArancinoPacket packet)
+{
+    if (packet.responseType == STRING)
+    {
+        free(packet.response.string);
+    }
+    else if (packet.responseType == STRING_ARRAY)
+    {
+        freeArray(packet.response.stringArray);
+    }
+    else
+    {
+        //nothing to do
+    }
+}
+
+void ArancinoClass::freeArray(String* _array)
+{
+    String* dummy = (_array != NULL) ? _array - 1 : NULL;
+    delete[] dummy;
+}
+
 void ArancinoClass::freeArray(char** _array)
 {
   char** dummy = (_array != NULL) ? _array - sizeof(char) : NULL;
@@ -810,7 +1022,6 @@ void ArancinoClass::freeArray(char** _array)
   if (dummy != NULL)
     free(dummy);
 }
-
 //============= DEBUG FUNCTIONS ======================
 
 void ArancinoClass::print(char* value){
@@ -963,7 +1174,7 @@ char** ArancinoClass::parseArray(char* data)
 }
 
 
-int ArancinoClass::getStatus(char* message)
+int ArancinoClass::getResponseCode(char* message)
 {
     int value = -1;
     int separatorIndex = -1;
@@ -1046,12 +1257,6 @@ char* ArancinoClass::parse(char* message){
 
 void ArancinoClass::sendArancinoCommand(char* command){
     //command must terminate with '\0'!
-#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-	{
-		vTaskSuspendAll();
-	}
-#endif
 		SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
 #if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
@@ -1091,13 +1296,6 @@ char* ArancinoClass::receiveArancinoResponse(char terminator)
         response[responseLength] = END_TX_CHAR;
         response[responseLength + 1] = '\0';
     }
-    
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-	{
-        xTaskResumeAll();
-    }
-    #endif  
     return response;
 }
 
