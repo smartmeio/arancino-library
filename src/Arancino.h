@@ -92,7 +92,7 @@ class ArancinoClass {
 		ArancinoPacket hgetPacket(char* key, char* field);
 		String hget(char* key, char* field);
 		ArancinoPacket hgetallPacket(char* key);
-		String* hgetal(char* key);
+		String* hgetall(char* key);
 		ArancinoPacket hkeysPacket(char* key);
 		String* hkeys(char* key);
 		ArancinoPacket hvalsPacket(char* key);
@@ -103,8 +103,10 @@ class ArancinoClass {
 		ArancinoPacket hset(char* key, char* field, uint32_t value);
 		ArancinoPacket hdelPacket(char* key, char* field);
 		int hdel(char* key, char* field);
-		ArancinoPacket publish(char* channel, char* msg);
-		ArancinoPacket publish(int channel, char* msg);
+		ArancinoPacket publishPacket(char* channel, char* msg);
+		int publish(char* channel, char* msg);
+		ArancinoPacket publishPacket(int channel, char* msg);
+		int publish(int channel, char* msg);
 		ArancinoPacket flush(void);
 
 		void print(String value);

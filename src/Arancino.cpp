@@ -419,6 +419,22 @@ ArancinoPacket ArancinoClass::hgetPacket( char* key, char* field ) {
 	return packet;
 }
 
+String ArancinoClass::hget( char* key, char* field ) {
+    ArancinoPacket packet = hgetPacket(key, field);
+    String retString;
+    if (!packet.isError)
+    {
+        retString = packet.response.string;
+    }
+    else
+    {
+        retString = "";
+    }
+    freePacket(packet);
+    return retString;
+}
+
+
 ArancinoPacket ArancinoClass::hgetallPacket(char* key) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
@@ -476,6 +492,20 @@ ArancinoPacket ArancinoClass::hgetallPacket(char* key) {
 	return packet;
 }
 
+String* ArancinoClass::hgetall(char* key) 
+{
+    ArancinoPacket packet = hgetallPacket(key);
+    int arraySize = getArraySize(packet.response.stringArray);
+    
+    String* retArray = new String[arraySize + 1];
+    retArray[0] = arraySize;
+    for (int i = 0; i < arraySize; i++)
+    {
+        retArray[i + 1] = packet.response.stringArray[i];
+    }
+    freePacket(packet);
+    return &retArray[1];
+}
 
 ArancinoPacket ArancinoClass::hkeysPacket(char* key) {
     if(isReservedKey(key)){
@@ -534,6 +564,19 @@ ArancinoPacket ArancinoClass::hkeysPacket(char* key) {
 	return packet;
 }
 
+String* ArancinoClass::hkeys(char* key) {
+    ArancinoPacket packet = hkeysPacket(key);
+    int arraySize = getArraySize(packet.response.stringArray);
+    
+    String* retArray = new String[arraySize + 1];
+    retArray[0] = arraySize;
+    for (int i = 0; i < arraySize; i++)
+    {
+        retArray[i + 1] = packet.response.stringArray[i];
+    }
+    freePacket(packet);
+    return &retArray[1];
+}
 
 ArancinoPacket ArancinoClass::hvalsPacket(char* key) {
     if(isReservedKey(key)){
@@ -590,6 +633,20 @@ ArancinoPacket ArancinoClass::hvalsPacket(char* key) {
     }
 
 	return packet;
+}
+
+String* ArancinoClass::hvals(char* key) {
+    ArancinoPacket packet = hvalsPacket(key);
+    int arraySize = getArraySize(packet.response.stringArray);
+    
+    String* retArray = new String[arraySize + 1];
+    retArray[0] = arraySize;
+    for (int i = 0; i < arraySize; i++)
+    {
+        retArray[i + 1] = packet.response.stringArray[i];
+    }
+    freePacket(packet);
+    return &retArray[1];
 }
 
 
@@ -854,6 +911,18 @@ ArancinoPacket ArancinoClass::hdelPacket( char* key, char* field ) {
 	return packet; 
 }
 
+
+int ArancinoClass::hdel(char* key, char* field) {
+    ArancinoPacket packet = hdelPacket(key, field);
+    int retValue = 0;
+    if (!packet.isError)
+    {
+        retValue = packet.response.integer;
+    }
+    return retValue;
+}
+
+
 ArancinoPacket ArancinoClass::_publish( char* channel, char* msg ) {
     if(isReservedKey(channel)){
         //TODO maybe it's better to print a log
@@ -919,14 +988,34 @@ ArancinoPacket ArancinoClass::_publish( char* channel, char* msg ) {
 	return packet;
 }
 
-ArancinoPacket ArancinoClass::publish( char* channel, char* msg ) {
+ArancinoPacket ArancinoClass::publishPacket( char* channel, char* msg ) {
 	return _publish(channel, msg);
 }
 
-ArancinoPacket ArancinoClass::publish( int channel, char* msg ) {
+int ArancinoClass::publish( char* channel, char* msg ) {
+    ArancinoPacket packet = publishPacket(channel, msg);
+    int retValue = 0;
+    if (!packet.isError)
+    {
+        retValue = packet.response.integer;
+    }
+    return retValue;
+}
+
+ArancinoPacket ArancinoClass::publishPacket( int channel, char* msg ) {
     char str[20] = "";
-    sprintf(str, "%d", channel);
-	publish(str, msg);
+    itoa(channel, str, 10);
+	return _publish(str, msg);
+}
+
+int ArancinoClass::publish( int channel, char* msg ) {
+    ArancinoPacket packet = publishPacket(channel, msg);
+    int retValue = 0;
+    if (!packet.isError)
+    {
+        retValue = packet.response.integer;
+    }
+    return retValue;
 }
 
 ArancinoPacket ArancinoClass::flush() {
