@@ -31,49 +31,50 @@ under the License
 
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
 
-#define START_COMMAND 		"START"
+#define START_COMMAND 		    "START"
 #define SET_COMMAND 			"SET"
+#define SET_PERS_COMMAND 		"SETPERS"
 #define GET_COMMAND 			"GET"
 #define DEL_COMMAND 			"DEL"
 #define KEYS_COMMAND			"KEYS"
 #define HGET_COMMAND			"HGET"
-#define HGETALL_COMMAND		"HGETALL"
+#define HGETALL_COMMAND		    "HGETALL"
 #define HKEYS_COMMAND			"HKEYS"
 #define HDEL_COMMAND			"HDEL"
 #define HSET_COMMAND			"HSET"
 #define HVALS_COMMAND			"HVALS"
-#define PUBLISH_COMMAND		"PUB"
+#define PUBLISH_COMMAND		    "PUB"
 #define FLUSH_COMMAND			"FLUSH"
 
 #define SENT_STRING				"Sent Command: "
 #define RCV_STRING				"Received Response: "
 
 #define END_TX_CHAR				(char)4 //'@' //
-#define DATA_SPLIT_CHAR		(char)30 //'#' //
+#define DATA_SPLIT_CHAR		    (char)30 //'#' //
 
-#define RSP_OK						100
+#define RSP_OK					100
 #define RSP_HSET_NEW			101
 #define RSP_HSET_UPD			102
-#define ERR								200		//Generic Error
-#define ERR_NULL					201		//Null value
-#define ERR_SET						202		//Error during SET
-#define ERR_CMD_NOT_FND		203		//Command Not Found
-#define ERR_CMD_NOT_RCV		204		//Command Not Received
-#define ERR_CMD_PRM_NUM		205		//Invalid parameter number
-#define ERR_REDIS					206		//Generic Redis Error
+#define ERR						200		//Generic Error
+#define ERR_NULL				201		//Null value
+#define ERR_SET					202		//Error during SET
+#define ERR_CMD_NOT_FND		    203		//Command Not Found
+#define ERR_CMD_NOT_RCV		    204		//Command Not Received
+#define ERR_CMD_PRM_NUM		    205		//Invalid parameter number
+#define ERR_REDIS				206		//Generic Redis Error
 
-#define DBG_PIN						26		//pin used to Debug Message
-//#define PWR_PIN					??		//pin used for Power Management
+#define DBG_PIN					26		//pin used to Debug Message
+//#define PWR_PIN				??		//pin used for Power Management
 
 #define MONITOR_KEY				"___MONITOR___"
 #define LIBVERS_KEY				"___LIBVERS___"
 #define MODVERS_KEY				"___MODVERS___"
-#define POWER_KEY					"___POWER___"
+#define POWER_KEY				"___POWER___"
 #define LIB_VERSION				"0.1.2"	//library version 
 
 //RESPONSE CODE
-#define RESERVED_KEY_ERROR  -3
-#define COMMUNICATION_ERROR      -2
+#define RESERVED_KEY_ERROR      -3
+#define COMMUNICATION_ERROR     -2
 #define GENERIC_ERROR           -1
 
 //RESPONSE TYPE

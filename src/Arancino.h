@@ -87,6 +87,10 @@ class ArancinoClass {
 		ArancinoPacket set(char* key, int value);
 		ArancinoPacket set(char* key, double value);
 		ArancinoPacket set(char* key, uint32_t value);
+		ArancinoPacket set(char* key, char* value, bool isPersistent);
+		ArancinoPacket set(char* key, int value, bool isPersistent);
+		ArancinoPacket set(char* key, double value, bool isPersistent);
+		ArancinoPacket set(char* key, uint32_t value, bool isPersistent);
 		
 		ArancinoPacket delPacket(char* key);
 		int del(char* key);
@@ -165,7 +169,8 @@ class ArancinoClass {
 		int COMM_MODE = SYNCH;
 		
 		ArancinoPacket sendViaCOMM_MODE(char* key, char* value);
-		ArancinoPacket _set(char* key, char* value);
+		ArancinoPacket sendViaCOMM_MODE(char* key, char* value, bool isPersistent);
+		ArancinoPacket _set(char* key, char* value, bool isPersistent);
 		ArancinoPacket _publish(char* channel, char* msg);
 		
 		const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};

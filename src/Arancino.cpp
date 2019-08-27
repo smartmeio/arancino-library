@@ -118,6 +118,9 @@ void ArancinoClass::setReservedCommunicationMode(int mode){
 
 }*/
 
+
+// ==== GET
+
 ArancinoPacket ArancinoClass::getPacket( char* key ) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
@@ -188,6 +191,128 @@ String ArancinoClass::get( char* key ) {
     return retString;
 }
 
+// ==== SET
+
+ArancinoPacket ArancinoClass::_set( char* key, char* value, bool isPersistent ) {
+    if(isReservedKey(key)){
+		//TODO maybe it's better to print a log
+        return reservedKeyErrorPacket;
+	}
+
+    int commandLength = 0;
+
+    if(isPersistent){
+        commandLength = strlen(SET_PERS_COMMAND);
+    }
+    else
+    {
+        commandLength = strlen(SET_COMMAND);
+    }
+    
+    int keyLength = strlen(key);
+    int valueLength = strlen(value);
+    int strLength = commandLength + 1 + keyLength + 1 + valueLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+    
+    if(isPersistent){
+        strcpy(str, SET_PERS_COMMAND);
+    } else
+    {
+        strcpy(str, SET_COMMAND);
+    }
+    
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
+	}
+	if (strcmp(value, "") != 0)
+    {
+        strcat(str, dataSplitStr);
+        strcat(str, value);
+
+    }
+	strcat(str, endTXStr);
+    
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
+    sendArancinoCommand(str);
+	char* message = receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
+    
+    free(str);
+
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        ArancinoPacket temp = {false, getResponseCode(message), VOID, {.string = NULL}};
+        packet = temp;
+        free(message);
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet;
+}
+
+ArancinoPacket ArancinoClass::set( char* key, char* value) {
+    return _set(key, value, false);
+}
+
+ArancinoPacket ArancinoClass::set( char* key, int value) {
+    return set(key, value, false);
+}
+
+ArancinoPacket ArancinoClass::set( char* key, double value) {
+    return set(key, value, false);
+}
+
+ArancinoPacket ArancinoClass::set( char* key, uint32_t value) {
+    return set(key, value, false);
+}
+
+
+ArancinoPacket ArancinoClass::set( char* key, char* value, bool isPersistent ) {
+	return _set(key, value, isPersistent);
+}
+
+ArancinoPacket ArancinoClass::set( char* key, int value, bool isPersistent ) {
+    char str[20] = "";
+    itoa(value, str, 10);
+	return set(key, str, isPersistent);
+}
+
+ArancinoPacket ArancinoClass::set( char* key, double value, bool isPersistent ) {
+    char str[20] = "";
+    doubleToString(value, 4, str);
+    return set(key, str, isPersistent);
+}
+
+ArancinoPacket ArancinoClass::set( char* key, uint32_t value, bool isPersistent) {
+    char str[20] = "";
+    itoa(value, str, 10);
+	return set(key, str, isPersistent);
+}
+
+
+// ==== DEL
 
 ArancinoPacket ArancinoClass::delPacket( char* key ) {
     if(isReservedKey(key)){
@@ -258,8 +383,6 @@ int ArancinoClass::del( char* key ) {
     return retValue;
 }
 
-
-
 /*int ArancinoClass::del( String* key , int number) {
 
 	sendArancinoCommand(DEL_COMMAND);					// send read request
@@ -275,89 +398,8 @@ int ArancinoClass::del( char* key ) {
 	return parse(message).toInt();
 }*/
 
-ArancinoPacket ArancinoClass::_set( char* key, char* value ) {
-    if(isReservedKey(key)){
-		//TODO maybe it's better to print a log
-        return reservedKeyErrorPacket;
-	}
-    int commandLength = strlen(SET_COMMAND);
-    int keyLength = strlen(key);
-    int valueLength = strlen(value);
-    int strLength = commandLength + 1 + keyLength + 1 + valueLength + 1 + 1;
-    
-    char* str = (char *)calloc(strLength, sizeof(char));
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
-	strcpy(str, SET_COMMAND);
-	if (strcmp(key, "") != 0){
-        strcat(str, dataSplitStr);
-        strcat(str, key);
-	}
-	if (strcmp(value, "") != 0)
-    {
-        strcat(str, dataSplitStr);
-        strcat(str, value);
-    }
-	strcat(str, endTXStr);
-    
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-	{
-		vTaskSuspendAll();
-	}
-    #endif
-    sendArancinoCommand(str);
-	char* message = receiveArancinoResponse(END_TX_CHAR);
-    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-	{
-        xTaskResumeAll();
-    }
-    #endif  
-    
-    free(str);
 
-    ArancinoPacket packet;
-    
-    if (message != NULL)
-    {
-        ArancinoPacket temp = {false, getResponseCode(message), VOID, {.string = NULL}};
-        packet = temp;
-        free(message);
-    }
-    else
-    {
-        packet = communicationErrorPacket;
-    }
-
-	return packet;
-}
-
-ArancinoPacket ArancinoClass::set( char* key, char* value ) {
-	return _set(key, value);
-
-}
-
-ArancinoPacket ArancinoClass::set( char* key, int value ) {
-    char str[20] = "";
-    itoa(value, str, 10);
-	return set(key, str);
-}
-
-ArancinoPacket ArancinoClass::set( char* key, double value ) {
-    char str[20] = "";
-    doubleToString(value, 4, str);
-    return set(key, str);
-}
-
-ArancinoPacket ArancinoClass::set( char* key, uint32_t value ) {
-    char str[20] = "";
-    itoa(value, str, 10);
-	return set(key, str);
-}
+// ==== HGET
 
 ArancinoPacket ArancinoClass::hgetPacket( char* key, char* field ) {
     if(isReservedKey(key)){
@@ -434,6 +476,7 @@ String ArancinoClass::hget( char* key, char* field ) {
     return retString;
 }
 
+// ==== HGETALL
 
 ArancinoPacket ArancinoClass::hgetallPacket(char* key) {
     if(isReservedKey(key)){
@@ -492,8 +535,7 @@ ArancinoPacket ArancinoClass::hgetallPacket(char* key) {
 	return packet;
 }
 
-String* ArancinoClass::hgetall(char* key) 
-{
+String* ArancinoClass::hgetall(char* key) {
     ArancinoPacket packet = hgetallPacket(key);
     int arraySize = getArraySize(packet.response.stringArray);
     
@@ -506,6 +548,8 @@ String* ArancinoClass::hgetall(char* key)
     freePacket(packet);
     return &retArray[1];
 }
+
+// ==== HKEYS
 
 ArancinoPacket ArancinoClass::hkeysPacket(char* key) {
     if(isReservedKey(key)){
@@ -578,6 +622,8 @@ String* ArancinoClass::hkeys(char* key) {
     return &retArray[1];
 }
 
+// ==== HVALS
+
 ArancinoPacket ArancinoClass::hvalsPacket(char* key) {
     if(isReservedKey(key)){
 		//TODO maybe it's better to print a log
@@ -649,6 +695,8 @@ String* ArancinoClass::hvals(char* key) {
     return &retArray[1];
 }
 
+
+// ==== KEYS
 
 ArancinoPacket ArancinoClass::keysPacket(char* pattern){
     int commandLength = strlen(KEYS_COMMAND);
@@ -786,6 +834,7 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 	return packet;
 }
 
+// ==== HSET
 
 ArancinoPacket ArancinoClass::hset( char* key, char* field, int value ) {
     char str[20]; 
@@ -793,46 +842,6 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field, int value ) {
     return hset(key, field, str);
 }
 
-int ArancinoClass::getDigit(long value)
-{
-    int digit = 0;
-    long _val = value;
-    while(abs(_val) > 0)
-    {
-        ++digit;
-        _val /= 10;
-    }
-    return digit;
-}
-
-void ArancinoClass::doubleToString(double value, unsigned int _nDecimal, char* str) //truncation!
-{
-    uint8_t sign = (value < 0);
-    uint8_t dot = (_nDecimal > 0);
-    long integer = ( sign ? ceil(value) : floor(value) );
-    double _decimal = (value - integer); //without integer part
-    integer = abs(integer);
-    
-    for (int i = 0; i < _nDecimal; i++)
-        _decimal *= 10;
-
-    long decimal = (_decimal < 0) ? ceil(_decimal - 0.5) : floor(_decimal + 0.5);
-    decimal = abs(decimal);
-    
-    int integerDigit = integer != 0 ? getDigit(integer) : 1;
-    int decimalDigit = _nDecimal;
-    
-    str[0] = '-';
-    ltoa(integer, &str[sign], 10);
-    if (dot)
-    {
-        str[sign + integerDigit] = '.';
-        ltoa(decimal, &str[sign + integerDigit + 1], 10);
-        for (int i = 1; decimal == 0 && i < decimalDigit; i++)
-            ltoa(decimal, &str[sign + integerDigit + i + 1], 10);
-    }
-    str[sign + integerDigit + dot + decimalDigit] = '\0';
-}
 
 ArancinoPacket ArancinoClass::hset( char* key, char* field, double value ) {
     char str[20] = "";
@@ -845,6 +854,8 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field, uint32_t value ) {
     itoa(value, str, 10);
     return hset(key, field, str);
 }
+
+// ==== HDEL
 
 ArancinoPacket ArancinoClass::hdelPacket( char* key, char* field ) {
     if(isReservedKey(key)){
@@ -922,6 +933,7 @@ int ArancinoClass::hdel(char* key, char* field) {
     return retValue;
 }
 
+// ==== PUB
 
 ArancinoPacket ArancinoClass::_publish( char* channel, char* msg ) {
     if(isReservedKey(channel)){
@@ -1018,6 +1030,8 @@ int ArancinoClass::publish( int channel, char* msg ) {
     return retValue;
 }
 
+// ==== FLUSH
+
 ArancinoPacket ArancinoClass::flush() {
     int commandLength = strlen(FLUSH_COMMAND);
     int strLength = commandLength + 1 + 1;
@@ -1067,22 +1081,17 @@ ArancinoPacket ArancinoClass::flush() {
 
 }
 
-
-int ArancinoClass::getArraySize(char** _array)
-{
+int ArancinoClass::getArraySize(char** _array) {
   char** dummy = (_array != NULL) ? _array - sizeof(char) : NULL;
   return dummy != NULL ? (int)(*dummy) : 0;
 }
 
-int ArancinoClass::getArraySize(String* _array)
-{
+int ArancinoClass::getArraySize(String* _array) {
     String* dummy = (_array != NULL) ? _array - 1 : NULL;
     return (dummy[0] != "") ? dummy[0].toInt() : 0;
 }
 
-
-void ArancinoClass::freePacket(ArancinoPacket packet)
-{
+void ArancinoClass::freePacket(ArancinoPacket packet) {
     if (packet.responseType == STRING)
     {
         free(packet.response.string);
@@ -1097,20 +1106,60 @@ void ArancinoClass::freePacket(ArancinoPacket packet)
     }
 }
 
-void ArancinoClass::freeArray(String* _array)
-{
+void ArancinoClass::freeArray(String* _array){
     String* dummy = (_array != NULL) ? _array - 1 : NULL;
     delete[] dummy;
 }
 
-void ArancinoClass::freeArray(char** _array)
-{
+void ArancinoClass::freeArray(char** _array) {
   char** dummy = (_array != NULL) ? _array - sizeof(char) : NULL;
   if (*_array != NULL)
     free(*_array);
   if (dummy != NULL)
     free(dummy);
 }
+
+
+int ArancinoClass::getDigit(long value) {
+    int digit = 0;
+    long _val = value;
+    while(abs(_val) > 0)
+    {
+        ++digit;
+        _val /= 10;
+    }
+    return digit;
+}
+
+void ArancinoClass::doubleToString(double value, unsigned int _nDecimal, char* str) {//truncation!
+    uint8_t sign = (value < 0);
+    uint8_t dot = (_nDecimal > 0);
+    long integer = ( sign ? ceil(value) : floor(value) );
+    double _decimal = (value - integer); //without integer part
+    integer = abs(integer);
+    
+    for (int i = 0; i < _nDecimal; i++)
+        _decimal *= 10;
+
+    long decimal = (_decimal < 0) ? ceil(_decimal - 0.5) : floor(_decimal + 0.5);
+    decimal = abs(decimal);
+    
+    int integerDigit = integer != 0 ? getDigit(integer) : 1;
+    int decimalDigit = _nDecimal;
+    
+    str[0] = '-';
+    ltoa(integer, &str[sign], 10);
+    if (dot)
+    {
+        str[sign + integerDigit] = '.';
+        ltoa(decimal, &str[sign + integerDigit + 1], 10);
+        for (int i = 1; decimal == 0 && i < decimalDigit; i++)
+            ltoa(decimal, &str[sign + integerDigit + i + 1], 10);
+    }
+    str[sign + integerDigit + dot + decimalDigit] = '\0';
+}
+
+
 //============= DEBUG FUNCTIONS ======================
 
 void ArancinoClass::print(char* value){
@@ -1133,7 +1182,7 @@ void ArancinoClass::print(double value) {
 	print(str);
 }
 
-void ArancinoClass::println(String value){
+void ArancinoClass::println(String value) {
 	print(value+String('\n'));
 }
 
@@ -1149,10 +1198,14 @@ void ArancinoClass::println(double value) {
     print("\n");
 }
 
-ArancinoPacket ArancinoClass::sendViaCOMM_MODE(char* key, char* value){
+ArancinoPacket ArancinoClass::sendViaCOMM_MODE(char* key, char* value) {
+    return sendViaCOMM_MODE(key, value, false);
+}
+
+ArancinoPacket ArancinoClass::sendViaCOMM_MODE(char* key, char* value, bool isPersistent) {
 	switch (COMM_MODE) {
 		case SYNCH:
-			return _set(key, value);
+			return _set(key, value, isPersistent);
 		break;
 
 		case ASYNCH:
@@ -1161,15 +1214,14 @@ ArancinoPacket ArancinoClass::sendViaCOMM_MODE(char* key, char* value){
 
 		case BOTH:
 			return _publish(key, value);
-			return _set(key, value);
+			return _set(key, value, isPersistent);
 		break;
 
 		default:
-			return _set(key, value);
+			return _set(key, value, isPersistent);
 		break;
 	}
 }
-
 
 //=================================================
 /*int ArancinoClass::hdel( String key, String* fields , int number) {
@@ -1192,8 +1244,7 @@ ArancinoPacket ArancinoClass::sendViaCOMM_MODE(char* key, char* value){
 }*/
 
 
-char** ArancinoClass::parseArray(char* data)
-{
+char** ArancinoClass::parseArray(char* data) {
     char** arrayParsed = NULL;
     char* tempArray;
 
@@ -1263,8 +1314,7 @@ char** ArancinoClass::parseArray(char* data)
 }
 
 
-int ArancinoClass::getResponseCode(char* message)
-{
+int ArancinoClass::getResponseCode(char* message) {
     int value = -1;
     int separatorIndex = -1;
     char* temp = NULL;
@@ -1293,7 +1343,7 @@ int ArancinoClass::getResponseCode(char* message)
 }
 
 
-char* ArancinoClass::parse(char* message){
+char* ArancinoClass::parse(char* message) {
 
 	char* status = NULL;
 	char* value = NULL;
@@ -1344,23 +1394,23 @@ char* ArancinoClass::parse(char* message){
 
 }
 
-void ArancinoClass::sendArancinoCommand(char* command){
+void ArancinoClass::sendArancinoCommand(char* command) {
     //command must terminate with '\0'!
-		SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
-#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		if(command[strlen(command) - 1] == END_TX_CHAR)
-        {
-			Serial.println(command);
+	SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
+    #if defined(__SAMD21G18A__)
+        if(!digitalRead(DBG_PIN)){
+            if(command[strlen(command) - 1] == END_TX_CHAR)
+            {
+                Serial.println(command);
+            }
+            else
+                Serial.print(command);
         }
-		else
-			Serial.print(command);
-	}
-#endif
+    #endif
 }
 
 
-void ArancinoClass::sendArancinoCommand(char command){
+void ArancinoClass::sendArancinoCommand(char command) {
     char* c = (char *)calloc(2, sizeof(char));
     c[0] = command;
     c[1] = '\0';
@@ -1373,8 +1423,7 @@ void ArancinoClass::sendArancinoCommand(char command){
  * 'terminator' char is used only for non-freeRTOS implementations.
  * For freeRTOS implementations is always used END_TX_CHAR as terminator char (see commTask()).
  */
-char* ArancinoClass::receiveArancinoResponse(char terminator)
-{
+char* ArancinoClass::receiveArancinoResponse(char terminator) {
     char* response = NULL; //must be freed    
     String str = SERIAL_PORT.readStringUntil(terminator);
     int responseLength = strlen(str.begin());
@@ -1388,7 +1437,7 @@ char* ArancinoClass::receiveArancinoResponse(char terminator)
     return response;
 }
 
-bool ArancinoClass::isReservedKey(char* key){
+bool ArancinoClass::isReservedKey(char* key) {
     int keyCount = sizeof(reservedKey) / sizeof(reservedKey[0]);
 	for(int i = 0; i < keyCount; i++)
     {
