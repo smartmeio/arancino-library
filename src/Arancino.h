@@ -79,10 +79,8 @@ class ArancinoClass {
 		void begin(int timeout = TIMEOUT);
     	void startScheduler();
 		void setReservedCommunicationMode(int mode);
-    	
-		ArancinoPacket getPacket(char* value);
-    	String get(char* value);
-		
+        ArancinoPacket getPacket(char* value);
+        char* get(char* value);
 		ArancinoPacket set(char* key, char* value);
 		ArancinoPacket set(char* key, int value);
 		ArancinoPacket set(char* key, double value);
@@ -96,20 +94,15 @@ class ArancinoClass {
 		int del(char* key);
 		
 		ArancinoPacket keysPacket(char* pattern="");
-		String* keys(char* pattern="");
-		
+		char** keys(char* pattern="");
 		ArancinoPacket hgetPacket(char* key, char* field);
-		String hget(char* key, char* field);
-		
+		char* hget(char* key, char* field);
 		ArancinoPacket hgetallPacket(char* key);
-		String* hgetall(char* key);
-		
+		char** hgetall(char* key);
 		ArancinoPacket hkeysPacket(char* key);
-		String* hkeys(char* key);
-		
+		char** hkeys(char* key);
 		ArancinoPacket hvalsPacket(char* key);
-		String* hvals(char* key);
-		
+		char** hvals(char* key);
 		ArancinoPacket hset(char* key, char* field, char* value);
 		ArancinoPacket hset(char* key, char* field, int value);
 		ArancinoPacket hset(char* key, char* field, double value);
@@ -132,13 +125,13 @@ class ArancinoClass {
 		void println(String value);
 		void println(int value);
 		void println(double value);
-		
-		int getArraySize(char** _array);
-		int getArraySize(String* _array);
-		
-		void freeArray(char** _array);
-		void freeArray(String* _array);
-		void freePacket(ArancinoPacket packet);
+        int getArraySize(char** _array);
+        int getArraySize(String* _array);
+        //void free(char* str);
+        //void free(char** _array);
+        void freeArray(char** _array);
+        void freeArray(String* _array);
+        void freePacket(ArancinoPacket packet);
 		//int hdel( String key, String* fields, int number);
 		//ArancinoClass(Stream &_stream);
 

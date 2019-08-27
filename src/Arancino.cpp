@@ -176,18 +176,17 @@ ArancinoPacket ArancinoClass::getPacket( char* key ) {
 	return packet;
 }
 
-String ArancinoClass::get( char* key ) {
+char* ArancinoClass::get( char* key ) {
     ArancinoPacket packet = getPacket(key);
-    String retString;
+    char* retString;
     if (!packet.isError)
     {
         retString = packet.response.string;
     }
     else
     {
-        retString = "";
+        retString = NULL;
     }
-    freePacket(packet);
     return retString;
 }
 
@@ -461,18 +460,17 @@ ArancinoPacket ArancinoClass::hgetPacket( char* key, char* field ) {
 	return packet;
 }
 
-String ArancinoClass::hget( char* key, char* field ) {
+char* ArancinoClass::hget( char* key, char* field ) {
     ArancinoPacket packet = hgetPacket(key, field);
-    String retString;
+    char* retString;
     if (!packet.isError)
     {
         retString = packet.response.string;
     }
     else
     {
-        retString = "";
+        retString = NULL;
     }
-    freePacket(packet);
     return retString;
 }
 
@@ -535,18 +533,19 @@ ArancinoPacket ArancinoClass::hgetallPacket(char* key) {
 	return packet;
 }
 
-String* ArancinoClass::hgetall(char* key) {
+char** ArancinoClass::hgetall(char* key) 
+{
     ArancinoPacket packet = hgetallPacket(key);
-    int arraySize = getArraySize(packet.response.stringArray);
-    
-    String* retArray = new String[arraySize + 1];
-    retArray[0] = arraySize;
-    for (int i = 0; i < arraySize; i++)
+    char** retArray;
+    if (!packet.isError)
     {
-        retArray[i + 1] = packet.response.stringArray[i];
+        retArray = packet.response.stringArray;
     }
-    freePacket(packet);
-    return &retArray[1];
+    else
+    {
+        retArray = NULL;
+    }
+    return retArray;
 }
 
 // ==== HKEYS
@@ -608,18 +607,18 @@ ArancinoPacket ArancinoClass::hkeysPacket(char* key) {
 	return packet;
 }
 
-String* ArancinoClass::hkeys(char* key) {
+char** ArancinoClass::hkeys(char* key) {
     ArancinoPacket packet = hkeysPacket(key);
-    int arraySize = getArraySize(packet.response.stringArray);
-    
-    String* retArray = new String[arraySize + 1];
-    retArray[0] = arraySize;
-    for (int i = 0; i < arraySize; i++)
+    char** retArray;
+    if (!packet.isError)
     {
-        retArray[i + 1] = packet.response.stringArray[i];
+        retArray = packet.response.stringArray;
     }
-    freePacket(packet);
-    return &retArray[1];
+    else
+    {
+        retArray = NULL;
+    }
+    return retArray;
 }
 
 // ==== HVALS
@@ -681,18 +680,18 @@ ArancinoPacket ArancinoClass::hvalsPacket(char* key) {
 	return packet;
 }
 
-String* ArancinoClass::hvals(char* key) {
+char** ArancinoClass::hvals(char* key) {
     ArancinoPacket packet = hvalsPacket(key);
-    int arraySize = getArraySize(packet.response.stringArray);
-    
-    String* retArray = new String[arraySize + 1];
-    retArray[0] = arraySize;
-    for (int i = 0; i < arraySize; i++)
+    char** retArray;
+    if (!packet.isError)
     {
-        retArray[i + 1] = packet.response.stringArray[i];
+        retArray = packet.response.stringArray;
     }
-    freePacket(packet);
-    return &retArray[1];
+    else
+    {
+        retArray = NULL;
+    }
+    return retArray;
 }
 
 
@@ -750,19 +749,18 @@ ArancinoPacket ArancinoClass::keysPacket(char* pattern){
 	return packet;
 }
 
-String* ArancinoClass::keys(char* pattern){
+char** ArancinoClass::keys(char* pattern){
     ArancinoPacket packet = keysPacket(pattern);
-    int arraySize = getArraySize(packet.response.stringArray);
-    
-    String* retArray = new String[arraySize + 1];
-    retArray[0] = arraySize;
-    for (int i = 0; i < arraySize; i++)
+    char** retArray;
+    if (!packet.isError)
     {
-        retArray[i + 1] = packet.response.stringArray[i];
+        retArray = packet.response.stringArray;
     }
-    freePacket(packet);
-    return &retArray[1];
-    
+    else
+    {
+        retArray = NULL;
+    }
+    return retArray;
 }
 
 
@@ -1091,7 +1089,18 @@ int ArancinoClass::getArraySize(String* _array) {
     return (dummy[0] != "") ? dummy[0].toInt() : 0;
 }
 
-void ArancinoClass::freePacket(ArancinoPacket packet) {
+/*void ArancinoClass::free(char* str)
+{
+    free(str);
+}*/
+
+/*void ArancinoClass::free(char** _array)
+{
+    freeArray(_array);
+}*/
+
+void ArancinoClass::freePacket(ArancinoPacket packet)
+{
     if (packet.responseType == STRING)
     {
         free(packet.response.string);
