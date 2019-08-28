@@ -1,6 +1,6 @@
 # Changelog
 
-#### v 0.1.2 - YYYY.MM.DD
+#### v 1.0.0 - YYYY.MM.DD
 
 #### v 0.1.1 - 2019.04.17
 * Fix: cannot set empty string #26

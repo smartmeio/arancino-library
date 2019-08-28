@@ -20,7 +20,7 @@ Open the Arduino IDE and go to *Sketch* → *Include Library* → *Manage Librar
 ### begin
 ##### *void begin(int timeout)*
 ##### *void begin()*
-Start the communication with the Arancino Module.
+Start the communication with the Arancino Module. When communication starts, the begin sends the Arancino Library version for compatibility to be evaluated.
 
 ##### Parameters
 * **`timeout`**: represents the time that each command sent (via API call) will wait for a response. Otherwise the delayed command will be skipped. When the `begin` function is called w/o `timeout` it is assumed `100ms` as default value of timeout.
@@ -678,6 +678,9 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | `204`             | **KO** - Command not received                      |
 | `205`             | **KO** - Invalid parameter number                  |
 | `206`             | **KO** - Generic Redis Error                       |
+| `207`             | **KO** - Key exists in the Standard Data Store     |
+| `208`             | **KO** - Key exists in the Persistent Data Store   |
+| `209`             | **KO** - Non compatibility between Arancino Module and Library |
 
 ### Commands and Protocol
 As exaplained above, when an API function is called, a command is sent over the `SerialUSB` and a response is received.
@@ -685,9 +688,8 @@ In the next paragraphs, for simplicity we are considering each command returns a
 - Command Sepatator → `4`  → `#`
 - End of transmission → `30`  →` @`
 
-
 #### begin
-- Command Sent: `START@
+- Command Sent: `START#<lib vers>@`
 - Response Received: `100@`
 
 #### set

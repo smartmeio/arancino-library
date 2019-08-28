@@ -41,7 +41,8 @@ void ArancinoClass::begin(int timeout) {
     SERIAL_PORT.setTimeout(TIMEOUT);
 
     int commandLength = strlen(START_COMMAND);
-    int strLength = commandLength + 1 + 1;
+    int argLength = strlen(LIB_VERSION);
+    int strLength = commandLength + 1 + argLength + 1 + 1;
     char* str = (char *)calloc(strLength, sizeof(char));
     
     //reserved Key
@@ -58,11 +59,16 @@ void ArancinoClass::begin(int timeout) {
     #endif
     
     strcpy(str, START_COMMAND);
+    strcat(str, dataSplitStr);
+    strcat(str, LIB_VERSION);
 	strcat(str, endTXStr);
     
     ArancinoPacket packet;
     // Start communication with serial module on CPU
     do{
+        //try to start comunication every 2,5 seconds.
+        delay(2500);
+
         #if defined(__SAMD21G18A__)
         if(!digitalRead(DBG_PIN)){
             Serial.print(SENT_STRING);
@@ -84,9 +90,11 @@ void ArancinoClass::begin(int timeout) {
         }
         free(message);
     }while (packet.isError == true || packet.responseCode != RSP_OK);
+    
     free(str);
 
-    sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
+    //lib version is sent via start command.
+    //sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
 
 }
 
