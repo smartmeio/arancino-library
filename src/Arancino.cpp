@@ -75,7 +75,7 @@ void ArancinoClass::begin(int timeout) {
 
 	String start;
 	//reserved Key
-	reservedKey[0]=MONITOR_KEY;
+  reservedKey[0]=MONITOR_KEY;
   reservedKey[1]=LIBVERS_KEY;
   reservedKey[2]=MODVERS_KEY;
   reservedKey[3]=POWER_KEY;
@@ -574,7 +574,7 @@ void ArancinoClass::sendArancinoCommand(char command){
 
 bool ArancinoClass::isReservedKey(String key){
 
-	for(int i=0;i<sizeof(reservedKey);i++){
+	for(int i=0; i<RESERVED_KEY_ARRAY_SIZE; i++){
 		if(reservedKey[i] == key)
 			return true;
 	}

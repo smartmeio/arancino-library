@@ -36,6 +36,9 @@ under the License
 
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
 
+//RESERVED KEYS ARRAY DEF
+#define RESERVED_KEY_ARRAY_SIZE 4   // Array dimension of Reserved Keys
+
 /*
 Reserved keys communication mode
 0 -> SYNC MODE (Default)
@@ -110,7 +113,7 @@ class ArancinoClass {
 		void sendArancinoCommand(String command);
 		void sendArancinoCommand(char command);
 		bool isReservedKey(String key);
-		String reservedKey[4];
+		String reservedKey[RESERVED_KEY_ARRAY_SIZE];
 		Stream &stream;
 		int arraySize=0;
 		int COMM_MODE = SYNCH;
