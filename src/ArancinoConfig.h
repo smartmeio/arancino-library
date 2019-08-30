@@ -85,3 +85,7 @@ under the License
 #define INT             1
 #define STRING          2
 #define STRING_ARRAY    3
+
+//RESERVED KEYS ARRAY DEF
+#define RESERVED_KEY_ARRAY_SIZE 4   // Array dimension of Reserved Keys
+#define RESERVED_KEY_MAX_LENGTH 11  // Max length of a Reserved Key name

@@ -152,7 +152,7 @@ class ArancinoClass {
 		bool isReservedKey(String key);
 		bool isReservedKey(char* key);
 		
-		char reservedKey[4][11]; //max 10 char for key
+		char reservedKey[RESERVED_KEY_ARRAY_SIZE][RESERVED_KEY_MAX_LENGTH]; //max 10 char for key
 		
 		//Stream &stream;
 		

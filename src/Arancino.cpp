@@ -1455,8 +1455,8 @@ char* ArancinoClass::receiveArancinoResponse(char terminator) {
 }
 
 bool ArancinoClass::isReservedKey(char* key) {
-    int keyCount = sizeof(reservedKey) / sizeof(reservedKey[0]);
-	for(int i = 0; i < keyCount; i++)
+    //int keyCount = sizeof(reservedKey) / sizeof(reservedKey[0]);
+    for(int i = 0; i < RESERVED_KEY_ARRAY_SIZE; i++)
     {
 		if(strcmp(reservedKey[i], key) == 0) 
 			return true;
