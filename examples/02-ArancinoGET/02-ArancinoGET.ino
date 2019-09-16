@@ -48,7 +48,7 @@ void loop() {
   Serial.print("foo -> ");
   Serial.println(value);
   //foo -> bar
-  free(value); //delete the string from memory
+  Arancino.free(value); //delete the string from memory
 
   delay(2000); //wait 2 seconds
 
@@ -59,7 +59,7 @@ void loop() {
   Serial.print("foo -> ");
   Serial.println(value);
   //foo -> baz
-  free(value); //delete the string from memory
+  Arancino.free(value); //delete the string from memory
   
   delay(2000); //wait 2 seconds
 }

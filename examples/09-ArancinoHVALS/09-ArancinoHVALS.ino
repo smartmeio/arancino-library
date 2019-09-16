@@ -51,7 +51,7 @@ void loop() {
     // foo -> yeah
     // foo -> whoo
   }
-  Arancino.freeArray(values);
+  Arancino.free(values);
 
 
   delay(5000); //wait 5 seconds

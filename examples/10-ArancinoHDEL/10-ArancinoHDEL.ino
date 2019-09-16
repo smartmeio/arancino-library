@@ -46,7 +46,7 @@ void setup() {
   char* str = Arancino.hget("foo","bar"); //return NULL
   Serial.print("hget: ");
   Serial.println(str);
-  free(str);
+  Arancino.free(str);
 
 }
 

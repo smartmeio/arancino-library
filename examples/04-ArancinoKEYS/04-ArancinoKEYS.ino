@@ -61,7 +61,7 @@ void loop() {
   //pressure
   //humidity
   //temperature
-  Arancino.freeArray(key); //delete the array from memory
+  Arancino.free(key); //delete the array from memory
 
   delay(1000); //wait 1 seconds
 
@@ -69,7 +69,7 @@ void loop() {
   for (int i = 0; i < Arancino.getArraySize(key) ; i++) {
     Serial.println(key[i]);   //temperature
   }
-  Arancino.freeArray(key); //delete the array from memory
+  Arancino.free(key); //delete the array from memory
 
   delay(1000); //wait 1 seconds
 

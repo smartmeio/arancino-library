@@ -51,13 +51,13 @@ void loop() {
   Serial.print("foo bar -> ");
   Serial.println(value);
   //foo bar -> yeah
-  free(value);
+  Arancino.free(value);
   
   value = Arancino.hget("foo","baz");
   Serial.print("foo baz -> ");
   Serial.println(value);
   //foo bar -> whoo
-  free(value);
+  Arancino.free(value);
 
   delay(5000); //wait 5 seconds
 

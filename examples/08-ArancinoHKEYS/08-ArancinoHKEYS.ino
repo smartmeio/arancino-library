@@ -52,7 +52,7 @@ void loop() {
     // foo -> bar
     // foo -> baz
   }
-  Arancino.freeArray(fields);
+  Arancino.free(fields);
 
   delay(5000); //wait 5 seconds
 }

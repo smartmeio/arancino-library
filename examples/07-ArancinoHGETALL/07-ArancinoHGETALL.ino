@@ -53,7 +53,7 @@ void loop() {
     Serial.print(" = ");
     Serial.println(values[i + 1]);
   }
-  Arancino.freeArray(values); //delete the array from memory
+  Arancino.free(values); //delete the array from memory
 
   delay(5000); //wait 5 seconds
 }
