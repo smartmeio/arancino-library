@@ -25,6 +25,7 @@ under the License
 #include <ArancinoConfig.h>
 #include <Stream.h>
 #include <stdlib.h>
+#include <cstdlib>
 
 #define USEFREERTOS
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -127,10 +128,10 @@ class ArancinoClass {
 		void println(double value);
         int getArraySize(char** _array);
         int getArraySize(String* _array);
-        //void free(char* str);
-        //void free(char** _array);
+        void free(char* str);
+        void free(char** _array);
+        void free(ArancinoPacket packet);
         void freeArray(char** _array);
-        void freeArray(String* _array);
         void freePacket(ArancinoPacket packet);
 		//int hdel( String key, String* fields, int number);
 		//ArancinoClass(Stream &_stream);
