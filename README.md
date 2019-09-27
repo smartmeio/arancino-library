@@ -15,6 +15,51 @@ Open the Arduino IDE, unzip the _Arancino Library_ and import the unzipped folde
 #### from Arduino Library Manager
 Open the Arduino IDE and go to *Sketch* → *Include Library* → *Manage Libraries*, the Arduino Library Manager window will be shown. Using the text box, type _Arancino_; finally selecte the Arancino Library item within the result list and click install. Be sure to select the latest version available.
 
+## Data structures
+### ArancinoPacket
+`ArancinoPacket` is a data structure returned from some Arancino APIs and contain details about the APIs calling result.
+
+##### Content
+```c++
+typedef struct {
+  bool isError;
+  int responseCode;
+  int responseType;
+  ArancinoResponse response;
+} ArancinoPacket;
+```
+##### Variables
+* `isError`: indicates the outcome of an API call. Both in positive and negative cases is possible to check `responseCode` for more details;
+* `responseCode`: contain a code relative to API call outcome, identified by a label as follows:
+    * `#define RESERVED_KEY_ERROR      -3`: returned when trying to set a reserved key;
+    * `#define COMMUNICATION_ERROR     -2`: returned when an UART communication error occur;
+    * `#define GENERIC_ERROR           -1`: returned on generic and not specific error;
+    * `#define RSP_OK					        100`: Redis OK - Generic operation successfully completed;
+    * `#define RSP_HSET_NEW			      101`: Redis OK - Setted value into a new field;
+    * `#define RSP_HSET_UPD		       	102`: Redis OK - Setted value into an existing field;
+    * `#define ERR						        200`: Redis KO - Generic Error;
+    * `#define ERR_NULL				        201`: Redis KO - Retrieved NULL value;
+    * `#define ERR_SET					      202`: Redis KO - Error during SET command;
+    * `#define ERR_CMD_NOT_FND		    203`: Redis KO - Command not found;
+    * `#define ERR_CMD_NOT_RCV		    204`: Redis KO - Command not received;
+    * `#define ERR_CMD_PRM_NUM		    205`: Redis KO - Invalid parameter number;
+    * `#define ERR_REDIS				      206`: Redis KO - Generic Redis Error;
+    * `#define ERR_REDIS				      207`: Redis KO - Key exists in the Standard Data Store;
+    * `#define ERR_REDIS				      208`: Redis KO - Key exists in the Persistent Data Store;
+    * `#define ERR_REDIS				      209`: Redis KO - Non compatibility between Arancino Module and Library;
+* `responseType`: contain a code that indicate the type of the reponse, identified as follows:
+    * `#define VOID            0`: returned when the API call does not provide any data, e.g. `set` command (see `responseCode` to evaluate the outcome);
+    * `#define INT             1`: returned when the Redis response is an integer value, e.g. `del` command;
+    * `#define STRING          2`: returned when the Redis response is a string, e.g. `get` command;
+    * `#define STRING_ARRAY    3`: returned when the Redis response is an array string, e.g. `keys` command.
+* `response`: is a data structure that contain the Redis response. Is content can be an `int`, `char*` or `char**`, for example:
+    * `response.integer`: interprets the content as an `int` type;
+    * `response.string`: interprets the content as an `char*` type;
+    * `response.stringArray`: interprets the content as an `char**` type;
+
+###### Note: when the ArancinoPacket returned from an API contain a string or an array string, the user must manually free the ArancinoPacket (or directly the `char*` or `char**` associated pointer) using the Arancino.free() API; this is necessary to avoid memory leaks.
+
+
 ## API
 
 ### begin
@@ -601,11 +646,16 @@ void loop() {
 }
 ```
 ___
-### freeArray
-##### *void freeArray(char&ast;&ast; array)*
-frees the memory used by *array*
+### free
+##### *void free(char&ast; string)*
+##### *void free(char&ast;&ast; stringArray)*
+##### *void free(ArancinoPacket packet)*
+
+frees the memory used by a `char*` string, `char**` array string, or by an ArancinoPacket.
 ##### Parameters
-* **`array`**: pointer to string array.
+* **`string`**: pointer to string.
+* **`stringArray`**: pointer to string array.
+* **`packet`**: ArancinoPacket variable.
 
 
 ##### Example
@@ -616,6 +666,8 @@ void setup() {
   Serial.begin(115200);
   Arancino.begin();
 
+  Arancino.set("foo", "bar");
+  Arancino.set("qwe", "asd");
   Arancino.set("pressure",1023);
   Arancino.set("humidity",67.5);
   Arancino.set("temperature",24.4);
@@ -623,13 +675,18 @@ void setup() {
 }
 
 void loop() {
+  char* str = Arancino.get("foo");
   char** key = Arancino.keys();
-  int count = Arancino.getArraySize(key);
-  Serial.print("Key count: ");
-  Serial.println(count);
-  Arancino.freeArray(key);
+  ArancinoPacket myPacket = Arancino.getPacket("qwe");
+
+  /* user code... */
+
+  Arancino.free(str);
+  Arancino.free(key);
+  Arancino.free(myPacket);
 }
 ```
+###### Note: when the *free* API is used for freeing an ArancinoPacket, the response type (string or string array ) is auto detected.
 
 ## Cortex Protocol
 Arancino Library uses a simple protocol, called **Cortex**, to communicate with the Arancino Module over serial connection. Cortex Protocol is designed to be easy to read and processed. Arancino Library, Arancino Module and Cortex Protocol are designed to be monodirectional and synchronous. In this scenario the Arancino Library within the microcontroller acts as *master*, and the Arancino Module as *slave*.
