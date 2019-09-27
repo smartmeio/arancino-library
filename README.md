@@ -104,7 +104,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `responseType`: `VOID`;
   * `response`: `NULL`;
 
-##### Example
+##### Example 1
 
 ```c++
 #include <Arancino.h>
@@ -112,6 +112,38 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
 void setup() {
   Arancino.begin();
   Arancino.set("foo","bar");
+}
+
+void loop() {
+    //do something
+}
+
+```
+
+##### Example 2
+
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+
+  ArancinoPacket temp = Arancino.set("foo", "bar");
+  if (temp.isError == 0)
+  {
+    Serial.println("SET OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+    Serial.print("Response value: ");
+    Serial.println(temp.response.integer);
+  }
+  else
+  {
+    Serial.println("SET ERROR");
+  }
+
 }
 
 void loop() {
