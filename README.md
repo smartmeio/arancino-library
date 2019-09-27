@@ -308,7 +308,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `isError`: API call outcome (`true` or `false`);
   * `responseCode`: the [response code](#variables) value.
   * `responseType`: `INT`;
-  * `response`: The number of keys that were removed.
+  * `response.integer`: The number of keys that were removed.
 
 ##### Example
 ```c++
@@ -1219,7 +1219,7 @@ void loop() {
 ___
 ### print
 ##### *void print(char&ast; message)*
-Set the *message* as a *value* for the reserved *key* `___MONITOR____`. To do that it uses the `set` api under the hood.
+Set the *message* as a *value* for the reserved *key* `___MONITOR___`. To do that it uses the `set` api under the hood.
 
 ##### Example
 ```c++
