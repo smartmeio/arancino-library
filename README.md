@@ -1193,7 +1193,7 @@ void setup() {
 }
 
 void loop() {
-  ArancinoPacket temp = Arancino.publish(0,"Hello from Arancino");
+  ArancinoPacket temp = Arancino.publishPacket(0,"Hello from Arancino");
   if (!temp.isError)
    {
      Serial.println("PUBLISH OK");
@@ -1202,7 +1202,7 @@ void loop() {
      Serial.print("Response type: ");
      Serial.println(temp.responseType);  
      int resp = temp.response.integer;
-     Serial.print("Message sent to ")
+     Serial.print("Message sent to ");
      Serial.print(resp);
      Serial.println(" clients");
      //Message sent to 0 client
