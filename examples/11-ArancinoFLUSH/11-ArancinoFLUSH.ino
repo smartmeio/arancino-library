@@ -17,13 +17,17 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License
 */
-
 /*
 Delete all the keys.
 
-- void flush()
+ArancinoPacket flush()
 
-Return value - void reply
+Return value:
+ArancinoPacket reply: ArancinoPacket containing:
+  - isError: API call outcome (true or false);
+  - responseCode: the response code value. (Response code -> https://git.smartme.io/smartme.io/arancino/arancino-library#variables)
+  - responseType: VOID;
+  - response: NULL.
 */
 
 #include <Arancino.h>
@@ -41,4 +45,3 @@ void setup() {
 void loop() {
   //do something
 }
-

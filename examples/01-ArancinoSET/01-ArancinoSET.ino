@@ -21,18 +21,20 @@ under the License
 /*
 Set 'key' to hold the string 'value'. If 'key' already holds a 'value', it is overwritten, regardless of its type.
 
-- int set( char* key, char* value )
-- int set( char* key, int value )
-- int set( char* key, float value )
-
+- ArancinoPacket set( char* key, char* value )
+- ArancinoPacket set( char* key, int value )
+- ArancinoPacket set( char* key, float value )
 
 Parameters:
 - key: the key name
 - value: the value for the specified key. can be char*, int o float
 
-Return value - int reply (Response code -> https://git.smartme.io/smartme.io/arancino/arancino-library#response-codes)
-- 101 = OK - Setted value into a new field.
-- 102 = OK - Setted value into an existing field.
+Return value - ArancinoPacket reply: ArancinoPacket containing:
+
+- isError: API call outcome (true or false);
+- responseCode: the response code value. (Response code -> https://git.smartme.io/smartme.io/arancino/arancino-library#variables)
+- responseType: VOID;
+- response: NULL;
 */
 
 

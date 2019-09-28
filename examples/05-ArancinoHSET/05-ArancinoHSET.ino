@@ -19,36 +19,33 @@ under the License
 */
 
 /*
-Sets field in the hash stored at key with the specified value. If key does not exist, a new key holding a hash is created. 
-If field already exists in the hash, it is overwritten.
+Sets field in the hash stored at key with the specified value. If key does not exist, a new key holding a hash is created. If field already exists in the hash, it is overwritten.
 
-- int hset( char* key, char* field , char* value )
-- int hset( char* key, char* field , int value )
-- int hset( char* key, char* field , float value )
+ArancinoPacket hset(char* key, char* field , char* value )
+ArancinoPacket hset(char* key, char* field , int value )
+ArancinoPacket hset(char* key, char* field , float value )
 
-Parameters
-
-- key: the name of the key used to create the hash.
-- field: the name of the field to store in the hash.
-- value: the value to store in the hash with the specified field.
-
-Return value - int reply (Response code -> https://git.smartme.io/smartme.io/arancino/arancino-library#response-codes)
-- 101 = OK - if field is a new field in the hash and value was set.
-- 102 = OK - if field already exists in the hash and the value was updated.
+Parameters:
+  - key: the name of the key used to create the hash.
+  - field: the name of the field to store in the hash.
+  - value: the value to store in the hash with the specified field.
+  
+Return value:
+ArancinoPacket reply: ArancinoPacket containing:
+  - isError: API call outcome (true or false);
+  - responseCode: the response code value. (Response code -> https://git.smartme.io/smartme.io/arancino/arancino-library#variables)
+  - responseType: VOID;
+  - response: NULL;
 */
+
 
 #include <Arancino.h>
 
 void setup() {
   Arancino.begin();
 
-  int resp = Arancino.hset("foo","bar","yeah"); //return 101
-  Serial.print("Response code: ");
-  Serial.println(resp);
-  
-  resp = Arancino.hset("foo","bar","whoo"); //return 102
-  Serial.print("Response code: ");
-  Serial.println(resp);
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","bar","whoo");
 }
 
 void loop() {
