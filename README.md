@@ -15,6 +15,51 @@ Open the Arduino IDE, unzip the _Arancino Library_ and import the unzipped folde
 #### from Arduino Library Manager
 Open the Arduino IDE and go to *Sketch* → *Include Library* → *Manage Libraries*, the Arduino Library Manager window will be shown. Using the text box, type _Arancino_; finally selecte the Arancino Library item within the result list and click install. Be sure to select the latest version available.
 
+## Data structures
+### ArancinoPacket
+`ArancinoPacket` is a data structure returned from some Arancino APIs and contain details about the APIs calling result.
+
+##### Content
+```c++
+typedef struct {
+  bool isError;
+  int responseCode;
+  int responseType;
+  ArancinoResponse response;
+} ArancinoPacket;
+```
+##### Variables
+* `isError`: indicates the outcome of an API call. Both in positive and negative cases is possible to check `responseCode` for more details;
+* `responseCode`: contain a code relative to API call outcome, identified by a label as follows:
+    * `#define RESERVED_KEY_ERROR      -3`: returned when trying to set a reserved key;
+    * `#define COMMUNICATION_ERROR     -2`: returned when an UART communication error occur;
+    * `#define GENERIC_ERROR           -1`: returned on generic and not specific error;
+    * `#define RSP_OK					        100`: Redis OK - Generic operation successfully completed;
+    * `#define RSP_HSET_NEW			      101`: Redis OK - Setted value into a new field;
+    * `#define RSP_HSET_UPD		       	102`: Redis OK - Setted value into an existing field;
+    * `#define ERR						        200`: Redis KO - Generic Error;
+    * `#define ERR_NULL				        201`: Redis KO - Retrieved NULL value;
+    * `#define ERR_SET					      202`: Redis KO - Error during SET command;
+    * `#define ERR_CMD_NOT_FND		    203`: Redis KO - Command not found;
+    * `#define ERR_CMD_NOT_RCV		    204`: Redis KO - Command not received;
+    * `#define ERR_CMD_PRM_NUM		    205`: Redis KO - Invalid parameter number;
+    * `#define ERR_REDIS				      206`: Redis KO - Generic Redis Error;
+    * `#define ERR_REDIS				      207`: Redis KO - Key exists in the Standard Data Store;
+    * `#define ERR_REDIS				      208`: Redis KO - Key exists in the Persistent Data Store;
+    * `#define ERR_REDIS				      209`: Redis KO - Non compatibility between Arancino Module and Library;
+* `responseType`: contain a code that indicate the type of the reponse, identified as follows:
+    * `#define VOID            0`: returned when the API call does not provide any data, e.g. `set` command (see `responseCode` to evaluate the outcome);
+    * `#define INT             1`: returned when the Redis response is an integer value, e.g. `del` command;
+    * `#define STRING          2`: returned when the Redis response is a string, e.g. `get` command;
+    * `#define STRING_ARRAY    3`: returned when the Redis response is an array string, e.g. `keys` command.
+* `response`: is a data structure that contain the Redis response. Is content can be an `int`, `char*` or `char**`, for example:
+    * `response.integer`: interprets the content as an `int` type;
+    * `response.string`: interprets the content as an `char*` type;
+    * `response.stringArray`: interprets the content as an `char**` type;
+
+###### Note: when the ArancinoPacket returned from an API contain a string or an array string, the user must manually free the ArancinoPacket (or directly the `char*` or `char**` associated pointer) using the Arancino.free() API; this is necessary to avoid memory leaks.
+
+
 ## API
 
 ### begin
@@ -42,20 +87,24 @@ void loop() {
 
 ___
 ### set
-##### *int set(char&ast; key, char&ast; value )*
-##### *int set(char&ast; key,  int value )*
-##### *int set(char&ast; key, float value )*
+##### *ArancinoPacket set(char&ast; key, char&ast; value )*
+##### *ArancinoPacket set(char&ast; key,  int value )*
+##### *ArancinoPacket set(char&ast; key, float value )*
 
 Set *key* to hold the string *value*. If *key* already holds a *value*, it is overwritten, regardless of its type.
 
 ##### Parameters
 * **`key`**: the *key* name
-* **`value`**: the *value* for the specified *key*. can be String, int o float  
+* **`value`**: the *value* for the specified *key*. can be char*, int o float  
 
 ##### Return value
-int reply: the [*response code*](#response-codes) value.
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `VOID`;
+  * `response`: `NULL`;
 
-##### Example
+##### Example 1
 
 ```c++
 #include <Arancino.h>
@@ -63,6 +112,38 @@ int reply: the [*response code*](#response-codes) value.
 void setup() {
   Arancino.begin();
   Arancino.set("foo","bar");
+}
+
+void loop() {
+    //do something
+}
+
+```
+
+##### Example 2
+
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+
+  ArancinoPacket temp = Arancino.set("foo", "bar");
+  if (temp.isError == 0)
+  {
+    Serial.println("SET OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+    Serial.print("Response value: ");
+    Serial.println(temp.response.integer);
+  }
+  else
+  {
+    Serial.println("SET ERROR");
+  }
+
 }
 
 void loop() {
@@ -91,8 +172,6 @@ char&ast; reply:
 ```c++
 #include <Arancino.h>
 
-String value = "";
-
 void setup() {
   Arancino.begin();
   Serial.begin(115200);
@@ -108,7 +187,7 @@ void loop() {
   Serial.print("foo -> ");
   Serial.println(value);
   //foo -> bar
-  free(value); //delete the string from memory
+  Arancino.free(value); //delete the string from memory
 
   delay(2000); //wait 2 seconds
 
@@ -119,15 +198,66 @@ void loop() {
   Serial.print("foo -> ");
   Serial.println(value);
   //foo -> baz
-  free(value); //delete the string from memory
+  Arancino.free(value); //delete the string from memory
 
   delay(2000); //wait 2 seconds
 }
 
-
 ```
 
+___
+### getPacket
+##### *ArancinoPacket getPacket(char&ast; key)*
 
+Get the *value* of *key*. If the *key* does not exist, the special value NULL is returned.
+
+##### Parameters
+* **`key`**: the name of the key from which the value is retrieved
+
+##### Return value
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `STRING`;
+  * `response.string`: `char*` pointer that can contain the value of selected *key* or `NULL` if the *key* doesn't exist.
+
+###### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+  Serial.begin(115200);
+}
+
+void loop() {
+
+  //sets the value 'bar' into the 'foo' key
+  Arancino.set("foo","bar");
+
+  ArancinoPacket temp = Arancino.getPacket("foo");
+  if (!temp.isError)
+  {
+    Serial.println("GET OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+
+    Serial.print("foo -> ");
+    Serial.println(temp.response.string);
+    //foo -> bar
+    Arancino.free(temp); //delete the string from memory
+  }
+  else
+  {
+    Serial.println("GET ERROR");
+  }
+
+  delay(2000); //wait 2 seconds
+}
+
+```
 ___
 ### del
 ##### *int del(char&ast; key )*
@@ -164,7 +294,70 @@ void loop() {
 
 ```
 
+___
+### delPacket
+##### *ArancinoPacket delPacket(char&ast; key )*
 
+Removes the specified *key*. A *key* is ignored if it does not exist.
+
+##### Parameters
+* **`key`**: the name of the key to delete.
+
+##### Return value
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `INT`;
+  * `response.integer`: The number of keys that were removed.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Serial.begin(115200);
+  Arancino.begin();
+  Arancino.set("foo","bar");
+
+  ArancinoPacket temp = Arancino.delPacket("baz");
+  if (temp.isError == 0)
+  {
+    Serial.println("DEL OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+    Serial.println(temp.response.integer ? "Key deleted" : "Key not found");
+    //0
+  }
+  else
+  {
+    Serial.println("DEL ERROR");    
+  }
+
+  temp = Arancino.delPacket("foo");
+  if (temp.isError == 0)
+  {
+    Serial.println("DEL OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+    Serial.println(temp.response.integer ? "Key deleted" : "Key not found");
+    //1
+  }
+  else
+  {
+    Serial.println("DEL ERROR");    
+  }
+}
+
+
+void loop() {
+  //do something
+}
+
+```
 
 ___
 ### keys
@@ -210,7 +403,7 @@ void loop() {
   //pressure
   //humidity
   //temperature
-  Arancino.freeArray(key); //delete the array from memory
+  Arancino.free(key); //delete the array from memory
 
   delay(1000); //wait 1 seconds
 
@@ -218,7 +411,7 @@ void loop() {
   for (int i = 0; i < Arancino.getArraySize(key) ; i++) {
     Serial.println(key[i]);   //temperature
   }
-  Arancino.freeArray(key); //delete the array from memory
+  Arancino.free(key); //delete the array from memory
 
   delay(1000); //wait 1 seconds
 }
@@ -226,13 +419,101 @@ void loop() {
 
 ```
 
+___
+### keysPacket
+##### *ArancinoPacket keysPacket(char&ast; pattern)*
+Returns all the keys matching the *pattern*.
+
+Supported glob-style patterns:
+
+- h?llo matches hello, hallo and hxllo
+- h*llo matches hllo and heeeello
+- h[ae]llo matches hello and hallo, but not hillo
+- h[^e]llo matches hallo, hbllo, ... but not hello
+- h[a-b]llo matches hallo and hbllo
+
+Use \ to escape special characters if you want to match them verbatim.
+
+##### Parameters
+* **`pattern`**: the pattern used to find matching keys.
+
+##### Return value
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `STRING_ARRAY`;
+  * `response.stringArray`: `char**` pointer to the string array of keys matching *pattern*.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Serial.begin(115200);
+  Arancino.begin();
+
+  Arancino.set("pressure",1023);
+  Arancino.set("humidity",67.5);
+  Arancino.set("temperature",24.4);
+
+}
+
+void loop() {
+
+  ArancinoPacket temp = Arancino.keysPacket();
+  char** key = temp.response.stringArray;
+  if (temp.isError == 0)
+  {
+    Serial.println("KEYS OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+    for (int i = 0; i < Arancino.getArraySize(key); i++) {
+      Serial.println(key[i]);
+    }
+    //pressure
+    //humidity
+    //temperature
+    Arancino.free(key); //delete the array from memory
+  }
+  else
+  {
+    Serial.println("KEYS ERROR");    
+  }
+
+  delay(1000); //wait 1 seconds
+
+  temp = Arancino.keysPacket("temp*");
+  key = temp.response.stringArray;
+  if (temp.isError == 0)
+  {
+    Serial.println("KEYS OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+    for (int i = 0; i < Arancino.getArraySize(key); i++) {
+      Serial.println(key[i]);
+    }
+    //temperature
+    Arancino.free(key); //delete the array from memory
+  }
+  else
+  {
+    Serial.println("KEYS ERROR");    
+  }
+
+  delay(1000); //wait 1 seconds
+}
 
 
+```
 ___
 ### hset
-##### *int hset(char&ast; key, char&ast; field , char&ast; value )*
-##### *int hset(char&ast; key, char&ast; field , int value )*
-##### *int hset(char&ast; key, char&ast; field , float value )*
+##### *ArancinoPacket hset(char&ast; key, char&ast; field , char&ast; value )*
+##### *ArancinoPacket hset(char&ast; key, char&ast; field , int value )*
+##### *ArancinoPacket hset(char&ast; key, char&ast; field , float value )*
 
 Sets *field* in the hash stored at *key* with the specified *value*. If *key* does not exist, a new *key* holding a hash is created. If *field* already exists in the hash, it is overwritten.
 
@@ -242,9 +523,13 @@ Sets *field* in the hash stored at *key* with the specified *value*. If *key* do
 * **`value`**: the value to store in the hash with the specified field.
 
 ##### Return value
-int reply: the [*response code*](#response-codes) value.
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `VOID`;
+  * `response`: `NULL`;
 
-##### Example
+##### Example 1
 ```c++
 #include <Arancino.h>
 
@@ -267,11 +552,41 @@ void loop() {
 
 ```
 
+##### Example 2
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+
+  ArancinoPacket temp = Arancino.hset("foo", "bar", "yeah");
+
+  if (temp.isError == 0)
+  {
+    Serial.println("HSET OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+  }
+  else
+  {
+    Serial.println("HSET ERROR");
+  }
+
+}
+
+
+void loop() {
+  //do something
+}
+
+```
 
 
 ___
 ### hget
-##### *char&ast; hget(char&ast; key, char&ast; field ) {*
+##### *char&ast; hget(char&ast; key, char&ast; field )*
 Returns the *value* associated with *field* in the hash stored at *key*.
 
 ##### Parameters
@@ -302,19 +617,78 @@ void loop() {
   Serial.print("foo bar -> ");
   Serial.println(value);
   //foo bar -> yeah
-  free(value);
+  Arancino.free(value);
 
   value = Arancino.hget("foo","baz");
   Serial.print("foo baz -> ");
   Serial.println(value);
   //foo bar -> whoo
-  free(value);
+  Arancino.free(value);
 
   delay(5000); //wait 5 seconds
 }
 
 ```
+___
+### hgetPacket
+##### *ArancinoPacket hgetPacket(char&ast; key, char&ast; field )*
+Returns the *value* associated with *field* in the hash stored at *key*.
 
+##### Parameters
+* **`key`**: the name of the *key* which hold the hash.
+* **`field`**: the name of the *field* from which the value is retrieved
+
+##### Return value
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `STRING`;
+  * `response.string`: `char*` pointer that can contain the *value* if a value is stored in *field* at *key* or `NULL` if there isn't a value stored.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+
+  Arancino.begin();
+  Serial.begin(115200);
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
+
+}
+
+void loop() {
+
+  char* value = Arancino.hget("foo","bar");
+  Serial.print("foo bar -> ");
+  Serial.println(value);
+  //foo bar -> yeah
+  Arancino.free(value);
+
+  ArancinoPacket temp = Arancino.hgetPacket("foo", "baz");
+
+  if (temp.isError == 0)
+  {
+    Serial.println("HGET OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+    Serial.print("foo baz -> ");
+    Serial.println(temp.response.string);
+    Arancino.free(temp);
+  }
+  else
+  {
+    Serial.println("HGET ERROR");
+  }
+
+
+  delay(5000); //wait 5 seconds
+}
+
+```
 ___
 ### hgetall
 ##### *char&ast;&ast; hgetall(char&ast; key )*
@@ -347,14 +721,70 @@ void loop() {
     Serial.print(" = ");
     Serial.println(values[i + 1]);
   }
-  Arancino.freeArray(values); //delete the array from memory
+  Arancino.free(values); //delete the array from memory
 
   delay(5000); //wait 5 seconds
 }
 
 ```
 
+___
+### hgetallPacket
+##### *ArancinoPacket hgetallPacket(char&ast; key )*
+Returns all fields and values of the hash stored at *key*. In the returned value, every *field* name is followed by its *value*.
 
+##### Parameters
+* **`key`**: the name of the *key* which holds the hash.
+
+##### Return value
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `STRING_ARRAY`;
+  * `response.stringArray`: `char**` pointer that can contain the string array of field and value matching *key*
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+  Serial.begin(115200);
+  Arancino.hset("foo", "bar", "yeah");
+  Arancino.hset("foo", "baz", "whoo");
+}
+
+void loop() {
+  ArancinoPacket temp = Arancino.hgetallPacket("foo");
+  if (!temp.isError)
+  {
+    Serial.println("HGETALL OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+
+    char** values = temp.response.stringArray;
+    int arraySize = Arancino.getArraySize(values);
+    for (int i = 0; i < arraySize; i += 2)
+    {
+      Serial.print("foo ");
+      Serial.print(values[i]);
+      Serial.print(" = ");
+      Serial.println(values[i + 1]);
+    }
+    Arancino.free(values); //delete the array from memory
+  }
+  else
+  {
+    Serial.print("HGETALL ERROR");
+  }
+
+  delay(1000); //wait 1 seconds
+}
+
+
+```
 ___
 ### hkeys
 ##### *char&ast;&ast; hkeys( String key )*
@@ -389,12 +819,68 @@ void loop() {
     // foo -> bar
     // foo -> baz
   }
-  Arancino.freeArray(fields);
+  Arancino.free(fields);
 
   delay(5000); //wait 5 seconds
 }
 ```
 
+___
+### hkeysPacket
+##### *ArancinoPacket hkeysPacket( String key )*
+Returns all field names in the hash stored at *key*.
+
+##### Parameters
+* **`key`**: the name of the *key* which holds the hash.
+
+##### Return value
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `STRING_ARRAY`;
+  * `response.stringArray`: `char**` pointer to the string array of *fields* matching *key*.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+
+  Arancino.begin();
+  Serial.begin(115200);
+
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
+
+}
+
+void loop() {
+
+  ArancinoPacket temp = Arancino.hkeysPacket("foo");
+  char** fields = temp.response.stringArray;
+  if (!temp.isError)
+  {
+    Serial.println("HKEYS OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+    for (int i = 0; i < Arancino.getArraySize(fields); i++) {
+      Serial.print("foo -> ");
+      Serial.println(fields[i]);
+      // foo -> bar
+      // foo -> baz
+    }
+    Arancino.free(fields);
+  }
+  else
+  {
+    Serial.println("HKEYS ERROR");
+  }
+
+  delay(5000); //wait 5 seconds
+}
+```
 
 ___
 ### hvals
@@ -430,14 +916,68 @@ void loop() {
     // foo -> yeah
     // foo -> whoo
   }
-  Arancino.freeArray(values);
+  Arancino.free(values);
 
 
   delay(5000); //wait 5 seconds
 }
 ```
 
+___
+### hvalsPacket
+##### *ArancinoPacket hvalsPacket(char&ast; key )*
+Returns all values in the hash stored at *key*.
 
+##### Parameters
+* **`key`**: the name of the *key* which holds the hash.
+
+##### Return value
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `STRING_ARRAY`;
+  * `response.stringArray`: `char**` pointer to the string array of *values* matching *key*.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+
+  Arancino.begin();
+  Serial.begin(115200);
+
+  Arancino.hset("foo", "bar", "yeah");
+  Arancino.hset("foo", "baz", "whoo");
+
+}
+
+void loop() {
+  ArancinoPacket temp = Arancino.hvalsPacket("foo");
+  char** values = temp.response.stringArray;
+  if (!temp.isError)
+  {
+    Serial.println("HVALS OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+    for (int i = 0; i < Arancino.getArraySize(values); i++) {
+      Serial.print("foo -> ");
+      Serial.println(values[i]);
+      // foo -> yeah
+      // foo -> whoo
+    }
+    Arancino.free(values);
+  }
+  else
+  {
+    Serial.println("HVALS ERROR");
+  }  
+
+  delay(5000); //wait 5 seconds
+}
+```
 
 ___
 ### hdel
@@ -452,7 +992,7 @@ Removes the specified *field* from the hash stored at *key*. If *field* is speci
 ##### Return value
 int reply:
 - 1 if the *field* is removed from hash.
-- 0 if the *field* or the key does not exist in the hash.
+- 0 if the *field* or the *key* does not exist in the hash.
 
 ##### Example
 ```c++
@@ -467,7 +1007,7 @@ void setup() {
   char* str = Arancino.hget("foo","bar"); //return NULL
   Serial.print("hget: ");
   Serial.println(str);
-  free(str);
+  Arancino.free(str);
 }
 
 void loop() {
@@ -476,13 +1016,68 @@ void loop() {
 
 ```
 
+___
+### hdelPacket
+##### *ArancinoPacket hdelPacket(char&ast; key, char&ast; field )*
+Removes the specified *field* from the hash stored at *key*. If *field* is specified and it does not exist within this hash, this command returns 0. If the key does not exist, it is treated as an empty hash and this command returns 0.
+
+
+##### Parameters
+* **`key`**: the name of the *key* stored in the hash.
+* **`field`**: the name of the *field* stored in the hash at key to delete.
+
+##### Return value
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `INT`;
+  * `response.integer`: 1 if the *field* is removed from hash or 0 if the *field* or the *key* does not exist in the hash.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+
+  Arancino.begin();
+  Arancino.hset("foo","bar","yeah");
+  Arancino.hset("foo","baz","whoo");
+  ArancinoPacket temp = Arancino.hdelPacket("foo","bar");
+  if (!temp.isError)
+  {
+    Serial.println("HDEL OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);  
+    int value = temp.response.integer;
+    Serial.println(value ? "Field removed" : "Field/key not found");
+  }
+  else
+  {
+    Serial.println("HDEL ERROR");    
+  }
+}
+
+void loop() {
+  //do something
+}
+
+```
 
 ___
 ### flush
-##### *void flush()*
+##### *ArancinoPacket flush()*
 Delete all the keys.
 
-##### Example
+##### Return value
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `VOID`;
+  * `response`: `NULL`.
+
+##### Example 1
 ```c++
 #include <Arancino.h>
 
@@ -494,6 +1089,36 @@ void setup() {
   //delete all the keys
   Arancino.flush();
 
+}
+
+void loop() {
+  //do something
+}
+```
+
+##### Example 2
+```c++
+#include <Arancino.h>
+
+void setup() {
+
+  Arancino.begin();
+  Arancino.set("foo","bar");
+  Arancino.set("foo","baz");
+  //delete all the keys
+  ArancinoPacket temp = Arancino.flush();
+  if (!temp.isError)
+  {
+    Serial.println("FLUSH OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+  }
+  else
+  {
+    Serial.println("FLUSH ERROR");    
+  }
 }
 
 void loop() {
@@ -539,9 +1164,62 @@ void loop() {
 ```
 
 ___
+### publishPacket
+##### *ArancinoPacket publishPacket(char&ast; channel, char&ast; message)*
+##### *ArancinoPacket publishPacket(int channel, char&ast; message)*
+Posts a message to the given channel.
+
+
+##### Parameters
+* **`channel`**: the name of the *channel* where the message will be sent.
+* **`message`**: *message* to send.
+
+##### Return value
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `INT`;
+  * `response.integer`: the number of clients that received the message.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+
+  Arancino.begin();
+  Serial.begin(115200);
+
+}
+
+void loop() {
+  ArancinoPacket temp = Arancino.publishPacket(0,"Hello from Arancino");
+  if (!temp.isError)
+   {
+     Serial.println("PUBLISH OK");
+     Serial.print("Response code: ");
+     Serial.println(temp.responseCode);
+     Serial.print("Response type: ");
+     Serial.println(temp.responseType);  
+     int resp = temp.response.integer;
+     Serial.print("Message sent to ");
+     Serial.print(resp);
+     Serial.println(" clients");
+     //Message sent to 0 client
+   }
+   else
+   {
+     Serial.println("PUBLISH ERROR");    
+   }
+
+  delay(5000); //wait 5 seconds
+
+}
+```
+___
 ### print
 ##### *void print(char&ast; message)*
-Set the *message* as a *value* for the reserved *key* `___MONITOR____`. To do that it uses the `set` api under the hood.
+Set the *message* as a *value* for the reserved *key* `___MONITOR___`. To do that it uses the `set` api under the hood.
 
 ##### Example
 ```c++
@@ -597,15 +1275,20 @@ void loop() {
   int count = Arancino.getArraySize(key);
   Serial.print("Key count: ");
   Serial.println(count);
-  Arancino.freeArray(key);
+  Arancino.free(key);
 }
 ```
 ___
-### freeArray
-##### *void freeArray(char&ast;&ast; array)*
-frees the memory used by *array*
+### free
+##### *void free(char&ast; string)*
+##### *void free(char&ast;&ast; stringArray)*
+##### *void free(ArancinoPacket packet)*
+
+frees the memory used by a `char*` string, `char**` array string, or by an ArancinoPacket.
 ##### Parameters
-* **`array`**: pointer to string array.
+* **`string`**: pointer to string.
+* **`stringArray`**: pointer to string array.
+* **`packet`**: ArancinoPacket variable.
 
 
 ##### Example
@@ -616,6 +1299,8 @@ void setup() {
   Serial.begin(115200);
   Arancino.begin();
 
+  Arancino.set("foo", "bar");
+  Arancino.set("qwe", "asd");
   Arancino.set("pressure",1023);
   Arancino.set("humidity",67.5);
   Arancino.set("temperature",24.4);
@@ -623,13 +1308,18 @@ void setup() {
 }
 
 void loop() {
+  char* str = Arancino.get("foo");
   char** key = Arancino.keys();
-  int count = Arancino.getArraySize(key);
-  Serial.print("Key count: ");
-  Serial.println(count);
-  Arancino.freeArray(key);
+  ArancinoPacket myPacket = Arancino.getPacket("qwe");
+
+  /* user code... */
+
+  Arancino.free(str);
+  Arancino.free(key);
+  Arancino.free(myPacket);
 }
 ```
+###### Note: when the *free* API is used for freeing an ArancinoPacket, the response type (string or string array ) is auto detected.
 
 ## Cortex Protocol
 Arancino Library uses a simple protocol, called **Cortex**, to communicate with the Arancino Module over serial connection. Cortex Protocol is designed to be easy to read and processed. Arancino Library, Arancino Module and Cortex Protocol are designed to be monodirectional and synchronous. In this scenario the Arancino Library within the microcontroller acts as *master*, and the Arancino Module as *slave*.
