@@ -95,7 +95,7 @@ Set *key* to hold the string *value*. If *key* already holds a *value*, it is ov
 
 ##### Parameters
 * **`key`**: the *key* name
-* **`value`**: the *value* for the specified *key*. can be String, int o float  
+* **`value`**: the *value* for the specified *key*. can be char*, int o float  
 
 ##### Return value
 ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
@@ -586,7 +586,7 @@ void loop() {
 
 ___
 ### hget
-##### *char&ast; hget(char&ast; key, char&ast; field ) {*
+##### *char&ast; hget(char&ast; key, char&ast; field )*
 Returns the *value* associated with *field* in the hash stored at *key*.
 
 ##### Parameters
@@ -631,7 +631,7 @@ void loop() {
 ```
 ___
 ### hgetPacket
-##### *ArancinoPacket hgetPacket(char&ast; key, char&ast; field ) {*
+##### *ArancinoPacket hgetPacket(char&ast; key, char&ast; field )*
 Returns the *value* associated with *field* in the hash stored at *key*.
 
 ##### Parameters
