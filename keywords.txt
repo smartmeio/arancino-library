@@ -7,6 +7,7 @@
 #######################################
 
 Arancino	KEYWORD3
+ArancinoPacket	KEYWORD3
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -14,6 +15,7 @@ Arancino	KEYWORD3
 
 available	KEYWORD2
 begin	KEYWORD2
+startScheduler	KEYWORD2
 set	KEYWORD2
 get	KEYWORD2
 del	KEYWORD2
@@ -26,6 +28,9 @@ hgetvals	KEYWORD2
 hdel	KEYWORD2
 flush	KEYWORD2
 publish	KEYWORD2
+getArraySize	KEYWORD2
+freeArray	KEYWORD2
+doubleToString  KEYWORD2
 print	KEYWORD2
 println	KEYWORD2
 setReservedCommunicationMode	KEYWORD2

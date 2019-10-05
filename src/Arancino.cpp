@@ -19,525 +19,1322 @@ under the License
 */
 
 #include "Arancino.h"
+#define DEBUG 0
 
-#define START_COMMAND 		"START"
-#define SET_COMMAND 			"SET"
-#define GET_COMMAND 			"GET"
-#define DEL_COMMAND 			"DEL"
-#define KEYS_COMMAND			"KEYS"
-#define HGET_COMMAND			"HGET"
-#define HGETALL_COMMAND		"HGETALL"
-#define HKEYS_COMMAND			"HKEYS"
-#define HDEL_COMMAND			"HDEL"
-#define HSET_COMMAND			"HSET"
-#define HVALS_COMMAND			"HVALS"
-#define PUBLISH_COMMAND		"PUB"
-#define FLUSH_COMMAND			"FLUSH"
+ArancinoPacket reservedKeyErrorPacket = {true, RESERVED_KEY_ERROR, RESERVED_KEY_ERROR, {.string = NULL}}; //default reserved key error packet
+ArancinoPacket communicationErrorPacket = {true, COMMUNICATION_ERROR, COMMUNICATION_ERROR, {.string = NULL}}; //default reserved key error packet
 
-#define SENT_STRING				"Sent Command: "
-#define RCV_STRING				"Received Response: "
 
-#define END_TX_CHAR				(char)4 //'@' //
-#define DATA_SPLIT_CHAR		(char)30 //'#' //
-
-#define RSP_OK						100
-#define RSP_HSET_NEW			101
-#define RSP_HSET_UPD			102
-#define ERR								200		//Generic Error
-#define ERR_NULL					201		//Null value
-#define ERR_SET						202		//Error during SET
-#define ERR_CMD_NOT_FND		203		//Command Not Found
-#define ERR_CMD_NOT_RCV		204		//Command Not Received
-#define ERR_CMD_PRM_NUM		205		//Invalid parameter number
-#define ERR_REDIS					206		//Generic Redis Error
-
-#define DBG_PIN						26		//pin used to Debug Message
-//#define PWR_PIN					??		//pin used for Power Management
-
-#define MONITOR_KEY				"___MONITOR___"
-#define LIBVERS_KEY				"___LIBVERS___"
-#define MODVERS_KEY				"___MODVERS___"
-#define POWER_KEY					"___POWER___"
-#define LIB_VERSION				"0.1.2"	//library version
-
-ArancinoClass::ArancinoClass(Stream &_stream):
+/*ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
   // Empty
-}
+}*/
 
 /*void ArancinoClass::begin() {
 	begin(TIMEOUT);
 }*/
 
-//============= SETUP FUNCTIONS ======================
+/********************************************************
+                        API FUNCTIONS
+********************************************************/
+
+/******** API BASIC :: BEGIN *********/
 
 void ArancinoClass::begin(int timeout) {
+    SERIAL_PORT.begin(BAUDRATE);
+    SERIAL_PORT.setTimeout(TIMEOUT);
 
-	String start;
-	//reserved Key
-	reservedKey[0]=MONITOR_KEY;
-  reservedKey[1]=LIBVERS_KEY;
-  reservedKey[2]=MODVERS_KEY;
-  reservedKey[3]=POWER_KEY;
-  stream.setTimeout(timeout);			//response timeout
-  //DEBUG
-  #if defined(__SAMD21G18A__)
-  pinMode(DBG_PIN,INPUT);
-  if(!digitalRead(DBG_PIN)){
-  	Serial.begin(115200);
-  }
-  #endif
-  // Start communication with serial module on CPU
-	do{
-		#if defined(__SAMD21G18A__)
-		if(!digitalRead(DBG_PIN)){
-			Serial.print(SENT_STRING);
-		}
-		#endif
-		sendArancinoCommand(START_COMMAND);
-		sendArancinoCommand(END_TX_CHAR);				//check if bridge python is running
-		start = stream.readStringUntil(END_TX_CHAR);
-	}while (start.toInt() != RSP_OK);
+    int commandLength = strlen(START_COMMAND);
+    int argLength = strlen(LIB_VERSION);
+    int strLength = commandLength + 1 + argLength + 1 + 1;
+    char* str = (char *)calloc(strLength, sizeof(char));
+    
+    //reserved Key
+    strcpy(reservedKey[0], MONITOR_KEY);
+    strcpy(reservedKey[1], LIBVERS_KEY);
+    strcpy(reservedKey[2], MODVERS_KEY);
+    strcpy(reservedKey[3], POWER_KEY);
+    //DEBUG
+    #if defined(__SAMD21G18A__)
+    pinMode(DBG_PIN,INPUT);
+    if(!digitalRead(DBG_PIN)){
+        Serial.begin(115200);
+    }
+    #endif
+    
+    strcpy(str, START_COMMAND);
+    strcat(str, dataSplitStr);
+    strcat(str, LIB_VERSION);
+	strcat(str, endTXStr);
+    
+    ArancinoPacket packet;
+    // Start communication with serial module on CPU
+    do{
+        //try to start comunication every 2,5 seconds.
+        delay(2500);
 
-	// sendArancinoCommand(SET_COMMAND);					// send library version
-	// sendArancinoCommand(DATA_SPLIT_CHAR);
-	// sendArancinoCommand(LIBVERS_KEY);
-	// sendArancinoCommand(DATA_SPLIT_CHAR);
-	// sendArancinoCommand(LIB_VERSION);
-	// sendArancinoCommand(END_TX_CHAR);
-	// stream.readStringUntil(END_TX_CHAR);
+        #if defined(__SAMD21G18A__)
+        if(!digitalRead(DBG_PIN)){
+            Serial.print(SENT_STRING);
+        }
+        #endif
+        
+        
+        _sendArancinoCommand(str);
+        char* message = _receiveArancinoResponse(END_TX_CHAR);
+        
+        if (message != NULL)
+        {
+            ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
+            packet = temp;
+        }
+        else
+        {
+            packet = communicationErrorPacket;
+        }
+        std::free(message);
+    }while (packet.isError == true || packet.responseCode != RSP_OK);
+    std::free(str);
 
-	sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
+    //lib version is sent via start command.
+    //_sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
 
 }
+
+
+#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+TaskHandle_t commTaskHandle;
+
+/******** API ADVANCED :: START SCHEDULER *********/
+
+void ArancinoClass::startScheduler() {
+    vSetErrorLed(LED_BUILTIN, HIGH);
+    
+    /*
+     * Uncomment this if you want run loop() as a dedicated task.
+     * If loop() doesn't run as dedicated task, should not contain blocking code.
+     */
+    //runLoopAsTask(256, tskIDLE_PRIORITY);
+
+    vTaskStartScheduler();
+}
+#endif
+
+/******** API ADVANCED :: SET RESERVED COMMUNICATION MODE *********/
 
 void ArancinoClass::setReservedCommunicationMode(int mode){
 	COMM_MODE = mode;
 }
 
-//============= API FUNCTIONS ======================
+/******** API BASIC :: SET *********/
 
-String ArancinoClass::get( String key ) {
-
-	if(isReservedKey(key)){
-		return "";
-	}
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
-	sendArancinoCommand(GET_COMMAND);					// send read request
-	if (key != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
-	}
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	return parse(message);
+ArancinoPacket ArancinoClass::set( char* key, int value) {
+    return set(key, value, false);
 }
 
-int ArancinoClass::del( String key ) {
-
-	if(isReservedKey(key)){
-		return -1;
-	}
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
-	sendArancinoCommand(DEL_COMMAND);					// send read request
-	if (key != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
-	}
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	return parse(message).toInt();
+ArancinoPacket ArancinoClass::set( char* key, double value) {
+    return set(key, value, false);
 }
 
-/*int ArancinoClass::del( String* key , int number) {
-
-	sendArancinoCommand(DEL_COMMAND);					// send read request
-	for(int i=0;i<number;i++){
-		if(key[i] != ""){
-			sendArancinoCommand(DATA_SPLIT_CHAR);
-			sendArancinoCommand(key[i]);
-		}
-	}
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	return parse(message).toInt();
-}*/
-
-void ArancinoClass::_set( String key, String value ) {
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
-	sendArancinoCommand(SET_COMMAND);					// send read request
-	if (key != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
-	}
-	sendArancinoCommand(DATA_SPLIT_CHAR);
-	sendArancinoCommand(value);
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	parse(message);
+ArancinoPacket ArancinoClass::set( char* key, uint32_t value) {
+    return set(key, value, false);
 }
 
-void ArancinoClass::set( String key, String value ) {
+ArancinoPacket ArancinoClass::set( char* key, char* value) {
+    return _set(key, value, false);
+}
 
-	if(isReservedKey(key)){
+ArancinoPacket ArancinoClass::set( char* key, int value, bool isPersistent ) {
+    char str[20] = "";
+    itoa(value, str, 10);
+	return set(key, str, isPersistent);
+}
+
+ArancinoPacket ArancinoClass::set( char* key, double value, bool isPersistent ) {
+    char str[20] = "";
+    _doubleToString(value, 4, str);
+    return set(key, str, isPersistent);
+}
+
+ArancinoPacket ArancinoClass::set( char* key, uint32_t value, bool isPersistent) {
+    char str[20] = "";
+    itoa(value, str, 10);
+	return set(key, str, isPersistent);
+}
+
+ArancinoPacket ArancinoClass::set( char* key, char* value, bool isPersistent ) {
+	return _set(key, value, isPersistent);
+}
+
+ArancinoPacket ArancinoClass::_set( char* key, char* value, bool isPersistent ) {
+    if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
-		return;
+        return reservedKeyErrorPacket;
 	}
-	_set(key, value);
 
-}
+    int commandLength = 0;
 
-void ArancinoClass::set( String key, int value ) {
-	set(key, String(value));
-}
-
-void ArancinoClass::set( String key, double value ) {
-	set(key, String(value));
-}
-
-void ArancinoClass::set( String key, uint32_t value ) {
-	set(key, String(value));
-}
-
-String ArancinoClass::hget( String key, String field ) {
-
-	if(isReservedKey(key)){
-		return "";
-	}
+    if(isPersistent){
+        commandLength = strlen(SET_PERS_COMMAND);
+    }
+    else
+    {
+        commandLength = strlen(SET_COMMAND);
+    }
+    
+    int keyLength = strlen(key);
+    int valueLength = strlen(value);
+    int strLength = commandLength + 1 + keyLength + 1 + valueLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
-	sendArancinoCommand(HGET_COMMAND);					// send read request
-	if (key != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
+    
+    if(isPersistent){
+        strcpy(str, SET_PERS_COMMAND);
+    } else
+    {
+        strcpy(str, SET_COMMAND);
+    }
+    
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
 	}
-	if (field != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(field);
+	if (strcmp(value, "") != 0)
+    {
+        strcat(str, dataSplitStr);
+        strcat(str, value);
+
+    }
+	strcat(str, endTXStr);
+    
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
 	}
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	return parse(message);
+    #endif
+    _sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
+    
+    std::free(str);
+
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
+        packet = temp;
+        std::free(message);
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet;
 }
 
-String* ArancinoClass::hgetall( String key) {
+/******** API BASIC :: GET *********/
 
-	if(isReservedKey(key)){
-		return NULL;
+ArancinoPacket ArancinoClass::getPacket( char* key ) {
+    if(_isReservedKey(key)){
+		//TODO maybe it's better to print a log
+        return reservedKeyErrorPacket;
 	}
+	
+    int commandLength = strlen(GET_COMMAND);
+    int keyLength = strlen(key);
+    int strLength = commandLength + 1 + keyLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
-	sendArancinoCommand(HGETALL_COMMAND);					// send read request
-	if (key != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
+	
+	strcpy(str, GET_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
 	}
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	parseArray(parse(message));
-	return arrayKey;
+	strcat(str, endTXStr);
+    
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
+    _sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
+    std::free(str);
+
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}};
+        packet = temp;
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet;
 }
 
-String* ArancinoClass::hkeys( String key) {
+char* ArancinoClass::get( char* key ) {
+    ArancinoPacket packet = getPacket(key);
+    char* retString;
+    if (!packet.isError)
+    {
+        retString = packet.response.string;
+    }
+    else
+    {
+        retString = NULL;
+    }
+    return retString;
+}
 
-	if(isReservedKey(key)){
-		return NULL;
+/******** API BASIC :: DEL *********/
+
+ArancinoPacket ArancinoClass::delPacket( char* key ) {
+    if(_isReservedKey(key)){
+		//TODO maybe it's better to print a log
+        return reservedKeyErrorPacket;
 	}
+	
+	int commandLength = strlen(DEL_COMMAND);
+    int keyLength = strlen(key);
+    int strLength = commandLength + 1 + keyLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
+    
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
-	sendArancinoCommand(HKEYS_COMMAND);					// send read request
-	if (key != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
+	
+	strcpy(str, DEL_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
 	}
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	parseArray(parse(message));
-	return arrayKey;
+	strcat(str, endTXStr);
+    
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
+    _sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
+    
+    std::free(str);
+    
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        char* messageParsed = _parse(message);
+        ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
+        packet = temp;
+        std::free(messageParsed);
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet;
 }
 
-String* ArancinoClass::hvals( String key) {
+int ArancinoClass::del( char* key ) {
+    ArancinoPacket packet = delPacket(key);
+    int retValue = 0;
+    if (!packet.isError)
+    {
+        retValue = packet.response.integer;
+    }
+    return retValue;
+}
 
-	if(isReservedKey(key))
-		return NULL;
+/******** API BASIC :: HSET *********/
+
+ArancinoPacket ArancinoClass::hset( char* key, char* field, int value ) {
+    char str[20]; 
+    itoa(value, str, 10);
+    return hset(key, field, str);
+}
+
+ArancinoPacket ArancinoClass::hset( char* key, char* field, double value ) {
+    char str[20] = "";
+    _doubleToString(value, 4, str);
+    return hset(key, field, str);    
+}
+
+ArancinoPacket ArancinoClass::hset( char* key, char* field, uint32_t value ) {
+    char str[20]; 
+    itoa(value, str, 10);
+    return hset(key, field, str);
+}
+
+ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
+
+    if(_isReservedKey(key)){
+		//TODO maybe it's better to print a log
+        return reservedKeyErrorPacket;
+	}
+    int commandLength = strlen(HSET_COMMAND);
+    int keyLength = strlen(key);
+    int fieldLength = strlen(field);
+    int valueLength = strlen(value);
+    int strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + valueLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
-	sendArancinoCommand(HVALS_COMMAND);					// send read request
-	if (key != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
+    strcpy(str, HSET_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
 	}
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	parseArray(parse(message));
-	return arrayKey;
+    if (strcmp(field, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, field);
+    }
+    if (strcmp(value, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, value);
+    }
+	strcat(str, endTXStr);
+    
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
+    _sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
+    
+    std::free(str);
+
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        packet.isError = 0; 
+        packet.responseCode = _getResponseCode(message);
+        packet.responseType = VOID;
+        packet.response.string = NULL;
+        std::free(message);
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet;
 }
 
-String* ArancinoClass::keys(String pattern){
+/******** API BASIC :: HGET *********/
+
+ArancinoPacket ArancinoClass::hgetPacket( char* key, char* field ) {
+    if(_isReservedKey(key)){
+		//TODO maybe it's better to print a log
+        return reservedKeyErrorPacket;
+	}
+    int commandLength = strlen(HGET_COMMAND);
+    int keyLength = strlen(key);
+    int fieldLength = strlen(field);
+    int strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
+	
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
-	sendArancinoCommand(KEYS_COMMAND);					// send read request
-	if (pattern != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(pattern);
+    strcpy(str, HGET_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
 	}
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	parseArray(parse(message));
-	return arrayKey;
-
-};
-
-int ArancinoClass::hset( String key, String field , String value) {
-
-	if(isReservedKey(key)){
-		return -1;
+    if (strcmp(field, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, field);
+    }
+	strcat(str, endTXStr);
+       
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
 	}
+    #endif
+    _sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
+    
+    std::free(str);
+
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}}; //TODO getStatus to _getResponseCode
+        packet = temp;
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet;
+}
+
+char* ArancinoClass::hget( char* key, char* field ) {
+    ArancinoPacket packet = hgetPacket(key, field);
+    char* retString;
+    if (!packet.isError)
+    {
+        retString = packet.response.string;
+    }
+    else
+    {
+        retString = NULL;
+    }
+    return retString;
+}
+
+/******** API BASIC :: HGETALL PACKET *********/
+
+ArancinoPacket ArancinoClass::hgetallPacket(char* key) {
+    if(_isReservedKey(key)){
+		//TODO maybe it's better to print a log
+        return reservedKeyErrorPacket;
+	}
+	
+    int commandLength = strlen(HGETALL_COMMAND);
+    int keyLength = strlen(key);
+    int strLength = commandLength + 1 + keyLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
+	
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
-	sendArancinoCommand(HSET_COMMAND);					// send read request
-	if (key != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
+	
+    strcpy(str, HGETALL_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
 	}
-	if (field != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(field);
+	strcat(str, endTXStr);
+	   
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
 	}
-	if (value != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(value);
+    #endif
+    _sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
+    
+    std::free(str);
+    
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+        packet = temp;
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet;
+}
+
+char** ArancinoClass::hgetall(char* key) {
+    ArancinoPacket packet = hgetallPacket(key);
+    char** retArray;
+    if (!packet.isError)
+    {
+        retArray = packet.response.stringArray;
+    }
+    else
+    {
+        retArray = NULL;
+    }
+    return retArray;
+}
+
+/******** API BASIC :: HKEYS *********/
+
+ArancinoPacket ArancinoClass::hkeysPacket(char* key) {
+    if(_isReservedKey(key)){
+		//TODO maybe it's better to print a log
+        return reservedKeyErrorPacket;
 	}
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	return parse(message).toInt();
+	
+    int commandLength = strlen(HKEYS_COMMAND);
+    int keyLength = strlen(key);
+    int strLength = commandLength + 1 + keyLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
+    
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+	
+    strcpy(str, HKEYS_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
+	}
+	strcat(str, endTXStr);	
+	
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
+    _sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
+    
+    std::free(str);
+    
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+        packet = temp;
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet;
 }
 
-int ArancinoClass::hset( String key, String field, int value ) {
-	hset(key, field, String(value));
+char** ArancinoClass::hkeys(char* key) {
+    ArancinoPacket packet = hkeysPacket(key);
+    char** retArray;
+    if (!packet.isError)
+    {
+        retArray = packet.response.stringArray;
+    }
+    else
+    {
+        retArray = NULL;
+    }
+    return retArray;
 }
 
-int ArancinoClass::hset( String key, String field, double value ) {
-	hset(key, field, String(value));
+/******** API BASIC :: HVALS *********/
+
+ArancinoPacket ArancinoClass::hvalsPacket(char* key) {
+    if(_isReservedKey(key)){
+		//TODO maybe it's better to print a log
+        return reservedKeyErrorPacket;
+	}
+	
+    int commandLength = strlen(HVALS_COMMAND);
+    int keyLength = strlen(key);
+    int strLength = commandLength + 1 + keyLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
+    
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+	
+    strcpy(str, HVALS_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
+	}
+	strcat(str, endTXStr);
+    
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
+    _sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif
+    
+    std::free(str);
+    
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+        packet = temp;
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet;
 }
 
-int ArancinoClass::hset( String key, String field, uint32_t value ) {
-	hset(key, field, String(value));
+char** ArancinoClass::hvals(char* key) {
+    ArancinoPacket packet = hvalsPacket(key);
+    char** retArray;
+    if (!packet.isError)
+    {
+        retArray = packet.response.stringArray;
+    }
+    else
+    {
+        retArray = NULL;
+    }
+    return retArray;
 }
 
-int ArancinoClass::hdel( String key, String field ) {
+/******** API BASIC :: HDEL *********/
 
-	if(isReservedKey(key))
-		return -1;
+ArancinoPacket ArancinoClass::hdelPacket( char* key, char* field ) {
+    if(_isReservedKey(key)){
+		//TODO maybe it's better to print a log
+        return reservedKeyErrorPacket;
+	}
+
+    int commandLength = strlen(HDEL_COMMAND);
+    int keyLength = strlen(key);
+    int fieldLength = strlen(field);
+    int strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
+    
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+	
+    strcpy(str, HDEL_COMMAND);
+	if (strcmp(key, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, key);
+	}
+	if (strcmp(field, "") != 0)
+    {
+        strcat(str, dataSplitStr);
+        strcat(str, field);
+    }
+	strcat(str, endTXStr);
+    
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
+    _sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
+    
+    std::free(str);
+
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        char* messageParsed = _parse(message);
+        ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
+        packet = temp;
+        std::free(messageParsed);
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet; 
+}
+
+int ArancinoClass::hdel(char* key, char* field) {
+    ArancinoPacket packet = hdelPacket(key, field);
+    int retValue = 0;
+    if (!packet.isError)
+    {
+        retValue = packet.response.integer;
+    }
+    return retValue;
+}
+
+/******** API BASIC :: KEYS PACKET *********/
+
+ArancinoPacket ArancinoClass::keysPacket(char* pattern){
+    int commandLength = strlen(KEYS_COMMAND);
+    int patternLength = strlen(pattern);
+    int strLength = commandLength + 1 + patternLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));
 
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
-	sendArancinoCommand(HDEL_COMMAND);					// send read request
-	if (key != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
+	
+    strcpy(str, KEYS_COMMAND);
+	if (strcmp(pattern, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, pattern);
 	}
-	if (field != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(field);
+	strcat(str, endTXStr);
+    
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
 	}
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	return parse(message).toInt();
+    #endif
+    _sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
+    
+    std::free(str);
+
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+        packet = temp;
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet;
 }
 
-int ArancinoClass::_publish( String channel, String msg ) {
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
-	sendArancinoCommand(PUBLISH_COMMAND);					// send read request
-	if (channel != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(channel);
-	}
-	if (msg != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(msg);
-	}
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	return parse(message).toInt();
+char** ArancinoClass::keys(char* pattern){
+    ArancinoPacket packet = keysPacket(pattern);
+    char** retArray;
+    if (!packet.isError)
+    {
+        retArray = packet.response.stringArray;
+    }
+    else
+    {
+        retArray = NULL;
+    }
+    return retArray;
 }
 
-int ArancinoClass::publish( String channel, String msg ) {
+/******** API BASIC :: PUBLISH *********/
 
-	if(isReservedKey(channel)){
-		//TODO maybe its better to log the error
-		return -1;
-	}
+ArancinoPacket ArancinoClass::publishPacket( int channel, char* msg ) {
+    char str[20] = "";
+    itoa(channel, str, 10);
+	return _publish(str, msg);
+}
+
+ArancinoPacket ArancinoClass::publishPacket( char* channel, char* msg ) {
 	return _publish(channel, msg);
-
 }
 
-int ArancinoClass::publish( int channel, String msg ) {
-	publish(String(channel), msg);
+int ArancinoClass::publish( int channel, char* msg ) {
+    ArancinoPacket packet = publishPacket(channel, msg);
+    int retValue = 0;
+    if (!packet.isError)
+    {
+        retValue = packet.response.integer;
+    }
+    return retValue;
 }
 
-void ArancinoClass::flush() {
+int ArancinoClass::publish( char* channel, char* msg ) {
+    ArancinoPacket packet = publishPacket(channel, msg);
+    int retValue = 0;
+    if (!packet.isError)
+    {
+        retValue = packet.response.integer;
+    }
+    return retValue;
+}
 
+
+ArancinoPacket ArancinoClass::_publish( char* channel, char* msg ) {
+    if(_isReservedKey(channel)){
+        //TODO maybe it's better to print a log
+        return reservedKeyErrorPacket;
+	}
+	
+    int commandLength = strlen(PUBLISH_COMMAND);
+    int channelLength = strlen(channel);
+    int msgLength = strlen(msg);
+    int strLength = commandLength + 1 + channelLength + 1 + msgLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));  
+    
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
 	#endif
-	sendArancinoCommand(FLUSH_COMMAND);					// send read request
-	/*if (key != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
+	
+    strcpy(str, PUBLISH_COMMAND);
+	if (strcmp(channel, "") != 0){
+        strcat(str, dataSplitStr);
+        strcat(str, channel);
 	}
-	if (value != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(value);
-	}*/
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	parse(message);
+	if (strcmp(msg, "") != 0)
+    {
+        strcat(str, dataSplitStr);
+        strcat(str, msg);
+    }
+	strcat(str, endTXStr);
+    
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
+    _sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
+    
+    std::free(str);
+
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        char* messageParsed = _parse(message);
+        ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
+        packet = temp;
+        std::free(messageParsed);
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet;
+}
+
+/******** API BASIC :: FLUSH *********/
+
+ArancinoPacket ArancinoClass::flush() {
+    int commandLength = strlen(FLUSH_COMMAND);
+    int strLength = commandLength + 1 + 1;
+    
+    char* str = (char *)calloc(strLength, sizeof(char));  
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+
+    strcpy(str, FLUSH_COMMAND);
+	strcat(str, endTXStr);
+    
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+    #endif
+    _sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+    #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+        xTaskResumeAll();
+    }
+    #endif  
+    
+    std::free(str);
+
+    ArancinoPacket packet;
+    
+    if (message != NULL)
+    {
+        char* messageParsed = _parse(message);
+        ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
+        packet = temp;
+        std::free(messageParsed);
+    }
+    else
+    {
+        packet = communicationErrorPacket;
+    }
+
+	return packet;
 
 }
 
-int ArancinoClass::getArraySize(){
-		return arraySize;
+/******** API UTILITY :: FREE *********/
+
+void ArancinoClass::free(char* str){
+    std::free(str);
 }
 
-//============= DEBUG FUNCTIONS ======================
+void ArancinoClass::free(char** _array){
+    _freeArray(_array);
+}
+
+void ArancinoClass::free(ArancinoPacket packet){
+    _freePacket(packet);
+}
+
+void ArancinoClass::_freePacket(ArancinoPacket packet){
+    if (packet.responseType == STRING)
+    {
+        std::free(packet.response.string);
+    }
+    else if (packet.responseType == STRING_ARRAY)
+    {
+        _freeArray(packet.response.stringArray);
+    }
+    else
+    {
+        //nothing to do
+    }
+}
+
+void ArancinoClass::_freeArray(char** _array) {
+  char** dummy = (_array != NULL) ? _array - sizeof(char) : NULL;
+  if (*_array != NULL)
+    std::free(*_array);
+  if (dummy != NULL)
+    std::free(dummy);
+}
+
+/******** API ADVANCED :: PRINT *********/
+
+void ArancinoClass::print(char* value){
+	_sendViaCOMM_MODE(MONITOR_KEY, value);
+}
 
 void ArancinoClass::print(String value){
-	sendViaCOMM_MODE(MONITOR_KEY, value);
+	_sendViaCOMM_MODE(MONITOR_KEY, value.begin());
 }
 
 void ArancinoClass::print(int value) {
-	print(String(value));
+    char str[20] = "";
+    itoa(value, str, 10);
+	print(str);
 }
+
+/******** API ADVANCED :: PRINTLN *********/
 
 void ArancinoClass::print(double value) {
-	print(String(value));
+    char str[20] = "";
+    _doubleToString(value, 4, str);
+	print(str);
 }
 
-void ArancinoClass::println(String value){
+void ArancinoClass::println(String value) {
 	print(value+String('\n'));
 }
 
 void ArancinoClass::println(int value) {
-	println(String(value));
+	print(String(value));
+    print("\n");
 }
 
 void ArancinoClass::println(double value) {
-	println(String(value));
+    char str[20] = "";
+    _doubleToString(value, 4, str);
+	print(str);
+    print("\n");
 }
 
-void ArancinoClass::sendViaCOMM_MODE(String key, String value){
+// ????
+
+int ArancinoClass::getArraySize(char** _array) {
+  char** dummy = (_array != NULL) ? _array - sizeof(char) : NULL;
+  return dummy != NULL ? (int)(*dummy) : 0;
+}
+
+int ArancinoClass::getArraySize(String* _array) {
+    String* dummy = (_array != NULL) ? _array - 1 : NULL;
+    return (dummy[0] != "") ? dummy[0].toInt() : 0;
+}
+
+
+
+/******** INTERNAL UTILS :: FREE *********/
+
+void ArancinoClass::_sendArancinoCommand(char* command) {
+    //command must terminate with '\0'!
+	SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
+    #if defined(__SAMD21G18A__)
+        if(!digitalRead(DBG_PIN)){
+            if(command[strlen(command) - 1] == END_TX_CHAR)
+            {
+                Serial.println(command);
+            }
+            else
+                Serial.print(command);
+        }
+    #endif
+}
+
+void ArancinoClass::_sendArancinoCommand(char command) {
+    char* c = (char *)calloc(2, sizeof(char));
+    c[0] = command;
+    c[1] = '\0';
+    _sendArancinoCommand(c);
+    std::free(c);
+}
+
+/*
+ * 'terminator' char is used only for non-freeRTOS implementations.
+ * For freeRTOS implementations is always used END_TX_CHAR as terminator char (see commTask()).
+ */
+char* ArancinoClass::_receiveArancinoResponse(char terminator) {
+    char* response = NULL; //must be freed    
+    String str = SERIAL_PORT.readStringUntil(terminator);
+    int responseLength = strlen(str.begin());
+    if (responseLength > 0)
+    {
+        response = (char *)calloc(responseLength + 1 + 1, sizeof(char));
+        strcpy(response, str.begin());
+        response[responseLength] = END_TX_CHAR;
+        response[responseLength + 1] = '\0';
+    }
+    return response;
+}
+
+bool ArancinoClass::_isReservedKey(char* key) {
+    //int keyCount = sizeof(reservedKey) / sizeof(reservedKey[0]);
+    for(int i = 0; i < RESERVED_KEY_ARRAY_SIZE; i++)
+    {
+		if(strcmp(reservedKey[i], key) == 0) 
+			return true;
+	}
+	return false;
+}
+
+void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char* str) {//truncation!
+    uint8_t sign = (value < 0);
+    uint8_t dot = (_nDecimal > 0);
+    long integer = ( sign ? ceil(value) : floor(value) );
+    double _decimal = (value - integer); //without integer part
+    integer = abs(integer);
+    
+    for (int i = 0; i < _nDecimal; i++)
+        _decimal *= 10;
+
+    long decimal = (_decimal < 0) ? ceil(_decimal - 0.5) : floor(_decimal + 0.5);
+    decimal = abs(decimal);
+    
+    int integerDigit = integer != 0 ? _getDigit(integer) : 1;
+    int decimalDigit = _nDecimal;
+    
+    str[0] = '-';
+    ltoa(integer, &str[sign], 10);
+    if (dot)
+    {
+        str[sign + integerDigit] = '.';
+        ltoa(decimal, &str[sign + integerDigit + 1], 10);
+        for (int i = 1; decimal == 0 && i < decimalDigit; i++)
+            ltoa(decimal, &str[sign + integerDigit + i + 1], 10);
+    }
+    str[sign + integerDigit + dot + decimalDigit] = '\0';
+}
+
+int ArancinoClass::_getDigit(long value) {
+    int digit = 0;
+    long _val = value;
+    while(abs(_val) > 0)
+    {
+        ++digit;
+        _val /= 10;
+    }
+    return digit;
+}
+
+ArancinoPacket ArancinoClass::_sendViaCOMM_MODE(char* key, char* value) {
+    return _sendViaCOMM_MODE(key, value, false);
+}
+
+ArancinoPacket ArancinoClass::_sendViaCOMM_MODE(char* key, char* value, bool isPersistent) {
 	switch (COMM_MODE) {
 		case SYNCH:
-			_set(key, value);
+			return _set(key, value, isPersistent);
 		break;
 
 		case ASYNCH:
-			_publish(key, value);
+			return _publish(key, value);
 		break;
 
 		case BOTH:
-			_publish(key, value);
-			_set(key, value);
+			return _publish(key, value);
+			return _set(key, value, isPersistent);
 		break;
 
 		default:
-			_set(key, value);
+			return _set(key, value, isPersistent);
 		break;
 	}
 }
 
-
-//=================================================
-/*int ArancinoClass::hdel( String key, String* fields , int number) {
-
-	sendArancinoCommand(HDEL_COMMAND);					// send read request
-	if (key != ""){
-		sendArancinoCommand(DATA_SPLIT_CHAR);
-		sendArancinoCommand(key);
-	}
-	for(int i=0;i<number;i++){
-		if(fields[i] != ""){
-			sendArancinoCommand(DATA_SPLIT_CHAR);
-			sendArancinoCommand(fields[i]);
-		}
-	}
-	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
-	return parse(message).toInt();
-}*/
-
-void ArancinoClass::parseArray(String data){
-	arraySize=0;					//reset size array
-  int idx=data.indexOf(DATA_SPLIT_CHAR);
-  while(idx!=-1){
-    idx=data.indexOf(DATA_SPLIT_CHAR,idx+1);		//split char recurrence in a command
-    arraySize++;
-  }
-  arraySize++;
-  if (arrayKey != 0) {
-    delete [] arrayKey;										//free size
-	}
-	arrayKey = new String[arraySize];
-	idx=0;
-	int idx_temp=0;
-	int i=0;
-	while(idx_temp!=-1){
-	  idx_temp=data.indexOf(DATA_SPLIT_CHAR,idx+1);
-		arrayKey[i++]=data.substring(idx,idx_temp);
-		idx=idx_temp+1;
-	}
+int ArancinoClass::_getResponseCode(char* message) {
+    int value = -1;
+    int separatorIndex = -1;
+    char* temp = NULL;
+    char* charAddr = strchr(message, DATA_SPLIT_CHAR); //address of DATA_SPLIT_CHAR
+    if (charAddr == NULL) //NO DATA_SPLIT_CHAR 
+    {
+        charAddr = strchr(message, END_TX_CHAR); //-> search for END_TX_CHAR
+    }
+    
+    if (charAddr != NULL)
+    {
+      separatorIndex = charAddr - message; //index of DATA_SPLIT_CHAR/END_TX_CHAR on message string
+      temp = (char *)calloc(separatorIndex + 1, sizeof(char));
+      strncpy(temp, message, separatorIndex + 1);
+      temp[separatorIndex] = '\0'; //replace separator with null-character
+      
+      value = atoi(temp);
+      std::free(temp);
+    }
+    else
+    {
+        value = -1; //error
+    }
+    
+    return value;
 }
 
-String ArancinoClass::parse(String message){
+char* ArancinoClass::_parse(char* message) {
 
-	String status;
-	String value = "";
-	int statusIndex = message.indexOf(DATA_SPLIT_CHAR);
-	//int valueIndex = message.indexOf(DATA_SPLIT_CHAR, statusIndex+1);
-	status = message.substring(0, statusIndex);				//message status (0: no message; 1:data ready; -1:error)
-	if(statusIndex != -1){
-		value = message.substring(statusIndex+1);
-	}
+	char* status = NULL;
+	char* value = NULL;
+    int DSCIndex; //DATA_SPLIT_CHAR index
+    char* charAddr = strchr(message, DATA_SPLIT_CHAR); //address of DATA_SPLIT_CHAR
+
+    if (charAddr != NULL)
+    {
+      DSCIndex = charAddr - message; //index of DATA_SPLIT_CHAR on message string
+    }
+    else
+    {
+      DSCIndex = -1; //DATA_SPLIT_CHAR not found --> received only 'status'
+    }
+    
+	int messageLength = strlen(message);
+    
+	if (DSCIndex == -1)
+    {
+        status = (char *)calloc(messageLength + 1, sizeof(char)); //response = [STATUS] + @
+        strncpy(status, message, messageLength);
+        status[messageLength] = '\0'; //replace END_TX_CHAR with '\0'        
+    }
+    else
+    {
+        status = (char *)calloc(DSCIndex + 1, sizeof(char)); //response = [STATUS] + # + [VALUE] + @
+        strncpy(status, message, DSCIndex);
+        status[DSCIndex] = '\0'; //replace DATA_SPLIT_CHAR with '\0'
+        
+        value = (char *)calloc(messageLength - DSCIndex - 1, sizeof(char));
+        strncpy(value, &message[DSCIndex + 1], messageLength - (DSCIndex + 2));
+        value[messageLength - (DSCIndex + 2)] = '\0'; //replace END_TX_CHAR with '\0'
+    }
+
 	//DEBUG
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
@@ -547,50 +1344,86 @@ String ArancinoClass::parse(String message){
 		Serial.println(value);
 	}
 	#endif
+
+	std::free(message);
+	std::free(status);
 	return value;
 
 }
 
-void ArancinoClass::sendArancinoCommand(String command){
-	stream.print(command);
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(command);
-	}
-	#endif
+char** ArancinoClass::_parseArray(char* data) {
+    char** arrayParsed = NULL;
+    char* tempArray;
+
+    char* previousDSCIndex = data;
+    char* DSCIndex = data;
+    
+    int fieldCount = data != NULL; //at least 1 field
+    int maxLength = 0;
+    
+    if (data != NULL) {
+    
+        //get the key count
+        do
+        {
+            DSCIndex = strchr(previousDSCIndex, DATA_SPLIT_CHAR);
+            
+            if (DSCIndex != NULL)
+            {
+                ++fieldCount;
+                if (DSCIndex - previousDSCIndex > maxLength)
+                    maxLength = DSCIndex - previousDSCIndex;
+            }
+            else if (strlen(previousDSCIndex) > maxLength)
+            {
+                maxLength =  strlen(previousDSCIndex);
+            }
+            previousDSCIndex = DSCIndex + 1;
+            
+            
+        } while(DSCIndex != NULL);
+    
+        /*
+         * Alloco un elemento in più (fieldCount + 1). 
+         * Nel primo elemento inserisco la lunghezza del vettore;
+         * Il valore di ritorno della funzione sarà l'elemento 1 del vettore (e non l'elemento 0)
+         */
+        arrayParsed = (char **)malloc((fieldCount + 1) * sizeof(char*)); //user must free!
+        tempArray = (char *)malloc((fieldCount + 1) * (maxLength + 1) * sizeof(char)); //user must free!
+        arrayParsed[0] = (char*)fieldCount;
+        
+    
+        previousDSCIndex = data;
+        
+        for (int i = 1; i < (fieldCount + 1); ++i)
+        {
+            arrayParsed[i] = tempArray + ((i - 1) * (maxLength + 1));
+            DSCIndex = strchr(previousDSCIndex + 1, DATA_SPLIT_CHAR);
+            
+            if (DSCIndex != NULL)
+            {
+                strncpy(arrayParsed[i], previousDSCIndex, DSCIndex - previousDSCIndex);
+                arrayParsed[i][DSCIndex - previousDSCIndex] = '\0';  
+                previousDSCIndex = DSCIndex + 1;
+            }
+            else
+            {
+                strcpy(arrayParsed[i], previousDSCIndex);
+            }        
+        }
+
+        if (data != NULL) {
+            std::free(data);
+        }
+    }
+    
+    return (data != NULL && arrayParsed != NULL) ? &arrayParsed[1] : NULL;
 }
 
-void ArancinoClass::sendArancinoCommand(char command){
-	stream.print(command);
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		if(command == END_TX_CHAR)
-			Serial.println(command);
-		else
-			Serial.print(command);
-	}
-	#endif
-}
-
-bool ArancinoClass::isReservedKey(String key){
-
-	for(int i=0;i<sizeof(reservedKey);i++){
-		if(reservedKey[i] == key)
-			return true;
-	}
-	return false;
-
-}
 /*void ArancinoClass::dropAll() {
   while (stream.available() > 0) {
     stream.read();
   }
 }*/
 
-// Arancino instance
-#if defined(__SAMD21G18A__)
-SerialArancinoClass Arancino(SerialUSB);
-#else
-SerialArancinoClass Arancino(Serial);
-#endif
-//#endif
+ArancinoClass Arancino;
