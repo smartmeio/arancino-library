@@ -29,8 +29,8 @@ typedef struct {
 } ArancinoPacket;
 ```
 ##### Variables
-* `isError`: indicates the outcome of an API call. Both in positive and negative cases is possible to check `responseCode` for more details;
-* `responseCode`: contain a code relative to API call outcome, identified by a label as follows:
+* `isError`: indicates the outcome of an API call. Its value is `False` (0) when everything is OK or `True` (1) when an error occurs. Both in positive and negative cases is possible to check `responseCode` for more details;
+* `responseCode`: contains a code relative to API call outcome, identified by a label as follows (codes from `100` are defined by the [Cortex Protocol](#response-codes):
     * `#define RESERVED_KEY_ERROR      -3`: returned when trying to set a reserved key;
     * `#define COMMUNICATION_ERROR     -2`: returned when an UART communication error occur;
     * `#define GENERIC_ERROR           -1`: returned on generic and not specific error;
@@ -47,17 +47,17 @@ typedef struct {
     * `#define ERR_REDIS				      207`: Redis KO - Key exists in the Standard Data Store;
     * `#define ERR_REDIS				      208`: Redis KO - Key exists in the Persistent Data Store;
     * `#define ERR_REDIS				      209`: Redis KO - Non compatibility between Arancino Module and Library;
-* `responseType`: contain a code that indicate the type of the reponse, identified as follows:
+* `responseType`: contains a code that indicate the type of the reponse, identified as follows:
     * `#define VOID            0`: returned when the API call does not provide any data, e.g. `set` command (see `responseCode` to evaluate the outcome);
     * `#define INT             1`: returned when the Redis response is an integer value, e.g. `del` command;
     * `#define STRING          2`: returned when the Redis response is a string, e.g. `get` command;
     * `#define STRING_ARRAY    3`: returned when the Redis response is an array string, e.g. `keys` command.
-* `response`: is a data structure that contain the Redis response. Is content can be an `int`, `char*` or `char**`, for example:
+* `response`: is a data structure that contain the Redis response. Its content can be an `int`, `char*` or `char**`, for example:
     * `response.integer`: interprets the content as an `int` type;
     * `response.string`: interprets the content as an `char*` type;
     * `response.stringArray`: interprets the content as an `char**` type;
 
-###### Note: when the ArancinoPacket returned from an API contain a string or an array string, the user must manually free the ArancinoPacket (or directly the `char*` or `char**` associated pointer) using the Arancino.free() API; this is necessary to avoid memory leaks.
+> **Note**: when the `ArancinoPacket` returned from an API contain a string or an array string, the user must manually free the ArancinoPacket (or directly the `char*` or `char**` associated pointer) using the [`Arancino.free()`](#free) API; this is necessary to avoid memory leaks.
 
 
 ## API
@@ -209,7 +209,7 @@ ___
 ### getPacket
 ##### *ArancinoPacket getPacket(char&ast; key)*
 
-Get the *value* of *key*. If the *key* does not exist, the special value NULL is returned.
+Get the *value* of *key*. If the *key* does not exist, the special value `NULL` is returned.
 
 ##### Parameters
 * **`key`**: the name of the key from which the value is retrieved
