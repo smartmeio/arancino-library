@@ -45,15 +45,15 @@ void setup() {
 }
 
 void loop() {
-  ArancinoPacket temp = Arancino.publishPacket(0,"Hello from Arancino");
-  if (!temp.isError)
+  ArancinoPacket apckt = Arancino.publishPacket(0,"Hello from Arancino");
+  if (!apckt.isError)
    {
      Serial.println("PUBLISH OK");
      Serial.print("Response code: ");
-     Serial.println(temp.responseCode);
+     Serial.println(apckt.responseCode);
      Serial.print("Response type: ");
-     Serial.println(temp.responseType);  
-     int resp = temp.response.integer;
+     Serial.println(apckt.responseType);  
+     int resp = apckt.response.integer;
      Serial.print("Message sent to ");
      Serial.print(resp);
      Serial.println(" clients");

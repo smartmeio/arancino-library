@@ -62,9 +62,9 @@ under the License
 #define ERR_CMD_NOT_RCV		    204		//Command Not Received
 #define ERR_CMD_PRM_NUM		    205		//Invalid parameter number
 #define ERR_REDIS				206		//Generic Redis Error
-#define ERR_REDIS				207		//Key exists in the Standard Data Store
-#define ERR_REDIS				208		//Key exists in the Persistent Data Store
-#define ERR_REDIS				209		//Non compatibility between Arancino Module and Library
+#define ERR_REDIS_KEY_EXISTS_IN_STD	    207		//Key exists in the Standard Data Store
+#define ERR_REDIS_KEY_EXISTS_IN_PERS	208		//Key exists in the Persistent Data Store
+#define ERR_NON_COMPATIBILITY		    209		//Non compatibility between Arancino Module and Library
 
 #define DBG_PIN					26		//pin used to Debug Message
 //#define PWR_PIN				??		//pin used for Power Management

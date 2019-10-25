@@ -41,15 +41,15 @@ ArancinoPacket reply: ArancinoPacket containing:
 void setup() {
   Arancino.begin();
 
-  ArancinoPacket temp = Arancino.hset("foo", "bar", "yeah");
+  ArancinoPacket apckt = Arancino.hset("foo", "bar", "yeah");
 
-  if (temp.isError == 0)
+  if (apckt.isError == 0)
   {
     Serial.println("HSET OK");
     Serial.print("Response code: ");
-    Serial.println(temp.responseCode);
+    Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
-    Serial.println(temp.responseType);
+    Serial.println(apckt.responseType);
   }
   else
   {

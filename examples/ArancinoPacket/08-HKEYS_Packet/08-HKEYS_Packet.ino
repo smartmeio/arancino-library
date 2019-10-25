@@ -46,15 +46,15 @@ void setup() {
 
 void loop() {
 
-  ArancinoPacket temp = Arancino.hkeysPacket("foo");
-  char** fields = temp.response.stringArray;
-  if (!temp.isError)
+  ArancinoPacket apckt = Arancino.hkeysPacket("foo");
+  char** fields = apckt.response.stringArray;
+  if (!apckt.isError)
   {
     Serial.println("HKEYS OK");
     Serial.print("Response code: ");
-    Serial.println(temp.responseCode);
+    Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
-    Serial.println(temp.responseType);
+    Serial.println(apckt.responseType);
     for (int i = 0; i < Arancino.getArraySize(fields); i++) {
       Serial.print("foo -> ");
       Serial.println(fields[i]);

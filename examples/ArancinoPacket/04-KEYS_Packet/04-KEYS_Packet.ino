@@ -55,22 +55,22 @@ void setup() {
 
 void loop() {
 
-  ArancinoPacket temp = Arancino.keysPacket();
-  char** key = temp.response.stringArray;
-  if (temp.isError == 0)
+  ArancinoPacket apckt = Arancino.keysPacket();
+  char** keys = apckt.response.stringArray;
+  if (apckt.isError == 0)
   {
     Serial.println("KEYS OK");
     Serial.print("Response code: ");
-    Serial.println(temp.responseCode);
+    Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
-    Serial.println(temp.responseType);
-    for (int i = 0; i < Arancino.getArraySize(key); i++) {
-      Serial.println(key[i]);
+    Serial.println(apckt.responseType);
+    for (int i = 0; i < Arancino.getArraySize(keys); i++) {
+      Serial.println(keys[i]);
     }
     //pressure
     //humidity
     //temperature
-    Arancino.free(key); //delete the array from memory
+    Arancino.free(keys); //delete the array from memory
   }
   else
   {
@@ -79,20 +79,20 @@ void loop() {
 
   delay(1000); //wait 1 seconds
 
-  temp = Arancino.keysPacket("temp*");
-  key = temp.response.stringArray;
-  if (temp.isError == 0)
+  apckt = Arancino.keysPacket("temp*");
+  keys = apckt.response.stringArray;
+  if (apckt.isError == 0)
   {
     Serial.println("KEYS OK");
     Serial.print("Response code: ");
-    Serial.println(temp.responseCode);
+    Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
-    Serial.println(temp.responseType);
-    for (int i = 0; i < Arancino.getArraySize(key); i++) {
-      Serial.println(key[i]);
+    Serial.println(apckt.responseType);
+    for (int i = 0; i < Arancino.getArraySize(keys); i++) {
+      Serial.println(keys[i]);
     }
     //temperature
-    Arancino.free(key); //delete the array from memory
+    Arancino.free(keys); //delete the array from memory
   }
   else
   {

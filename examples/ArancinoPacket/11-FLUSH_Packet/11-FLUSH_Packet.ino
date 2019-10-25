@@ -38,14 +38,14 @@ void setup() {
   Arancino.set("foo","bar");
   Arancino.set("foo","baz");
   //delete all the keys
-  ArancinoPacket temp = Arancino.flush();
-  if (!temp.isError)
+  ArancinoPacket apckt = Arancino.flush();
+  if (!apckt.isError)
   {
     Serial.println("FLUSH OK");
     Serial.print("Response code: ");
-    Serial.println(temp.responseCode);
+    Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
-    Serial.println(temp.responseType);
+    Serial.println(apckt.responseType);
   }
   else
   {

@@ -44,16 +44,16 @@ void setup() {
 }
 
 void loop() {
-  ArancinoPacket temp = Arancino.hgetallPacket("foo");
-  if (!temp.isError)
+  ArancinoPacket apckt = Arancino.hgetallPacket("foo");
+  if (!apckt.isError)
   {
     Serial.println("HGETALL OK");
     Serial.print("Response code: ");
-    Serial.println(temp.responseCode);
+    Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
-    Serial.println(temp.responseType);
+    Serial.println(apckt.responseType);
 
-    char** values = temp.response.stringArray;
+    char** values = apckt.response.stringArray;
     int arraySize = Arancino.getArraySize(values);
     for (int i = 0; i < arraySize; i += 2)
     {

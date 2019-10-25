@@ -54,22 +54,22 @@ void setup() {
 
 void loop() {
 
-  char** key = Arancino.keys();
-  for (int i = 0; i < Arancino.getArraySize(key); i++) {
-    Serial.println(key[i]);
+  char** keys = Arancino.keys();
+  for (int i = 0; i < Arancino.getArraySize(keys); i++) {
+    Serial.println(keys[i]);
   }
   //pressure
   //humidity
   //temperature
-  Arancino.free(key); //delete the array from memory
+  Arancino.free(keys); //delete the array from memory
 
   delay(1000); //wait 1 seconds
 
-  key = Arancino.keys("temp*");  //return all the keys thath contains temp pattern
-  for (int i = 0; i < Arancino.getArraySize(key) ; i++) {
-    Serial.println(key[i]);   //temperature
+  keys = Arancino.keys("temp*");  //return all the keys thath contains temp pattern
+  for (int i = 0; i < Arancino.getArraySize(keys) ; i++) {
+    Serial.println(keys[i]);   //temperature
   }
-  Arancino.free(key); //delete the array from memory
+  Arancino.free(keys); //delete the array from memory
 
   delay(1000); //wait 1 seconds
 

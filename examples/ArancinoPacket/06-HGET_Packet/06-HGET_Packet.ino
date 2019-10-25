@@ -54,18 +54,18 @@ void loop() {
   //foo bar -> yeah
   Arancino.free(value);
 
-  ArancinoPacket temp = Arancino.hgetPacket("foo", "baz");
+  ArancinoPacket apckt = Arancino.hgetPacket("foo", "baz");
 
-  if (temp.isError == 0)
+  if (apckt.isError == 0)
   {
     Serial.println("HGET OK");
     Serial.print("Response code: ");
-    Serial.println(temp.responseCode);
+    Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
-    Serial.println(temp.responseType);
+    Serial.println(apckt.responseType);
     Serial.print("foo baz -> ");
-    Serial.println(temp.response.string);
-    Arancino.free(temp);
+    Serial.println(apckt.response.string);
+    Arancino.free(apckt);
   }
   else
   {

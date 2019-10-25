@@ -46,19 +46,19 @@ void loop() {
   //sets the value 'bar' into the 'foo' key
   Arancino.set("foo","bar");
 
-  ArancinoPacket temp = Arancino.getPacket("foo");
-  if (!temp.isError)
+  ArancinoPacket apckt = Arancino.getPacket("foo");
+  if (!apckt.isError)
   {
     Serial.println("GET OK");
     Serial.print("Response code: ");
-    Serial.println(temp.responseCode);
+    Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
-    Serial.println(temp.responseType);
+    Serial.println(apckt.responseType);
 
     Serial.print("foo -> ");
-    Serial.println(temp.response.string);
+    Serial.println(apckt.response.string);
     //foo -> bar
-    Arancino.free(temp); //delete the string from memory
+    Arancino.free(apckt); //delete the string from memory
   }
   else
   {

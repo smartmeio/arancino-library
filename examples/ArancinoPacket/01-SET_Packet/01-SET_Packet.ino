@@ -40,16 +40,16 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 void setup() {
   Arancino.begin();
 
-  ArancinoPacket temp = Arancino.set("foo", "bar");
-  if (temp.isError == 0)
+  ArancinoPacket apckt = Arancino.set("foo", "bar");
+  if (apckt.isError == 0)
   {
     Serial.println("SET OK");
     Serial.print("Response code: ");
-    Serial.println(temp.responseCode);
+    Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
-    Serial.println(temp.responseType);
+    Serial.println(apckt.responseType);
     Serial.print("Response value: ");
-    Serial.println(temp.response.integer);
+    Serial.println(apckt.response.integer);
   }
   else
   {

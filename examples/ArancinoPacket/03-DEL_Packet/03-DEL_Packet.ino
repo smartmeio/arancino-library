@@ -40,15 +40,15 @@ void setup() {
   Arancino.begin();
   Arancino.set("foo","bar");
 
-  ArancinoPacket temp = Arancino.delPacket("baz");
-  if (temp.isError == 0)
+  ArancinoPacket apckt = Arancino.delPacket("baz");
+  if (apckt.isError == 0)
   {
     Serial.println("DEL OK");
     Serial.print("Response code: ");
-    Serial.println(temp.responseCode);
+    Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
-    Serial.println(temp.responseType);
-    Serial.println(temp.response.integer ? "Key deleted" : "Key not found");
+    Serial.println(apckt.responseType);
+    Serial.println(apckt.response.integer ? "Key deleted" : "Key not found");
     //0
   }
   else
@@ -56,15 +56,15 @@ void setup() {
     Serial.println("DEL ERROR");    
   }
 
-  temp = Arancino.delPacket("foo");
-  if (temp.isError == 0)
+  apckt = Arancino.delPacket("foo");
+  if (apckt.isError == 0)
   {
     Serial.println("DEL OK");
     Serial.print("Response code: ");
-    Serial.println(temp.responseCode);
+    Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
-    Serial.println(temp.responseType);
-    Serial.println(temp.response.integer ? "Key deleted" : "Key not found");
+    Serial.println(apckt.responseType);
+    Serial.println(apckt.response.integer ? "Key deleted" : "Key not found");
     //1
   }
   else

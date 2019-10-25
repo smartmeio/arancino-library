@@ -40,15 +40,15 @@ void setup() {
   Arancino.begin();
   Arancino.hset("foo","bar","yeah");
   Arancino.hset("foo","baz","whoo");
-  ArancinoPacket temp = Arancino.hdelPacket("foo","bar");
-  if (!temp.isError)
+  ArancinoPacket apckt = Arancino.hdelPacket("foo","bar");
+  if (!apckt.isError)
   {
     Serial.println("HDEL OK");
     Serial.print("Response code: ");
-    Serial.println(temp.responseCode);
+    Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
-    Serial.println(temp.responseType);  
-    int value = temp.response.integer;
+    Serial.println(apckt.responseType);  
+    int value = apckt.response.integer;
     Serial.println(value ? "Field removed" : "Field/key not found");
   }
   else
