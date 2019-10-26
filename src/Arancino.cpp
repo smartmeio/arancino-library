@@ -24,6 +24,14 @@ under the License
 ArancinoPacket reservedKeyErrorPacket = {true, RESERVED_KEY_ERROR, RESERVED_KEY_ERROR, {.string = NULL}}; //default reserved key error packet
 ArancinoPacket communicationErrorPacket = {true, COMMUNICATION_ERROR, COMMUNICATION_ERROR, {.string = NULL}}; //default reserved key error packet
 
+template<> ArancinoPacket ArancinoClass::ArancinoGet<ArancinoPacket> (char* key){
+	ArancinoPacket result = {true, -1, -1, {.string = "test"}};
+	return result;
+}
+
+template<> char* ArancinoClass::ArancinoGet<char*> (char* key){
+	return "value";
+}
 
 /*ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
