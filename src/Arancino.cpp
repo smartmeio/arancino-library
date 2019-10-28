@@ -29,7 +29,9 @@ template<> ArancinoPacket ArancinoClass::ArancinoGet<ArancinoPacket> (char* key)
 	return result;
 }
 
-template<> char* ArancinoClass::ArancinoGet<char*> (char* key){
+template<class T = char*> T ArancinoClass::ArancinoGet (char* key){
+    //DEFAULT
+    
 	return "value";
 }
 

@@ -165,7 +165,7 @@ class ArancinoClass {
 		int getArraySize(char** _array);
         int getArraySize(String* _array);
 
-		template<class T> T ArancinoGet(char* key);
+		template<class T = char*> T ArancinoGet(char* key);
 
 	private:
 		//void dropAll();
