@@ -100,12 +100,17 @@ class ArancinoClass {
 		ArancinoPacket set(char* key, char* value, bool isPersistent);
 		
 		//GET
-		ArancinoPacket getPacket(char* value);
-		char* get(char* value);
+		//ArancinoPacket getPacket(char* key);
+		//char* get(char* key);
+		//GET W/ TEMPLATE
+		template<class T = char*> T get(char* key);
+
 
 		//DEL
-		ArancinoPacket delPacket(char* key);
-		int del(char* key);
+		// ArancinoPacket delPacket(char* key);
+		// int del(char* key);
+		//DEL W/ TEMPLATE
+		template<class T = int> T del(char* key);
 
 		//HSET
 		ArancinoPacket hset(char* key, char* field, char* value);
@@ -114,12 +119,16 @@ class ArancinoClass {
 		ArancinoPacket hset(char* key, char* field, uint32_t value);
 		
 		//HGET
-		ArancinoPacket hgetPacket(char* key, char* field);
-		char* hget(char* key, char* field);
+		// ArancinoPacket hgetPacket(char* key, char* field);
+		// char* hget(char* key, char* field);
+		//HGET W TEMPALTE
+		template<class T = char*> T hget(char* key, char* field);
 
 		//HGETALL
-		ArancinoPacket hgetallPacket(char* key);
-		char** hgetall(char* key);
+		//ArancinoPacket hgetallPacket(char* key);
+		//char** hgetall(char* key);
+		//HGETALL W TEMPALTE
+		template<class T = char*> T hgetall(char* key);
 
 		//HKEYS
 		ArancinoPacket hkeysPacket(char* key);
@@ -166,7 +175,7 @@ class ArancinoClass {
 		int getArraySize(String* _array);
 
 		//TEMPLATE TEST
-		template<class T = char*> T ArancinoGet(char* key);
+		//template<class T = char*> T ArancinoGet(char* key);
 
 
 	private:
@@ -203,6 +212,19 @@ class ArancinoClass {
 		
 		char* _parse(char* message);
 		char** _parseArray(char* message);
+
+		//TEMPLATE WRAPPED
+		ArancinoPacket _getPacket(char* key);
+		char* _get(char* key);
+
+		ArancinoPacket _delPacket(char* key);
+		int _del(char* key);
+	
+		ArancinoPacket _hgetPacket(char* key, char* field);
+		char* _hget(char* key, char* field);
+
+		ArancinoPacket _hgetallPacket(char* key);
+		char** _hgetall(char* key);
 
 };
 

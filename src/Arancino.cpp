@@ -24,16 +24,17 @@ under the License
 ArancinoPacket reservedKeyErrorPacket = {true, RESERVED_KEY_ERROR, RESERVED_KEY_ERROR, {.string = NULL}}; //default reserved key error packet
 ArancinoPacket communicationErrorPacket = {true, COMMUNICATION_ERROR, COMMUNICATION_ERROR, {.string = NULL}}; //default reserved key error packet
 
-template<> ArancinoPacket ArancinoClass::ArancinoGet<ArancinoPacket> (char* key){
-	ArancinoPacket result = {true, -1, -1, {.string = "test"}};
-	return result;
-}
+//TEMPLATE TEST
+// template<> ArancinoPacket ArancinoClass::ArancinoGet<ArancinoPacket> (char* key){
+// 	ArancinoPacket result = {true, -1, -1, {.string = "test"}};
+// 	return result;
+// }
 
-template<> char* ArancinoClass::ArancinoGet (char* key){
-	//DEFAULT
+// template<> char* ArancinoClass::ArancinoGet (char* key){
+// 	//DEFAULT
 
-	return "value";
-}
+// 	return "value";
+// }
 
 /*ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
@@ -257,7 +258,7 @@ ArancinoPacket ArancinoClass::_set( char* key, char* value, bool isPersistent ) 
 
 /******** API BASIC :: GET *********/
 
-ArancinoPacket ArancinoClass::getPacket( char* key ) {
+ArancinoPacket ArancinoClass::_getPacket( char* key ) {
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
@@ -312,8 +313,8 @@ ArancinoPacket ArancinoClass::getPacket( char* key ) {
 	return packet;
 }
 
-char* ArancinoClass::get( char* key ) {
-	ArancinoPacket packet = getPacket(key);
+char* ArancinoClass::_get( char* key ) {
+	ArancinoPacket packet = _getPacket(key);
 	char* retString;
 	if (!packet.isError)
 	{
@@ -326,9 +327,17 @@ char* ArancinoClass::get( char* key ) {
 	return retString;
 }
 
+template<> ArancinoPacket ArancinoClass::get<ArancinoPacket> (char* key){
+	return _getPacket(key);
+}
+
+template<> char* ArancinoClass::get(char* key){
+	return _get(key);
+}
+
 /******** API BASIC :: DEL *********/
 
-ArancinoPacket ArancinoClass::delPacket( char* key ) {
+ArancinoPacket ArancinoClass::_delPacket( char* key ) {
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
@@ -387,14 +396,22 @@ ArancinoPacket ArancinoClass::delPacket( char* key ) {
 	return packet;
 }
 
-int ArancinoClass::del( char* key ) {
-	ArancinoPacket packet = delPacket(key);
+int ArancinoClass::_del( char* key ) {
+	ArancinoPacket packet = _delPacket(key);
 	int retValue = 0;
 	if (!packet.isError)
 	{
 		retValue = packet.response.integer;
 	}
 	return retValue;
+}
+
+template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
+	return _delPacket(key);
+}
+
+template<> int ArancinoClass::del(char* key){
+	return _del(key);
 }
 
 /******** API BASIC :: HSET *********/
@@ -487,7 +504,7 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 
 /******** API BASIC :: HGET *********/
 
-ArancinoPacket ArancinoClass::hgetPacket( char* key, char* field ) {
+ArancinoPacket ArancinoClass::_hgetPacket( char* key, char* field ) {
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
@@ -547,8 +564,8 @@ ArancinoPacket ArancinoClass::hgetPacket( char* key, char* field ) {
 	return packet;
 }
 
-char* ArancinoClass::hget( char* key, char* field ) {
-	ArancinoPacket packet = hgetPacket(key, field);
+char* ArancinoClass::_hget( char* key, char* field ) {
+	ArancinoPacket packet = _hgetPacket(key, field);
 	char* retString;
 	if (!packet.isError)
 	{
@@ -561,9 +578,18 @@ char* ArancinoClass::hget( char* key, char* field ) {
 	return retString;
 }
 
+template<> ArancinoPacket ArancinoClass::hget<ArancinoPacket> (char* key, char* field){
+	return _hgetPacket(key, field);
+}
+
+template<> char* ArancinoClass::hget(char* key, char* field){
+	return _hget(key, field);
+}
+
+
 /******** API BASIC :: HGETALL PACKET *********/
 
-ArancinoPacket ArancinoClass::hgetallPacket(char* key) {
+ArancinoPacket ArancinoClass::_hgetallPacket(char* key) {
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
@@ -620,8 +646,8 @@ ArancinoPacket ArancinoClass::hgetallPacket(char* key) {
 	return packet;
 }
 
-char** ArancinoClass::hgetall(char* key) {
-	ArancinoPacket packet = hgetallPacket(key);
+char** ArancinoClass::_hgetall(char* key) {
+	ArancinoPacket packet = _hgetallPacket(key);
 	char** retArray;
 	if (!packet.isError)
 	{
@@ -632,6 +658,14 @@ char** ArancinoClass::hgetall(char* key) {
 		retArray = NULL;
 	}
 	return retArray;
+}
+
+template<> ArancinoPacket ArancinoClass::hgetall<ArancinoPacket> (char* key){
+	return _hgetallPacket(key);
+}
+
+template<> char** ArancinoClass::hgetall(char* key){
+	return _hgetall(key);
 }
 
 /******** API BASIC :: HKEYS *********/
@@ -956,7 +990,6 @@ int ArancinoClass::publish( char* channel, char* msg ) {
 	}
 	return retValue;
 }
-
 
 ArancinoPacket ArancinoClass::_publish( char* channel, char* msg ) {
 	if(_isReservedKey(channel)){
