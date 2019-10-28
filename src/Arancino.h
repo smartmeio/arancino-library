@@ -83,12 +83,12 @@ class ArancinoClass {
 		
 		//SET RESERVED COMMUNICATION MODE
 		void setReservedCommunicationMode(int mode);
-        
+
 		
 		/***** API BASIC *****/
 		//BEGIN
 		void begin(int timeout = TIMEOUT);
-    	
+	
 		//SET	
 		ArancinoPacket set(char* key, int value);
 		ArancinoPacket set(char* key, double value);
@@ -101,7 +101,7 @@ class ArancinoClass {
 		
 		//GET
 		ArancinoPacket getPacket(char* value);
-        char* get(char* value);
+		char* get(char* value);
 
 		//DEL
 		ArancinoPacket delPacket(char* key);
@@ -147,10 +147,10 @@ class ArancinoClass {
 		ArancinoPacket flush(void);
 
 		/***** API UTILS *****/
-        //FREE
+		//FREE
 		void free(char* str);
-        void free(char** _array);
-        void free(ArancinoPacket packet);
+		void free(char** _array);
+		void free(ArancinoPacket packet);
 
 		//PRINT
 		void print(String value);
@@ -160,12 +160,14 @@ class ArancinoClass {
 		void println(String value);
 		void println(int value);
 		void println(double value);
-        
+
 		//GET ARRAY SIZE
 		int getArraySize(char** _array);
-        int getArraySize(String* _array);
+		int getArraySize(String* _array);
 
+		//TEMPLATE TEST
 		template<class T = char*> T ArancinoGet(char* key);
+
 
 	private:
 		//void dropAll();
@@ -177,7 +179,7 @@ class ArancinoClass {
 
 		//API WRAPPED
 		void _freeArray(char** _array);
-        void _freePacket(ArancinoPacket packet);
+		void _freePacket(ArancinoPacket packet);
 		
 		ArancinoPacket _set(char* key, char* value, bool isPersistent);
 		ArancinoPacket _publish(char* channel, char* msg);
@@ -205,6 +207,5 @@ class ArancinoClass {
 };
 
 extern ArancinoClass Arancino;
-
 
 #endif /* ARANCINO_H_ */
