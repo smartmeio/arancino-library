@@ -128,29 +128,40 @@ class ArancinoClass {
 		//ArancinoPacket hgetallPacket(char* key);
 		//char** hgetall(char* key);
 		//HGETALL W TEMPALTE
-		template<class T = char*> T hgetall(char* key);
+		template<class T = char**> T hgetall(char* key);
 
 		//HKEYS
-		ArancinoPacket hkeysPacket(char* key);
-		char** hkeys(char* key);
+		// ArancinoPacket hkeysPacket(char* key);
+		// char** hkeys(char* key);
+		//HKEYS W TEMPALTE
+		template<class T = char**> T hkeys(char* key);
 
 		//HVALS
-		ArancinoPacket hvalsPacket(char* key);
-		char** hvals(char* key);
+		// ArancinoPacket hvalsPacket(char* key);
+		// char** hvals(char* key);
+		//HVALS W TEMPALTE
+		template<class T = char**> T hvals(char* key);
 
 		//HDEL
-		ArancinoPacket hdelPacket(char* key, char* field);
-		int hdel(char* key, char* field);
+		// ArancinoPacket hdelPacket(char* key, char* field);
+		// int hdel(char* key, char* field);
+		//HDEL W TEMPALTE
+		template<class T = int> T hdel(char* key, char* field);
 
 		//KEYS
-		ArancinoPacket keysPacket(char* pattern="");
-		char** keys(char* pattern="");
+		// ArancinoPacket keysPacket(char* pattern="");
+		// char** keys(char* pattern="");
+		//KEYS W TEMPALTE
+		template<class T = char**> T keys(char* pattern="");
 
 		//PUBLISH		
-		ArancinoPacket publishPacket(int channel, char* msg);
-		ArancinoPacket publishPacket(char* channel, char* msg);
-		int publish(int channel, char* msg);
-		int publish(char* channel, char* msg);
+		// ArancinoPacket publishPacket(int channel, char* msg);
+		// ArancinoPacket publishPacket(char* channel, char* msg);
+		// int publish(int channel, char* msg);
+		// int publish(char* channel, char* msg);
+		//PUBLISH W TEMPALTE
+		template<class T = int> T publish(int channel, char* msg);
+		template<class T = int> T publish(char* channel, char* msg);
 		
 		//FLUSH
 		ArancinoPacket flush(void);
@@ -190,8 +201,8 @@ class ArancinoClass {
 		void _freeArray(char** _array);
 		void _freePacket(ArancinoPacket packet);
 		
-		ArancinoPacket _set(char* key, char* value, bool isPersistent);
-		ArancinoPacket _publish(char* channel, char* msg);
+		ArancinoPacket __set(char* key, char* value, bool isPersistent);
+		ArancinoPacket __publish(char* channel, char* msg);
 
 		//INTERNAL UTILS
 		//void _sendArancinoCommand(String command);
@@ -225,6 +236,23 @@ class ArancinoClass {
 
 		ArancinoPacket _hgetallPacket(char* key);
 		char** _hgetall(char* key);
+
+		ArancinoPacket _hkeysPacket(char* key);
+		char** _hkeys(char* key);
+
+		ArancinoPacket _hvalsPacket(char* key);
+		char** _hvals(char* key);
+
+		ArancinoPacket _hdelPacket(char* key, char* field);
+		int _hdel(char* key, char* field);
+
+		ArancinoPacket _keysPacket(char* pattern="");
+		char** _keys(char* pattern="");
+
+		ArancinoPacket _publishPacket(int channel, char* msg);
+		ArancinoPacket _publishPacket(char* channel, char* msg);
+		int _publish(int channel, char* msg);
+		int _publish(char* channel, char* msg);
 
 };
 
