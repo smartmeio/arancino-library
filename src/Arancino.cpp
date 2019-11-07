@@ -313,7 +313,7 @@ ArancinoPacket ArancinoClass::_getPacket( char* key ) {
 	return packet;
 }
 
-char* ArancinoClass::_get( char* key ) {
+char* ArancinoClass::_get(char* key) {
 	ArancinoPacket packet = _getPacket(key);
 	char* retString;
 	if (!packet.isError)
@@ -327,7 +327,7 @@ char* ArancinoClass::_get( char* key ) {
 	return retString;
 }
 
-template<> ArancinoPacket ArancinoClass::get<ArancinoPacket> (char* key){
+template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
 	return _getPacket(key);
 }
 
@@ -337,7 +337,7 @@ template<> char* ArancinoClass::get(char* key){
 
 /******** API BASIC :: DEL *********/
 
-ArancinoPacket ArancinoClass::_delPacket( char* key ) {
+ArancinoPacket ArancinoClass::_delPacket(char* key) {
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
