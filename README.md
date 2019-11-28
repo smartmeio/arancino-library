@@ -5,7 +5,7 @@ Arancino Library allows to export/import data to/from the Linux environment usin
 
 
 ## Getting Started
-To get started with Arancino Library you can download the latest version from the repository `arancino-library` within the [SmartMe.IO Repository Management Site] or directly from Arduino Library Manager.
+To get started with Arancino Library you can download the latest version from the repository `arancino-library` within the [smartme.IO Repository Management Site](https://download.smartme.io/artifactory/list/arancino-library/) or directly from Arduino Library Manager.
 
 ### Arduino IDE
 
@@ -14,6 +14,13 @@ Open the Arduino IDE, unzip the _Arancino Library_ and import the unzipped folde
 
 #### from Arduino Library Manager
 Open the Arduino IDE and go to *Sketch* → *Include Library* → *Manage Libraries*, the Arduino Library Manager window will be shown. Using the text box, type _Arancino_; finally selecte the Arancino Library item within the result list and click install. Be sure to select the latest version available.
+
+*Important Note:*
+> Arancino Library use [FreeRTOS_SAMD21 Arduino library](https://github.com/BriscoeTech/Arduino-FreeRTOS-SAMD21) for samd21 when runs on Atmel samd21 uC (all Arancino Boards have Atmel samd21, please download Arduino platform package index for Arancino Boards [here](https://git.smartme.io/smartme.io/arancino/arduino/smartmeio-package-index/raw/master/package_smartmeio_index.json) ). FreeRTOS Library needs some extra flags when compile sketches, so when use Aracino boards whithin Arancino Library please pay attention and select _Yes_ from _Menu -> Tools -> Using Arancino Library?:_ in Arduino IDE. Consequently select _No_ when you are not using Arancino Library.
+
+*Note:*
+> Arancino Library has one dependency: [FreeRTOS_SAMD21 Arduino library](https://github.com/BriscoeTech/Arduino-FreeRTOS-SAMD21) by BriscoeTech. Please download it from Arduino Library Manager.
+
 
 ## Data structures
 ### ArancinoPacket
@@ -1360,7 +1367,7 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | ----------------- |:---------------------:|
 | `100`             | **OK** - Generic operation successfully completed. |
 | `101`             | **OK** - Setted value into a new field.            |
-| `102`             | **OK** - Setted value into an existing field    |
+| `102`             | **OK** - Setted value into an existing field       |
 | `200`             | **KO** - Generic Error                             |
 | `201`             | **KO** - Retrieved NULL value                      |
 | `202`             | **KO** - Error during *SET* command                |
@@ -1681,4 +1688,4 @@ void loop() {
 ## Credits
 Most of this documentation has been extrapolated from [Redis Command](https://redis.io/commands/), and [FreeRTOS quick start guide](https://www.freertos.org/FreeRTOS-quick-start-guide.html).
 
-Redis, Arduino and FreeRTOS are trademarks of their respective owners.
+Redis, Arduino, Atmel and FreeRTOS are trademarks of their respective owners.

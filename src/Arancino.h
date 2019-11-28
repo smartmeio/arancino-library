@@ -29,10 +29,18 @@ under the License
 
 #define USEFREERTOS
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	
+	#if !defined(__MEM_WRAP__)
+		#error You are using Arancino Library, please select Menu -> Tools -> Using Arancino Library?: Yes
+	#endif
+
 extern "C" {
 #include <FreeRTOS_SAMD21.h>
 }
 #endif
+
+	
+
 
 
 /*

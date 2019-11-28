@@ -22,7 +22,7 @@
 #                   REPO_BASE_URL:  url di base del repository: https://download.smartme.io
 #
 
-image: alpine:latest
+image: smartmeio/arancino-library-build
 
 
 stages:
