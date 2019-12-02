@@ -65,7 +65,7 @@ push:
     GIT_STRATEGY: clone
 
   script:
-    - apk add git
+    #- apk add git
     - git remote add github https://$GITHUB_BOT_USERNAME:$GITHUB_ACCESS_TOKEN@github.com/$GITHUB_DEST_REPO
     #- git remote show github
     #- git remote show origin
@@ -94,7 +94,7 @@ package_staging:
   stage: package
 
   script:
-    - apk add zip
+    #- apk add zip
     - DATE="$(cat tmp/date.tmp)"
     - TIME="$(cat tmp/time.tmp)"
     - PKG_NAME=$CI_PROJECT_NAME-$DATE-$TIME-$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8}
@@ -130,7 +130,7 @@ package_release:
   stage: package
 
   script:
-    - apk add zip
+    #- apk add zip
     #- DATE="$(cat tmp/date.tmp)"
     - PKG_NAME=$CI_PROJECT_NAME-$CI_COMMIT_REF_NAME
     - echo $PKG_NAME > tmp/pgk_name.tmp
