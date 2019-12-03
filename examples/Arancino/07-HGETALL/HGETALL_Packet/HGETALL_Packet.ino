@@ -69,6 +69,6 @@ void loop() {
     Serial.print("HGETALL ERROR");
   }
 
-  Arancino.free(ArancinoPacket); //delete the array from memory
+  Arancino.free(apckt); //delete the array from memory
   delay(1000); //wait 1 seconds
 }
