@@ -81,7 +81,7 @@ void loop() {
   Arancino.free(keys); //delete the array from memory
   Arancino.free(apckt);
   
-  delay(1000); //wait 1 seconds
+  //delay(1000); //wait 1 seconds
 
   apckt = Arancino.keys<ArancinoPacket>("temp*");
   keys = apckt.response.stringArray;
@@ -104,6 +104,6 @@ void loop() {
   }
   Arancino.free(keys); //delete the array from memory
   Arancino.free(apckt);
-  delay(1000); //wait 1 seconds
+  //delay(1000); //wait 1 seconds
 
 }
