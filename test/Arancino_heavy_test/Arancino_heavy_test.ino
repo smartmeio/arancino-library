@@ -32,7 +32,7 @@ void task0(void *pvPramaters)
     Arancino.hset("foo", "baz", "whoo");
     ++rqstCount;
 
-    char* _str = Arancino.getPacket("asd").response.string;
+    char* _str = Arancino.get<ArancinoPacket>("asd").response.string;
     String str;
 
     if (strcmp(_str, "qwe") == 0)
@@ -128,7 +128,7 @@ void task2(void *pvPramaters)
     String str;
     Arancino.set("asd", "qwe");
     ++rqstCount;
-    ArancinoPacket temp = Arancino.getPacket("pip");
+    ArancinoPacket temp = Arancino.get<ArancinoPacket>("pip");
     char* _str = temp.response.string;
     char* response = _str;
 
