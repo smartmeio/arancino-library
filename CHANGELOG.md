@@ -1,5 +1,15 @@
 # Changelog
 
+#### v 1.0.0 - 2019.12.20
+* Integration with FreeRTOS
+* Introduced ArancinoPacket to manage returns of Cortex Protocol, error cases and etc..
+* Using `char*` instead of `String` to fix some memory issues
+* Users can now store persistently values.
+* Increased stability and efficiency
+
+#### v 0.1.2 - 2019.08.30
+* Hot Fix: Error during check a reserved key
+
 #### v 0.1.1 - 2019.04.17
 * Fix: cannot set empty string #26
 * Fix: cannot use unint32_t variables #18
