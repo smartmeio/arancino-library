@@ -1,6 +1,12 @@
 /*
  * CO in slot 1
  * Accel in slot 2
+ *
+ * download SparkFun ADXL345 Library (library Manager)
+ * edit line 27 of SparkFun_ADXL345.cpp
+ * from: #define ADXL345_DEVICE (0x53)    // Device Address for ADXL345
+ * to:   #define ADXL345_DEVICE (0x1D)    // Device Address for ADXL345
+ *
  */
 
 #include <Arancino.h>
