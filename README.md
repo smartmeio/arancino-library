@@ -1135,46 +1135,8 @@ void loop() {
 ```
 ___
 ### publish
-##### *int publish(char&ast; channel, char&ast; message)*
-##### *int publish(int channel, char&ast; message)*
-Posts a message to the given channel.
-
-
-##### Parameters
-* **`channel`**: the name of the *channel* where the message will be sent.
-* **`message`**: *message* to send.
-
-##### Return value
-int reply: the number of clients that received the message.
-
-##### Example
-```c++
-#include <Arancino.h>
-
-void setup() {
-
-  Arancino.begin();
-  Serial.begin(115200);
-
-}
-
-void loop() {
-
-  int resp = Arancino.publish(0,"Hello from Arancino");
-  Serial.print("Message sent to ")
-  Serial.print(resp);
-  Serial.println(" clients");
-  //Message sent to 0 client
-
-  delay(5000); //wait 5 seconds
-
-}
-```
-
-___
-### publishPacket
-##### *ArancinoPacket publishPacket(char&ast; channel, char&ast; message)*
-##### *ArancinoPacket publishPacket(int channel, char&ast; message)*
+##### *ArancinoPacket publish(char&ast; channel, char&ast; message)*
+##### *ArancinoPacket publish(int channel, char&ast; message)*
 Posts a message to the given channel.
 
 
@@ -1201,7 +1163,7 @@ void setup() {
 }
 
 void loop() {
-  ArancinoPacket temp = Arancino.publishPacket(0,"Hello from Arancino");
+  ArancinoPacket temp = Arancino.publish(0,"Hello from Arancino");
   if (!temp.isError)
    {
      Serial.println("PUBLISH OK");
