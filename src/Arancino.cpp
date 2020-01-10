@@ -1003,25 +1003,25 @@ ArancinoPacket ArancinoClass::_publishPacket(char* channel, char* msg) {
 	return __publish(channel, msg);
 }
 
-int ArancinoClass::_publish(int channel, char* msg) {
-	ArancinoPacket packet = _publishPacket(channel, msg);
-	int retValue = 0;
-	if (!packet.isError)
-	{
-		retValue = packet.response.integer;
-	}
-	return retValue;
-}
+// int ArancinoClass::_publish(int channel, char* msg) {
+// 	ArancinoPacket packet = _publishPacket(channel, msg);
+// 	int retValue = 0;
+// 	if (!packet.isError)
+// 	{
+// 		retValue = packet.response.integer;
+// 	}
+// 	return retValue;
+// }
 
-int ArancinoClass::_publish(char* channel, char* msg) {
-	ArancinoPacket packet = _publishPacket(channel, msg);
-	int retValue = 0;
-	if (!packet.isError)
-	{
-		retValue = packet.response.integer;
-	}
-	return retValue;
-}
+// int ArancinoClass::_publish(char* channel, char* msg) {
+// 	ArancinoPacket packet = _publishPacket(channel, msg);
+// 	int retValue = 0;
+// 	if (!packet.isError)
+// 	{
+// 		retValue = packet.response.integer;
+// 	}
+// 	return retValue;
+// }
 
 ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 	if(_isReservedKey(channel)){
@@ -1088,21 +1088,21 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 	return packet;
 }
 
-template<> ArancinoPacket ArancinoClass::publish<ArancinoPacket> (int channel, char* msg){
+ArancinoPacket ArancinoClass::publish(int channel, char* msg){
 	return _publishPacket(channel, msg);
 }
 
-template<> ArancinoPacket ArancinoClass::publish<ArancinoPacket> (char* channel, char* msg){
+ArancinoPacket ArancinoClass::publish(char* channel, char* msg){
 	return _publishPacket(channel, msg);
 }
 
-template<> int ArancinoClass::publish(int channel, char* msg){
-	return _publish(channel, msg);
-}
+// template<> int ArancinoClass::publish(int channel, char* msg){
+// 	return _publish(channel, msg);
+// }
 
-template<> int ArancinoClass::publish(char* channel, char* msg){
-	return _publish(channel, msg);
-}
+// template<> int ArancinoClass::publish(char* channel, char* msg){
+// 	return _publish(channel, msg);
+// }
 
 
 /******** API BASIC :: FLUSH *********/

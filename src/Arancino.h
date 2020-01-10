@@ -171,8 +171,8 @@ class ArancinoClass {
 		// int publish(int channel, char* msg);
 		// int publish(char* channel, char* msg);
 		//PUBLISH W TEMPALTE
-		template<class T = int> T publish(int channel, char* msg);
-		template<class T = int> T publish(char* channel, char* msg);
+		ArancinoPacket publish(int channel, char* msg);
+		ArancinoPacket publish(char* channel, char* msg);
 		
 		//FLUSH
 		ArancinoPacket flush(void);
