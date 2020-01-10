@@ -13,13 +13,10 @@ To get started with Arancino Library you can download the latest version from th
 Open the Arduino IDE, unzip the _Arancino Library_ and import the unzipped folder (*Sketch* → *Include Library* → *Add .zip Library...*). The library will appear under *Sketch* → *Include Library* menu at the end, under the *Contributed* section. Examples will be under *File* → *Examples* → *Examples of Custom Libraries*.
 
 #### from Arduino Library Manager
-Open the Arduino IDE and go to *Sketch* → *Include Library* → *Manage Libraries*, the Arduino Library Manager window will be shown. Using the text box, type _Arancino_; finally selecte the Arancino Library item within the result list and click install. Be sure to select the latest version available.
+Open the Arduino IDE and go to *Sketch* → *Include Library* → *Manage Libraries*, the Arduino Library Manager window will be shown. Using the text box, type _Arancino_; finally selecte the Arancino Library item within the result list and click install. Be sure to select the latest version available.x
 
 *Important Note:*
-> Arancino Library use [FreeRTOS_SAMD21 Arduino library](https://github.com/BriscoeTech/Arduino-FreeRTOS-SAMD21) for samd21 when runs on Atmel samd21 uC (all Arancino Boards have Atmel samd21, please download Arduino platform package index for Arancino Boards [here](https://git.smartme.io/smartme.io/arancino/arduino/smartmeio-package-index/raw/master/package_smartmeio_index.json) ). FreeRTOS Library needs some extra flags when compile sketches, so when use Aracino boards whithin Arancino Library please pay attention and select _Yes_ from _Menu -> Tools -> Using Arancino Library?:_ in Arduino IDE. Consequently select _No_ when you are not using Arancino Library.
-
-*Note:*
-> Arancino Library has one dependency: [FreeRTOS_SAMD21 Arduino library](https://github.com/BriscoeTech/Arduino-FreeRTOS-SAMD21) by BriscoeTech. Please download it from Arduino Library Manager.
+> Arancino Library has one dependency when FreeRTOS capabilities are required: [FreeRTOS_SAMD21 Arduino library](https://github.com/BriscoeTech/Arduino-FreeRTOS-SAMD21) by BriscoeTech. Please download it from Arduino Library Manager. In that case you also have to select _Yes_ from _Menu -> Tools -> Using FreeRTOS?_.
 
 
 ## Data structures
