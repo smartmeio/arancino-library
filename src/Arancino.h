@@ -167,6 +167,9 @@ class ArancinoClass {
 
 		//PUBLISH		
 		ArancinoPacket publish(char* channel, char* msg);
+		ArancinoPacket publish(char* channel, double msg);
+		ArancinoPacket publish(char* channel, int msg);
+
 		
 		//FLUSH
 		ArancinoPacket flush(void);

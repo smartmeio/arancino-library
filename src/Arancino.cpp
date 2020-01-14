@@ -1076,6 +1076,20 @@ ArancinoPacket ArancinoClass::publish(char* channel, char* msg){
 	return _publishPacket(channel, msg);
 }
 
+ArancinoPacket ArancinoClass::publish(char* channel, double msg){
+	char str[20] = "";
+	_doubleToString(msg, 4, str);
+
+	return _publishPacket(channel, str);
+}
+
+ArancinoPacket ArancinoClass::publish(char* channel, int msg){
+	char str[20] = "";
+	itoa(msg, str, 10);
+
+	return _publishPacket(channel, str);
+}
+
 /******** API BASIC :: FLUSH *********/
 
 ArancinoPacket ArancinoClass::flush() {
