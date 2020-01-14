@@ -98,6 +98,7 @@ void ArancinoClass::begin(int timeout) {
 		{
 			ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
 			packet = temp;
+			std::free(message);
 		}
 		else
 		{
@@ -304,6 +305,7 @@ ArancinoPacket ArancinoClass::_getPacket( char* key ) {
 	{
 		ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}};
 		packet = temp;
+		std::free(message);
 	}
 	else
 	{
@@ -387,6 +389,7 @@ ArancinoPacket ArancinoClass::_delPacket(char* key) {
 		ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
 		packet = temp;
 		std::free(messageParsed);
+		std::free(message);
 	}
 	else
 	{
@@ -555,6 +558,7 @@ ArancinoPacket ArancinoClass::_hgetPacket( char* key, char* field ) {
 	{
 		ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}}; //TODO getStatus to _getResponseCode
 		packet = temp;
+		std::free(message);
 	}
 	else
 	{
@@ -637,6 +641,7 @@ ArancinoPacket ArancinoClass::_hgetallPacket(char* key) {
 	{
 		ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
 		packet = temp;
+		std::free(message);
 	}
 	else
 	{
@@ -718,6 +723,7 @@ ArancinoPacket ArancinoClass::_hkeysPacket(char* key) {
 	{
 		ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
 		packet = temp;
+		std::free(message);
 	}
 	else
 	{
@@ -799,6 +805,7 @@ ArancinoPacket ArancinoClass::_hvalsPacket(char* key) {
 	{
 		ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
 		packet = temp;
+		std::free(message);
 	}
 	else
 	{
@@ -888,6 +895,7 @@ ArancinoPacket ArancinoClass::_hdelPacket( char* key, char* field) {
 		ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
 		packet = temp;
 		std::free(messageParsed);
+		std::free(message);
 	}
 	else
 	{
@@ -960,6 +968,7 @@ ArancinoPacket ArancinoClass::_keysPacket(char* pattern){
 	{
 		ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
 		packet = temp;
+		std::free(message);
 	}
 	else
 	{
@@ -1053,6 +1062,7 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
 		packet = temp;
 		std::free(messageParsed);
+		std::free(message);
 	}
 	else
 	{
@@ -1107,6 +1117,7 @@ ArancinoPacket ArancinoClass::flush() {
 		ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
 		packet = temp;
 		std::free(messageParsed);
+		std::free(message);
 	}
 	else
 	{
@@ -1398,7 +1409,6 @@ char* ArancinoClass::_parse(char* message) {
 	}
 	#endif
 
-	std::free(message);
 	std::free(status);
 	return value;
 
