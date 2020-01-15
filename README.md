@@ -1133,7 +1133,9 @@ void loop() {
 ___
 ### publish
 ##### *ArancinoPacket publish(char&ast; channel, char&ast; message)*
-##### *ArancinoPacket publish(int channel, char&ast; message)*
+##### *ArancinoPacket publish(char&ast; channel, int message)*
+##### *ArancinoPacket publish(char&ast; channel, float message)*
+
 Posts a message to the given channel.
 
 
