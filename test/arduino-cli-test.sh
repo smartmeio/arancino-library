@@ -37,7 +37,7 @@ build_examples () {
       sleep 1
       arduino-cli compile --fqbn smartme.IO:samd:$1 \
         -vvv $sketch_rtos \
-        --build-properties build.arancino_memory_wrapping_flags='-Wl,--wrap=malloc -Wl,--wrap=free -Wl,--wrap=calloc -Wl,--wrap=realloc' \
+        --build-properties build.memory_wrapping_flags='-Wl,--wrap=malloc -Wl,--wrap=free -Wl,--wrap=calloc -Wl,--wrap=realloc' \
         --build-properties build.arancino_extra_flags=-DUSEFREERTOS
       
       local rcrtos=$?
