@@ -27,6 +27,7 @@ image: smartmeio/arancino-library-build
 
 stages:
   - start
+  - test
   - package
   - upload
   - cleanup
@@ -82,6 +83,24 @@ push:
 
   except:
     - master
+
+#################################
+#######       TEST        #######
+#################################
+
+#######    CLI Sketch Test Job    #######
+cli-test:
+  stage: test
+
+  # copying the Library source to the Arduino libraries folder
+  before_script:
+    - cp -r ${CI_PROJECT_DIR} ${HOME}/Arduino/libraries/Arancino
+    - chmod +x ./test/arduino-cli-test.sh
+
+  # we feed the test scripts the simple board to complete the FQBN entry
+  script:
+    - ./test/arduino-cli-test.sh arancino
+    - ./test/arduino-cli-test.sh arancino_mignon
 
 #################################
 #######      PACKAGE      #######
