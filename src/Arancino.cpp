@@ -140,29 +140,13 @@ void ArancinoClass::setReservedCommunicationMode(int mode){
 
 /******** API BASIC :: SET *********/
 
-ArancinoPacket ArancinoClass::set( char* key, int value) {
-	return set(key, value, false);
-}
-
-ArancinoPacket ArancinoClass::set( char* key, double value) {
-	return set(key, value, false);
-}
-
-ArancinoPacket ArancinoClass::set( char* key, uint32_t value) {
-	return set(key, value, false);
-}
-
-ArancinoPacket ArancinoClass::set( char* key, char* value) {
-	return __set(key, value, false);
-}
-
-ArancinoPacket ArancinoClass::set( char* key, int value, bool isPersistent ) {
+ArancinoPacket ArancinoClass::set( char* key, int value, bool isPersistent) {
 	char str[20] = "";
 	itoa(value, str, 10);
 	return set(key, str, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set( char* key, double value, bool isPersistent ) {
+ArancinoPacket ArancinoClass::set( char* key, double value, bool isPersistent) {
 	char str[20] = "";
 	_doubleToString(value, 4, str);
 	return set(key, str, isPersistent);
@@ -174,11 +158,11 @@ ArancinoPacket ArancinoClass::set( char* key, uint32_t value, bool isPersistent)
 	return set(key, str, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set( char* key, char* value, bool isPersistent ) {
+ArancinoPacket ArancinoClass::set( char* key, char* value, bool isPersistent) {
 	return __set(key, value, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent ) {
+ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent) {
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
@@ -259,7 +243,7 @@ ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent )
 
 /******** API BASIC :: GET *********/
 
-ArancinoPacket ArancinoClass::_getPacket( char* key ) {
+template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
@@ -315,8 +299,9 @@ ArancinoPacket ArancinoClass::_getPacket( char* key ) {
 	return packet;
 }
 
-char* ArancinoClass::_get(char* key) {
-	ArancinoPacket packet = _getPacket(key);
+template<> char* ArancinoClass::get(char* key){
+	ArancinoPacket packet = get<ArancinoPacket>(key);
+
 	char* retString;
 	if (!packet.isError)
 	{
@@ -329,17 +314,9 @@ char* ArancinoClass::_get(char* key) {
 	return retString;
 }
 
-template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
-	return _getPacket(key);
-}
-
-template<> char* ArancinoClass::get(char* key){
-	return _get(key);
-}
-
 /******** API BASIC :: DEL *********/
 
-ArancinoPacket ArancinoClass::_delPacket(char* key) {
+template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
@@ -399,22 +376,14 @@ ArancinoPacket ArancinoClass::_delPacket(char* key) {
 	return packet;
 }
 
-int ArancinoClass::_del( char* key ) {
-	ArancinoPacket packet = _delPacket(key);
+template<> int ArancinoClass::del(char* key){
+	ArancinoPacket packet = del<ArancinoPacket>(key);
 	int retValue = 0;
 	if (!packet.isError)
 	{
 		retValue = packet.response.integer;
 	}
 	return retValue;
-}
-
-template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
-	return _delPacket(key);
-}
-
-template<> int ArancinoClass::del(char* key){
-	return _del(key);
 }
 
 /******** API BASIC :: HSET *********/
@@ -507,7 +476,7 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 
 /******** API BASIC :: HGET *********/
 
-ArancinoPacket ArancinoClass::_hgetPacket( char* key, char* field ) {
+template<> ArancinoPacket ArancinoClass::hget<ArancinoPacket> (char* key, char* field){
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
@@ -568,8 +537,9 @@ ArancinoPacket ArancinoClass::_hgetPacket( char* key, char* field ) {
 	return packet;
 }
 
-char* ArancinoClass::_hget( char* key, char* field ) {
-	ArancinoPacket packet = _hgetPacket(key, field);
+template<> char* ArancinoClass::hget(char* key, char* field){
+	ArancinoPacket packet = hget<ArancinoPacket>(key, field);
+
 	char* retString;
 	if (!packet.isError)
 	{
@@ -582,18 +552,10 @@ char* ArancinoClass::_hget( char* key, char* field ) {
 	return retString;
 }
 
-template<> ArancinoPacket ArancinoClass::hget<ArancinoPacket> (char* key, char* field){
-	return _hgetPacket(key, field);
-}
-
-template<> char* ArancinoClass::hget(char* key, char* field){
-	return _hget(key, field);
-}
-
 
 /******** API BASIC :: HGETALL PACKET *********/
 
-ArancinoPacket ArancinoClass::_hgetallPacket(char* key) {
+template<> ArancinoPacket ArancinoClass::hgetall<ArancinoPacket> (char* key){
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
@@ -651,8 +613,9 @@ ArancinoPacket ArancinoClass::_hgetallPacket(char* key) {
 	return packet;
 }
 
-char** ArancinoClass::_hgetall(char* key) {
-	ArancinoPacket packet = _hgetallPacket(key);
+template<> char** ArancinoClass::hgetall(char* key){
+	ArancinoPacket packet = hgetall<ArancinoPacket>(key);
+
 	char** retArray;
 	if (!packet.isError)
 	{
@@ -665,17 +628,9 @@ char** ArancinoClass::_hgetall(char* key) {
 	return retArray;
 }
 
-template<> ArancinoPacket ArancinoClass::hgetall<ArancinoPacket> (char* key){
-	return _hgetallPacket(key);
-}
-
-template<> char** ArancinoClass::hgetall(char* key){
-	return _hgetall(key);
-}
-
 /******** API BASIC :: HKEYS *********/
 
-ArancinoPacket ArancinoClass::_hkeysPacket(char* key) {
+template<> ArancinoPacket ArancinoClass::hkeys<ArancinoPacket> (char* key){
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
@@ -733,8 +688,9 @@ ArancinoPacket ArancinoClass::_hkeysPacket(char* key) {
 	return packet;
 }
 
-char** ArancinoClass::_hkeys(char* key) {
-	ArancinoPacket packet = _hkeysPacket(key);
+template<> char** ArancinoClass::hkeys(char* key){
+	ArancinoPacket packet = hkeys<ArancinoPacket>(key);
+
 	char** retArray;
 	if (!packet.isError)
 	{
@@ -747,17 +703,9 @@ char** ArancinoClass::_hkeys(char* key) {
 	return retArray;
 }
 
-template<> ArancinoPacket ArancinoClass::hkeys<ArancinoPacket> (char* key){
-	return _hkeysPacket(key);
-}
-
-template<> char** ArancinoClass::hkeys(char* key){
-	return _hkeys(key);
-}
-
 /******** API BASIC :: HVALS *********/
 
-ArancinoPacket ArancinoClass::_hvalsPacket(char* key) {
+template<> ArancinoPacket ArancinoClass::hvals<ArancinoPacket> (char* key){
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
@@ -815,8 +763,9 @@ ArancinoPacket ArancinoClass::_hvalsPacket(char* key) {
 	return packet;
 }
 
-char** ArancinoClass::_hvals(char* key) {
-	ArancinoPacket packet = _hvalsPacket(key);
+template<> char** ArancinoClass::hvals(char* key){
+	ArancinoPacket packet = hvals<ArancinoPacket>(key);
+
 	char** retArray;
 	if (!packet.isError)
 	{
@@ -829,17 +778,9 @@ char** ArancinoClass::_hvals(char* key) {
 	return retArray;
 }
 
-template<> ArancinoPacket ArancinoClass::hvals<ArancinoPacket> (char* key){
-	return _hvalsPacket(key);
-}
-
-template<> char** ArancinoClass::hvals(char* key){
-	return _hvals(key);
-}
-
 /******** API BASIC :: HDEL *********/
 
-ArancinoPacket ArancinoClass::_hdelPacket( char* key, char* field) {
+template<> ArancinoPacket ArancinoClass::hdel<ArancinoPacket> (char* key, char* field){
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
 		return reservedKeyErrorPacket;
@@ -905,8 +846,9 @@ ArancinoPacket ArancinoClass::_hdelPacket( char* key, char* field) {
 	return packet; 
 }
 
-int ArancinoClass::_hdel(char* key, char* field) {
-	ArancinoPacket packet = _hdelPacket(key, field);
+template<> int ArancinoClass::hdel(char* key, char* field){
+	ArancinoPacket packet = hdel<ArancinoPacket>(key, field);
+
 	int retValue = 0;
 	if (!packet.isError)
 	{
@@ -915,17 +857,9 @@ int ArancinoClass::_hdel(char* key, char* field) {
 	return retValue;
 }
 
-template<> ArancinoPacket ArancinoClass::hdel<ArancinoPacket> (char* key, char* field){
-	return _hdelPacket(key, field);
-}
-
-template<> int ArancinoClass::hdel(char* key, char* field){
-	return _hdel(key, field);
-}
-
 /******** API BASIC :: KEYS PACKET *********/
 
-ArancinoPacket ArancinoClass::_keysPacket(char* pattern){
+template<> ArancinoPacket ArancinoClass::keys<ArancinoPacket> (char* pattern){
 	int commandLength = strlen(KEYS_COMMAND);
 	int patternLength = strlen(pattern);
 	int strLength = commandLength + 1 + patternLength + 1 + 1;
@@ -978,8 +912,9 @@ ArancinoPacket ArancinoClass::_keysPacket(char* pattern){
 	return packet;
 }
 
-char** ArancinoClass::_keys(char* pattern){
-	ArancinoPacket packet = _keysPacket(pattern);
+template<> char** ArancinoClass::keys(char* pattern){
+	ArancinoPacket packet = keys<ArancinoPacket>(pattern);
+
 	char** retArray;
 	if (!packet.isError)
 	{
@@ -992,19 +927,7 @@ char** ArancinoClass::_keys(char* pattern){
 	return retArray;
 }
 
-template<> ArancinoPacket ArancinoClass::keys<ArancinoPacket> (char* pattern){
-	return _keysPacket(pattern);
-}
-
-template<> char** ArancinoClass::keys(char* pattern){
-	return _keys(pattern);
-}
-
 /******** API BASIC :: PUBLISH *********/
-
-ArancinoPacket ArancinoClass::_publishPacket(char* channel, char* msg) {
-	return __publish(channel, msg);
-}
 
 ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 	if(_isReservedKey(channel)){
@@ -1073,21 +996,21 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 }
 
 ArancinoPacket ArancinoClass::publish(char* channel, char* msg){
-	return _publishPacket(channel, msg);
+	return __publish(channel, msg);
 }
 
 ArancinoPacket ArancinoClass::publish(char* channel, double msg){
 	char str[20] = "";
 	_doubleToString(msg, 4, str);
 
-	return _publishPacket(channel, str);
+	return __publish(channel, str);
 }
 
 ArancinoPacket ArancinoClass::publish(char* channel, int msg){
 	char str[20] = "";
 	itoa(msg, str, 10);
 
-	return _publishPacket(channel, str);
+	return __publish(channel, str);
 }
 
 /******** API BASIC :: FLUSH *********/
@@ -1149,14 +1072,15 @@ void ArancinoClass::free(char* str){
 }
 
 void ArancinoClass::free(char** _array){
-	_freeArray(_array);
+	char** dummy = (_array != NULL) ? _array - sizeof(char) : NULL;
+
+	if (*_array != NULL)
+		std::free(*_array);
+	if (dummy != NULL)
+		std::free(dummy);
 }
 
 void ArancinoClass::free(ArancinoPacket packet){
-	_freePacket(packet);
-}
-
-void ArancinoClass::_freePacket(ArancinoPacket packet){
 	if (packet.responseType == STRING)
 	{
 		std::free(packet.response.string);
@@ -1165,18 +1089,6 @@ void ArancinoClass::_freePacket(ArancinoPacket packet){
 	{
 		_freeArray(packet.response.stringArray);
 	}
-	else
-	{
-		//nothing to do
-	}
-}
-
-void ArancinoClass::_freeArray(char** _array) {
-  char** dummy = (_array != NULL) ? _array - sizeof(char) : NULL;
-  if (*_array != NULL)
-	std::free(*_array);
-  if (dummy != NULL)
-	std::free(dummy);
 }
 
 /******** API ADVANCED :: PRINT *********/
@@ -1195,13 +1107,13 @@ void ArancinoClass::print(int value) {
 	print(str);
 }
 
-/******** API ADVANCED :: PRINTLN *********/
-
 void ArancinoClass::print(double value) {
 	char str[20] = "";
 	_doubleToString(value, 4, str);
 	print(str);
 }
+
+/******** API ADVANCED :: PRINTLN *********/
 
 void ArancinoClass::println(String value) {
 	print(value+String('\n'));
@@ -1323,10 +1235,6 @@ int ArancinoClass::_getDigit(long value) {
 		_val /= 10;
 	}
 	return digit;
-}
-
-ArancinoPacket ArancinoClass::_sendViaCOMM_MODE(char* key, char* value) {
-	return _sendViaCOMM_MODE(key, value, false);
 }
 
 ArancinoPacket ArancinoClass::_sendViaCOMM_MODE(char* key, char* value, bool isPersistent) {
