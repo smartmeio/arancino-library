@@ -1,5 +1,9 @@
 # Changelog
 
+#### v 1.0.1 - 2020.01.10
+* fix: `publish` API function now always returns an ArancinoPacket.
+* fix: memory issues: free is called after variable usage.
+
 #### v 1.0.0 - 2019.12.20
 * Integration with FreeRTOS
 * Introduced ArancinoPacket to manage returns of Cortex Protocol, error cases and etc..
