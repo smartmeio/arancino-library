@@ -1087,7 +1087,7 @@ void ArancinoClass::free(ArancinoPacket packet){
 	}
 	else if (packet.responseType == STRING_ARRAY)
 	{
-		_freeArray(packet.response.stringArray);
+		free(packet.response.stringArray);
 	}
 }
 
