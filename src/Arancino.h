@@ -166,13 +166,10 @@ class ArancinoClass {
 		template<class T = char**> T keys(char* pattern="");
 
 		//PUBLISH		
-		// ArancinoPacket publishPacket(int channel, char* msg);
-		// ArancinoPacket publishPacket(char* channel, char* msg);
-		// int publish(int channel, char* msg);
-		// int publish(char* channel, char* msg);
-		//PUBLISH W TEMPALTE
-		template<class T = int> T publish(int channel, char* msg);
-		template<class T = int> T publish(char* channel, char* msg);
+		ArancinoPacket publish(char* channel, char* msg);
+		ArancinoPacket publish(char* channel, double msg);
+		ArancinoPacket publish(char* channel, int msg);
+
 		
 		//FLUSH
 		ArancinoPacket flush(void);

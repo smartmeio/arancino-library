@@ -45,7 +45,7 @@ void setup() {
 }
 
 void loop() {
-  ArancinoPacket apckt = Arancino.publish<ArancinoPacket>(0,"Hello from Arancino");
+  ArancinoPacket apckt = Arancino.publish("0","Hello from Arancino");
   if (!apckt.isError)
    {
      Serial.println("PUBLISH OK");
