@@ -81,8 +81,8 @@ push:
     - branches
     - tags
 
-  except:
-    - master
+#   except:
+#     - master
 
 #################################
 #######       TEST        #######
