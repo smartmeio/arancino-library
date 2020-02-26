@@ -163,7 +163,7 @@ class ArancinoClass {
 		// ArancinoPacket keysPacket(char* pattern="");
 		// char** keys(char* pattern="");
 		//KEYS W TEMPALTE
-		template<class T = char**> T keys(char* pattern="");
+		template<class T = char**> T keys(char* pattern="*");
 
 		//PUBLISH		
 		ArancinoPacket publish(char* channel, char* msg);
