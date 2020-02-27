@@ -104,7 +104,7 @@ void ArancinoClass::begin(int timeout) {
 		{
 			packet = communicationErrorPacket;
 		}
-		std::free(message);
+		
 	}while (packet.isError == true || packet.responseCode != RSP_OK);
 	std::free(str);
 
