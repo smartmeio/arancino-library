@@ -146,15 +146,22 @@ ArancinoPacket ArancinoClass::set( char* key, int value, bool isPersistent) {
 	return set(key, str, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set( char* key, double value, bool isPersistent) {
-	char str[20] = "";
-	_doubleToString(value, 4, str);
-	return set(key, str, isPersistent);
-}
-
 ArancinoPacket ArancinoClass::set( char* key, uint32_t value, bool isPersistent) {
 	char str[20] = "";
 	itoa(value, str, 10);
+	return set(key, str, isPersistent);
+}
+
+ArancinoPacket ArancinoClass::set( char* key, long value, bool isPersistent) {
+	char str[20] = "";
+	itoa(value, str, 10);
+	return set(key, str, isPersistent);
+}
+
+
+ArancinoPacket ArancinoClass::set( char* key, double value, bool isPersistent) {
+	char str[20] = "";
+	_doubleToString(value, 4, str);
 	return set(key, str, isPersistent);
 }
 
