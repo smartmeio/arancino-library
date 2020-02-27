@@ -73,7 +73,7 @@ under the License
 #define LIBVERS_KEY				"___LIBVERS___"
 #define MODVERS_KEY				"___MODVERS___"
 #define POWER_KEY				"___POWER___"
-#define LIB_VERSION				"1.0.1"	//library version 
+#define LIB_VERSION				"1.1.0"	//library version 
 
 //RESPONSE CODE
 #define RESERVED_KEY_ERROR		-3
