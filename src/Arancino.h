@@ -172,7 +172,8 @@ class ArancinoClass {
 		ArancinoPacket publish(char* channel, char* msg);
 		ArancinoPacket publish(char* channel, double msg);
 		ArancinoPacket publish(char* channel, int msg);
-
+		ArancinoPacket publish(char* channel, uint32_t msg);
+		ArancinoPacket publish(char* channel, long msg);
 		
 		//FLUSH
 		ArancinoPacket flush(void);
