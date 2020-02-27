@@ -1,5 +1,12 @@
 # Changelog
 
+#### v 1.1.0 - 2020.MM.DD
+* Fix: CI script to push even master branch to GitHub
+* Upd: `KEYS` Command sends to Arancino Module a default arg (`*`) when call `Arancino.keys()`
+* Add: Introduced new signatures with `long` type for function: `set`, `hset` and `publish`
+* Add: Introduced `Test` Job in CI to test every Arancino examples.
+* Upd: Improved API wrapping.
+
 #### v 1.0.1 - 2020.01.10
 * fix: `publish` API function now always returns an ArancinoPacket.
 * fix: memory issues: free is called after variable usage.
