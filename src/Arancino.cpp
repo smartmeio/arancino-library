@@ -413,6 +413,12 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field, uint32_t value ) {
 	return hset(key, field, str);
 }
 
+ArancinoPacket ArancinoClass::hset( char* key, char* field, long value ) {
+	char str[20]; 
+	itoa(value, str, 10);
+	return hset(key, field, str);
+}
+
 ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 
 	if(_isReservedKey(key)){

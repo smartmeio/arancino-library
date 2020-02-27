@@ -131,7 +131,8 @@ class ArancinoClass {
 		ArancinoPacket hset(char* key, char* field, int value);
 		ArancinoPacket hset(char* key, char* field, double value);
 		ArancinoPacket hset(char* key, char* field, uint32_t value);
-		
+		ArancinoPacket hset(char* key, char* field, long value);
+
 		//HGET
 		// ArancinoPacket hgetPacket(char* key, char* field);
 		// char* hget(char* key, char* field);
