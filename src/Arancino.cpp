@@ -146,15 +146,22 @@ ArancinoPacket ArancinoClass::set( char* key, int value, bool isPersistent) {
 	return set(key, str, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set( char* key, double value, bool isPersistent) {
-	char str[20] = "";
-	_doubleToString(value, 4, str);
-	return set(key, str, isPersistent);
-}
-
 ArancinoPacket ArancinoClass::set( char* key, uint32_t value, bool isPersistent) {
 	char str[20] = "";
 	itoa(value, str, 10);
+	return set(key, str, isPersistent);
+}
+
+ArancinoPacket ArancinoClass::set( char* key, long value, bool isPersistent) {
+	char str[20] = "";
+	itoa(value, str, 10);
+	return set(key, str, isPersistent);
+}
+
+
+ArancinoPacket ArancinoClass::set( char* key, double value, bool isPersistent) {
+	char str[20] = "";
+	_doubleToString(value, 4, str);
 	return set(key, str, isPersistent);
 }
 
@@ -1007,6 +1014,20 @@ ArancinoPacket ArancinoClass::publish(char* channel, double msg){
 }
 
 ArancinoPacket ArancinoClass::publish(char* channel, int msg){
+	char str[20] = "";
+	itoa(msg, str, 10);
+
+	return __publish(channel, str);
+}
+
+ArancinoPacket ArancinoClass::publish(char* channel, uint32_t msg){
+	char str[20] = "";
+	itoa(msg, str, 10);
+
+	return __publish(channel, str);
+}
+
+ArancinoPacket ArancinoClass::publish(char* channel, long msg){
 	char str[20] = "";
 	itoa(msg, str, 10);
 

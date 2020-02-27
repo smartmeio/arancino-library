@@ -26,6 +26,7 @@ under the License
 #include <Stream.h>
 #include <stdlib.h>
 #include <cstdlib>
+#include <type_traits>
 
 //#define USEFREERTOS
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -105,10 +106,12 @@ class ArancinoClass {
 		// ArancinoPacket set(char* key, double value);
 		// ArancinoPacket set(char* key, uint32_t value);
 		// ArancinoPacket set(char* key, char* value);
+
 		ArancinoPacket set(char* key, int value, bool isPersistent = false);
 		ArancinoPacket set(char* key, double value, bool isPersistent = false);
-		ArancinoPacket set(char* key, uint32_t value, bool isPersistent = false);
-		ArancinoPacket set(char* key, char* value, bool isPersistent = false);
+		ArancinoPacket set(char* key, long value, bool isPersistent = false);
+		ArancinoPacket set(char* key, char* value, bool isPersistent = false); 
+		ArancinoPacket set(char* key, uint32_t value, bool isPersistent = false); 
 		
 		//GET
 		//ArancinoPacket getPacket(char* key);
@@ -169,7 +172,8 @@ class ArancinoClass {
 		ArancinoPacket publish(char* channel, char* msg);
 		ArancinoPacket publish(char* channel, double msg);
 		ArancinoPacket publish(char* channel, int msg);
-
+		ArancinoPacket publish(char* channel, uint32_t msg);
+		ArancinoPacket publish(char* channel, long msg);
 		
 		//FLUSH
 		ArancinoPacket flush(void);
@@ -199,6 +203,7 @@ class ArancinoClass {
 
 	private:
 		//void dropAll();
+
 		bool started;
 		char reservedKey[RESERVED_KEY_ARRAY_SIZE][RESERVED_KEY_MAX_LENGTH]; //max 10 char for key
 		int COMM_MODE = SYNCH;
