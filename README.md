@@ -94,6 +94,8 @@ ___
 ##### *ArancinoPacket set(char&ast; key, char&ast; value [, bool isPersistent] )*
 ##### *ArancinoPacket set(char&ast; key,  int value [, bool isPersistent] )*
 ##### *ArancinoPacket set(char&ast; key, float value [, bool isPersistent] )*
+##### *ArancinoPacket set(char&ast; key, long value, [, bool isPersistent] )*
+##### *ArancinoPacket set(char&ast; key, uint32_t value, [, bool isPersistent] )*
 
 Set *key* to hold the string *value*. If *key* already holds a *value*, it is overwritten, regardless of its type.
 
@@ -519,6 +521,8 @@ ___
 ##### *ArancinoPacket hset(char&ast; key, char&ast; field , char&ast; value )*
 ##### *ArancinoPacket hset(char&ast; key, char&ast; field , int value )*
 ##### *ArancinoPacket hset(char&ast; key, char&ast; field , float value )*
+##### *ArancinoPacket hset(char&ast; key, char&ast; field , long value )*
+##### *ArancinoPacket hset(char&ast; key, char&ast; field , uint32_t value )*
 
 Sets *field* in the hash stored at *key* with the specified *value*. If *key* does not exist, a new *key* holding a hash is created. If *field* already exists in the hash, it is overwritten.
 
@@ -1135,6 +1139,8 @@ ___
 ##### *ArancinoPacket publish(char&ast; channel, char&ast; message)*
 ##### *ArancinoPacket publish(char&ast; channel, int message)*
 ##### *ArancinoPacket publish(char&ast; channel, float message)*
+##### *ArancinoPacket publish(char&ast; channel, uint32_t message)*
+##### *ArancinoPacket publish(char&ast; channel, long message)*
 
 Posts a message to the given channel.
 
