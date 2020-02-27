@@ -1,11 +1,11 @@
 # Changelog
 
 #### v 1.1.0 - 2020.MM.DD
-* Fix: CI script to push even master branch to GitHub
-* Upd: `KEYS` Command sends to Arancino Module a default arg (`*`) when call `Arancino.keys()`
-* Add: Introduced new signatures with `long` type for function: `set`, `hset` and `publish`
-* Add: Introduced `Test` Job in CI to test every Arancino examples.
-* Upd: Improved API wrapping.
+* Fix: CI script to push even master branch to GitHub #52
+* Upd: `KEYS` Command sends to Arancino Module a default arg (`*`) when call `Arancino.keys()` #51
+* Add: Introduced new signatures with `long` type for function: `set`, `hset` and `publish` #50
+* Add: Introduced `Test` Job in CI to test every Arancino examples. #47
+* Upd: Improved API wrapping. #41
 
 #### v 1.0.1 - 2020.01.10
 * fix: `publish` API function now always returns an ArancinoPacket.
