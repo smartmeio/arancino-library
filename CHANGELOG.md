@@ -1,5 +1,8 @@
 # Changelog
 
+#### v 1.0.2 - 2020.02.27
+* fix: Fixed a regression which occurs whene using `FreeRTOS` with Arancino. #54
+
 #### v 1.0.1 - 2020.01.10
 * fix: `publish` API function now always returns an ArancinoPacket.
 * fix: memory issues: free is called after variable usage.
@@ -20,7 +23,6 @@
 * Fix: Rename checkReserverCommand function  #23
 * Fix: `print` e `println` does not work #21
 * add `setReservedCommunicationMode` API function - Communication Mode for Reserved Keys #17
-
 
 #### v 0.1.0 - 2019.04.04
 * add `print` and `println` API functions.
