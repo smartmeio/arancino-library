@@ -22,6 +22,22 @@ build_examples () {
   
   echo -e "\n"
   echo "######################################"
+  echo -e "# Building unit tests #"
+  echo -e "######################################\n"
+  sleep 1
+
+  for sketch_test in `find ${PREFIX}/test/Arancino_tests -name '*.ino'`
+  do
+    echo -e '\n\n' `basename $sketch_test`
+    sleep 1
+    arduino-cli compile -vvv --fqbn smartme.IO:samd:$1 $sketch_test
+
+    local rctest=$?
+    error_check $rctest `basename $sketch_test`
+  done
+  
+  echo -e "\n"
+  echo "######################################"
   echo -e "# Building FreeRTOS Library examples #"
   echo -e "######################################\n"
   sleep 1
