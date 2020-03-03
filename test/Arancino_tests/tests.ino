@@ -43,8 +43,8 @@ void setup() {
     Arancino.hvals("test");
     Arancino.hvals<ArancinoPacket>("test");
 
-    Arancino.hdel("test");
-    Arancino.hdel<ArancinoPacket>("test");
+    Arancino.hdel("test", "testf");
+    Arancino.hdel<ArancinoPacket>("test", "testf");
 
     Arancino.keys();
     Arancino.keys("a");
