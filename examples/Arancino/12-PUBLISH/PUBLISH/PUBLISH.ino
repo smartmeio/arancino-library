@@ -40,20 +40,27 @@ Return value - void reply
 
 void setup() {
 
-  Arancino.begin();
-  Serial.begin(115200);
+  //char*
+  char* key1 = "foo";
+  char* value1 = "hooray";
+  //publish the value 'hooray' into the 'foo' channel
+  Arancino.publish(key1, value1);
+
+  //int
+  char* key2 = "bar";
+  int value2 = 123;
+  //publish the value 123 into the 'bar' channel
+  Arancino.publish(key2, value2);
+
+  //double
+  char* key3 = "baz";
+  double value3 = 123.456;
+  //publish the value 123.456 into the 'baz' channel
+  Arancino.publish(key3, value3);
 
 }
 
 void loop() {
-  
-  int resp = Arancino.publish("0","hello from Arancino");
-  Serial.print("message send to ")
-  Serial.print(resp);
-  Serial.println(" client");
-  //message send to 0 client 
-  
-  delay(5000); //wait 5 seconds
-  
+  // do something
 }
 

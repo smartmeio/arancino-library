@@ -27,6 +27,7 @@ image: smartmeio/arancino-library-build
 
 stages:
   - start
+  - test
   - package
   - upload
   - cleanup
@@ -80,8 +81,26 @@ push:
     - branches
     - tags
 
-  except:
-    - master
+#   except:
+#     - master
+
+#################################
+#######       TEST        #######
+#################################
+
+#######    CLI Sketch Test Job    #######
+cli-test:
+  stage: test
+
+  # copying the Library source to the Arduino libraries folder
+  before_script:
+    - cp -r ${CI_PROJECT_DIR} ${HOME}/Arduino/libraries/Arancino
+    - chmod +x ./test/arduino-cli-test.sh
+
+  # we feed the test scripts the simple board to complete the FQBN entry
+  script:
+    - ./test/arduino-cli-test.sh arancino
+    - ./test/arduino-cli-test.sh arancino_mignon
 
 #################################
 #######      PACKAGE      #######
@@ -103,7 +122,7 @@ package_staging:
     - echo $DATE/$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8} > tmp/target_path.tmp
     - mv tmp/ ../tmp && cd ../
     #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
-    - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x"$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
+    - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*" "$CI_PROJECT_NAME/test/*"
     - mv tmp/ $CI_PROJECT_NAME/
     - mv $PKG_NAME.zip $CI_PROJECT_NAME/tmp/
 
