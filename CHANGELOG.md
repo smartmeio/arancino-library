@@ -1,6 +1,6 @@
 # Changelog
 
-#### v 1.1.0 - 2020.MM.DD
+#### v 1.1.0 - 2020.03.16
 * Fix: CI script to push even master branch to GitHub #52
 * Upd: `KEYS` Command sends to Arancino Module a default arg (`*`) when call `Arancino.keys()` #51
 * Add: Introduced new signatures with `long` type for function: `set`, `hset` and `publish` #50
