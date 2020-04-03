@@ -94,7 +94,7 @@ class ArancinoClass {
 		int publish(String channel, String msg);
 		//int publish(int channel, String msg);
 		int publish(String channel, int msg);
-		int publish(String channel, floaf msg);
+		int publish(String channel, float msg);
 		int publish(String channel, long msg);
 		int publish(String channel, uint32_t msg);
 		void flush(void);
