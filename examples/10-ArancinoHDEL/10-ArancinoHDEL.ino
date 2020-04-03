@@ -44,7 +44,7 @@ void setup() {
   resp = Arancino.hset("foo","baz","whoo");
   int value = Arancino.hdel("foo","bar");
   //1
-  value = Arancino.hget("foo","baz");
+  String str_value = Arancino.hget("foo","baz");
   //0
 
 }
