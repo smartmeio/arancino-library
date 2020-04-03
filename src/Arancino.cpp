@@ -209,6 +209,10 @@ void ArancinoClass::set( String key, double value ) {
 	set(key, String(value));
 }
 
+void ArancinoClass::set( String key, long value ) {
+	set(key, String(value));
+}
+
 void ArancinoClass::set( String key, uint32_t value ) {
 	set(key, String(value));
 }
@@ -361,6 +365,10 @@ int ArancinoClass::hset( String key, String field, uint32_t value ) {
 	hset(key, field, String(value));
 }
 
+int ArancinoClass::hset( String key, String field, long value ) {
+	hset(key, field, String(value));
+}
+
 int ArancinoClass::hdel( String key, String field ) {
 
 	if(isReservedKey(key))
@@ -415,8 +423,20 @@ int ArancinoClass::publish( String channel, String msg ) {
 
 }
 
-int ArancinoClass::publish( int channel, String msg ) {
-	publish(String(channel), msg);
+// int ArancinoClass::publish( int channel, String msg ) {
+// 	publish(String(channel), msg);
+// }
+
+int ArancinoClass::publish( String channel, float msg ) {
+	publish(channel, String(msg));
+}
+
+int ArancinoClass::publish( String channel, long msg ) {
+	publish(channel, String(msg));
+}
+
+int ArancinoClass::publish( String channel, uint32_t msg ) {
+	publish(channel, String(msg));
 }
 
 void ArancinoClass::flush() {
