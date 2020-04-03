@@ -77,7 +77,6 @@ class ArancinoClass {
 		void set(String key, double value);
 		void set( String key, uint32_t value);
 		void set( String key, long value);
-		void set( String key, bool value);
 		int del(String key);
 		//int del (String* key, int number);
 		int set(String key, String field, String value);
@@ -91,7 +90,6 @@ class ArancinoClass {
 		int hset(String key, String field, double value);
 		int hset(String key, String field, uint32_t value);
 		int hset(String key, String field, long value);
-		int hset(String key, String field, bool value);
 		int hdel(String key, String field);
 		int publish(String channel, String msg);
 		//int publish(int channel, String msg);
@@ -99,7 +97,6 @@ class ArancinoClass {
 		int publish(String channel, float msg);
 		int publish(String channel, long msg);
 		int publish(String channel, uint32_t msg);
-		int publish(String channel, bool msg);
 		void flush(void);
 
 		void print(String value);
