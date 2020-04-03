@@ -58,7 +58,7 @@ under the License
 #define LIBVERS_KEY				"___LIBVERS___"
 #define MODVERS_KEY				"___MODVERS___"
 #define POWER_KEY					"___POWER___"
-#define LIB_VERSION				"0.1.2"	//library version
+#define LIB_VERSION				"0.2.0"	//library version
 
 ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
@@ -95,6 +95,8 @@ void ArancinoClass::begin(int timeout) {
 		}
 		#endif
 		sendArancinoCommand(START_COMMAND);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(LIB_VERSION);
 		sendArancinoCommand(END_TX_CHAR);				//check if bridge python is running
 		start = stream.readStringUntil(END_TX_CHAR);
 	}while (start.toInt() != RSP_OK);
