@@ -199,7 +199,6 @@ upload:
     - PKG_NAME="$(cat tmp/pgk_name.tmp)"
     - REPO_NAME="$(cat tmp/repo_name.tmp)"
     - TARGET_PATH="$(cat tmp/target_path.tmp)"
-    - apk add curl
     # Upload to Artifactory
     - curl -u $REPO_USR:$REPO_PWD -T tmp/$PKG_NAME.zip "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${TARGET_PATH}/${PKG_NAME}.zip"
 
