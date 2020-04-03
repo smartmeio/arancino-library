@@ -15,10 +15,10 @@ void setup() {
     Arancino.set("test", (uint32_t)5, true);
 
     Arancino.get("test");
-    Arancino.get<ArancinoPacket>("test");
+    //Arancino.get<ArancinoPacket>("test");
 
     Arancino.del("test");
-    Arancino.del<ArancinoPacket>("test");
+    //Arancino.del<ArancinoPacket>("test");
 
     Arancino.hset("test", "testf", 5);
     Arancino.hset("test", "testf", 5);
@@ -32,24 +32,24 @@ void setup() {
     Arancino.hset("test", "testf", (uint32_t)5);
 
     Arancino.hget("test", "testf");
-    Arancino.hget<ArancinoPacket>("test", "testf");
+    //Arancino.hget<ArancinoPacket>("test", "testf");
 
     Arancino.hgetall("test");
-    Arancino.hgetall<ArancinoPacket>("test");
+    //Arancino.hgetall<ArancinoPacket>("test");
 
     Arancino.hkeys("test");
-    Arancino.hkeys<ArancinoPacket>("test");
+    //Arancino.hkeys<ArancinoPacket>("test");
 
     Arancino.hvals("test");
-    Arancino.hvals<ArancinoPacket>("test");
+    //Arancino.hvals<ArancinoPacket>("test");
 
     Arancino.hdel("test", "testf");
-    Arancino.hdel<ArancinoPacket>("test", "testf");
+    //Arancino.hdel<ArancinoPacket>("test", "testf");
 
     Arancino.keys();
     Arancino.keys("a");
-    Arancino.keys<ArancinoPacket>();
-    Arancino.keys<ArancinoPacket>("a");
+    //Arancino.keys<ArancinoPacket>();
+    //Arancino.keys<ArancinoPacket>("a");
 
     Arancino.publish("test", 5);
     Arancino.publish("test", 5.5);
