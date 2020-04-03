@@ -36,30 +36,30 @@ build_examples () {
     error_check $rctest `basename $sketch_test`
   done
   
-  echo -e "\n"
-  echo "######################################"
-  echo -e "# Building FreeRTOS Library examples #"
-  echo -e "######################################\n"
-  sleep 1
+#   echo -e "\n"
+#   echo "######################################"
+#   echo -e "# Building FreeRTOS Library examples #"
+#   echo -e "######################################\n"
+#   sleep 1
 
-  RTOS_INO=(
-    ${PREFIX}/examples/FreeRTOS/Arancino_FreeRTOS_1/Arancino_FreeRTOS_1.ino
-    ${PREFIX}/test/Accel_CO_FreeRTOS/Accel_CO_FreeRTOS.ino
-    ${PREFIX}/test/Arancino_heavy_test/Arancino_heavy_test.ino
-    )
+#   RTOS_INO=(
+#     ${PREFIX}/examples/FreeRTOS/Arancino_FreeRTOS_1/Arancino_FreeRTOS_1.ino
+#     ${PREFIX}/test/Accel_CO_FreeRTOS/Accel_CO_FreeRTOS.ino
+#     ${PREFIX}/test/Arancino_heavy_test/Arancino_heavy_test.ino
+#     )
 
-  for sketch_rtos in "${RTOS_INO[@]}"; do
-      echo -e '\n\n' `basename $sketch_rtos`
-      sleep 1
-      arduino-cli compile --fqbn smartme.IO:samd:$1 \
-        -vvv $sketch_rtos \
-        --build-properties build.memory_wrapping_flags='-Wl,--wrap=malloc -Wl,--wrap=free -Wl,--wrap=calloc -Wl,--wrap=realloc' \
-        --build-properties build.arancino_extra_flags=-DUSEFREERTOS
+#   for sketch_rtos in "${RTOS_INO[@]}"; do
+#       echo -e '\n\n' `basename $sketch_rtos`
+#       sleep 1
+#       arduino-cli compile --fqbn smartme.IO:samd:$1 \
+#         -vvv $sketch_rtos \
+#         --build-properties build.memory_wrapping_flags='-Wl,--wrap=malloc -Wl,--wrap=free -Wl,--wrap=calloc -Wl,--wrap=realloc' \
+#         --build-properties build.arancino_extra_flags=-DUSEFREERTOS
       
-      local rcrtos=$?
-      error_check $rcrtos `basename $sketch_rtos`
-  done
-}
+#       local rcrtos=$?
+#       error_check $rcrtos `basename $sketch_rtos`
+#   done
+# }
 
 error_check () {
   
