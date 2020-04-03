@@ -310,6 +310,10 @@ String* ArancinoClass::keys(String pattern){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(pattern);
 	}
+	else {
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand("*");
+	}
 	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
