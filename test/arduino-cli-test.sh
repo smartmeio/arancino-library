@@ -59,7 +59,8 @@ build_examples () {
 #       local rcrtos=$?
 #       error_check $rcrtos `basename $sketch_rtos`
 #   done
-# }
+
+}
 
 error_check () {
   
