@@ -10,7 +10,7 @@ build_examples () {
   echo -e "############################################\n"
   sleep 1
 
-  for sketch in `find ${PREFIX}/examples/Arancino -name '*.ino'`
+  for sketch in `find ${PREFIX}/examples/*-Arancino* -name '*.ino'`
   do
     echo -e '\n\n' `basename $sketch`
     sleep 1
