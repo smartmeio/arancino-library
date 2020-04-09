@@ -47,8 +47,8 @@ void setup() {
 
 void loop() {
   
-  int resp = Arancino.publish(0,"hello from Arancino");
-  Serial.print("message send to ")
+  int resp = Arancino.publish("0","hello from Arancino");
+  Serial.print("message send to ");
   Serial.print(resp);
   Serial.println(" client");
   //message send to 0 client 

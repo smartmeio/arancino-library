@@ -22,11 +22,12 @@
 #                   REPO_BASE_URL:  url di base del repository: https://download.smartme.io
 #
 
-image: alpine:latest
+image: smartmeio/arancino-library-build
 
 
 stages:
   - start
+  - test
   - package
   - upload
   - cleanup
@@ -65,7 +66,7 @@ push:
     GIT_STRATEGY: clone
 
   script:
-    - apk add git
+    # - apk add git
     - git remote add github https://$GITHUB_BOT_USERNAME:$GITHUB_ACCESS_TOKEN@github.com/$GITHUB_DEST_REPO
     #- git remote show github
     #- git remote show origin
@@ -80,8 +81,30 @@ push:
     - branches
     - tags
 
-  except:
-    - master
+  #except:
+  #  - master
+
+
+
+#################################
+#######       TEST        #######
+#################################
+
+#######    CLI Sketch Test Job    #######
+cli-test:
+  stage: test
+
+  # copying the Library source to the Arduino libraries folder
+  before_script:
+    - cp -r ${CI_PROJECT_DIR} ${HOME}/Arduino/libraries/Arancino
+    - chmod +x ./test/arduino-cli-test.sh
+
+  # we feed the test scripts the simple board to complete the FQBN entry
+  script:
+    - ./test/arduino-cli-test.sh arancino
+    - ./test/arduino-cli-test.sh arancino_mignon
+
+
 
 #################################
 #######      PACKAGE      #######
@@ -94,7 +117,7 @@ package_staging:
   stage: package
 
   script:
-    - apk add zip
+    # - apk add zip
     - DATE="$(cat tmp/date.tmp)"
     - TIME="$(cat tmp/time.tmp)"
     - PKG_NAME=$CI_PROJECT_NAME-$DATE-$TIME-$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8}
@@ -103,7 +126,8 @@ package_staging:
     - echo $DATE/$CI_COMMIT_REF_NAME-${CI_COMMIT_SHA:0:8} > tmp/target_path.tmp
     - mv tmp/ ../tmp && cd ../
     #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
-    - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x"$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
+    - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*" "$CI_PROJECT_NAME/test/*"
+
     - mv tmp/ $CI_PROJECT_NAME/
     - mv $PKG_NAME.zip $CI_PROJECT_NAME/tmp/
 
@@ -130,7 +154,7 @@ package_release:
   stage: package
 
   script:
-    - apk add zip
+    # - apk add zip
     #- DATE="$(cat tmp/date.tmp)"
     - PKG_NAME=$CI_PROJECT_NAME-$CI_COMMIT_REF_NAME
     - echo $PKG_NAME > tmp/pgk_name.tmp
@@ -138,7 +162,7 @@ package_release:
     - echo $CI_COMMIT_REF_NAME > tmp/target_path.tmp
     - mv tmp/ ../tmp && cd ../
     #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
-    - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
+    - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*" "$CI_PROJECT_NAME/test/*"
     - mv tmp/ $CI_PROJECT_NAME/
     - mv $PKG_NAME.zip $CI_PROJECT_NAME/tmp/
 
@@ -175,7 +199,6 @@ upload:
     - PKG_NAME="$(cat tmp/pgk_name.tmp)"
     - REPO_NAME="$(cat tmp/repo_name.tmp)"
     - TARGET_PATH="$(cat tmp/target_path.tmp)"
-    - apk add curl
     # Upload to Artifactory
     - curl -u $REPO_USR:$REPO_PWD -T tmp/$PKG_NAME.zip "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${TARGET_PATH}/${PKG_NAME}.zip"
 

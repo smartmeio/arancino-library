@@ -58,7 +58,7 @@ under the License
 #define LIBVERS_KEY				"___LIBVERS___"
 #define MODVERS_KEY				"___MODVERS___"
 #define POWER_KEY					"___POWER___"
-#define LIB_VERSION				"0.1.2"	//library version
+#define LIB_VERSION				"0.2.0"	//library version
 
 ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
@@ -95,6 +95,8 @@ void ArancinoClass::begin(int timeout) {
 		}
 		#endif
 		sendArancinoCommand(START_COMMAND);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(LIB_VERSION);
 		sendArancinoCommand(END_TX_CHAR);				//check if bridge python is running
 		start = stream.readStringUntil(END_TX_CHAR);
 	}while (start.toInt() != RSP_OK);
@@ -207,6 +209,10 @@ void ArancinoClass::set( String key, double value ) {
 	set(key, String(value));
 }
 
+void ArancinoClass::set( String key, long value ) {
+	set(key, String(value));
+}
+
 void ArancinoClass::set( String key, uint32_t value ) {
 	set(key, String(value));
 }
@@ -308,6 +314,10 @@ String* ArancinoClass::keys(String pattern){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(pattern);
 	}
+	else {
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand("*");
+	}
 	sendArancinoCommand(END_TX_CHAR);
 	String message = stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
@@ -352,6 +362,10 @@ int ArancinoClass::hset( String key, String field, double value ) {
 }
 
 int ArancinoClass::hset( String key, String field, uint32_t value ) {
+	hset(key, field, String(value));
+}
+
+int ArancinoClass::hset( String key, String field, long value ) {
 	hset(key, field, String(value));
 }
 
@@ -409,9 +423,26 @@ int ArancinoClass::publish( String channel, String msg ) {
 
 }
 
-int ArancinoClass::publish( int channel, String msg ) {
-	publish(String(channel), msg);
+// int ArancinoClass::publish( int channel, String msg ) {
+// 	publish(String(channel), msg);
+// }
+
+int ArancinoClass::publish( String channel, int msg ) {
+	publish(channel, String(msg));
 }
+
+int ArancinoClass::publish( String channel, float msg ) {
+	publish(channel, String(msg));
+}
+
+int ArancinoClass::publish( String channel, long msg ) {
+	publish(channel, String(msg));
+}
+
+int ArancinoClass::publish( String channel, uint32_t msg ) {
+	publish(channel, String(msg));
+}
+
 
 void ArancinoClass::flush() {
 
