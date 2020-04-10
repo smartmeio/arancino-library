@@ -1175,6 +1175,15 @@ int ArancinoClass::getArraySize(String* _array) {
 /******** INTERNAL UTILS :: FREE *********/
 
 void ArancinoClass::_sendArancinoCommand(char* command) {
+	//check timeout on communication with module
+	if (COMM_TIMEOUT){
+		//flush data on serial communication to avoid to lose
+		//syncronization between arancino library and python module
+		while(SERIAL_PORT.available() > 0){
+				SERIAL_PORT.read();
+		}
+		COMM_TIMEOUT=false;
+	}
 	//command must terminate with '\0'!
 	SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
 	#if defined(__SAMD21G18A__)
@@ -1203,7 +1212,12 @@ void ArancinoClass::_sendArancinoCommand(char command) {
  */
 char* ArancinoClass::_receiveArancinoResponse(char terminator) {
 	char* response = NULL; //must be freed	
-	String str = SERIAL_PORT.readStringUntil(terminator);
+	String str = "";
+	str = SERIAL_PORT.readStringUntil(terminator);
+	if( str==""){
+		//enable timeout check
+		COMM_TIMEOUT = true;
+	}
 	int responseLength = strlen(str.begin());
 	if (responseLength > 0)
 	{
