@@ -1217,17 +1217,19 @@ char* ArancinoClass::_receiveArancinoResponse(char terminator) {
 	char* response = NULL; //must be freed	
 	String str = "";
 	str = SERIAL_PORT.readStringUntil(terminator);
-	if( str==""){
+	if( str == ""){
 		//enable timeout check
 		comm_timeout = true;
-	}
-	int responseLength = strlen(str.begin());
-	if (responseLength > 0)
-	{
-		response = (char *)calloc(responseLength + 1 + 1, sizeof(char));
-		strcpy(response, str.begin());
-		response[responseLength] = END_TX_CHAR;
-		response[responseLength + 1] = '\0';
+	} 
+	else {
+		int responseLength = strlen(str.begin());
+		if (responseLength > 0)
+		{
+			response = (char *)calloc(responseLength + 1 + 1, sizeof(char));
+			strcpy(response, str.begin());
+			response[responseLength] = END_TX_CHAR;
+			response[responseLength + 1] = '\0';
+		}
 	}
 	return response;
 }
