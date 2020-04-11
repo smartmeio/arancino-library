@@ -1175,14 +1175,17 @@ int ArancinoClass::getArraySize(String* _array) {
 /******** INTERNAL UTILS :: FREE *********/
 
 void ArancinoClass::_sendArancinoCommand(char* command) {
-	//check timeout on communication with module
-	if (COMM_TIMEOUT){
-		//flush data on serial communication to avoid to lose
-		//syncronization between arancino library and python module
+	//check communication timeout with arancino module
+	if (comm_timeout){
+		/*  
+			Flush data on serial communication to avoid of lost
+			synchronization between arancino library and arancino module.
+			By this way I prevent to receive reposonse of a previous sent command.
+		*/
 		while(SERIAL_PORT.available() > 0){
 				SERIAL_PORT.read();
 		}
-		COMM_TIMEOUT=false;
+		comm_timeout=false;
 	}
 	//command must terminate with '\0'!
 	SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
@@ -1216,7 +1219,7 @@ char* ArancinoClass::_receiveArancinoResponse(char terminator) {
 	str = SERIAL_PORT.readStringUntil(terminator);
 	if( str==""){
 		//enable timeout check
-		COMM_TIMEOUT = true;
+		comm_timeout = true;
 	}
 	int responseLength = strlen(str.begin());
 	if (responseLength > 0)

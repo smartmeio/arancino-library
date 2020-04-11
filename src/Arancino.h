@@ -206,7 +206,7 @@ class ArancinoClass {
 		//void dropAll();
 
 		bool started;
-		bool COMM_TIMEOUT = false;
+		bool comm_timeout = false;
 		char reservedKey[RESERVED_KEY_ARRAY_SIZE][RESERVED_KEY_MAX_LENGTH]; //max 10 char for key
 		int COMM_MODE = SYNCH;
 		const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
