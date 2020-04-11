@@ -1,5 +1,8 @@
 # Changelog
 
+#### v 0.2.1 - 2019.MM.DD
+* Fix: Fixed a bug of timeout in serial comm, it introduces synch error #57
+
 #### v 0.2.0 - 2019.04.09
 * Upd: start command send version number, #36
 * Upd: keys send a default paramenter #51

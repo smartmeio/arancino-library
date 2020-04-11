@@ -114,6 +114,7 @@ class ArancinoClass {
 	private:
 		//void dropAll();
 		bool started;
+		bool comm_timeout = false;
 		String parse(String message);
 		void parseArray(String message);
 		void sendArancinoCommand(String command);
@@ -126,6 +127,8 @@ class ArancinoClass {
 		void sendViaCOMM_MODE(String key, String value);
 		void _set(String key, String value);
 		int _publish(String channel, String msg);
+		void flush_on_timeout();
+		String receiveArancinoResponse(char terminator);
 };
 
 // This subclass uses a serial port Stream

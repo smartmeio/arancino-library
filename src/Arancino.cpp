@@ -21,44 +21,44 @@ under the License
 #include "Arancino.h"
 
 #define START_COMMAND 		"START"
-#define SET_COMMAND 			"SET"
-#define GET_COMMAND 			"GET"
-#define DEL_COMMAND 			"DEL"
-#define KEYS_COMMAND			"KEYS"
-#define HGET_COMMAND			"HGET"
+#define SET_COMMAND 		"SET"
+#define GET_COMMAND 		"GET"
+#define DEL_COMMAND 		"DEL"
+#define KEYS_COMMAND		"KEYS"
+#define HGET_COMMAND		"HGET"
 #define HGETALL_COMMAND		"HGETALL"
-#define HKEYS_COMMAND			"HKEYS"
-#define HDEL_COMMAND			"HDEL"
-#define HSET_COMMAND			"HSET"
-#define HVALS_COMMAND			"HVALS"
+#define HKEYS_COMMAND		"HKEYS"
+#define HDEL_COMMAND		"HDEL"
+#define HSET_COMMAND		"HSET"
+#define HVALS_COMMAND		"HVALS"
 #define PUBLISH_COMMAND		"PUB"
-#define FLUSH_COMMAND			"FLUSH"
+#define FLUSH_COMMAND		"FLUSH"
 
-#define SENT_STRING				"Sent Command: "
-#define RCV_STRING				"Received Response: "
+#define SENT_STRING			"Sent Command: "
+#define RCV_STRING			"Received Response: "
 
-#define END_TX_CHAR				(char)4 //'@' //
+#define END_TX_CHAR			(char)4 //'@' //
 #define DATA_SPLIT_CHAR		(char)30 //'#' //
 
-#define RSP_OK						100
-#define RSP_HSET_NEW			101
-#define RSP_HSET_UPD			102
-#define ERR								200		//Generic Error
-#define ERR_NULL					201		//Null value
-#define ERR_SET						202		//Error during SET
+#define RSP_OK				100
+#define RSP_HSET_NEW		101
+#define RSP_HSET_UPD		102
+#define ERR					200		//Generic Error
+#define ERR_NULL			201		//Null value
+#define ERR_SET				202		//Error during SET
 #define ERR_CMD_NOT_FND		203		//Command Not Found
 #define ERR_CMD_NOT_RCV		204		//Command Not Received
 #define ERR_CMD_PRM_NUM		205		//Invalid parameter number
-#define ERR_REDIS					206		//Generic Redis Error
+#define ERR_REDIS			206		//Generic Redis Error
 
-#define DBG_PIN						26		//pin used to Debug Message
-//#define PWR_PIN					??		//pin used for Power Management
+#define DBG_PIN				26		//pin used to Debug Message
+//#define PWR_PIN			??		//pin used for Power Management
 
-#define MONITOR_KEY				"___MONITOR___"
-#define LIBVERS_KEY				"___LIBVERS___"
-#define MODVERS_KEY				"___MODVERS___"
-#define POWER_KEY					"___POWER___"
-#define LIB_VERSION				"0.2.0"	//library version
+#define MONITOR_KEY			"___MONITOR___"
+#define LIBVERS_KEY			"___LIBVERS___"
+#define MODVERS_KEY			"___MODVERS___"
+#define POWER_KEY			"___POWER___"
+#define LIB_VERSION			"0.2.1"	//library version
 
 ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
@@ -87,7 +87,7 @@ void ArancinoClass::begin(int timeout) {
   	Serial.begin(115200);
   }
   #endif
-  // Start communication with serial module on CPU
+  // Start communication with arancino module
 	do{
 		#if defined(__SAMD21G18A__)
 		if(!digitalRead(DBG_PIN)){
@@ -97,8 +97,8 @@ void ArancinoClass::begin(int timeout) {
 		sendArancinoCommand(START_COMMAND);
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(LIB_VERSION);
-		sendArancinoCommand(END_TX_CHAR);				//check if bridge python is running
-		start = stream.readStringUntil(END_TX_CHAR);
+		sendArancinoCommand(END_TX_CHAR);				//check if arancino module is running
+		start = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	}while (start.toInt() != RSP_OK);
 
 	// sendArancinoCommand(SET_COMMAND);					// send library version
@@ -135,7 +135,7 @@ String ArancinoClass::get( String key ) {
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	return parse(message);
 }
 
@@ -155,7 +155,7 @@ int ArancinoClass::del( String key ) {
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
 
@@ -187,7 +187,7 @@ void ArancinoClass::_set( String key, String value ) {
 	sendArancinoCommand(DATA_SPLIT_CHAR);
 	sendArancinoCommand(value);
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	parse(message);
 }
 
@@ -237,7 +237,7 @@ String ArancinoClass::hget( String key, String field ) {
 		sendArancinoCommand(field);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	return parse(message);
 }
 
@@ -257,7 +257,7 @@ String* ArancinoClass::hgetall( String key) {
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
 }
@@ -278,7 +278,7 @@ String* ArancinoClass::hkeys( String key) {
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
 }
@@ -298,7 +298,7 @@ String* ArancinoClass::hvals( String key) {
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
 }
@@ -319,7 +319,7 @@ String* ArancinoClass::keys(String pattern){
 		sendArancinoCommand("*");
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	parseArray(parse(message));
 	return arrayKey;
 
@@ -349,7 +349,7 @@ int ArancinoClass::hset( String key, String field , String value) {
 		sendArancinoCommand(value);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
 
@@ -389,7 +389,7 @@ int ArancinoClass::hdel( String key, String field ) {
 		sendArancinoCommand(field);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
 
@@ -409,7 +409,7 @@ int ArancinoClass::_publish( String channel, String msg ) {
 		sendArancinoCommand(msg);
 	}
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	return parse(message).toInt();
 }
 
@@ -461,7 +461,7 @@ void ArancinoClass::flush() {
 		sendArancinoCommand(value);
 	}*/
 	sendArancinoCommand(END_TX_CHAR);
-	String message = stream.readStringUntil(END_TX_CHAR);
+	String message = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
 	parse(message);
 
 }
@@ -582,7 +582,32 @@ String ArancinoClass::parse(String message){
 
 }
 
+String ArancinoClass::receiveArancinoResponse(char terminator){
+	String str = "";
+	str = stream.readStringUntil(terminator);
+	if( str == ""){
+		//enable timeout check
+		comm_timeout = true;
+	}
+}
+
+void ArancinoClass::flush_on_timeout(){
+	//check communication timeout with arancino module
+	if (comm_timeout){
+		/*  
+			Flush data on serial communication to avoid of lost
+			synchronization between arancino library and arancino module.
+			By this way I prevent to receive reposonse of a previous sent command.
+		*/
+		while(stream.available() > 0){
+			stream.read();
+		}
+		comm_timeout=false;
+	}
+}
+
 void ArancinoClass::sendArancinoCommand(String command){
+	flush_on_timeout();
 	stream.print(command);
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
@@ -592,6 +617,7 @@ void ArancinoClass::sendArancinoCommand(String command){
 }
 
 void ArancinoClass::sendArancinoCommand(char command){
+	flush_on_timeout();
 	stream.print(command);
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
