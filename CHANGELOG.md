@@ -1,6 +1,6 @@
 # Changelog
 
-#### v 0.2.1 - 2019.MM.DD
+#### v 0.2.1 - 2019.04.14
 * Fix: Fixed a bug of timeout in serial comm, it introduces synch error #57
 * Fix: Introduced a delay in `begin` to prevent sync error with Arancino Module vers `2.0.0`.
 
