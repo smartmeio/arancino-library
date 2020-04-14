@@ -589,6 +589,7 @@ String ArancinoClass::receiveArancinoResponse(char terminator){
 		//enable timeout check
 		comm_timeout = true;
 	}
+	return str;
 }
 
 void ArancinoClass::flush_on_timeout(){
