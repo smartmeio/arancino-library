@@ -99,6 +99,8 @@ void ArancinoClass::begin(int timeout) {
 		sendArancinoCommand(LIB_VERSION);
 		sendArancinoCommand(END_TX_CHAR);				//check if arancino module is running
 		start = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
+        //try to start comunication every 2,5 seconds.
+        delay(2500);
 	}while (start.toInt() != RSP_OK);
 
 	// sendArancinoCommand(SET_COMMAND);					// send library version
