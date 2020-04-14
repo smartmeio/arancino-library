@@ -2,6 +2,7 @@
 
 #### v 0.2.1 - 2019.MM.DD
 * Fix: Fixed a bug of timeout in serial comm, it introduces synch error #57
+* Fix: Introduced a delay in `begin` to prevent sync error with Arancino Module vers `2.0.0`.
 
 #### v 0.2.0 - 2019.04.09
 * Upd: start command send version number, #36
