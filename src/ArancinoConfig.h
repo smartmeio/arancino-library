@@ -76,6 +76,7 @@ under the License
 #define LIB_VERSION				"1.1.1"	//library version 
 
 //RESPONSE CODE
+#define INVALID_VALUE_ERROR     -4
 #define RESERVED_KEY_ERROR		-3
 #define COMMUNICATION_ERROR		-2
 #define GENERIC_ERROR			-1
