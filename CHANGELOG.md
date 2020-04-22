@@ -1,7 +1,8 @@
 # Changelog
 
-#### v 1.1.10 - 2020.MM.DD
+#### v 1.1.1 - 2020.MM.DD
 * Fix: Fixed a bug of timeout in serial comm, it introduces synch error #57
+* Fix: Introduced checks to avoid NULL keys and values #58
 
 #### v 1.1.0 - 2020.03.16
 * Fix: CI script to push even master branch to GitHub #52
