@@ -1318,7 +1318,7 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | [`hvals`](#hvals)  | HVALS         |
 | [`hdel`](#hdel)    | HDEL          |
 | [`flush`](#flush)  | FLUSH         |
-| [`pubblish`](#pubblish)    | PUB          |
+| [`publish`](#publish)    | PUB          |
 
 ### Commands separator chars
 **Important**: Do not use these character codes to compose string values to pass to the API
