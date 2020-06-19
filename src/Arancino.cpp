@@ -54,7 +54,7 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 
 void ArancinoClass::begin(bool useid, int timeout) {
 	SERIAL_PORT.begin(BAUDRATE);
-	SERIAL_PORT.setTimeout(TIMEOUT);
+	SERIAL_PORT.setTimeout(timeout);
 	arancino_id_prefix = useid;
 
 	int commandLength = strlen(START_COMMAND);
