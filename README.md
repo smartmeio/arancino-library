@@ -72,6 +72,7 @@ typedef struct {
 Start the communication with the Arancino Module. When communication starts, the begin sends the Arancino Library version for compatibility to be evaluated.
 
 ##### Parameters
+* **`portid`**: if enabled each command sent will have as command prefix the serial port id. It is a boolean.
 * **`timeout`**: represents the time that each command sent (via API call) will wait for a response. Otherwise the delayed command will be skipped. When the `begin` function is called w/o `timeout` it is assumed `100ms` as default value of timeout.
 
 ##### Example

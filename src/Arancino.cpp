@@ -52,9 +52,10 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 
 /******** API BASIC :: BEGIN *********/
 
-void ArancinoClass::begin(int timeout) {
+void ArancinoClass::begin(bool useid, int timeout) {
 	SERIAL_PORT.begin(BAUDRATE);
 	SERIAL_PORT.setTimeout(TIMEOUT);
+	arancino_id_prefix = useid;
 
 	int commandLength = strlen(START_COMMAND);
 	int argLength = strlen(LIB_VERSION);
@@ -97,8 +98,14 @@ void ArancinoClass::begin(int timeout) {
 		
 		if (message != NULL)
 		{
-			ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
+			ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}};
 			packet = temp;
+			//store arancino serial port id
+			if(useid){
+				idSize = strlen(packet.response.string);
+				id = (char *)calloc(idSize, sizeof(char));
+				memcpy(id,packet.response.string,idSize-1);
+			}
 			std::free(message);
 		}
 		else
@@ -188,7 +195,13 @@ ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent) 
 			commandLength = strlen(SET_COMMAND);
 		}
 
-		int keyLength = strlen(key);
+		int keyLength ;
+		if(arancino_id_prefix){
+			keyLength = strlen(key)+idSize+1;
+		}
+		else{
+			keyLength = strlen(key);
+		}
 		int valueLength = strlen(value);
 		int strLength = commandLength + 1 + keyLength + 1 + valueLength + 1 + 1;
 
@@ -207,6 +220,10 @@ ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent) 
 		}
 
 		strcat(str, dataSplitStr);
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
 		strcat(str, key);
 		strcat(str, dataSplitStr);
 		strcat(str, value);
@@ -259,7 +276,13 @@ template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
 	if(key != NULL && strcmp(key, "") != 0 ){
 
 		int commandLength = strlen(GET_COMMAND);
-		int keyLength = strlen(key);
+		int keyLength ;
+		if(arancino_id_prefix){
+			keyLength = strlen(key)+idSize+1;
+		}
+		else{
+			keyLength = strlen(key);
+		}
 		int strLength = commandLength + 1 + keyLength + 1 + 1;
 
 		char* str = (char *)calloc(strLength, sizeof(char));
@@ -271,6 +294,10 @@ template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
 
 		strcpy(str, GET_COMMAND);
 		strcat(str, dataSplitStr);
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
 		strcat(str, key);
 		strcat(str, endTXStr);
 
@@ -334,7 +361,13 @@ template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
 	ArancinoPacket packet;
 	if(key != NULL && strcmp(key, "") != 0 ){
 		int commandLength = strlen(DEL_COMMAND);
-		int keyLength = strlen(key);
+		int keyLength ;
+		if(arancino_id_prefix){
+			keyLength = strlen(key)+idSize+1;
+		}
+		else{
+			keyLength = strlen(key);
+		}
 		int strLength = commandLength + 1 + keyLength + 1 + 1;
 
 		char* str = (char *)calloc(strLength, sizeof(char));
@@ -347,6 +380,10 @@ template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
 
 		strcpy(str, DEL_COMMAND);
 		strcat(str, dataSplitStr);
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
 		strcat(str, key);
 		strcat(str, endTXStr);
 
@@ -433,7 +470,13 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 	ArancinoPacket packet;
 	if(key != NULL && field != NULL && value != NULL && strcmp(key, "") != 0 && strcmp(field, "") != 0){
 		int commandLength = strlen(HSET_COMMAND);
-		int keyLength = strlen(key);
+		int keyLength;
+		if(arancino_id_prefix){
+			keyLength = strlen(key)+idSize+1;
+		}
+		else{
+			keyLength = strlen(key);
+		}
 		int fieldLength = strlen(field);
 		int valueLength = strlen(value);
 		int strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + valueLength + 1 + 1;
@@ -446,6 +489,10 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 		#endif
 		strcpy(str, HSET_COMMAND);
 		strcat(str, dataSplitStr);
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
 		strcat(str, key);
 		strcat(str, dataSplitStr);
 		strcat(str, field);
@@ -501,7 +548,13 @@ template<> ArancinoPacket ArancinoClass::hget<ArancinoPacket> (char* key, char* 
 	ArancinoPacket packet;
 	if(key != NULL && field != NULL && strcmp(key, "") != 0 && strcmp(field, "") != 0 ){
 		int commandLength = strlen(HGET_COMMAND);
-		int keyLength = strlen(key);
+		int keyLength ;
+		if(arancino_id_prefix){
+			keyLength = strlen(key)+idSize+1;
+		}
+		else{
+			keyLength = strlen(key);
+		}
 		int fieldLength = strlen(field);
 		int strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + 1;
 
@@ -514,6 +567,10 @@ template<> ArancinoPacket ArancinoClass::hget<ArancinoPacket> (char* key, char* 
 		#endif
 		strcpy(str, HGET_COMMAND);
 		strcat(str, dataSplitStr);
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
 		strcat(str, key);
 		strcat(str, dataSplitStr);
 		strcat(str, field);
@@ -581,7 +638,13 @@ template<> ArancinoPacket ArancinoClass::hgetall<ArancinoPacket> (char* key){
 	ArancinoPacket packet;
 	if(key != NULL && strcmp(key, "") != 0 ){
 		int commandLength = strlen(HGETALL_COMMAND);
-		int keyLength = strlen(key);
+		int keyLength ;
+		if(arancino_id_prefix){
+			keyLength = strlen(key)+idSize+1;
+		}
+		else{
+			keyLength = strlen(key);
+		}
 		int strLength = commandLength + 1 + keyLength + 1 + 1;
 
 		char* str = (char *)calloc(strLength, sizeof(char));
@@ -594,6 +657,10 @@ template<> ArancinoPacket ArancinoClass::hgetall<ArancinoPacket> (char* key){
 
 		strcpy(str, HGETALL_COMMAND);
 		strcat(str, dataSplitStr);
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
 		strcat(str, key);
 		strcat(str, endTXStr);
 
@@ -658,7 +725,13 @@ template<> ArancinoPacket ArancinoClass::hkeys<ArancinoPacket> (char* key){
 	ArancinoPacket packet;
 	if(key != NULL && strcmp(key, "") != 0 ){
 		int commandLength = strlen(HKEYS_COMMAND);
-		int keyLength = strlen(key);
+		int keyLength ;
+		if(arancino_id_prefix){
+			keyLength = strlen(key)+idSize+1;
+		}
+		else{
+			keyLength = strlen(key);
+		}
 		int strLength = commandLength + 1 + keyLength + 1 + 1;
 
 		char* str = (char *)calloc(strLength, sizeof(char));
@@ -671,6 +744,10 @@ template<> ArancinoPacket ArancinoClass::hkeys<ArancinoPacket> (char* key){
 
 		strcpy(str, HKEYS_COMMAND);
 		strcat(str, dataSplitStr);
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
 		strcat(str, key);
 		strcat(str, endTXStr);
 
@@ -735,7 +812,13 @@ template<> ArancinoPacket ArancinoClass::hvals<ArancinoPacket> (char* key){
 	ArancinoPacket packet;
 	if(key != NULL && strcmp(key, "") != 0 ){
 		int commandLength = strlen(HVALS_COMMAND);
-		int keyLength = strlen(key);
+		int keyLength ;
+		if(arancino_id_prefix){
+			keyLength = strlen(key)+idSize+1;
+		}
+		else{
+			keyLength = strlen(key);
+		}
 		int strLength = commandLength + 1 + keyLength + 1 + 1;
 
 		char* str = (char *)calloc(strLength, sizeof(char));
@@ -748,6 +831,10 @@ template<> ArancinoPacket ArancinoClass::hvals<ArancinoPacket> (char* key){
 
 		strcpy(str, HVALS_COMMAND);
 		strcat(str, dataSplitStr);
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
 		strcat(str, key);
 		strcat(str, endTXStr);
 
@@ -812,7 +899,13 @@ template<> ArancinoPacket ArancinoClass::hdel<ArancinoPacket> (char* key, char* 
 	ArancinoPacket packet;
 	if(key != NULL && field != NULL && strcmp(key,"") && strcmp(field, "") != 0 ){
 		int commandLength = strlen(HDEL_COMMAND);
-		int keyLength = strlen(key);
+		int keyLength ;
+		if(arancino_id_prefix){
+			keyLength = strlen(key)+idSize+1;
+		}
+		else{
+			keyLength = strlen(key);
+		}
 		int fieldLength = strlen(field);
 		int strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + 1;
 
@@ -826,6 +919,10 @@ template<> ArancinoPacket ArancinoClass::hdel<ArancinoPacket> (char* key, char* 
 
 		strcpy(str, HDEL_COMMAND);
 		strcat(str, dataSplitStr);
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
 		strcat(str, key);
 		strcat(str, dataSplitStr);
 		strcat(str, field);
@@ -962,7 +1059,13 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 	ArancinoPacket packet;
 	if(channel != NULL && msg != NULL && strcmp(channel,"") != 0 ){
 		int commandLength = strlen(PUBLISH_COMMAND);
-		int channelLength = strlen(channel);
+		int channelLength ;
+		if(arancino_id_prefix){
+			channelLength = strlen(channel)+idSize+1;
+		}
+		else{
+			channelLength = strlen(channel);
+		}
 		int msgLength = strlen(msg);
 		int strLength = commandLength + 1 + channelLength + 1 + msgLength + 1 + 1;
 
@@ -976,6 +1079,10 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 
 		strcpy(str, PUBLISH_COMMAND);
 		strcat(str, dataSplitStr);
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
 		strcat(str, channel);
 		strcat(str, dataSplitStr);
 		strcat(str, msg);

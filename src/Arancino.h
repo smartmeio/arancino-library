@@ -89,6 +89,10 @@ typedef struct {
 class ArancinoClass {
 	public:
 		/***** API ADVANCED *****/
+
+		//Serial port id
+		char *id;
+		int idSize;	
 		
 		//START SCHEDULER
 		void startScheduler();
@@ -99,7 +103,7 @@ class ArancinoClass {
 		
 		/***** API BASIC *****/
 		//BEGIN
-		void begin(int timeout = TIMEOUT);
+		void begin(bool useid = false, int timeout = TIMEOUT);
 	
 		//SET	
 		// ArancinoPacket set(char* key, int value);
@@ -207,6 +211,7 @@ class ArancinoClass {
 
 		bool started;
 		bool comm_timeout = false;
+		bool arancino_id_prefix;
 		char reservedKey[RESERVED_KEY_ARRAY_SIZE][RESERVED_KEY_MAX_LENGTH]; //max 10 char for key
 		int COMM_MODE = SYNCH;
 		const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
