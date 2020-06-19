@@ -40,6 +40,7 @@ Return value - void reply
 
 void setup() {
 
+  Arancino.begin();
   //char*
   char* key1 = "foo";
   char* value1 = "hooray";
