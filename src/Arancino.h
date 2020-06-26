@@ -117,14 +117,14 @@ class IArancino {
 		//virtual ArancinoPacket getPacket(char* key) = 0;
 		//virtual char* get(char* key) = 0;
 		//GET W/ TEMPLATE
-		virtual template<class T = char*> T get(char* key) = 0;
+		template<class T = char*> virtual T get(char* key) = 0;
 
 
 		//DEL
 		// ArancinoPacket delPacket(char* key);
 		// int del(char* key);
 		//DEL W/ TEMPLATE
-		virtual template<class T = int> T del(char* key) = 0;
+		template<class T = int> virtual T del(char* key) = 0;
 
 		//HSET
 		virtual ArancinoPacket hset(char* key, char* field, char* value) = 0;
@@ -137,37 +137,37 @@ class IArancino {
 		// virtual ArancinoPacket hgetPacket(char* key, char* field) = 0;
 		// virtual char* hget(char* key, char* field) = 0;
 		//HGET W TEMPALTE
-		virtual template<class T = char*> T hget(char* key, char* field) = 0;
+		template<class T = char*> virtual T hget(char* key, char* field) = 0;
 
 		//HGETALL
 		//virtual ArancinoPacket hgetallPacket(char* key) = 0;
 		//virtual char** hgetall(char* key) = 0;
 		//HGETALL W TEMPALTE
-		virtual template<class T = char**> T hgetall(char* key) = 0;
+		template<class T = char**> virtual T hgetall(char* key) = 0;
 
 		//HKEYS
 		// virtual ArancinoPacket hkeysPacket(char* key) = 0;
 		// virtual char** hkeys(char* key) = 0;
 		//HKEYS W TEMPALTE
-		virtual template<class T = char**> T hkeys(char* key) = 0;
+		template<class T = char**> virtual T hkeys(char* key) = 0;
 
 		//HVALS
 		// virtual ArancinoPacket hvalsPacket(char* key) = 0;
 		// virtual char** hvals(char* key) = 0;
 		//HVALS W TEMPALTE
-		virtual template<class T = char**> T hvals(char* key) = 0;
+		template<class T = char**> virtual T hvals(char* key) = 0;
 
 		//HDEL
 		// virtual ArancinoPacket hdelPacket(char* key, char* field) = 0;
 		// virtual int hdel(char* key, char* field) = 0;
 		//HDEL W TEMPALTE
-		virtual template<class T = int> T hdel(char* key, char* field) = 0;
+		template<class T = int> virtual T hdel(char* key, char* field) = 0;
 
 		//KEYS
 		// virtual ArancinoPacket keysPacket(char* pattern="") = 0;
 		// virtual char** keys(char* pattern="") = 0;
 		//KEYS W TEMPALTE
-		virtual template<class T = char**> T keys(char* pattern="*") = 0;
+		template<class T = char**> virtual T keys(char* pattern="*") = 0;
 
 		//PUBLISH		
 		virtual ArancinoPacket publish(char* channel, char* msg) = 0;
@@ -199,7 +199,7 @@ class IArancino {
 		virtual int getArraySize(String* _array) = 0;
 
 		//TEMPLATE TEST
-		//virtual template<class T = char*> T ArancinoGet(char* key) = 0;
+		//template<class T = char*> virtual T ArancinoGet(char* key) = 0;
 
 };
 
