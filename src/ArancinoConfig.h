@@ -91,3 +91,7 @@ under the License
 //RESERVED KEYS ARRAY DEF
 #define RESERVED_KEY_ARRAY_SIZE		4   // Array dimension of Reserved Keys
 #define RESERVED_KEY_MAX_LENGTH		11  // Max length of a Reserved Key name
+
+
+//BACKEND TYPE
+#define SERIAL_BACKEND 0

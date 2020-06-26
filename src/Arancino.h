@@ -86,7 +86,127 @@ typedef struct {
 } ArancinoPacket;
 
 
-class ArancinoClass {
+
+
+class IArancino {
+	public:
+		//START SCHEDULER
+		virtual void startScheduler() = 0;
+		
+		//SET RESERVED COMMUNICATION MODE
+		virtual void setReservedCommunicationMode(int mode) = 0;
+
+		
+		/***** API BASIC *****/
+		//BEGIN
+		virtual void begin(bool useid = false, int timeout = TIMEOUT) = 0;
+	
+		//SET	
+		// virtual ArancinoPacket set(char* key, int value) = 0;
+		// virtual ArancinoPacket set(char* key, double value) = 0;
+		// virtual ArancinoPacket set(char* key, uint32_t value) = 0;
+		// virtual ArancinoPacket set(char* key, char* value) = 0;
+
+		virtual ArancinoPacket set(char* key, int value, bool isPersistent = false) = 0;
+		virtual ArancinoPacket set(char* key, double value, bool isPersistent = false) = 0;
+		virtual ArancinoPacket set(char* key, long value, bool isPersistent = false) = 0;
+		virtual ArancinoPacket set(char* key, char* value, bool isPersistent = false) = 0; 
+		virtual ArancinoPacket set(char* key, uint32_t value, bool isPersistent = false) = 0; 
+		
+		//GET
+		//virtual ArancinoPacket getPacket(char* key) = 0;
+		//virtual char* get(char* key) = 0;
+		//GET W/ TEMPLATE
+		virtual template<class T = char*> T get(char* key) = 0;
+
+
+		//DEL
+		// ArancinoPacket delPacket(char* key);
+		// int del(char* key);
+		//DEL W/ TEMPLATE
+		virtual template<class T = int> T del(char* key) = 0;
+
+		//HSET
+		virtual ArancinoPacket hset(char* key, char* field, char* value) = 0;
+		virtual ArancinoPacket hset(char* key, char* field, int value) = 0;
+		virtual ArancinoPacket hset(char* key, char* field, double value) = 0;
+		virtual ArancinoPacket hset(char* key, char* field, uint32_t value) = 0;
+		virtual ArancinoPacket hset(char* key, char* field, long value) = 0;
+
+		//HGET
+		// virtual ArancinoPacket hgetPacket(char* key, char* field) = 0;
+		// virtual char* hget(char* key, char* field) = 0;
+		//HGET W TEMPALTE
+		virtual template<class T = char*> T hget(char* key, char* field) = 0;
+
+		//HGETALL
+		//virtual ArancinoPacket hgetallPacket(char* key) = 0;
+		//virtual char** hgetall(char* key) = 0;
+		//HGETALL W TEMPALTE
+		virtual template<class T = char**> T hgetall(char* key) = 0;
+
+		//HKEYS
+		// virtual ArancinoPacket hkeysPacket(char* key) = 0;
+		// virtual char** hkeys(char* key) = 0;
+		//HKEYS W TEMPALTE
+		virtual template<class T = char**> T hkeys(char* key) = 0;
+
+		//HVALS
+		// virtual ArancinoPacket hvalsPacket(char* key) = 0;
+		// virtual char** hvals(char* key) = 0;
+		//HVALS W TEMPALTE
+		virtual template<class T = char**> T hvals(char* key) = 0;
+
+		//HDEL
+		// virtual ArancinoPacket hdelPacket(char* key, char* field) = 0;
+		// virtual int hdel(char* key, char* field) = 0;
+		//HDEL W TEMPALTE
+		virtual template<class T = int> T hdel(char* key, char* field) = 0;
+
+		//KEYS
+		// virtual ArancinoPacket keysPacket(char* pattern="") = 0;
+		// virtual char** keys(char* pattern="") = 0;
+		//KEYS W TEMPALTE
+		virtual template<class T = char**> T keys(char* pattern="*") = 0;
+
+		//PUBLISH		
+		virtual ArancinoPacket publish(char* channel, char* msg) = 0;
+		virtual ArancinoPacket publish(char* channel, double msg) = 0;
+		virtual ArancinoPacket publish(char* channel, int msg) = 0;
+		virtual ArancinoPacket publish(char* channel, uint32_t msg) = 0;
+		virtual ArancinoPacket publish(char* channel, long msg) = 0;
+		
+		//FLUSH
+		virtual ArancinoPacket flush(void) = 0;
+
+		/***** API UTILS *****/
+		//FREE
+		virtual void free(char* str) = 0;
+		virtual void free(char** _array) = 0;
+		virtual void free(ArancinoPacket packet) = 0;
+
+		//PRINT
+		virtual void print(String value) = 0;
+		virtual void print(char* value) = 0;
+		virtual void print(int value) = 0;
+		virtual void print(double value) = 0;
+		virtual void println(String value) = 0;
+		virtual void println(int value) = 0;
+		virtual void println(double value) = 0;
+
+		//GET ARRAY SIZE
+		virtual int getArraySize(char** _array) = 0;
+		virtual int getArraySize(String* _array) = 0;
+
+		//TEMPLATE TEST
+		//virtual template<class T = char*> T ArancinoGet(char* key) = 0;
+
+};
+
+
+
+
+class ArancinoSerial : public IArancino{
 	public:
 		/***** API ADVANCED *****/
 
@@ -276,6 +396,13 @@ class ArancinoClass {
 
 };
 
-extern ArancinoClass Arancino;
+
+#ifndef ARANCINO_BACKEND
+#define ARANCINO_BACKEND SERIAL_BACKEND
+#endif
+
+#if ARANCINO_BACKEND == SERIAL_BACKEND
+extern ArancinoSerial Arancino;
+#endif
 
 #endif /* ARANCINO_H_ */
