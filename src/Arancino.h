@@ -92,7 +92,6 @@ class ArancinoClass {
 
 		//Serial port id
 		char *id;
-		int idSize;	
 		
 		//START SCHEDULER
 		void startScheduler();
@@ -212,6 +211,9 @@ class ArancinoClass {
 		bool started;
 		bool comm_timeout = false;
 		bool arancino_id_prefix;
+		int idSize;
+		char *timestamp;
+		
 		char reservedKey[RESERVED_KEY_ARRAY_SIZE][RESERVED_KEY_MAX_LENGTH]; //max 10 char for key
 		int COMM_MODE = SYNCH;
 		const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};

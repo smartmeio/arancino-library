@@ -98,14 +98,20 @@ void ArancinoClass::begin(bool useid, int timeout) {
 		
 		if (message != NULL)
 		{
-			ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}};
+			//ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}};
+			ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+
 			packet = temp;
+			
 			//store arancino serial port id
-			if(useid){
-				idSize = strlen(packet.response.string);
-				id = (char *)calloc(idSize, sizeof(char));
-				memcpy(id,packet.response.string,idSize-1);
-			}
+			idSize = strlen(packet.response.stringArray[0]);
+			id = (char *)calloc(idSize+1, sizeof(char));
+			memcpy(id,packet.response.stringArray[0],idSize);
+			//timestamp from arancino module
+			int timeStampSize = strlen(packet.response.stringArray[1]);
+			timestamp = (char *)calloc(timeStampSize+1, sizeof(char));
+			memcpy(timestamp,packet.response.stringArray[1],timeStampSize);
+
 			std::free(message);
 		}
 		else
