@@ -69,7 +69,8 @@ enum POWER_MODE {
 class ArancinoClass {
 	public:
 		//void begin();
-		void begin(int timeout);
+		String id;
+		void begin(bool useid = false, int timeout = TIMEOUT);
 		void setReservedCommunicationMode(int mode);
 		String get(String value);
 		void set(String key, String value);
@@ -113,6 +114,9 @@ class ArancinoClass {
 
 	private:
 		//void dropAll();
+		bool arancino_id_prefix;
+		String timestamp;
+
 		bool started;
 		bool comm_timeout = false;
 		String parse(String message);

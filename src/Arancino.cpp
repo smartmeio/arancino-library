@@ -39,6 +39,7 @@ under the License
 
 #define END_TX_CHAR			(char)4 //'@' //
 #define DATA_SPLIT_CHAR		(char)30 //'#' //
+#define ID_SEPARATOR		"_"
 
 #define RSP_OK				100
 #define RSP_HSET_NEW		101
@@ -58,7 +59,7 @@ under the License
 #define LIBVERS_KEY			"___LIBVERS___"
 #define MODVERS_KEY			"___MODVERS___"
 #define POWER_KEY			"___POWER___"
-#define LIB_VERSION			"0.2.1"	//library version
+#define LIB_VERSION			"0.3.0"	//library version
 
 ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
@@ -71,7 +72,7 @@ ArancinoClass::ArancinoClass(Stream &_stream):
 
 //============= SETUP FUNCTIONS ======================
 
-void ArancinoClass::begin(int timeout) {
+void ArancinoClass::begin(bool useid, int timeout) {
 
 	String start;
 	//reserved Key
@@ -79,6 +80,7 @@ void ArancinoClass::begin(int timeout) {
   reservedKey[1]=LIBVERS_KEY;
   reservedKey[2]=MODVERS_KEY;
   reservedKey[3]=POWER_KEY;
+  arancino_id_prefix = useid;
   stream.setTimeout(timeout);			//response timeout
   //DEBUG
   #if defined(__SAMD21G18A__)
@@ -99,10 +101,13 @@ void ArancinoClass::begin(int timeout) {
 		sendArancinoCommand(LIB_VERSION);
 		sendArancinoCommand(END_TX_CHAR);				//check if arancino module is running
 		start = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
-        //try to start comunication every 2,5 seconds.
-        delay(2500);
+  		//try to start comunication every 2,5 seconds.
+    	delay(2500);
 	}while (start.toInt() != RSP_OK);
 
+	parseArray(parse(start));
+	id=arrayKey[0];
+	timestamp=arrayKey[1];
 	// sendArancinoCommand(SET_COMMAND);					// send library version
 	// sendArancinoCommand(DATA_SPLIT_CHAR);
 	// sendArancinoCommand(LIBVERS_KEY);
@@ -134,6 +139,10 @@ String ArancinoClass::get( String key ) {
 	sendArancinoCommand(GET_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
+		if(arancino_id_prefix){
+			sendArancinoCommand(id);
+			sendArancinoCommand(ID_SEPARATOR);
+		}
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
@@ -154,6 +163,10 @@ int ArancinoClass::del( String key ) {
 	sendArancinoCommand(DEL_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
+		if(arancino_id_prefix){
+			sendArancinoCommand(id);
+			sendArancinoCommand(ID_SEPARATOR);
+		}
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
@@ -184,6 +197,10 @@ void ArancinoClass::_set( String key, String value ) {
 	sendArancinoCommand(SET_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
+		if(arancino_id_prefix){
+			sendArancinoCommand(id);
+			sendArancinoCommand(ID_SEPARATOR);
+		}
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(DATA_SPLIT_CHAR);
@@ -232,6 +249,10 @@ String ArancinoClass::hget( String key, String field ) {
 	sendArancinoCommand(HGET_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
+		if(arancino_id_prefix){
+			sendArancinoCommand(id);
+			sendArancinoCommand(ID_SEPARATOR);
+		}
 		sendArancinoCommand(key);
 	}
 	if (field != ""){
@@ -256,6 +277,10 @@ String* ArancinoClass::hgetall( String key) {
 	sendArancinoCommand(HGETALL_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
+		if(arancino_id_prefix){
+			sendArancinoCommand(id);
+			sendArancinoCommand(ID_SEPARATOR);
+		}
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
@@ -277,6 +302,10 @@ String* ArancinoClass::hkeys( String key) {
 	sendArancinoCommand(HKEYS_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
+		if(arancino_id_prefix){
+			sendArancinoCommand(id);
+			sendArancinoCommand(ID_SEPARATOR);
+		}
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
@@ -297,6 +326,10 @@ String* ArancinoClass::hvals( String key) {
 	sendArancinoCommand(HVALS_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
+		if(arancino_id_prefix){
+			sendArancinoCommand(id);
+			sendArancinoCommand(ID_SEPARATOR);
+		}
 		sendArancinoCommand(key);
 	}
 	sendArancinoCommand(END_TX_CHAR);
@@ -340,6 +373,10 @@ int ArancinoClass::hset( String key, String field , String value) {
 	sendArancinoCommand(HSET_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
+		if(arancino_id_prefix){
+			sendArancinoCommand(id);
+			sendArancinoCommand(ID_SEPARATOR);
+		}
 		sendArancinoCommand(key);
 	}
 	if (field != ""){
@@ -384,6 +421,10 @@ int ArancinoClass::hdel( String key, String field ) {
 	sendArancinoCommand(HDEL_COMMAND);					// send read request
 	if (key != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
+		if(arancino_id_prefix){
+			sendArancinoCommand(id);
+			sendArancinoCommand(ID_SEPARATOR);
+		}
 		sendArancinoCommand(key);
 	}
 	if (field != ""){
@@ -404,8 +445,13 @@ int ArancinoClass::_publish( String channel, String msg ) {
 	sendArancinoCommand(PUBLISH_COMMAND);					// send read request
 	if (channel != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
+		if(arancino_id_prefix){
+			sendArancinoCommand(id);
+			sendArancinoCommand(ID_SEPARATOR);
+		}
 		sendArancinoCommand(channel);
 	}
+
 	if (msg != ""){
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(msg);
@@ -597,7 +643,7 @@ String ArancinoClass::receiveArancinoResponse(char terminator){
 void ArancinoClass::flush_on_timeout(){
 	//check communication timeout with arancino module
 	if (comm_timeout){
-		/*  
+		/*
 			Flush data on serial communication to avoid of lost
 			synchronization between arancino library and arancino module.
 			By this way I prevent to receive reposonse of a previous sent command.
