@@ -72,7 +72,7 @@ ArancinoClass::ArancinoClass(Stream &_stream):
 
 //============= SETUP FUNCTIONS ======================
 
-void ArancinoClass::begin(bool useid, int timeout) {
+void ArancinoClass::begin(int timeout, bool useid) {
 
 	String start;
 	//reserved Key
@@ -101,8 +101,8 @@ void ArancinoClass::begin(bool useid, int timeout) {
 		sendArancinoCommand(LIB_VERSION);
 		sendArancinoCommand(END_TX_CHAR);				//check if arancino module is running
 		start = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
-  		//try to start comunication every 2,5 seconds.
-    	delay(2500);
+        //try to start comunication every 2,5 seconds.
+        delay(2500);
 	}while (start.toInt() != RSP_OK);
 
 	parseArray(parse(start));

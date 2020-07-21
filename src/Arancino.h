@@ -70,7 +70,7 @@ class ArancinoClass {
 	public:
 		//void begin();
 		String id;
-		void begin(bool useid = false, int timeout = TIMEOUT);
+		void begin(int timeout = TIMEOUT, bool useid = false);
 		void setReservedCommunicationMode(int mode);
 		String get(String value);
 		void set(String key, String value);
@@ -143,9 +143,9 @@ class SerialArancinoClass : public ArancinoClass {
 			// Empty
 		}
 		//void begin(int timeout=TIMEOUT, unsigned long baudrate = BAUDRATE) {
-		void begin(int timeout=TIMEOUT) {
+		void begin(int timeout, bool useid) {
 			serial.begin(BAUDRATE);
-			ArancinoClass::begin(timeout);
+			ArancinoClass::begin(timeout, useid);
 		}
 	private:
 		SERIAL_TRANSPORT &serial;
