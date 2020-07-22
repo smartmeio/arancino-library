@@ -143,7 +143,7 @@ class SerialArancinoClass : public ArancinoClass {
 			// Empty
 		}
 		//void begin(int timeout=TIMEOUT, unsigned long baudrate = BAUDRATE) {
-		void begin(int timeout, bool useid) {
+		void begin(int timeout = TIMEOUT, bool useid = false) {
 			serial.begin(BAUDRATE);
 			ArancinoClass::begin(timeout, useid);
 		}
