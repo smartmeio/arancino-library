@@ -1,5 +1,10 @@
 # Changelog
 
+#### v 0.3.0 - 2020.07.24
+* Add: Introduced the possibility to use prefix id for each command sent #66
+* Add: Receive timestamp from Arancino Module #71
+* Add: Introduced `arancino.id` attribute #65
+
 #### v 0.2.1 - 2019.04.14
 * Fix: Fixed a bug of timeout in serial comm, it introduces synch error #57
 * Fix: Introduced a delay in `begin` to prevent sync error with Arancino Module vers `2.0.0`.

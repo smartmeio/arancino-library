@@ -13,13 +13,14 @@ Open the Arduino IDE, unzip the _Arancino Library_ and import the unzipped folde
 
 ## API
 
-### begin
+##### *void begin(int timeout, bool portid)*
 ##### *void begin(int timeout)*
 ##### *void begin()*
-Start the communication with the Arancino Module.
+Start the communication with the Arancino Module. When communication starts, the begin sends the Arancino Library version for compatibility to be evaluated.
 
 ##### Parameters
 * **`timeout`**: represents the time that each command sent (via API call) will wait for a response. Otherwise the delayed command will be skipped. When the `begin` function is called w/o `timeout` it is assumed `100ms` as default value of timeout.
+* **`portid`**: if enabled each command sent will have as command prefix the serial port id. It is a boolean.
 
 ##### Example
 ```c++
@@ -598,7 +599,7 @@ In the next paragraphs, for simplicity we are considering each command returns a
 
 #### begin
 - Command Sent: `START@
-- Response Received: `100@`
+- Response Received: `100#<arancino-id>#<timestamp>`
 
 #### set
 - Command Sent: `SET#<key>#<value>@`
