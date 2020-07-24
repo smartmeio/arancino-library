@@ -36,11 +36,14 @@ Parameters
 
 void setup() {
 
-  //calls begin w/o paramenter: it is assumed 100ms timeout by default
+  //calls begin w/o parameter: it is assumed 100ms timeout by default and arancino port id disabled (false)
   Arancino.begin();
 
-  //calls begin w/ 200ms timeout
+  //calls begin w/ 200ms timeout and arancino port id disabled (false)
   //Arancino.begin(200);
+
+  //calls begin w/ 200ms timeout and arancino port id enabled (true)
+  //Arancino.begin(200,true);
 }
 
 void loop() {
