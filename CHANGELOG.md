@@ -1,12 +1,14 @@
 # Changelog
 
-#### v 1.2.0 - 2020.MM.DD
+#### v 1.2.0 - 2020.07.25
 * Fix: Fixed arancino `publish` example  #72
 * Fix: Fixed a bug of timeout setting in serial comm  #70
 * Add: Introduced the possibility to use prefix id for each command sent #66
+* Add: Introduced `arancino.id` attribute #65
 * Add: Receive timestamp from Arancino Module #71
 * Fix: Fixed a bug of timeout in serial comm, it introduces synch error #57
 * Fix: Introduced checks to avoid NULL keys and values #58
+
 
 #### v 1.1.0 - 2020.03.16
 * Fix: CI script to push even master branch to GitHub #52

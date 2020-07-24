@@ -66,14 +66,34 @@ typedef struct {
 
 ## API
 
+
+> Note: when you get a value using api like `get`, `hget`, etc. please keep in mind to free memory each time using the `free` api. 
+>
+> To prevent memory leak, code like this must be avoided:
+> ```c++
+> //Do not use
+> Arancino.set("test", Arancino.get("mem"));
+> ```
+>
+> Use the following instead:
+> ```c++
+> //Use this
+> char* mem = Arancino.get("mem");
+> Arancino.set("test", mem);
+> Arancino.free(mem);
+> ```
+
+
+
 ### begin
+##### *void begin(int timeout, bool portid)*
 ##### *void begin(int timeout)*
 ##### *void begin()*
 Start the communication with the Arancino Module. When communication starts, the begin sends the Arancino Library version for compatibility to be evaluated.
 
 ##### Parameters
-* **`portid`**: if enabled each command sent will have as command prefix the serial port id. It is a boolean.
 * **`timeout`**: represents the time that each command sent (via API call) will wait for a response. Otherwise the delayed command will be skipped. When the `begin` function is called w/o `timeout` it is assumed `100ms` as default value of timeout.
+* **`portid`**: if enabled each command sent will have as command prefix the serial port id. It is a boolean.
 
 ##### Example
 ```c++

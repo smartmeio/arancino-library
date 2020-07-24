@@ -74,7 +74,7 @@ under the License
 #define LIBVERS_KEY				"___LIBVERS___"
 #define MODVERS_KEY				"___MODVERS___"
 #define POWER_KEY				"___POWER___"
-#define LIB_VERSION				"1.1.1"	//library version 
+#define LIB_VERSION				"1.2.0"	//library version 
 
 //RESPONSE CODE
 #define INVALID_VALUE_ERROR     -4
