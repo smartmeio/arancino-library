@@ -1403,7 +1403,7 @@ In the next paragraphs, for simplicity we are considering each command returns a
 - Response Received: `100#<value>@`
 
 #### hgetall
-- Command Sent: `HGETALL#<key>#<field>@`
+- Command Sent: `HGETALL#<key>@`
 - Response Received: `100[#<field-1>#<value-1>#<field-2>#<value-2>]@`
 
 #### hkeys
