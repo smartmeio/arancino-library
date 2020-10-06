@@ -1,5 +1,9 @@
 # Changelog
 
+#### v 1.2.1 - 2020.10.07
+* Fix: Fixed a bug in start command #78
+* Upd: Updated Doc README for `HGETALL` function #55
+
 #### v 1.2.0 - 2020.07.25
 * Fix: Fixed arancino `publish` example  #72
 * Fix: Fixed a bug of timeout setting in serial comm  #70

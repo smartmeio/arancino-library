@@ -103,14 +103,16 @@ void ArancinoClass::begin(bool useid, int timeout) {
 
 			packet = temp;
 			
-			//store arancino serial port id
-			idSize = strlen(packet.response.stringArray[0]);
-			id = (char *)calloc(idSize+1, sizeof(char));
-			memcpy(id,packet.response.stringArray[0],idSize);
-			//timestamp from arancino module
-			int timeStampSize = strlen(packet.response.stringArray[1]);
-			timestamp = (char *)calloc(timeStampSize+1, sizeof(char));
-			memcpy(timestamp,packet.response.stringArray[1],timeStampSize);
+			if(packet.responseCode == RSP_OK){
+				//store arancino serial port id
+				idSize = strlen(packet.response.stringArray[0]);
+				id = (char *)calloc(idSize+1, sizeof(char));
+				memcpy(id,packet.response.stringArray[0],idSize);
+				//timestamp from arancino module
+				int timeStampSize = strlen(packet.response.stringArray[1]);
+				timestamp = (char *)calloc(timeStampSize+1, sizeof(char));
+				memcpy(timestamp,packet.response.stringArray[1],timeStampSize);
+			}
 
 			std::free(message);
 		}
