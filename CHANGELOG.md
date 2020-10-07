@@ -1,5 +1,8 @@
 # Changelog
 
+#### v 0.4.0 - 2020.MM.DD
+* Upd: Removed the unused reserved key `___LIBVERS___` #79
+
 #### v 0.3.0 - 2020.07.24
 * Add: Introduced the possibility to use prefix id for each command sent #66
 * Add: Receive timestamp from Arancino Module #71

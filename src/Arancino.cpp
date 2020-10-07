@@ -59,7 +59,7 @@ under the License
 #define LIBVERS_KEY			"___LIBVERS___"
 #define MODVERS_KEY			"___MODVERS___"
 #define POWER_KEY			"___POWER___"
-#define LIB_VERSION			"0.3.0"	//library version
+#define LIB_VERSION			"0.4.0"	//library version
 
 ArancinoClass::ArancinoClass(Stream &_stream):
 	stream(_stream), started(false) {
@@ -116,7 +116,7 @@ void ArancinoClass::begin(int timeout, bool useid) {
 	// sendArancinoCommand(END_TX_CHAR);
 	// stream.readStringUntil(END_TX_CHAR);
 
-	sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
+	// sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
 
 }
 
