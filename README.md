@@ -19,8 +19,6 @@ Open the Arduino IDE and go to *Sketch* → *Include Library* → *Manage Librar
 > Arancino Library has one dependency when FreeRTOS capabilities are required: [FreeRTOS_SAMD21 Arduino library](https://github.com/BriscoeTech/Arduino-FreeRTOS-SAMD21) by BriscoeTech. Please download it from Arduino Library Manager. In that case you also have to select _Yes_ from _Menu -> Tools -> Using FreeRTOS?_.
 
 
- such as: firmware name, firmware version and local timezone offset. The latter is used to calculate the timestamp at which the firmware is compiled.
-
 ## Data structures
 ### ArancinoMetadata
 `ArancinoMetadata` is a data structure used to encapsulate firmware metadata.
