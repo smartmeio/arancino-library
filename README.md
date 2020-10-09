@@ -19,7 +19,26 @@ Open the Arduino IDE and go to *Sketch* → *Include Library* → *Manage Librar
 > Arancino Library has one dependency when FreeRTOS capabilities are required: [FreeRTOS_SAMD21 Arduino library](https://github.com/BriscoeTech/Arduino-FreeRTOS-SAMD21) by BriscoeTech. Please download it from Arduino Library Manager. In that case you also have to select _Yes_ from _Menu -> Tools -> Using FreeRTOS?_.
 
 
+ such as: firmware name, firmware version and local timezone offset. The latter is used to calculate the timestamp at which the firmware is compiled.
+
 ## Data structures
+### ArancinoMetadata
+`ArancinoMetadata` is a data structure used to encapsulate firmware metadata.
+
+#### Content
+```c++
+typedef struct {
+	char* fwname;
+	char* fwversion;
+	char* tzoffset;
+} ArancinoMetadata;
+```
+
+#### Variables
+* `fwname`: represents the firmware name, it is later read and displayed by Arancino Module;
+* `fwversion`: represents the firmware version;
+* `tzoffset`: is the local timezone offset. It is used to calculate the timestamp at which the firmware is compiled;
+
 ### ArancinoPacket
 `ArancinoPacket` is a data structure returned from some Arancino APIs and contain details about the APIs calling result.
 
@@ -84,6 +103,32 @@ typedef struct {
 > ```
 
 
+### metadata
+#### *void metadata(ArancinoMetadata data)*
+Stores the metadata to use later during the `START` command in `begin` API.
+
+##### Parameters
+* **`data`**: struct of type `ArancinoMetadata`. Represents the firmware name, version and local timezone offset.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+ArancinoMetadata meta;
+meta.fwname = "Arancino firmware";
+meta.fwversion = "1.0.0";
+meta.tzoffset = "+0100";
+
+void setup() {
+  Arancino.metadata(meta);
+  Arancino.begin();
+}
+
+void loop() {
+  // Do something
+}
+```
+___
 
 ### begin
 ##### *void begin(int timeout, bool portid)*
@@ -107,7 +152,6 @@ void loop() {
     //do something
 }
 ```
-
 
 
 ___
@@ -1328,7 +1372,7 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 
 | API               | Command Identifiers    |
 | ------------------ |:-------------:|
-| [`begin`](#begin)  | SET           |
+| [`begin`](#begin)  | BEGIN         |
 | [`set`](#set)      | SET           |
 | [`get`](#get)      | GET           |
 | [`del`](#del)      | DEL           |
@@ -1375,7 +1419,7 @@ In the next paragraphs, for simplicity we are considering each command returns a
 - End of transmission → `30`  →` @`
 
 #### begin
-- Command Sent: `START#<lib vers>@`
+- Command Sent: `START#<lib vers>#<fwname>#<fwversion>#<compiletime>#<coreversion>@`
 - Response Received: `100@`
 
 #### set

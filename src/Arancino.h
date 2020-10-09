@@ -85,6 +85,11 @@ typedef struct {
   ArancinoResponse response;
 } ArancinoPacket;
 
+typedef struct {
+	char* fwname;
+	char* fwversion;
+	char* tzoffset;
+} ArancinoMetadata;
 
 class ArancinoClass {
 	public:
@@ -101,6 +106,9 @@ class ArancinoClass {
 
 		
 		/***** API BASIC *****/
+		//METADATA
+		void metadata(ArancinoMetadata meta);
+
 		//BEGIN
 		void begin(bool useid = false, int timeout = TIMEOUT);
 	
@@ -218,6 +226,12 @@ class ArancinoClass {
 		int COMM_MODE = SYNCH;
 		const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
 		const char endTXStr[2] = {END_TX_CHAR, '\0'};
+
+		ArancinoMetadata _meta = {
+			"",
+			"",
+			"+0000"
+		};
 
 		//API WRAPPED
 		void _freeArray(char** _array);
