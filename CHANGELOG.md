@@ -1,6 +1,6 @@
 # Changelog
 
-#### v 1.2.1 - 2020.10.07
+#### v 1.2.1 - 2020.10.09
 * Fix: Fixed a bug in start command #78
 * Upd: Updated Doc README for `HGETALL` function #55
 
