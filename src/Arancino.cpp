@@ -19,6 +19,7 @@ under the License
 */
 
 #include "Arancino.h"
+
 #define DEBUG 0
 
 ArancinoPacket reservedKeyErrorPacket = {true, RESERVED_KEY_ERROR, RESERVED_KEY_ERROR, {.string = NULL}}; //default reserved key error packet
@@ -50,16 +51,34 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 					API FUNCTIONS
 ********************************************************/
 
-/******** API BASIC :: BEGIN *********/
+/******** API BASIC :: METADATA *********/
 
+void ArancinoClass::metadata(ArancinoMetadata data) {
+	_meta = data;
+}
+
+/******** API BASIC :: BEGIN *********/
 void ArancinoClass::begin(bool useid, int timeout) {
 	SERIAL_PORT.begin(BAUDRATE);
 	SERIAL_PORT.setTimeout(timeout);
 	arancino_id_prefix = useid;
 
+	int fwnameLength = strlen(_meta.fwname);
+	int fwversionLength = strlen(_meta.fwversion);
+	int localtoffsetLength = strlen(_meta.tzoffset);
+
+	int dateLength = strlen(__DATE__);
+	int timeLength = strlen(__TIME__);
+	int arancinocoreversionLength = 0; // assuming is not defined
+
+	#ifdef ARANCINO_CORE_VERSION
+	arancinocoreversionLength += strlen(ARANCINO_CORE_VERSION);
+	#endif
+
 	int commandLength = strlen(START_COMMAND);
 	int argLength = strlen(LIB_VERSION);
-	int strLength = commandLength + 1 + argLength + 1 + 1;
+	int strLength = commandLength + 1 + argLength + 1 + fwnameLength + 1 + fwversionLength + 1 + dateLength + 1 + timeLength + 1 + localtoffsetLength + arancinocoreversionLength + 1 + 1;
+	
 	char* str = (char *)calloc(strLength, sizeof(char));
 
 	//reserved Key
@@ -77,7 +96,26 @@ void ArancinoClass::begin(bool useid, int timeout) {
 	
 	strcpy(str, START_COMMAND);
 	strcat(str, dataSplitStr);
+
 	strcat(str, LIB_VERSION);
+	strcat(str, dataSplitStr);
+
+	strcat(str, _meta.fwname);
+	strcat(str, dataSplitStr);
+	strcat(str, _meta.fwversion);
+	strcat(str, dataSplitStr);
+
+	strcat(str, __DATE__);
+	strcat(str, " ");
+	strcat(str, __TIME__);
+	strcat(str, " ");
+	strcat(str, _meta.tzoffset);
+	strcat(str, dataSplitStr);
+	
+	#ifdef ARANCINO_CORE_VERSION
+	strcat(str, ARANCINO_CORE_VERSION);
+	#endif
+
 	strcat(str, endTXStr);
 	
 	ArancinoPacket packet;
