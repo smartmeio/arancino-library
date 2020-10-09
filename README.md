@@ -1372,7 +1372,7 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 
 | API               | Command Identifiers    |
 | ------------------ |:-------------:|
-| [`begin`](#begin)  | SET           |
+| [`begin`](#begin)  | BEGIN         |
 | [`set`](#set)      | SET           |
 | [`get`](#get)      | GET           |
 | [`del`](#del)      | DEL           |
@@ -1419,7 +1419,7 @@ In the next paragraphs, for simplicity we are considering each command returns a
 - End of transmission → `30`  →` @`
 
 #### begin
-- Command Sent: `START#<lib vers>@`
+- Command Sent: `START#<lib vers>#<fwname>#<fwversion>#<compiletime>#<coreversion>@`
 - Response Received: `100@`
 
 #### set
