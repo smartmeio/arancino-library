@@ -64,12 +64,19 @@ enum POWER_MODE {
 	POWERSUPPLY = 1
 };
 
+typedef struct {
+	char* fwname;
+	char* fwversion;
+	char* tzoffset;
+} ArancinoMetadata;
+
 //
 
 class ArancinoClass {
 	public:
 		//void begin();
 		String id;
+		void metadata(ArancinoMetadata meta);
 		void begin(int timeout = TIMEOUT, bool useid = false);
 		void setReservedCommunicationMode(int mode);
 		String get(String value);
@@ -133,6 +140,11 @@ class ArancinoClass {
 		int _publish(String channel, String msg);
 		void flush_on_timeout();
 		String receiveArancinoResponse(char terminator);
+		ArancinoMetadata _meta = {
+			"",
+			"",
+			"+0000"
+		};
 };
 
 // This subclass uses a serial port Stream

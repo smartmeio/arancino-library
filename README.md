@@ -11,7 +11,54 @@ To start using Arancino Library, download the latest version from the repository
 Open the Arduino IDE, unzip the _Arancino Library_ and import the unzipped folder (*Sketch* → *Include Library* → *Add .zip Library...*). The library will appear under *Sketch* → *Include Library* menu at the end, under the *Contributed* section. Examples will be under *File* → *Examples* → *Examples of Custom Libraries*.
 
 
+## Data structures
+### ArancinoMetadata
+`ArancinoMetadata` is a data structure used to encapsulate firmware metadata.
+
+#### Content
+```c++
+typedef struct {
+	char* fwname;
+	char* fwversion;
+	char* tzoffset;
+} ArancinoMetadata;
+```
+
+#### Variables
+* `fwname`: represents the firmware name, it is later read and displayed by Arancino Module;
+* `fwversion`: represents the firmware version;
+* `tzoffset`: is the local timezone offset. It is used to calculate the timestamp at which the firmware is compiled;
+
+
+
 ## API
+
+### metadata
+#### *void metadata(ArancinoMetadata data)*
+Stores the metadata to use later during the `START` command in `begin` API.
+
+##### Parameters
+* **`data`**: struct of type `ArancinoMetadata`. Represents the firmware name, version and local timezone offset.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+ArancinoMetadata meta;
+meta.fwname = "Arancino firmware";
+meta.fwversion = "1.0.0";
+meta.tzoffset = "+0100";
+
+void setup() {
+  Arancino.metadata(meta);
+  Arancino.begin();
+}
+
+void loop() {
+  // Do something
+}
+```
+___
 
 ##### *void begin(int timeout, bool portid)*
 ##### *void begin(int timeout)*
@@ -553,7 +600,7 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 
 | API               | Command Identifiers    |
 | ------------------ |:-------------:|
-| [`begin`](#begin)  | SET           |
+| [`begin`](#begin)  | BEGIN         |
 | [`set`](#set)      | SET           |
 | [`get`](#get)      | GET           |
 | [`del`](#del)      | DEL           |
@@ -598,7 +645,7 @@ In the next paragraphs, for simplicity we are considering each command returns a
 
 
 #### begin
-- Command Sent: `START@
+- Command Sent: `START@<lib vers>#<fwname>#<fwversion>#<compiletime>#<coreversion>@`
 - Response Received: `100#<arancino-id>#<timestamp>`
 
 #### set

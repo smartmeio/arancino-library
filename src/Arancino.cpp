@@ -72,6 +72,10 @@ ArancinoClass::ArancinoClass(Stream &_stream):
 
 //============= SETUP FUNCTIONS ======================
 
+void ArancinoClass::metadata(ArancinoMetadata data) {
+	_meta = data;
+}
+
 void ArancinoClass::begin(int timeout, bool useid) {
 
 	String start;
@@ -99,6 +103,22 @@ void ArancinoClass::begin(int timeout, bool useid) {
 		sendArancinoCommand(START_COMMAND);
 		sendArancinoCommand(DATA_SPLIT_CHAR);
 		sendArancinoCommand(LIB_VERSION);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(_meta.fwname);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(_meta.fwversion);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		sendArancinoCommand(__DATE__);
+		sendArancinoCommand(" ");
+		sendArancinoCommand(__TIME__);
+		sendArancinoCommand(" ");
+		sendArancinoCommand(_meta.tzoffset);
+		sendArancinoCommand(DATA_SPLIT_CHAR);
+		
+		#ifdef ARANCINO_CORE_VERSION
+		sendArancinoCommand(ARANCINO_CORE_VERSION);
+		#endif
+
 		sendArancinoCommand(END_TX_CHAR);				//check if arancino module is running
 		start = receiveArancinoResponse(END_TX_CHAR);//stream.readStringUntil(END_TX_CHAR);
         //try to start comunication every 2,5 seconds.
