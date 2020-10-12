@@ -40,11 +40,11 @@ Return value - int reply:
 void setup() {
 
   Arancino.begin();
-  int resp = Arancino.hset("foo","bar","yeah");
-  resp = Arancino.hset("foo","baz","whoo");
-  int value = Arancino.hdel("foo","bar");
+  int resp = Arancino.hset("ex10_foo","bar","yeah");
+  resp = Arancino.hset("ex10_foo","baz","whoo");
+  int value = Arancino.hdel("ex10_foo","bar");
   //1
-  String str_value = Arancino.hget("foo","baz");
+  String str_value = Arancino.hget("ex10_foo","baz");
   //0
 
 }

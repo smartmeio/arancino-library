@@ -37,7 +37,7 @@ void setup() {
   Arancino.begin();
 
   //sets the value 'bar' into the 'foo' key
-  Arancino.set("foo","bar");
+  Arancino.set("ex01_foo","bar");
 }
 
 void loop() {

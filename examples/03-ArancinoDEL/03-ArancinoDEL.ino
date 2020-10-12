@@ -36,11 +36,11 @@ The number of keys that were removed.
 void setup() {
   Serial.begin(115200);
   Arancino.begin();
-  Arancino.set("foo","bar");
+  Arancino.set("ex03_foo","bar");
 
-  int num = Arancino.del("baz");
+  int num = Arancino.del("ex03_baz");
   //0
-  num = Arancino.del("foo");
+  num = Arancino.del("ex03_foo");
   //1
 }
 

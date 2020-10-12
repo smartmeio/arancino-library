@@ -103,7 +103,7 @@ Set *key* to hold the string *value*. If *key* already holds a *value*, it is ov
 
 void setup() {
   Arancino.begin();
-  Arancino.set("foo","bar");
+  Arancino.set("exset_foo","bar");
 }
 
 void loop() {
@@ -142,21 +142,21 @@ void setup() {
 void loop() {
 
   //sets the value 'bar' into the 'foo' key
-  Arancino.set("foo","bar");
+  Arancino.set("exget_foo","bar");
 
   //gets the value from the 'foo' key
-  value = Arancino.get("foo");
-  Serial.print("foo -> ");
+  value = Arancino.get("exget_foo");
+  Serial.print("exget_foo -> ");
   Serial.println(value);
   //foo -> bar
 
   delay(2000);
 
-  Arancino.set("foo","baz");
+  Arancino.set("exget_foo","baz");
 
   //gets the value from the 'foo' key
-  value = Arancino.get("foo");
-  Serial.print("foo -> ");
+  value = Arancino.get("exget_foo");
+  Serial.print("exget_foo -> ");
   Serial.println(value);
   //foo -> baz
 }
@@ -183,11 +183,11 @@ int reply: The number of keys that were removed.
 void setup() {
   Serial.begin(115200);
   Arancino.begin();
-  Arancino.set("foo","bar");
+  Arancino.set("exdel_foo","bar");
 
-  int num = Arancino.del("baz");
+  int num = Arancino.del("exdel_baz");
   //0
-  num = Arancino.del("foo");
+  num = Arancino.del("exdel_foo");
   //1
 }
 
@@ -228,9 +228,9 @@ void setup() {
   Serial.begin(115200);
   Arancino.begin();
 
-  Arancino.set("pressure",1023);
-  Arancino.set("humidity",67.5);
-  Arancino.set("temperature",24.4);
+  Arancino.set("exkeys_pressure",1023);
+  Arancino.set("exkeys_humidity",67.5);
+  Arancino.set("exkeys_temperature",24.4);
 
 }
 
@@ -278,9 +278,9 @@ int reply:
 void setup() {
   Arancino.begin();
 
-  int resp = Arancino.hset("foo","bar","yeah");
+  int resp = Arancino.hset("exhset_foo","bar","yeah");
   //1
-  resp = Arancino.hset("foo","baz","whoo");
+  resp = Arancino.hset("exhset_foo","baz","whoo");
   //0
 }
 
@@ -314,19 +314,19 @@ void setup() {
 
   Arancino.begin();
   Serial.begin(115200);
-  int resp = Arancino.hset("foo","bar","yeah");
-  resp = Arancino.hset("foo","baz","whoo");
+  int resp = Arancino.hset("exhget_foo","bar","yeah");
+  resp = Arancino.hset("exhget_foo","baz","whoo");
 
 }
 
 void loop() {
   
-  String value = Arancino.hget("foo","bar");
+  String value = Arancino.hget("exhget_foo","bar");
   Serial.print("foo bar -> ");
   Serial.println(value);
   //foo bar -> yeah
   
-  value = Arancino.hget("foo","baz");
+  value = Arancino.hget("exhget_foo","baz");
   Serial.print("foo baz -> ");
   Serial.println(value);
   //foo bar -> whoo
@@ -357,14 +357,14 @@ void setup() {
   
   Serial.begin(115200);
   
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
+  Arancino.hset("exhgetall_foo","bar","yeah");
+  Arancino.hset("exhgetall_foo","baz","whoo");
   
 }
 
 void loop() {
 
-  String* values = Arancino.hgetall("foo");
+  String* values = Arancino.hgetall("exhgetall_foo");
   for(int i=0; i<Arancino.getArraySize(); i+=2){
   	Serial.print("foo ");
   	Serial.print(values[i]);
@@ -399,16 +399,16 @@ void setup() {
   Arancino.begin();
   Serial.begin(115200);
   
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
+  Arancino.hset("exhkeys_foo","bar","yeah");
+  Arancino.hset("exhkeys_foo","baz","whoo");
 
 }
 
 void loop() {
 
-  String* fields = Arancino.hkeys("foo");
+  String* fields = Arancino.hkeys("exhkeys_foo");
   for(int i=0; i<Arancino.getArraySize(); i++){
-    Serial.print("foo -> ");
+    Serial.print("exhkeys_foo -> ");
     Serial.println(fields[i]);
     // foo -> bar
     // foo -> baz
@@ -439,16 +439,16 @@ void setup() {
   Arancino.begin();
   Serial.begin(115200);
   
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
+  Arancino.hset("exhvals_foo","bar","yeah");
+  Arancino.hset("exhvals_foo","baz","whoo");
 
 }
 
 void loop() {
   
-  String* values = Arancino.hkeys("foo");
+  String* values = Arancino.hvals("exhvals_foo");
   for(int i=0; i<Arancino.getArraySize(); i++){
-    Serial.print("foo -> ");
+    Serial.print("exhvals_foo -> ");
     Serial.println(values[i]);
     // foo -> yeah
     // foo -> whoo
@@ -482,11 +482,11 @@ int reply:
 void setup() {
 
   Arancino.begin();
-  int resp = Arancino.hset("foo","bar","yeah");
-  resp = Arancino.hset("foo","baz","whoo");
-  int value = Arancino.hdel("foo","bar");
+  int resp = Arancino.hset("exhdel_foo","bar","yeah");
+  resp = Arancino.hset("exhdel_foo","baz","whoo");
+  int value = Arancino.hdel("exhdel_foo","bar");
   //1
-  value = Arancino.hget("foo","baz");
+  value = Arancino.hget("exhdel_foo","baz");
   //0
 
 }
@@ -509,8 +509,8 @@ Delete all the keys.
 void setup() {
 
   Arancino.begin();
-  Arancino.set("foo","bar");
-  Arancino.set("foo","baz");
+  Arancino.set("exflush_foo","bar");
+  Arancino.set("exflush_foo","baz");
   //delete all the keys
   Arancino.flush();
 
