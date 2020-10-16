@@ -181,7 +181,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
 
 void setup() {
   Arancino.begin();
-  Arancino.set("foo","bar");
+  Arancino.set("exset_foo","bar");
 }
 
 void loop() {
@@ -198,7 +198,7 @@ void loop() {
 void setup() {
   Arancino.begin();
 
-  ArancinoPacket temp = Arancino.set("foo", "bar");
+  ArancinoPacket temp = Arancino.set("exsetp_foo", "bar");
   if (temp.isError == 0)
   {
     Serial.println("SET OK");
@@ -250,11 +250,11 @@ void setup() {
 void loop() {
 
   //sets the value 'bar' into the 'foo' key
-  Arancino.set("foo","bar");
+  Arancino.set("exget_foo","bar");
 
   //gets the value from the 'foo' key
-  char* value = Arancino.get("foo");
-  Serial.print("foo -> ");
+  char* value = Arancino.get("exget_foo");
+  Serial.print("exget_foo -> ");
   Serial.println(value);
   //foo -> bar
   Arancino.free(value); //delete the string from memory
@@ -305,7 +305,7 @@ void loop() {
   //sets the value 'bar' into the 'foo' key
   Arancino.set("foo","bar");
 
-  ArancinoPacket temp = Arancino.getPacket("foo");
+  ArancinoPacket temp = Arancino.getPacket("exgetp_foo");
   if (!temp.isError)
   {
     Serial.println("GET OK");
@@ -314,7 +314,7 @@ void loop() {
     Serial.print("Response type: ");
     Serial.println(temp.responseType);
 
-    Serial.print("foo -> ");
+    Serial.print("exgetp_foo -> ");
     Serial.println(temp.response.string);
     //foo -> bar
     Arancino.free(temp); //delete the string from memory
@@ -347,12 +347,12 @@ int reply: The number of keys that were removed.
 void setup() {
   Serial.begin(115200);
   Arancino.begin();
-  Arancino.set("foo","bar");
+  Arancino.set("exdel_foo","bar");
 
-  int num = Arancino.del("baz");
+  int num = Arancino.del("exdel_baz");
   Serial.println(num ? "Key deleted" : "Key not found");
   //0
-  num = Arancino.del("foo");
+  num = Arancino.del("exdel_foo");
   Serial.println(num ? "Key deleted" : "Key not found");
   //1
 }
@@ -387,9 +387,9 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
 void setup() {
   Serial.begin(115200);
   Arancino.begin();
-  Arancino.set("foo","bar");
+  Arancino.set("exdelp_foo","bar");
 
-  ArancinoPacket temp = Arancino.delPacket("baz");
+  ArancinoPacket temp = Arancino.delPacket("exdelp_baz");
   if (temp.isError == 0)
   {
     Serial.println("DEL OK");
@@ -405,7 +405,7 @@ void setup() {
     Serial.println("DEL ERROR");    
   }
 
-  temp = Arancino.delPacket("foo");
+  temp = Arancino.delPacket("exdelp_foo");
   if (temp.isError == 0)
   {
     Serial.println("DEL OK");
@@ -458,9 +458,9 @@ void setup() {
   Serial.begin(115200);
   Arancino.begin();
 
-  Arancino.set("pressure",1023);
-  Arancino.set("humidity",67.5);
-  Arancino.set("temperature",24.4);
+  Arancino.set("exkeys_pressure",1023);
+  Arancino.set("exkeys_humidity",67.5);
+  Arancino.set("exkeys_temperature",24.4);
 
 }
 
@@ -477,7 +477,7 @@ void loop() {
 
   delay(1000); //wait 1 seconds
 
-  key = Arancino.keys("temp*");  //return all the keys that contains temp pattern
+  key = Arancino.keys("exkeys_temp*");  //return all the keys that contains temp pattern
   for (int i = 0; i < Arancino.getArraySize(key) ; i++) {
     Serial.println(key[i]);   //temperature
   }
@@ -522,9 +522,9 @@ void setup() {
   Serial.begin(115200);
   Arancino.begin();
 
-  Arancino.set("pressure",1023);
-  Arancino.set("humidity",67.5);
-  Arancino.set("temperature",24.4);
+  Arancino.set("exkeysp_pressure",1023);
+  Arancino.set("exkeysp_humidity",67.5);
+  Arancino.set("exkeysp_temperature",24.4);
 
 }
 
@@ -554,7 +554,7 @@ void loop() {
 
   delay(1000); //wait 1 seconds
 
-  temp = Arancino.keysPacket("temp*");
+  temp = Arancino.keysPacket("exkeysp_temp*");
   key = temp.response.stringArray;
   if (temp.isError == 0)
   {
@@ -608,11 +608,11 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
 void setup() {
   Arancino.begin();
 
-  int resp = Arancino.hset("foo","bar","yeah"); //return 101
+  int resp = Arancino.hset("exhset_foo","bar","yeah"); //return 101
   Serial.print("Response code: ");
   Serial.println(resp);
 
-  resp = Arancino.hset("foo","bar","whoo"); //return 102
+  resp = Arancino.hset("exhset_foo","bar","whoo"); //return 102
   Serial.print("Response code: ");
   Serial.println(resp);
 }
@@ -631,7 +631,7 @@ void loop() {
 void setup() {
   Arancino.begin();
 
-  ArancinoPacket temp = Arancino.hset("foo", "bar", "yeah");
+  ArancinoPacket temp = Arancino.hset("exhsetp_foo", "bar", "yeah");
 
   if (temp.isError == 0)
   {
@@ -678,20 +678,20 @@ void setup() {
 
   Arancino.begin();
   Serial.begin(115200);
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
+  Arancino.hset("exhget_foo","bar","yeah");
+  Arancino.hset("exhget_foo","baz","whoo");
 
 }
 
 void loop() {
 
-  char* value = Arancino.hget("foo","bar");
+  char* value = Arancino.hget("exhget_foo","bar");
   Serial.print("foo bar -> ");
   Serial.println(value);
   //foo bar -> yeah
   Arancino.free(value);
 
-  value = Arancino.hget("foo","baz");
+  value = Arancino.hget("exhget_foo","baz");
   Serial.print("foo baz -> ");
   Serial.println(value);
   //foo bar -> whoo
@@ -725,20 +725,20 @@ void setup() {
 
   Arancino.begin();
   Serial.begin(115200);
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
+  Arancino.hset("exhgetp_foo","bar","yeah");
+  Arancino.hset("exhgetp_foo","baz","whoo");
 
 }
 
 void loop() {
 
-  char* value = Arancino.hget("foo","bar");
+  char* value = Arancino.hget("exhgetp_foo","bar");
   Serial.print("foo bar -> ");
   Serial.println(value);
   //foo bar -> yeah
   Arancino.free(value);
 
-  ArancinoPacket temp = Arancino.hgetPacket("foo", "baz");
+  ArancinoPacket temp = Arancino.hgetPacket("exhgetp_foo", "baz");
 
   if (temp.isError == 0)
   {
@@ -779,12 +779,12 @@ char&ast;&ast; reply: string array of field and value matching *key*.
 void setup() {
   Arancino.begin();
   Serial.begin(115200);
-  Arancino.hset("foo", "bar", "yeah");
-  Arancino.hset("foo", "baz", "whoo");
+  Arancino.hset("exhgetall_foo", "bar", "yeah");
+  Arancino.hset("exhgetall_foo", "baz", "whoo");
 }
 
 void loop() {
-  char** values = Arancino.hgetall("foo");
+  char** values = Arancino.hgetall("exhgetall_foo");
   int arraySize = Arancino.getArraySize(values);
   for (int i = 0; i < arraySize; i += 2)
   {
@@ -822,12 +822,12 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
 void setup() {
   Arancino.begin();
   Serial.begin(115200);
-  Arancino.hset("foo", "bar", "yeah");
-  Arancino.hset("foo", "baz", "whoo");
+  Arancino.hset("exhgetallp_foo", "bar", "yeah");
+  Arancino.hset("exhgetallp_foo", "baz", "whoo");
 }
 
 void loop() {
-  ArancinoPacket temp = Arancino.hgetallPacket("foo");
+  ArancinoPacket temp = Arancino.hgetallPacket("exhgetallp_foo");
   if (!temp.isError)
   {
     Serial.println("HGETALL OK");
@@ -877,14 +877,14 @@ void setup() {
   Arancino.begin();
   Serial.begin(115200);
 
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
+  Arancino.hset("exhkeys_foo","bar","yeah");
+  Arancino.hset("exhkeys_foo","baz","whoo");
 
 }
 
 void loop() {
 
-  char** fields = Arancino.hkeys("foo");
+  char** fields = Arancino.hkeys("exhkeys_foo");
   for (int i = 0; i < Arancino.getArraySize(fields); i++) {
     Serial.print("foo -> ");
     Serial.println(fields[i]);
@@ -921,14 +921,14 @@ void setup() {
   Arancino.begin();
   Serial.begin(115200);
 
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
+  Arancino.hset("exhkeysp_foo","bar","yeah");
+  Arancino.hset("exhkeysp_foo","baz","whoo");
 
 }
 
 void loop() {
 
-  ArancinoPacket temp = Arancino.hkeysPacket("foo");
+  ArancinoPacket temp = Arancino.hkeysPacket("exhkeysp_foo");
   char** fields = temp.response.stringArray;
   if (!temp.isError)
   {
@@ -974,14 +974,14 @@ void setup() {
   Arancino.begin();
   Serial.begin(115200);
 
-  Arancino.hset("foo", "bar", "yeah");
-  Arancino.hset("foo", "baz", "whoo");
+  Arancino.hset("exhvals_foo", "bar", "yeah");
+  Arancino.hset("exhvals_foo", "baz", "whoo");
 
 }
 
 void loop() {
 
-  char** values = Arancino.hvals("foo");
+  char** values = Arancino.hvals("exhvals_foo");
   for (int i = 0; i < Arancino.getArraySize(values); i++) {
     Serial.print("foo -> ");
     Serial.println(values[i]);
@@ -1019,13 +1019,13 @@ void setup() {
   Arancino.begin();
   Serial.begin(115200);
 
-  Arancino.hset("foo", "bar", "yeah");
-  Arancino.hset("foo", "baz", "whoo");
+  Arancino.hset("exhvalsp_foo", "bar", "yeah");
+  Arancino.hset("exhvalsp_foo", "baz", "whoo");
 
 }
 
 void loop() {
-  ArancinoPacket temp = Arancino.hvalsPacket("foo");
+  ArancinoPacket temp = Arancino.hvalsPacket("exhvalsp_foo");
   char** values = temp.response.stringArray;
   if (!temp.isError)
   {
@@ -1073,10 +1073,10 @@ int reply:
 void setup() {
 
   Arancino.begin();
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
-  int value = Arancino.hdel("foo","bar"); //return 1
-  char* str = Arancino.hget("foo","bar"); //return NULL
+  Arancino.hset("exhdel_foo","bar","yeah");
+  Arancino.hset("exhdel_foo","baz","whoo");
+  int value = Arancino.hdel("exhdel_foo","bar"); //return 1
+  char* str = Arancino.hget("exhdel_foo","bar"); //return NULL
   Serial.print("hget: ");
   Serial.println(str);
   Arancino.free(str);
@@ -1112,9 +1112,9 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
 void setup() {
 
   Arancino.begin();
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
-  ArancinoPacket temp = Arancino.hdelPacket("foo","bar");
+  Arancino.hset("exhdelp_foo","bar","yeah");
+  Arancino.hset("exhdelp_foo","baz","whoo");
+  ArancinoPacket temp = Arancino.hdelPacket("exhdelp_foo","bar");
   if (!temp.isError)
   {
     Serial.println("HDEL OK");
@@ -1156,8 +1156,8 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
 void setup() {
 
   Arancino.begin();
-  Arancino.set("foo","bar");
-  Arancino.set("foo","baz");
+  Arancino.set("exflush_foo","bar");
+  Arancino.set("exflush_foo","baz");
   //delete all the keys
   Arancino.flush();
 
@@ -1175,8 +1175,8 @@ void loop() {
 void setup() {
 
   Arancino.begin();
-  Arancino.set("foo","bar");
-  Arancino.set("foo","baz");
+  Arancino.set("exflushp_foo","bar");
+  Arancino.set("exflushp_foo","baz");
   //delete all the keys
   ArancinoPacket temp = Arancino.flush();
   if (!temp.isError)
@@ -1302,9 +1302,9 @@ void setup() {
   Serial.begin(115200);
   Arancino.begin();
 
-  Arancino.set("pressure",1023);
-  Arancino.set("humidity",67.5);
-  Arancino.set("temperature",24.4);
+  Arancino.set("exgetarraysize_pressure",1023);
+  Arancino.set("exgetarraysize_humidity",67.5);
+  Arancino.set("exgetarraysize_temperature",24.4);
 
 }
 
@@ -1337,18 +1337,18 @@ void setup() {
   Serial.begin(115200);
   Arancino.begin();
 
-  Arancino.set("foo", "bar");
-  Arancino.set("qwe", "asd");
-  Arancino.set("pressure",1023);
-  Arancino.set("humidity",67.5);
-  Arancino.set("temperature",24.4);
+  Arancino.set("exfree_foo", "bar");
+  Arancino.set("exfree_qwe", "asd");
+  Arancino.set("exfree_pressure",1023);
+  Arancino.set("exfree_humidity",67.5);
+  Arancino.set("exfree_temperature",24.4);
 
 }
 
 void loop() {
-  char* str = Arancino.get("foo");
+  char* str = Arancino.get("exfree_foo");
   char** key = Arancino.keys();
-  ArancinoPacket myPacket = Arancino.getPacket("qwe");
+  ArancinoPacket myPacket = Arancino.getPacket("exfree_qwe");
 
   /* user code... */
 
@@ -1370,7 +1370,7 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 
 | API               | Command Identifiers    |
 | ------------------ |:-------------:|
-| [`begin`](#begin)  | BEGIN         |
+| [`begin`](#begin)  | START         |
 | [`set`](#set)      | SET           |
 | [`get`](#get)      | GET           |
 | [`del`](#del)      | DEL           |
