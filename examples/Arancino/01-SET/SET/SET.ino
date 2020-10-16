@@ -44,19 +44,19 @@ void setup() {
   Arancino.begin();
   
   //char*
-  char* key1 = "foo";
+  char* key1 = "ex01_foo";
   char* value1 = "hooray";
   //sets the value 'hooray' into the 'foo' key
   Arancino.set(key1, value1);
 
   //int
-  char* key2 = "bar";
+  char* key2 = "ex01_bar";
   int value2 = 123;
   //sets the value 123 into the 'bar' key
   Arancino.set(key2, value2);
 
   //double
-  char* key3 = "baz";
+  char* key3 = "ex01_baz";
   double value3 = 123.456;
   //sets the value 123.456 into the 'baz' key
   Arancino.set(key3, value3);

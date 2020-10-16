@@ -40,7 +40,7 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 void setup() {
   Arancino.begin();
 
-  ArancinoPacket apckt = Arancino.set("foo", "bar");
+  ArancinoPacket apckt = Arancino.set("ex01p_foo", "bar");
   if (apckt.isError == 0)
   {
     Serial.println("SET OK");

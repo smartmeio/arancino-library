@@ -38,9 +38,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 void setup() {
   Serial.begin(115200);
   Arancino.begin();
-  Arancino.set("foo","bar");
+  Arancino.set("ex03p_foo","bar");
 
-  ArancinoPacket apckt = Arancino.del<ArancinoPacket>("baz");
+  ArancinoPacket apckt = Arancino.del<ArancinoPacket>("ex03p_baz");
   if (apckt.isError == 0)
   {
     Serial.println("DEL OK");
@@ -57,7 +57,7 @@ void setup() {
   }
   Arancino.free(apckt); //delete packet from memory
 
-  apckt = Arancino.del<ArancinoPacket>("foo");
+  apckt = Arancino.del<ArancinoPacket>("ex03p_foo");
   if (apckt.isError == 0)
   {
     Serial.println("DEL OK");

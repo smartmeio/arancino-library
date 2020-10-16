@@ -35,8 +35,8 @@ ArancinoPacket reply: ArancinoPacket containing:
 void setup() {
 
   Arancino.begin();
-  Arancino.set("foo","bar");
-  Arancino.set("foo","baz");
+  Arancino.set("ex11_foo","bar");
+  Arancino.set("ex11_foo","baz");
   //delete all the keys
   Arancino.flush();
 

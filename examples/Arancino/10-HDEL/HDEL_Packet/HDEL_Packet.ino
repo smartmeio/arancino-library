@@ -38,10 +38,10 @@ ArancinoPacket reply: ArancinoPacket containing:
 void setup() {
 
   Arancino.begin();
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
+  Arancino.hset("ex10p_foo","bar","yeah");
+  Arancino.hset("ex10p_foo","baz","whoo");
   
-  ArancinoPacket apckt = Arancino.hdel<ArancinoPacket>("foo","bar");
+  ArancinoPacket apckt = Arancino.hdel<ArancinoPacket>("ex10p_foo","bar");
   
   if (!apckt.isError)
   {

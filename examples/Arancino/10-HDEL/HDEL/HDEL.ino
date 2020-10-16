@@ -40,11 +40,11 @@ Return value - int reply:
 void setup() {
 
   Arancino.begin();
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
+  Arancino.hset("ex10_foo","bar","yeah");
+  Arancino.hset("ex10_foo","baz","whoo");
   
-  int value = Arancino.hdel("foo","bar"); //return 1
-  char* str = Arancino.hget("foo","bar"); //return NULL
+  int value = Arancino.hdel("ex10_foo","bar"); //return 1
+  char* str = Arancino.hget("ex10_foo","bar"); //return NULL
   
   Serial.print("hget: ");
   Serial.println(str);

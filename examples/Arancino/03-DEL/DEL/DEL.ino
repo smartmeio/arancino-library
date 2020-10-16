@@ -36,12 +36,12 @@ The number of keys that were removed.
 void setup() {
   Serial.begin(115200);
   Arancino.begin();
-  Arancino.set("foo","bar");
+  Arancino.set("ex03_foo","bar");
 
-  int num = Arancino.del("baz");
+  int num = Arancino.del("ex03_baz");
   Serial.println(num ? "Key deleted" : "Key not found");
   //0
-  num = Arancino.del("foo");
+  num = Arancino.del("ex03_foo");
   Serial.println(num ? "Key deleted" : "Key not found");
   //1
 }

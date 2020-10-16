@@ -39,13 +39,13 @@ void setup() {
   Arancino.begin();
   Serial.begin(115200);
 
-  Arancino.hset("foo", "bar", "yeah");
-  Arancino.hset("foo", "baz", "whoo");
+  Arancino.hset("ex09p_foo", "bar", "yeah");
+  Arancino.hset("ex09p_foo", "baz", "whoo");
 
 }
 
 void loop() {
-  ArancinoPacket apckt = Arancino.hvals<ArancinoPacket>("foo");
+  ArancinoPacket apckt = Arancino.hvals<ArancinoPacket>("ex09p_foo");
   char** values = apckt.response.stringArray;
   if (!apckt.isError)
   {
@@ -55,7 +55,7 @@ void loop() {
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
     for (int i = 0; i < Arancino.getArraySize(values); i++) {
-      Serial.print("foo -> ");
+      Serial.print("ex09p_foo -> ");
       Serial.println(values[i]);
       // foo -> yeah
       // foo -> whoo

@@ -41,20 +41,20 @@ void setup() {
 
   Arancino.begin();
   Serial.begin(115200);
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
+  Arancino.hset("ex06p_foo","bar","yeah");
+  Arancino.hset("ex06p_foo","baz","whoo");
 
 }
 
 void loop() {
 
-  char* value = Arancino.hget("foo","bar");
+  char* value = Arancino.hget("ex06p_foo","bar");
   Serial.print("foo bar -> ");
   Serial.println(value);
   //foo bar -> yeah
   Arancino.free(value);
 
-  ArancinoPacket apckt = Arancino.hget<ArancinoPacket>("foo", "baz");
+  ArancinoPacket apckt = Arancino.hget<ArancinoPacket>("ex06p_foo", "baz");
 
   if (apckt.isError == 0)
   {
