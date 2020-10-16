@@ -39,12 +39,12 @@ ArancinoPacket reply: ArancinoPacket containing:
 void setup() {
   Arancino.begin();
   Serial.begin(115200);
-  Arancino.hset("foo", "bar", "yeah");
-  Arancino.hset("foo", "baz", "whoo");
+  Arancino.hset("ex07p_foo", "bar", "yeah");
+  Arancino.hset("ex07p_foo", "baz", "whoo");
 }
 
 void loop() {
-  ArancinoPacket apckt = Arancino.hgetall<ArancinoPacket>("foo");
+  ArancinoPacket apckt = Arancino.hgetall<ArancinoPacket>("ex07p_foo");
   if (!apckt.isError)
   {
     Serial.println("HGETALL OK");

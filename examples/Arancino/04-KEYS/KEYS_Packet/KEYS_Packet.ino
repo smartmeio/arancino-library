@@ -49,9 +49,9 @@ void setup() {
   
   Arancino.begin();
   
-  Arancino.set("pressure",1023);
-  Arancino.set("humidity",67.5);
-  Arancino.set("temperature",24.4);
+  Arancino.set("ex04p_pressure",1023);
+  Arancino.set("ex04p_humidity",67.5);
+  Arancino.set("ex04p_temperature",24.4);
 
 }
 
@@ -83,7 +83,7 @@ void loop() {
   
   //delay(1000); //wait 1 seconds
 
-  apckt = Arancino.keys<ArancinoPacket>("temp*");
+  apckt = Arancino.keys<ArancinoPacket>("ex04p_temp*");
   keys = apckt.response.stringArray;
   if (apckt.isError == 0)
   {

@@ -41,22 +41,22 @@ void setup() {
 void loop() {
 
   //sets the value 'bar' into the 'foo' key
-  Arancino.set("foo","bar");
+  Arancino.set("ex02_foo","bar");
 
   //gets the value from the 'foo' key
-  char* value = Arancino.get("foo");
-  Serial.print("foo -> ");
+  char* value = Arancino.get("ex02_foo");
+  Serial.print("ex02_foo -> ");
   Serial.println(value);
   //foo -> bar
   Arancino.free(value); //frees memory
 
   delay(2000); //wait 2 seconds
 
-  Arancino.set("foo","baz");
+  Arancino.set("ex02_foo","baz");
 
   //gets the value from the 'foo' key
-  value = Arancino.get("foo");
-  Serial.print("foo -> ");
+  value = Arancino.get("ex02_foo");
+  Serial.print("ex02_foo -> ");
   Serial.println(value);
   //foo -> baz
   Arancino.free(value); //frees memory

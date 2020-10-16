@@ -41,7 +41,7 @@ ArancinoPacket reply: ArancinoPacket containing:
 void setup() {
   Arancino.begin();
 
-  ArancinoPacket apckt = Arancino.hset("foo", "bar", "yeah");
+  ArancinoPacket apckt = Arancino.hset("ex05p_foo", "bar", "yeah");
 
   if (apckt.isError == 0)
   {

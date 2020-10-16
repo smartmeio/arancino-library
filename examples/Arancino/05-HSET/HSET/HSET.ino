@@ -44,8 +44,8 @@ ArancinoPacket reply: ArancinoPacket containing:
 void setup() {
   Arancino.begin();
 
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","bar","whoo");
+  Arancino.hset("ex05_foo","bar","yeah");
+  Arancino.hset("ex05_foo","bar","whoo");
 }
 
 void loop() {

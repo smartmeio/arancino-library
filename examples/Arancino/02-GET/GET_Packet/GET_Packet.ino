@@ -44,9 +44,9 @@ void setup() {
 void loop() {
 
   //sets the value 'bar' into the 'foo' key
-  Arancino.set("foo","bar");
+  Arancino.set("ex02p_foo","bar");
 
-  ArancinoPacket apckt = Arancino.get<ArancinoPacket>("foo");
+  ArancinoPacket apckt = Arancino.get<ArancinoPacket>("ex02p_foo");
   if (!apckt.isError)
   {
     Serial.println("GET OK");
@@ -55,7 +55,7 @@ void loop() {
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
 
-    Serial.print("foo -> ");
+    Serial.print("ex02p_foo -> ");
     Serial.println(apckt.response.string);
     //foo -> bar
     

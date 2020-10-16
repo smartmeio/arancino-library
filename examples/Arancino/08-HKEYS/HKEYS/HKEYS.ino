@@ -38,16 +38,16 @@ void setup() {
   Arancino.begin();
   Serial.begin(115200);
   
-  Arancino.hset("foo","bar","yeah");
-  Arancino.hset("foo","baz","whoo");
+  Arancino.hset("ex08_foo","bar","yeah");
+  Arancino.hset("ex08_foo","baz","whoo");
 
 }
 
 void loop() {
 
-  char** fields = Arancino.hkeys("foo");
+  char** fields = Arancino.hkeys("ex08_foo");
   for (int i = 0; i < Arancino.getArraySize(fields); i++) {
-    Serial.print("foo -> ");
+    Serial.print("ex08_foo -> ");
     Serial.println(fields[i]);
     // foo -> bar
     // foo -> baz
