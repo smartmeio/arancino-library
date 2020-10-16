@@ -42,9 +42,9 @@ Return value - int reply:
 void setup() {
   Arancino.begin();
 
-  int resp = Arancino.hset("foo","bar","yeah");
+  int resp = Arancino.hset("ex05_foo","bar","yeah");
   //1
-  resp = Arancino.hset("foo","baz","whoo");
+  resp = Arancino.hset("ex05_foo","baz","whoo");
   //0
 }
 

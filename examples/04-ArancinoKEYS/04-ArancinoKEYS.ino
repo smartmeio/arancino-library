@@ -46,9 +46,9 @@ void setup() {
   Serial.begin(115200);
   Arancino.begin();
 
-  Arancino.set("pressure",1023);
-  Arancino.set("humidity",67.5);
-  Arancino.set("temperature",24.4);
+  Arancino.set("ex04_pressure",1023);
+  Arancino.set("ex04_humidity",67.5);
+  Arancino.set("ex04_temperature",24.4);
 
 }
 
@@ -64,7 +64,7 @@ void loop() {
 
   delay(5000); //wait 5 seconds
   
-  key = Arancino.keys("temp*");  //return all the keys thath contains temp pattern
+  key = Arancino.keys("ex04_temp*");  //return all the keys thath contains temp pattern
   for(int i=0; i<Arancino.getArraySize() ;i++){
       Serial.println(key[i]);  
   }
