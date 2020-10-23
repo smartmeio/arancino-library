@@ -111,7 +111,10 @@ class ArancinoClass {
 
 		//BEGIN
 		void begin(bool useid = false, int timeout = TIMEOUT);
-	
+
+		//MSET
+		ArancinoPacket mset(char** keys, char** values, uint len);
+
 		//SET	
 		// ArancinoPacket set(char* key, int value);
 		// ArancinoPacket set(char* key, double value);
@@ -144,6 +147,9 @@ class ArancinoClass {
 		ArancinoPacket hset(char* key, char* field, uint32_t value);
 		ArancinoPacket hset(char* key, char* field, long value);
 
+		//MGET
+		template<class T = char**> T mget(char** keys, uint len);
+		
 		//HGET
 		// ArancinoPacket hgetPacket(char* key, char* field);
 		// char* hget(char* key, char* field);
@@ -225,6 +231,7 @@ class ArancinoClass {
 		char reservedKey[RESERVED_KEY_ARRAY_SIZE][RESERVED_KEY_MAX_LENGTH]; //max 10 char for key
 		int COMM_MODE = SYNCH;
 		const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
+		const char arraySplitStr[2] = {ARRAY_SPLIT_CHAR, '\0'};
 		const char endTXStr[2] = {END_TX_CHAR, '\0'};
 
 		ArancinoMetadata _meta = {

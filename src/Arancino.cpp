@@ -192,6 +192,199 @@ void ArancinoClass::setReservedCommunicationMode(int mode){
 	COMM_MODE = mode;
 }
 
+/******** API BASIC :: MSET *********/
+
+ArancinoPacket ArancinoClass::mset(char** keys, char** values, uint len) {
+	if ((keys == NULL) || (values == NULL) || (len <= 0)) {
+		return invalidCommandErrorPacket;
+	}
+
+	uint commandLength = strlen(MSET_COMMAND);
+	uint strLength = commandLength + 1; // Counting the # character (data split chr)
+
+	// Calculating Cortex Protocol command length
+	for (uint i = 0; i < len; i ++) {
+		char* key = keys[i];
+		char* value = values[i];
+		
+		uint keyLength = strlen(key);
+
+		// if arancino_id has to be prepended we take into account its length and _ char
+		if (arancino_id_prefix) {
+			keyLength += idSize + 1;
+		}
+
+		uint valueLength = strlen(value);
+
+
+		// For every key-value pair the length of both key and value is added
+		// two 1s are added in order to take into account the % chr and
+		// the # and @ chrs in the case of last key or last value respectively
+		strLength += keyLength + 1 + valueLength + 1;
+	}
+
+	char* str = (char*) calloc(strLength + 1, sizeof(char));
+	strcat(str, MSET_COMMAND);
+	strcat(str, dataSplitStr);
+
+	// Points to the memory area where keys have to be written
+	char* keysPointer = str + strlen(MSET_COMMAND) + strlen(dataSplitStr);
+
+	// Points at the end of the string
+	char* valuesPointer = str + strLength;
+
+	// The string to send is built in 1 single loop.
+	// keys are copied from first to last (left to right in string)
+	// and values are copied from last to first (right to left in string)
+	for(uint i = 0; i < len; i ++) {
+		char* key = keys[i];
+		char* value = values[len - (i + 1)];
+
+		if(arancino_id_prefix){
+			strcat(keysPointer, id);
+			strcat(keysPointer, ID_SEPARATOR);
+		}
+
+		strcat(keysPointer, key);
+		
+		if (i == len - 1) { // If it's the last key we have to use #(\4) instead of %(\16)
+			strcat(keysPointer, dataSplitStr);
+		} else {
+			strcat(keysPointer, arraySplitStr);
+		}
+
+		// We use memcpy rather than strcat here because it would append \0, 
+		// thus terminating the string prematurely
+		valuesPointer -= strlen(value) + 1;
+		
+		memcpy(valuesPointer, value, strlen(value));
+
+		if (i == 0) {
+			memcpy(valuesPointer + strlen(value), endTXStr, 1);
+		} else {
+			memcpy(valuesPointer + strlen(value), arraySplitStr, 1);
+		}
+	}
+
+	#if defined(__SAMD21G18A__)
+		if(!digitalRead(DBG_PIN)){
+			Serial.print(SENT_STRING);
+		}
+	#endif
+
+	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+		{
+			vTaskSuspendAll();
+		}
+	#endif
+	
+	_sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+		{
+			xTaskResumeAll();
+		}
+	#endif
+
+	std::free(str);
+
+
+	if (message == NULL) return communicationErrorPacket;
+
+	ArancinoPacket packet = {false, _getResponseCode(message), VOID, {.string = NULL}};
+	std::free(message);
+
+	return packet;
+}
+
+/******** API BASIC :: MGET *********/
+
+template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, uint len){
+	if ((keys == NULL) || (len <= 0)) {
+		return invalidCommandErrorPacket;
+	}
+
+	uint commandLength = strlen(MSET_COMMAND);
+	uint strLength = commandLength + 1; // Counting the # character (data split chr)
+
+	// Calculating Cortex Protocol command length
+	for (uint i = 0; i < len; i ++) {
+		char* key = keys[i];
+		
+		uint keyLength = strlen(key);
+
+		// if arancino_id has to be prepended we take into account its length and _ char
+		if (arancino_id_prefix) {
+			keyLength += idSize + 1;
+		}
+
+		strLength += keyLength + 1;
+	}
+
+	char* str = (char*) calloc(strLength, sizeof(char));
+	strcat(str, MGET_COMMAND);
+	strcat(str, dataSplitStr);
+
+
+	// Building the string
+	for(uint i = 0; i < len; i ++) {
+		char* key = keys[i];
+
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
+
+		strcat(str, key);
+		if (i != len - 1) strcat(str, arraySplitStr);
+	}
+
+	strcat(str, endTXStr);
+	
+	#if defined(__SAMD21G18A__)
+		if(!digitalRead(DBG_PIN)){
+			Serial.print(SENT_STRING);
+		}
+	#endif
+
+	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+		{
+			vTaskSuspendAll();
+		}
+	#endif
+	
+	_sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+		{
+			xTaskResumeAll();
+		}
+	#endif
+
+	std::free(str);
+
+
+	if (message == NULL) return communicationErrorPacket;
+
+	ArancinoPacket packet = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+	std::free(message);
+
+	return packet;
+}
+
+template<> char** ArancinoClass::mget(char** keys, uint len) {
+
+	ArancinoPacket packet = mget<ArancinoPacket>(keys, len);
+
+	if (packet.isError) return NULL;
+
+	return packet.response.stringArray;
+}
+
 /******** API BASIC :: SET *********/
 
 ArancinoPacket ArancinoClass::set( char* key, int value, bool isPersistent) {
