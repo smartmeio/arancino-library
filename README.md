@@ -18,6 +18,14 @@ Open the Arduino IDE and go to *Sketch* → *Include Library* → *Manage Librar
 *Important Note:*
 > Arancino Library has one dependency when FreeRTOS capabilities are required: [FreeRTOS_SAMD21 Arduino library](https://github.com/BriscoeTech/Arduino-FreeRTOS-SAMD21) by BriscoeTech. Please download it from Arduino Library Manager. In that case you also have to select _Yes_ from _Menu -> Tools -> Using FreeRTOS?_.
 
+## Testing the Library
+It is possible to run unit tests for the Arancino Library. In order to do so you need to:
+
+1. Flash `test/unit.ino` sketch on the microcontroller.
+2. Run `test/unit.sh` on the host where Arancino Module is installed. *
+3. Output is written to `Serial1`.
+
+*: It is possible to modify connection variables relative to redis databases inside `unit.sh` file.
 
 ## Data structures
 ### ArancinoMetadata
