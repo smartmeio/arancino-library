@@ -54,6 +54,7 @@ under the License
 #define END_TX_CHAR				(char)4 //'@' //
 #define DATA_SPLIT_CHAR			(char)30 //'#' //
 #define ARRAY_SPLIT_CHAR        (char)16 //'%' //
+#define NULL_CHAR               (char)25
 #define ID_SEPARATOR            "_"
 
 #define RSP_OK					100

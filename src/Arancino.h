@@ -233,6 +233,7 @@ class ArancinoClass {
 		const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
 		const char arraySplitStr[2] = {ARRAY_SPLIT_CHAR, '\0'};
 		const char endTXStr[2] = {END_TX_CHAR, '\0'};
+		const char nullStr[2] = {NULL_CHAR, '\0'};
 
 		ArancinoMetadata _meta = {
 			"",

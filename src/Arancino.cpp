@@ -1734,7 +1734,8 @@ char* ArancinoClass::_parse(char* message) {
 	#endif
 
 	std::free(status);
-	return value;
+
+	return strcmp(value, nullStr) == 0 ? NULL : value;
 
 }
 
@@ -1788,9 +1789,13 @@ char** ArancinoClass::_parseArray(char* data) {
 			DSCIndex = strchr(previousDSCIndex + 1, DATA_SPLIT_CHAR);
 
 			if (DSCIndex != NULL)
-			{
-				strncpy(arrayParsed[i], previousDSCIndex, DSCIndex - previousDSCIndex);
-				arrayParsed[i][DSCIndex - previousDSCIndex] = '\0';
+			{	
+				if (strncmp(previousDSCIndex, nullStr, DSCIndex - previousDSCIndex) == 0){
+					arrayParsed[i] = NULL;
+				} else {
+					strncpy(arrayParsed[i], previousDSCIndex, DSCIndex - previousDSCIndex);
+					arrayParsed[i][DSCIndex - previousDSCIndex] = '\0';
+				}
 				previousDSCIndex = DSCIndex + 1;
 			}
 			else
