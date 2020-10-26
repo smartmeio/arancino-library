@@ -60,9 +60,9 @@ void setup() {
     char* keys[] = {"key1", "key2", "key3"};
     char* values[] = {"value1", "value2", "value3"};
 
-    Arancino.mset(keys, values);
-    Arancino.mget(keys);
-    Arancino.mget<ArancinoPacket>(keys);
+    Arancino.mset(keys, values, 3);
+    Arancino.mget(keys, 3);
+    Arancino.mget<ArancinoPacket>(keys, 3);
 
     Arancino.flush();
 
