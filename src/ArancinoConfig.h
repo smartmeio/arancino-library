@@ -32,8 +32,10 @@ under the License
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
 
 #define START_COMMAND			"START"
+#define MSET_COMMAND            "MSET"
 #define SET_COMMAND 			"SET"
 #define SET_PERS_COMMAND 		"SETPERS"
+#define MGET_COMMAND            "MGET"
 #define GET_COMMAND 			"GET"
 #define DEL_COMMAND 			"DEL"
 #define KEYS_COMMAND			"KEYS"
@@ -51,6 +53,8 @@ under the License
 
 #define END_TX_CHAR				(char)4 //'@' //
 #define DATA_SPLIT_CHAR			(char)30 //'#' //
+#define ARRAY_SPLIT_CHAR        (char)16 //'%' //
+#define NULL_CHAR               (char)25
 #define ID_SEPARATOR            "_"
 
 #define RSP_OK					100

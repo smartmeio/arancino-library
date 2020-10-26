@@ -57,6 +57,13 @@ void setup() {
     Arancino.publish("test", "val");
     Arancino.publish("test", (uint32_t)5);
 
+    char* keys[] = {"key1", "key2", "key3"};
+    char* values[] = {"value1", "value2", "value3"};
+
+    Arancino.mset(keys, values, 3);
+    Arancino.mget(keys, 3);
+    Arancino.mget<ArancinoPacket>(keys, 3);
+
     Arancino.flush();
 
 }
