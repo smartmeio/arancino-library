@@ -29,3 +29,9 @@ publish	KEYWORD2
 print	KEYWORD2
 println	KEYWORD2
 setReservedCommunicationMode	KEYWORD2
+
+#######################################
+# Stucts (KEYWORD1)
+#######################################
+
+ArancinoMetadata

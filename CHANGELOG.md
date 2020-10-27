@@ -2,6 +2,8 @@
 
 #### v 0.4.0 - 2020.MM.DD
 * Upd: Removed the unused reserved key `___LIBVERS___` #79
+* Upd: Changes in examples: keys/values name. #60
+* Add: Introduced a struct called `ArancinoMetadata`, used to set information about the current firmware. #85
 
 #### v 0.3.0 - 2020.07.24
 * Add: Introduced the possibility to use prefix id for each command sent #66
