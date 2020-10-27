@@ -10,14 +10,24 @@ Arancino	KEYWORD3
 ArancinoPacket	KEYWORD3
 
 #######################################
+# Stucts (KEYWORD1)
+#######################################
+
+ArancinoMetadata KEYWORD1
+ArancinoPacket KEYWORD1
+
+#######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
 available	KEYWORD2
+metadata KEYWORD2
 begin	KEYWORD2
 startScheduler	KEYWORD2
 set	KEYWORD2
 get	KEYWORD2
+mset KEYWORD2
+mget KEYWORD2
 del	KEYWORD2
 keys	KEYWORD2
 hset	KEYWORD2
