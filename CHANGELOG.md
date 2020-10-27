@@ -1,6 +1,6 @@
 # Changelog
 
-#### v 0.4.0 - 2020.MM.DD
+#### v 0.4.0 - 2020.10.27
 * Upd: Removed the unused reserved key `___LIBVERS___` #79
 * Upd: Changes in examples: keys/values name. #60
 * Add: Introduced a struct called `ArancinoMetadata`, used to set information about the current firmware. #85
