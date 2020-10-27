@@ -330,7 +330,7 @@ void loop() {
 }
 ```
 
-###### Note: [1](###notes)
+###### Note: [1](###notes), [4](###notes)
 
 ___
 
@@ -472,7 +472,7 @@ void loop() {
 }
 ```
 
-###### Note: [1](###notes)
+###### Note: [1](###notes), [4](###notes)
 
 ### del
 ##### *int del(char&ast; key )*
@@ -886,7 +886,7 @@ void loop() {
 }
 ```
 
-###### Note: [1](###notes)
+###### Note: [1](###notes), [4](###notes)
 
 ___
 ### hgetall
@@ -978,7 +978,7 @@ void loop() {
   delay(1000); //wait 1 seconds
 }
 ```
-###### Note: [1](###notes)
+###### Note: [1](###notes), [4](###notes)
 
 ___
 ### hkeys
@@ -1073,7 +1073,7 @@ void loop() {
 }
 ```
 
-###### Note: [1](###notes)
+###### Note: [1](###notes), [4](###notes)
 
 ___
 ### hvals
@@ -1167,7 +1167,7 @@ void loop() {
 }
 ```
 
-###### Note: [1](###notes)
+###### Note: [1](###notes), [4](###notes)
 
 ___
 ### hdel
@@ -1464,7 +1464,7 @@ void setup() {
 void loop() {
   char* str = Arancino.get("exfree_foo");
   char** key = Arancino.keys();
-  ArancinoPacket myPacket = Arancino.getPacket("exfree_qwe");
+  ArancinoPacket myPacket = Arancino.getPacket("exfree_ qwe");
 
   /* user code... */
 
@@ -1479,7 +1479,16 @@ void loop() {
 1. When using get-type functions (such as `get`, `hget`, `mget`, `hkeys`, `hvals`, `hgetall`, ...) the Arancino Module first searches the key in the volatile redis db. If it is not found there, the persistent redis db is used.
 2. When using `set` and `hset` functions the key has to be unique between both volatile and persistent db. Example: if we want to set a volatile variable named `key1`, the Arancino Module first checks if `key1` exists in the persistent db.
 3. When using `mset` function the previous check is not executed. Later, when using `get` function the default redis db is first used (volatile).
-
+4. When using arrays returned by Arancino Library functions it is important to free them after usage to prevent memory leaks. Example:
+      ```c++
+      char* temp = Arancino.get("test");
+      Arancino.set("key2", temp);
+      Arancino.free(temp);
+      ```
+      It is not recommended to do as follows:
+      ```c++
+      Arancino.set("key2", Arancino.get("test"));
+      ```
 
 ## Cortex Protocol
 Arancino Library uses a simple protocol, called **Cortex**, to communicate with the Arancino Module over serial connection. Cortex Protocol is designed to be easy to read and processed. Arancino Library, Arancino Module and Cortex Protocol are designed to be monodirectional and synchronous. In this scenario the Arancino Library within the microcontroller acts as *master*, and the Arancino Module as *slave*.
