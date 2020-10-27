@@ -230,7 +230,7 @@ void loop() {
 
 ```
 
-
+###### Note: [2](###notes)
 
 ___
 ### get
@@ -282,6 +282,8 @@ void loop() {
 }
 
 ```
+
+###### Note: [1](###notes)
 
 ___
 ### getPacket
@@ -336,7 +338,151 @@ void loop() {
 }
 
 ```
+
+###### Note: [1](###notes)
+
 ___
+
+### mset
+##### *ArancinoPacket mset(char&ast;&ast; keys, char&ast;&ast; values, uint len)*
+Executes the MSET command. Every key in the `keys` parameter is set to the corresponding value in the `values` parameter.
+
+##### Parameters
+* **`keys`**: keys to set;
+* **`values`**: corresponding values of the keys;
+* **`len`**: number of keys to set, namely the length of `keys` array.
+
+##### Return value
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `VOID`;
+  * `response`: `NULL`;
+
+##### Example
+```c++
+#include <Arancino.h>
+
+char* keys[] = {"exmset_foo1", "exmset_foo2", "exmset_foo3"};
+char* values[] = {"value1", "value2", "value3"};
+
+void setup(){
+  Arancino.begin();
+  ArancinoPacket temp = Arancino.mset(keys, values, 3);
+
+  if (temp.isError == 0)
+  {
+    Serial.println("MSET OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+    Serial.print("Response value: ");
+    Serial.println(temp.response.integer);
+  }
+  else
+  {
+    Serial.println("MSET ERROR");
+  }
+}
+
+void loop() {
+  // Do something
+}
+```
+###### Note: [3](###notes)
+
+### mget
+##### *char&ast;&ast; mget(char&ast;&ast; keys, char&ast;&ast; values, uint len)*
+##### *ArancinoPacket mget\<ArancinoPacket>(char&ast;&ast; keys, uint len)*
+
+Retrieves multiple keys from redis. 
+
+##### Parameters
+* **`keys`**: array containing keys to retrieve;
+* **`len`**: number of keys to retrieve.
+
+##### Return value
+`get` function can return both `char**` and `ArancinoPacket` depending on the template used.
+
+###### `char**`
+In this case an array of `char*` in returned. Every element contains the value stored in the corresponding key in the `keys` parameter. If a key doesn't exist the corresponding element in the returned array is `NULL`.
+
+###### `ArancinoPacket`
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `STRING_ARRAY`;
+  * `response.stringarray`: `char**` pointer that points to the start of the returned array of strings.
+
+##### Example 1
+```c++
+#include <Arancino.h>
+
+char* keys[] = {"exmget_foo1", "exmget_foo2", "exmget_foo3"};
+
+void setup() {
+  Arancino.begin();
+  Serial.begin(115200);
+  Arancino.set("exmget_foo1", "a");
+  Arancino.set("exmget_foo3", "c");
+
+  char** result = Arancino.mget(keys, 3);
+
+  for(int i = 0; i < Arancino.getArraySize(result); i++) {
+    Serial.print(keys[i]);
+    Serial.print(" -> ");
+    Serial.println(result[i]);
+  }
+}
+
+void loop() {
+  // Do something
+}
+```
+
+##### Example 2
+```c++
+#include <Arancino.h>
+
+char* keys[] = {"exmget_foo1", "exmget_foo2", "exmget_foo3"};
+
+void setup() {
+  Arancino.begin();
+  Serial.begin(115200);
+  Arancino.set("exmget_foo1", "a");
+  Arancino.set("exmget_foo3", "c");
+
+  ArancinoPacket temp = Arancino.mget(keys, 3);
+
+  if (!temp.isError)
+  {
+    Serial.println("MGET OK");
+    Serial.print("Response code: ");
+    Serial.println(temp.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(temp.responseType);
+
+    for(int i = 0; i < Arancino.getArraySize(temp.response.stringArray); i++) {
+      Serial.print(keys[i]);
+      Serial.print(" -> ");
+      Serial.println(temp.response.stringArray[i]);
+    }
+    Arancino.free(temp); //delete the string from memory
+  }
+  else
+  {
+    Serial.println("MGET ERROR");
+  }
+}
+
+void loop() {
+  // Do something
+}
+```
+
+###### Note: [1](###notes)
+
 ### del
 ##### *int del(char&ast; key )*
 
@@ -371,6 +517,8 @@ void loop() {
 }
 
 ```
+
+###### Note: [1](###notes)
 
 ___
 ### delPacket
@@ -436,6 +584,8 @@ void loop() {
 }
 
 ```
+
+###### Note: [1](###notes)
 
 ___
 ### keys
@@ -663,6 +813,7 @@ void loop() {
 
 ```
 
+###### Note: [2](###notes)
 
 ___
 ### hget
@@ -709,6 +860,9 @@ void loop() {
 }
 
 ```
+
+###### Note: [1](###notes)
+
 ___
 ### hgetPacket
 ##### *ArancinoPacket hgetPacket(char&ast; key, char&ast; field )*
@@ -808,6 +962,8 @@ void loop() {
 
 ```
 
+###### Note: [1](###notes)
+
 ___
 ### hgetallPacket
 ##### *ArancinoPacket hgetallPacket(char&ast; key )*
@@ -904,6 +1060,8 @@ void loop() {
   delay(5000); //wait 5 seconds
 }
 ```
+
+###### Note: [1](###notes)
 
 ___
 ### hkeysPacket
@@ -1003,6 +1161,8 @@ void loop() {
 }
 ```
 
+###### Note: [1](###notes)
+
 ___
 ### hvalsPacket
 ##### *ArancinoPacket hvalsPacket(char&ast; key )*
@@ -1095,6 +1255,8 @@ void loop() {
 }
 
 ```
+
+###### Note: [1](###notes)
 
 ___
 ### hdelPacket
@@ -1367,6 +1529,12 @@ void loop() {
 ```
 ###### Note: when the *free* API is used for freeing an ArancinoPacket, the response type (string or string array ) is auto detected.
 
+### Notes
+1. When using get-type functions (such as `get`, `hget`, `mget`, `hkeys`, `hvals`, `hgetall`, ...) the Arancino Module first searches the key in the volatile redis db. If it is not found there, the persistent redis db is used.
+2. When using `set` and `hset` functions the key has to be unique between both volatile and persistent db. Example: if we want to set a volatile variable named `key1`, the Arancino Module first checks if `key1` exists in the persistent db.
+3. When using `mset` function the previous check is not executed. Later, when using `get` function the default redis db is first used (volatile).
+
+
 ## Cortex Protocol
 Arancino Library uses a simple protocol, called **Cortex**, to communicate with the Arancino Module over serial connection. Cortex Protocol is designed to be easy to read and processed. Arancino Library, Arancino Module and Cortex Protocol are designed to be monodirectional and synchronous. In this scenario the Arancino Library within the microcontroller acts as *master*, and the Arancino Module as *slave*.
 
@@ -1381,6 +1549,8 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | [`begin`](#begin)  | START         |
 | [`set`](#set)      | SET           |
 | [`get`](#get)      | GET           |
+| [`mset`](#mset)    | MSET          |
+| [`mget`](#mget)    | MGET          |
 | [`del`](#del)      | DEL           |
 | [`keys`](#keys)    | KEYS          |
 | [`hget`](#hget)    | HGET          |
@@ -1397,6 +1567,8 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | Separator             | Char Code     |
 | --------------------- |:-------------:|
 | Command Sepatator     | `4`           |
+| Array separator       | `16`          |
+| NULL character        | `25`          |
 | End of transmission   | `30`          |
 
 
@@ -1422,6 +1594,7 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 As exaplained above, when an API function is called, a command is sent over the `SerialUSB` and a response is received.
 In the next paragraphs, for simplicity we are considering each command returns an *OK* response and using the following representation for *Separator Codes*:
 - Command Sepatator → `4`  → `#`
+- Array separator → `16` → `16`
 - End of transmission → `30`  →` @`
 
 #### begin
@@ -1435,6 +1608,14 @@ In the next paragraphs, for simplicity we are considering each command returns a
 #### get
 - Command Sent: `GET#<key>@`
 - Response Received: `100#<value>@`
+
+#### mset
+- Command Sent: `MSET#<key1><%key2>%...<%keyn>#<val1><%val2>%...<%valn>@`
+- Response Received: `100#@`
+
+#### mget
+- Command Sent: `MGET#<key1><%key2>%...<%keyn>@`
+- Response Received: `100#[val1][#val2][#...][#valn]@`
 
 #### del
 - Command Sent: `DEL#<key>@`
