@@ -1,5 +1,12 @@
 # Changelog
 
+#### v 1.3.0 - 2020.10.28
+* Upd: `get`-type functions now return NULL when key is not found #81
+* Add: now it is possible to pass information about firmware name and version to Arancino Module #76
+* Add: added `mset` and `mget` functions #74
+* Add: added unit tests #83
+* Docs: several documentation fixes #82 #61 #60
+
 #### v 1.2.1 - 2020.10.09
 * Fix: Fixed a bug in start command #78
 * Upd: Updated Doc README for `HGETALL` function #55

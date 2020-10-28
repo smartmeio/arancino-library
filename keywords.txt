@@ -7,7 +7,6 @@
 #######################################
 
 Arancino	KEYWORD3
-ArancinoPacket	KEYWORD3
 
 #######################################
 # Stucts (KEYWORD1)
