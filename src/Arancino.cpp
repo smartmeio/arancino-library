@@ -1735,7 +1735,12 @@ char* ArancinoClass::_parse(char* message) {
 
 	std::free(status);
 
-	return strcmp(value, nullStr) == 0 ? NULL : value;
+	if (strcmp(value, nullStr) == 0){
+		std::free(value);
+		return NULL;
+	}else{
+		return value;
+	}
 
 }
 

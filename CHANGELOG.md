@@ -1,5 +1,8 @@
 # Changelog
 
+#### v 1.3.1 - 2021.01.XX
+* Fix: Fixed a memory leak bug's on `get` function
+
 #### v 1.3.0 - 2020.10.28
 * Upd: `get`-type functions now return NULL when key is not found #81
 * Add: now it is possible to pass information about firmware name and version to Arancino Module #76
