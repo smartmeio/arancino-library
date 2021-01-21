@@ -231,7 +231,7 @@ void loop() {
 ```
 
 ###### Note: [2](###notes)
-
+###### Note: [5](###notes)
 ___
 ### get
 ##### *char&ast; get(char&ast; key)*
@@ -1474,9 +1474,34 @@ void loop() {
 }
 ```
 ###### Note: when the *free* API is used for freeing an ArancinoPacket, the response type (string or string array ) is auto detected.
+___
+### isValidUTF8
+##### * bool isValidUTF8(char&ast; string) *
 
+
+Check if the string is valid and correct for the utf-8 standard.
+
+##### Parameters
+* **`string`**: pointer to string.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Serial.begin(115200);
+  Arancino.begin();
+}
+
+void loop() {
+  char* str = "Test";
+  if(isValidUTF8(str)) 
+        Arancino.set("key3", str);
+ 
+}
+```
 ### Notes
-1. When using get-type functions (such as `get`, `hget`, `mget`, `hkeys`, `hvals`, `hgetall`, ...) the Arancino Module first searches the key in the volatile redis db. If it is not found there, the persistent redis db is used.
+1. When using `get`-type functions (such as `get`, `hget`, `mget`, `hkeys`, `hvals`, `hgetall`, ...) the Arancino Module first searches the key in the volatile redis db. If it is not found there, the persistent redis db is used.
 2. When using `set` and `hset` functions the key has to be unique between both volatile and persistent db. Example: if we want to set a volatile variable named `key1`, the Arancino Module first checks if `key1` exists in the persistent db.
 3. When using `mset` function the previous check is not executed. Later, when using `get` function the default redis db is first used (volatile).
 4. When using arrays returned by Arancino Library functions it is important to free them after usage to prevent memory leaks. Example:
@@ -1488,6 +1513,14 @@ void loop() {
       It is not recommended to do as follows:
       ```c++
       Arancino.set("key2", Arancino.get("test"));
+      ```
+
+5. When using `set`-type functions, make sure that the value is correctly formatted with *utf-8* standard. Is recommended to use the internal function `isValidUTF8` before the `set` to avoid decoding errors on Arancino Module. Example:
+```c++
+      char* value="test";
+      if(isValidUTF8(value)) 
+        Arancino.set("key3", value);
+      
       ```
 
 ## Cortex Protocol

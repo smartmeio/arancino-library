@@ -215,6 +215,9 @@ class ArancinoClass {
 		int getArraySize(char** _array);
 		int getArraySize(String* _array);
 
+		//CHECK UTF-8
+		bool isValidUTF8(const char * string);
+
 		//TEMPLATE TEST
 		//template<class T = char*> T ArancinoGet(char* key);
 
