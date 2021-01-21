@@ -43,3 +43,4 @@ doubleToString  KEYWORD2
 print	KEYWORD2
 println	KEYWORD2
 setReservedCommunicationMode	KEYWORD2
+isValidUTF8	KEYWORD2
