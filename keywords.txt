@@ -1,5 +1,5 @@
 #######################################
-# Syntax Coloring Map For LightingRod
+# Syntax Coloring Map For Arancino Library
 #######################################
 
 #######################################

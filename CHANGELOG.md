@@ -1,7 +1,8 @@
 # Changelog
 
-#### v 1.3.1 - 2021.01.XX
-* Fix: Fixed a memory leak bug's on `get` function
+#### v 1.3.1 - 2021.01.22
+* Fix: Fixed a memory leak bug's `get`-based functions [#c8y3rg](https://app.clickup.com/t/c8y3rg)
+* Add: Utility to use for UTF-8 verification [#cq2620](https://app.clickup.com/t/cq2620)
 
 #### v 1.3.0 - 2020.10.28
 * Upd: `get`-type functions now return NULL when key is not found #81
