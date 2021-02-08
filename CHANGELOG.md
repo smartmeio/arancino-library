@@ -1,6 +1,6 @@
 # Changelog
 
-#### v 1.3.1 - 2021.01.22
+#### v 1.3.1 - 2021.02.08
 * Fix: Fixed a memory leak bug's `get`-based functions [#c8y3rg](https://app.clickup.com/t/c8y3rg)
 * Add: Utility to use for UTF-8 verification [#cq2620](https://app.clickup.com/t/cq2620)
 
