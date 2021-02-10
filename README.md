@@ -230,6 +230,27 @@ void loop() {
 
 ```
 
+##### Example 3
+
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+  
+  Arancino.set("pers_key","bar",true); // persistent key
+  Arancino.set("pers_key1","bar",1); // persistent key
+  Arancino.set("no_pers_key","bar",false); //no persistent key
+  Arancino.set("no_pers_key1","bar",NULL); //no persistent key
+  Arancino.set("no_pers_key2","bar"); //no persistent key
+}
+
+void loop() {
+    //do something
+}
+
+```
+
 ###### Note: [2](###notes)
 ###### Note: [5](###notes)
 ___
