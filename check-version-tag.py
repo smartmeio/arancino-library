@@ -33,12 +33,12 @@ if __name__ == '__main__':
     tag = args[1]
     v = semver.Version(tag)
 
-    print("release is : "+str(v.major)+'.'+str(v.minor)+'.'+str(v.patch))
+    # print("release is : "+str(v.major)+'.'+str(v.minor)+'.'+str(v.patch))
 
     try:
         if v.prerelease[0] in pre_release_release_list:
             # print("pre-release is : "+v.prerelease[0]+'.'+v.prerelease[1])
-            print("pre-release is : "+v.prerelease[0]+'.'+re.sub("-.*$", "",  v.prerelease[1]))
+            # print("pre-release is : "+v.prerelease[0]+'.'+re.sub("-.*$", "",  v.prerelease[1]))
             pass
     except IndexError:
         pass
