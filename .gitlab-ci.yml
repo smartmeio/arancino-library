@@ -130,7 +130,7 @@ package_release:
     - mv tmp/ $CI_PROJECT_NAME/
     - mv $PKG_NAME.zip $CI_PROJECT_NAME/tmp/
     # packaging for PlatformIO
-    # - jq --arg tag_ver ${CI_COMMIT_REF_NAME} '.version = $tag_ver' library.json|sponge library.json
+    - jq --arg tag_ver ${CI_COMMIT_REF_NAME} '.version = $tag_ver' library.json|sponge library.json
     # - pio package pack -o /tmp
 
   dependencies:
