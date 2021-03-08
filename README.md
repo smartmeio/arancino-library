@@ -57,6 +57,15 @@ typedef struct {
   ArancinoResponse response;
 } ArancinoPacket;
 ```
+
+### ArancinoConfig
+`ArancinoConfig` is class composed only by attributes used to configure the Arancino Library behaviour. It replaces the use of direct configuration arguments of the `begin` function.
+```c++
+		bool _USEID = false;
+		int _TIMEOUT = TIMEOUT; // 100 ms for samd21
+```
+
+
 ##### Variables
 * `isError`: indicates the outcome of an API call. Its value is `False` (0) when everything is OK or `True` (1) when an error occurs. Both in positive and negative cases is possible to check `responseCode` for more details;
 * `responseCode`: contains a code relative to API call outcome, identified by a label as follows (codes from `100` are defined by the [Cortex Protocol](#response-codes):
@@ -110,7 +119,7 @@ typedef struct {
 
 
 ### metadata
-#### *void metadata(ArancinoMetadata data)*
+#### *void metadata(ArancinoMetadata data)*  |  ***DEPRECATED from Version 1.3.2***
 Stores the metadata to use later during the `START` command in `begin` API.
 
 ##### Parameters
@@ -120,14 +129,20 @@ Stores the metadata to use later during the `START` command in `begin` API.
 ```c++
 #include <Arancino.h>
 
-ArancinoMetadata meta;
-meta.fwname = "Arancino firmware";
-meta.fwversion = "1.0.0";
-meta.tzoffset = "+0100";
+ArancinoMetadata amdata = {
+  .fwname = "Arancino firmware",
+  .fwversion = "1.0.0",
+  .tzoffset = "+1000" 
+};
 
 void setup() {
-  Arancino.metadata(meta);
-  Arancino.begin();
+  
+  // deprecated: do not use the .metadata function directly. Use the mandatory metadata argument in the begin function instead.
+  // This will be removed in the next major relase
+  //Arancino.metadata(meta);
+  
+  //
+  Arancino.begin(amdata);
 }
 
 void loop() {
@@ -137,21 +152,55 @@ void loop() {
 ___
 
 ### begin
-##### *void begin(int timeout, bool portid)*
-##### *void begin(int timeout)*
-##### *void begin()*
-Start the communication with the Arancino Module. When communication starts, the begin sends the Arancino Library version for compatibility to be evaluated.
+##### *void begin(ArancinoMetadata amdata, bool useid = false, int timeout = TIMEOUT )*  |  ***DEPRECATED from Version 1.3.2***
+##### *void begin(ArancinoMetadata amdata, ArancinoConfig aconfig)*
+
+Starts the communication with the Arancino Module. When communication starts, the `begin` transmits the Arancino Library version for compatibility evaluatation.
+From version `1.3.2` the `ArancinoMetadata` argument became mandatory, becouse the data contained in it is part of the initial trasmission.
+From version
 
 ##### Parameters
-* **`timeout`**: represents the time that each command sent (via API call) will wait for a response. Otherwise the delayed command will be skipped. When the `begin` function is called w/o `timeout` it is assumed `100ms` as default value of timeout.
-* **`portid`**: if enabled each command sent will have as command prefix the serial port id. It is a boolean.
+- ArancinoConfig: is class composed only by attributes:
+  - `_TIMEOUT`: (see the following paragraph: `timeout`)
+  - `_USEID`: (see the following paragraph: `useid`)
+
+The convenience of using class X is to be able to increase the number of parameters without necessarily having to change the prototypes. 
+
+
+the use of the following is deprecated and will be remove in the next major release.
+- **`timeout`**:  Represents the time that each command sent (via API call) will wait
+            for a response. Otherwise the delayed command will be skipped. When the
+            `begin` function is called w/o `timeout` it is assumed `100ms` as
+            default value of timeout.
+- **`useid`**: Default `false`. If `true` each key setted up is prefixed with ID of the microntroller.
+        It's useful when you connect multiple microntroller with the same firmware (using the same keys) to
+        one Arancino Module; By this way, at the application level, you can distinguish keys by
+        microntroller id.
+
+
+
 
 ##### Example
 ```c++
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "00 - Begin Example",
+  .fwversion = "1.0.0",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
-  Arancino.begin();
+    // Arancino Configuration
+  ArancinoConfig acfg;
+  acfg._TIMEOUT = 200;
+
+
+  //calls begin w/o paramenter: it is assumed 100ms timeout by default
+  Arancino.begin(amdata);
+
+  //calls begin w/ 200ms timeout trough Arancino Config
+  //Arancino.begin(amdata, acfg);
 }
 
 void loop() {

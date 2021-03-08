@@ -12,8 +12,9 @@ Arancino	KEYWORD3
 # Stucts (KEYWORD1)
 #######################################
 
-ArancinoMetadata	KEYWORD3
-ArancinoPacket	KEYWORD3
+ArancinoMetadata	KEYWORD2
+ArancinoPacket	KEYWORD2
+ArancinoConfig	KEYWORD2
 
 #######################################
 # Methods and Functions (KEYWORD2)

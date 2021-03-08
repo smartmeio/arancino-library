@@ -53,19 +53,45 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 
 /******** API BASIC :: METADATA *********/
 
-void ArancinoClass::metadata(ArancinoMetadata data) {
-	_meta = data;
+[[deprecated("Pass ArancinoMetadata to the Arancino.begin function.")]]
+void ArancinoClass::metadata(ArancinoMetadata _amdata) {
+	_metadata = _amdata;
 }
 
 /******** API BASIC :: BEGIN *********/
-void ArancinoClass::begin(bool useid, int timeout) {
-	SERIAL_PORT.begin(BAUDRATE);
-	SERIAL_PORT.setTimeout(timeout);
-	arancino_id_prefix = useid;
 
-	int fwnameLength = strlen(_meta.fwname);
-	int fwversionLength = strlen(_meta.fwversion);
-	int localtoffsetLength = strlen(_meta.tzoffset);
+// void ArancinoClass::begin(ArancinoMetadata _amdata, bool useid, int timeout) {
+// 	ArancinoConfig _acfg;
+// 	_acfg._USEID = useid;
+// 	_acfg._TIMEOUT = timeout;
+// 	begin(_amdata, _acfg);
+// }
+
+
+void ArancinoClass::begin(ArancinoMetadata _amdata, bool useid, int timeout) {
+	ArancinoConfig _acfg;
+	_acfg._USEID = useid;
+	_acfg._TIMEOUT = timeout;
+	begin(_amdata, _acfg);
+}
+
+void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
+	SERIAL_PORT.begin(BAUDRATE);
+	// SERIAL_PORT.setTimeout(TIMEOUT);
+	// arancino_id_prefix = false;
+	arancino_id_prefix = _acfg._USEID;
+	SERIAL_PORT.setTimeout(_acfg._TIMEOUT);
+	
+	
+	_metadata = _amdata;
+
+	Serial.begin(115200);
+	Serial.println(_acfg._USEID);
+	Serial.println(_acfg._TIMEOUT);
+
+	int fwnameLength = strlen(_metadata.fwname);
+	int fwversionLength = strlen(_metadata.fwversion);
+	int localtoffsetLength = strlen(_metadata.tzoffset);
 
 	int dateLength = strlen(__DATE__);
 	int timeLength = strlen(__TIME__);
@@ -100,16 +126,16 @@ void ArancinoClass::begin(bool useid, int timeout) {
 	strcat(str, LIB_VERSION);
 	strcat(str, dataSplitStr);
 
-	strcat(str, _meta.fwname);
+	strcat(str, _metadata.fwname);
 	strcat(str, dataSplitStr);
-	strcat(str, _meta.fwversion);
+	strcat(str, _metadata.fwversion);
 	strcat(str, dataSplitStr);
 
 	strcat(str, __DATE__);
 	strcat(str, " ");
 	strcat(str, __TIME__);
 	strcat(str, " ");
-	strcat(str, _meta.tzoffset);
+	strcat(str, _metadata.tzoffset);
 	strcat(str, dataSplitStr);
 	
 	#ifdef ARANCINO_CORE_VERSION
