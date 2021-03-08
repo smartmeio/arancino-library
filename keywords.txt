@@ -12,15 +12,15 @@ Arancino	KEYWORD3
 # Stucts (KEYWORD1)
 #######################################
 
-ArancinoMetadata KEYWORD1
-ArancinoPacket KEYWORD1
+ArancinoMetadata	KEYWORD3
+ArancinoPacket	KEYWORD3
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
 available	KEYWORD2
-metadata KEYWORD2
+metadata	KEYWORD2
 begin	KEYWORD2
 startScheduler	KEYWORD2
 set	KEYWORD2
@@ -44,3 +44,4 @@ print	KEYWORD2
 println	KEYWORD2
 setReservedCommunicationMode	KEYWORD2
 isValidUTF8	KEYWORD2
+
