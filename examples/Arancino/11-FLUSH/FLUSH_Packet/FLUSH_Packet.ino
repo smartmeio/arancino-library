@@ -32,25 +32,36 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "11.2 - Flush w/ Packet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
 
-  Arancino.begin();
-  Arancino.set("ex11p_foo","bar");
-  Arancino.set("ex11p_foo","baz");
+  Arancino.begin(amdata);
+  Serial.begin(115200);
+
+  Arancino.set("EX_11_2_foo","bar");
+  Arancino.set("EX_11_2_foo","baz");
   //delete all the keys
+  
   ArancinoPacket apckt = Arancino.flush();
-  if (!apckt.isError)
-  {
+  
+  if (!apckt.isError){
     Serial.println("FLUSH OK");
     Serial.print("Response code: ");
     Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
   }
-  else
-  {
+  else{
     Serial.println("FLUSH ERROR");    
   }
+
+  Arancino.free(apckt);
+
 }
 
 void loop() {

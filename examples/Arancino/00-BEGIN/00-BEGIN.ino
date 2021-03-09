@@ -52,12 +52,10 @@ the use of the following is deprecated and will be remove in the next major rele
 #include <Arancino.h>
 
 ArancinoMetadata amdata = {
-  .fwname = "00 - Begin Example",
+  .fwname = "00.1 - Begin Example",
   .fwversion = "1.0.0",
   .tzoffset = "+1000" 
 };
-
-
 
 void setup() {
 

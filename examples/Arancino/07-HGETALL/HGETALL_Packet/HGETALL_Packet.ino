@@ -36,17 +36,28 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "07.2 - HGetAll w/ Packet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
-  Arancino.begin();
+
+  Arancino.begin(amdata);
   Serial.begin(115200);
-  Arancino.hset("ex07p_foo", "bar", "yeah");
-  Arancino.hset("ex07p_foo", "baz", "whoo");
+
+  Arancino.hset("EX_07_02_foo", "bar", "yeah");
+  Arancino.hset("EX_07_02_foo", "baz", "whoo");
+
 }
 
 void loop() {
-  ArancinoPacket apckt = Arancino.hgetall<ArancinoPacket>("ex07p_foo");
-  if (!apckt.isError)
-  {
+  
+  ArancinoPacket apckt = Arancino.hgetall<ArancinoPacket>("EX_07_02_foo");
+  
+  if (!apckt.isError){
+
     Serial.println("HGETALL OK");
     Serial.print("Response code: ");
     Serial.println(apckt.responseCode);
@@ -55,20 +66,24 @@ void loop() {
 
     char** values = apckt.response.stringArray;
     int arraySize = Arancino.getArraySize(values);
-    for (int i = 0; i < arraySize; i += 2)
-    {
+
+    for (int i = 0; i < arraySize; i += 2){
+
       Serial.print("foo ");
       Serial.print(values[i]);
       Serial.print(" = ");
       Serial.println(values[i + 1]);
+
     }
+  
     Arancino.free(values); //delete the array from memory
+  
   }
-  else
-  {
+  else{
     Serial.print("HGETALL ERROR");
   }
 
   Arancino.free(apckt); //delete the array from memory
+
   delay(1000); //wait 1 seconds
 }

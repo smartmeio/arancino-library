@@ -32,19 +32,24 @@
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "07.1 - HGetAll Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
 
-  Arancino.begin();
-
+  Arancino.begin(amdata);
   Serial.begin(115200);
 
-  Arancino.hset("ex07_foo", "bar", "yeah");
-  Arancino.hset("ex07_foo", "baz", "whoo");
+  Arancino.hset("EX_07_1_foo", "bar", "yeah");
+  Arancino.hset("EX_07_1_foo", "baz", "whoo");
 
 }
 
 void loop() {
-  char** values = Arancino.hgetall("ex07_foo");
+  char** values = Arancino.hgetall("EX_07_1_foo");
   int arraySize = Arancino.getArraySize(values);
   for (int i = 0; i < arraySize; i += 2)
   {

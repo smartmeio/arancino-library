@@ -37,24 +37,31 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "06.2 - HGet w/ Packet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
 
-  Arancino.begin();
+  Arancino.begin(amdata);
   Serial.begin(115200);
-  Arancino.hset("ex06p_foo","bar","yeah");
-  Arancino.hset("ex06p_foo","baz","whoo");
+  
+  Arancino.hset("EX_06_2_foo","bar","yeah");
+  Arancino.hset("EX_06_2_foo","baz","whoo");
 
 }
 
 void loop() {
 
-  char* value = Arancino.hget("ex06p_foo","bar");
+  char* value = Arancino.hget("EX_06_2_foo","bar");
   Serial.print("foo bar -> ");
   Serial.println(value);
   //foo bar -> yeah
   Arancino.free(value);
 
-  ArancinoPacket apckt = Arancino.hget<ArancinoPacket>("ex06p_foo", "baz");
+  ArancinoPacket apckt = Arancino.hget<ArancinoPacket>("EX_06_2_foo", "baz");
 
   if (apckt.isError == 0)
   {

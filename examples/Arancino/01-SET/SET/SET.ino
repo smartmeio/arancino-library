@@ -21,13 +21,17 @@ under the License
 /*
 Set 'key' to hold the string 'value'. If 'key' already holds a 'value', it is overwritten, regardless of its type.
 
-- ArancinoPacket set( char* key, char* value )
-- ArancinoPacket set( char* key, int value )
-- ArancinoPacket set( char* key, float value )
+- ArancinoPacket set(char* key, char*; value [, bool isPersistent] )
+- ArancinoPacket set(char* key,  int value [, bool isPersistent] )
+- ArancinoPacket set(char* key, float value [, bool isPersistent] )
+- ArancinoPacket set(char* key, long value, [, bool isPersistent] )
+- ArancinoPacket set(char* key, uint32_t value, [, bool isPersistent] )
 
 Parameters:
 - key: the key name
-- value: the value for the specified key. can be char*, int o float
+- value: the value for the specified key. can be char*, int, long or float
+- isPersistent: optional boolean value to specify if value must be stored 
+    persistently or not. Default is `false`.
 
 Return value - ArancinoPacket reply: ArancinoPacket containing:
 
@@ -40,23 +44,30 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "01.1 - Set Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
-  Arancino.begin();
+  
+  Arancino.begin(amdata);
   
   //char*
-  char* key1 = "ex01_foo";
+  char* key1 = "EX_01_1_foo";
   char* value1 = "hooray";
   //sets the value 'hooray' into the 'foo' key
   Arancino.set(key1, value1);
 
   //int
-  char* key2 = "ex01_bar";
+  char* key2 = "EX_01_1__bar";
   int value2 = 123;
   //sets the value 123 into the 'bar' key
   Arancino.set(key2, value2);
 
   //double
-  char* key3 = "ex01_baz";
+  char* key3 = "EX_01_1__baz";
   double value3 = 123.456;
   //sets the value 123.456 into the 'baz' key
   Arancino.set(key3, value3);

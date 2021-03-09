@@ -37,17 +37,25 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "12.2 - Publish Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
 
-  Arancino.begin();
+  Arancino.begin(amdata);
   Serial.begin(115200);
 
 }
 
 void loop() {
-  ArancinoPacket apckt = Arancino.publish("0","Hello from Arancino");
-  if (!apckt.isError)
-   {
+  
+  ArancinoPacket apckt = Arancino.publish("EX_12_2","Hello from Arancino");
+  
+  if (!apckt.isError){
+
      Serial.println("PUBLISH OK");
      Serial.print("Response code: ");
      Serial.println(apckt.responseCode);
@@ -59,12 +67,12 @@ void loop() {
      Serial.println(" clients");
      //Message sent to 0 client
    }
-   else
-   {
+   else{
      Serial.println("PUBLISH ERROR");    
    }
 
   Arancino.free(apckt);
+  
   delay(5000); //wait 5 seconds
 
 }

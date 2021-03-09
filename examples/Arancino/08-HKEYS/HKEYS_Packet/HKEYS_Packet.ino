@@ -34,19 +34,25 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "08.2 - HKeys w/ Packet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
 
-  Arancino.begin();
+  Arancino.begin(amdata);
   Serial.begin(115200);
 
-  Arancino.hset("ex08p_foo","bar","yeah");
-  Arancino.hset("ex08p_foo","baz","whoo");
+  Arancino.hset("EX_08_2_foo","bar","yeah");
+  Arancino.hset("EX_08_2_foo","baz","whoo");
 
 }
 
 void loop() {
 
-  ArancinoPacket apckt = Arancino.hkeys<ArancinoPacket>("ex08p_foo");
+  ArancinoPacket apckt = Arancino.hkeys<ArancinoPacket>("EX_08_2_foo");
   char** fields = apckt.response.stringArray;
   if (!apckt.isError)
   {
@@ -56,7 +62,7 @@ void loop() {
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
     for (int i = 0; i < Arancino.getArraySize(fields); i++) {
-      Serial.print("ex08p_foo -> ");
+      Serial.print("EX_08_2_foo -> ");
       Serial.println(fields[i]);
       // foo -> bar
       // foo -> baz

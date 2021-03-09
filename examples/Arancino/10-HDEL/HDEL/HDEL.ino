@@ -37,16 +37,24 @@ Return value - int reply:
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "10.1 - HDel Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
 
-  Arancino.begin();
-  Arancino.hset("ex10_foo","bar","yeah");
-  Arancino.hset("ex10_foo","baz","whoo");
+  Arancino.begin(amdata);
+  Serial.begin(115200);
+
+  Arancino.hset("EX_10_1_foo","bar","yeah");
+  Arancino.hset("EX_10_1_foo","baz","whoo");
   
-  int value = Arancino.hdel("ex10_foo","bar"); //return 1
-  char* str = Arancino.hget("ex10_foo","bar"); //return NULL
+  int value = Arancino.hdel("EX_10_1_foo","bar"); //return 1
+  char* str = Arancino.hget("EX_10_1_foo","bar"); //return NULL
   
-  Serial.print("hget: ");
+  Serial.print("HGet: ");
   Serial.println(str);
   
   Arancino.free(str);

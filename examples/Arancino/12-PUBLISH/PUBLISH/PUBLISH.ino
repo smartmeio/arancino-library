@@ -38,26 +38,33 @@ Return value - void reply
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "12.1 - Publish Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
 
-  Arancino.begin();
+  Arancino.begin(amdata);
+  
   //char*
-  char* key1 = "foo";
-  char* value1 = "hooray";
-  //publish the value 'hooray' into the 'foo' channel
-  Arancino.publish(key1, value1);
+  char* channel1 = "EX_12_1_channel1";
+  char* message1 = "hooray";
+  //publish the value 'hooray' into the 'EX_12_1_channel1' channel
+  Arancino.publish(channel1, message1);
 
   //int
-  char* key2 = "bar";
-  int value2 = 123;
-  //publish the value 123 into the 'bar' channel
-  Arancino.publish(key2, value2);
+  char* channel1 = "EX_12_1_channel2";
+  int message2 = 123;
+  //publish the value 123 into the 'EX_12_1_channel2' channel
+  Arancino.publish(channel2, message2);
 
   //double
-  char* key3 = "baz";
+  char* channel3 = "EX_12_1_channel3";
   double value3 = 123.456;
-  //publish the value 123.456 into the 'baz' channel
-  Arancino.publish(key3, value3);
+  //publish the value 123.456 into the 'EX_12_1_channel3' channel
+  Arancino.publish(channel2, message2);
 
 }
 

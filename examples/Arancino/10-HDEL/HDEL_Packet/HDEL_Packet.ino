@@ -35,13 +35,21 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "10.2 - HDel w/ Packet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
 
-  Arancino.begin();
-  Arancino.hset("ex10p_foo","bar","yeah");
-  Arancino.hset("ex10p_foo","baz","whoo");
+  Arancino.begin(amdata);
+  Serial.begin(115200);
+
+  Arancino.hset("EX_10_2_foo","bar","yeah");
+  Arancino.hset("EX_10_2_foo","baz","whoo");
   
-  ArancinoPacket apckt = Arancino.hdel<ArancinoPacket>("ex10p_foo","bar");
+  ArancinoPacket apckt = Arancino.hdel<ArancinoPacket>("EX_10_2_foo","bar");
   
   if (!apckt.isError)
   {

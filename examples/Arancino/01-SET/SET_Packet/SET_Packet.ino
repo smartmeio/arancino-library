@@ -20,13 +20,17 @@
 /*
 Set 'key' to hold the string 'value'. If 'key' already holds a 'value', it is overwritten, regardless of its type.
 
-- ArancinoPacket set( char* key, char* value )
-- ArancinoPacket set( char* key, int value )
-- ArancinoPacket set( char* key, float value )
+- ArancinoPacket set(char* key, char*; value [, bool isPersistent] )
+- ArancinoPacket set(char* key,  int value [, bool isPersistent] )
+- ArancinoPacket set(char* key, float value [, bool isPersistent] )
+- ArancinoPacket set(char* key, long value, [, bool isPersistent] )
+- ArancinoPacket set(char* key, uint32_t value, [, bool isPersistent] )
 
 Parameters:
 - key: the key name
-- value: the value for the specified key. can be char*, int o float
+- value: the value for the specified key. can be char*, int, long or float
+- isPersistent: optional boolean value to specify if value must be stored 
+    persistently or not. Default is `false`.
 
 Return value - ArancinoPacket reply: ArancinoPacket containing:
 
@@ -35,14 +39,24 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 - responseType: VOID;
 - response: NULL;
 */
+
 #include <Arancino.h>
 
-void setup() {
-  Arancino.begin();
+ArancinoMetadata amdata = {
+  .fwname = "01.2 - Set w/ Packet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
 
-  ArancinoPacket apckt = Arancino.set("ex01p_foo", "bar");
-  if (apckt.isError == 0)
-  {
+void setup() {
+
+  Arancino.begin(amdata);
+  Serial.begin(115200);
+
+  ArancinoPacket apckt = Arancino.set("EX_01_2_foo", "bar");
+  
+  if (apckt.isError == 0){
+    
     Serial.println("SET OK");
     Serial.print("Response code: ");
     Serial.println(apckt.responseCode);
@@ -50,9 +64,9 @@ void setup() {
     Serial.println(apckt.responseType);
     Serial.print("Response value: ");
     Serial.println(apckt.response.integer);
+
   }
-  else
-  {
+  else{
     Serial.println("SET ERROR");
   }
 

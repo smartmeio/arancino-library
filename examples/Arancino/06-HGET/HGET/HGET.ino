@@ -36,24 +36,31 @@ Return value - char* reply:
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "06.1 - HGet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
 
-  Arancino.begin();
+  Arancino.begin(amdata);
   Serial.begin(115200);
-  Arancino.hset("ex06_foo","bar","yeah");
-  Arancino.hset("ex06_foo","baz","whoo");
+
+  Arancino.hset("EX_06_1_foo","bar","yeah");
+  Arancino.hset("EX_06_1_foo","baz","whoo");
 
 }
 
 void loop() {
   
-  char* value = Arancino.hget("ex06_foo","bar");
+  char* value = Arancino.hget("EX_06_1_foo","bar");
   Serial.print("foo bar -> ");
   Serial.println(value);
   //foo bar -> yeah
   Arancino.free(value);
   
-  value = Arancino.hget("ex06_foo","baz");
+  value = Arancino.hget("EX_06_1_foo","baz");
   Serial.print("foo baz -> ");
   Serial.println(value);
   //foo bar -> whoo
