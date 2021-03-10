@@ -1,7 +1,15 @@
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "Heavy Test w/ FreeRTOS",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
+
 void setup() {
-    Arancino.begin();
+
+    Arancino.begin(amdata);
 
     Arancino.set("test", 5);
     Arancino.set("test", 5, true);

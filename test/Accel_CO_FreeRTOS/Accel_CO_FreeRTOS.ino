@@ -12,10 +12,18 @@
 #include <Arancino.h>
 #define LED_PIN 13
 
+ArancinoMetadata amdata = {
+  .fwname = "Accel CO w/ FreeRTOS",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
-  Arancino.begin();
+  
+  Arancino.begin(amdata);
   pinMode(LED_PIN, OUTPUT);
   Serial.begin(115200);
+  
   Arancino.flush();
   Arancino.set("CO", 0);
 

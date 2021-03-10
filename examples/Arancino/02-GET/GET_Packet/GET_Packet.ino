@@ -44,7 +44,7 @@ ArancinoMetadata amdata = {
 
 void setup() {
   
-  Arancino.begin();
+  Arancino.begin(amdata);
   Serial.begin(115200);
 
 }
