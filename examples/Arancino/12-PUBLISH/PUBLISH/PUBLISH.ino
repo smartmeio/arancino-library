@@ -55,16 +55,16 @@ void setup() {
   Arancino.publish(channel1, message1);
 
   //int
-  char* channel1 = "EX_12_1_channel2";
+  char* channel2 = "EX_12_1_channel2";
   int message2 = 123;
   //publish the value 123 into the 'EX_12_1_channel2' channel
   Arancino.publish(channel2, message2);
 
   //double
   char* channel3 = "EX_12_1_channel3";
-  double value3 = 123.456;
+  double message3 = 123.456;
   //publish the value 123.456 into the 'EX_12_1_channel3' channel
-  Arancino.publish(channel2, message2);
+  Arancino.publish(channel3, message3);
 
 }
 
