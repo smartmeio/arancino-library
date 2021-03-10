@@ -76,7 +76,7 @@ ArancinoPacket apckt = Arancino.mget<ArancinoPacket>(keys, 3);
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
 
-    for(int i = 0; i < Arancino.getArraySize(temp.response.stringArray); i++) {
+    for(int i = 0; i < Arancino.getArraySize(apckt.response.stringArray); i++) {
       Serial.print(keys[i]);
       Serial.print(" -> ");
       Serial.println(apckt.response.stringArray[i]);
