@@ -33,33 +33,42 @@ Return value - String reply:
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "2.1 - Get Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
-  Arancino.begin();
+
+  Arancino.begin(amdata);
   Serial.begin(115200);
+
 }
 
 void loop() {
 
   //sets the value 'bar' into the 'foo' key
-  Arancino.set("ex02_foo","bar");
+  Arancino.set("EX_02_1_foo","bar");
 
   //gets the value from the 'foo' key
-  char* value = Arancino.get("ex02_foo");
-  Serial.print("ex02_foo -> ");
+  char* value = Arancino.get("EX_02_1");
+  Serial.print("EX_02_1 -> ");
   Serial.println(value);
   //foo -> bar
   Arancino.free(value); //frees memory
 
   delay(2000); //wait 2 seconds
 
-  Arancino.set("ex02_foo","baz");
+  Arancino.set("EX_02_1","baz");
 
   //gets the value from the 'foo' key
-  value = Arancino.get("ex02_foo");
-  Serial.print("ex02_foo -> ");
+  value = Arancino.get("EX_02_1");
+  Serial.print("EX_02_1 -> ");
   Serial.println(value);
   //foo -> baz
   Arancino.free(value); //frees memory
   
   delay(2000); //wait 2 seconds
+
 }

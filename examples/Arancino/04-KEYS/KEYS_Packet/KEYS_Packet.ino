@@ -43,15 +43,20 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "04.2 - Keys w/ Packet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
   
+  Arancino.begin(amdata);
   Serial.begin(115200);
   
-  Arancino.begin();
-  
-  Arancino.set("ex04p_pressure",1023);
-  Arancino.set("ex04p_humidity",67.5);
-  Arancino.set("ex04p_temperature",24.4);
+  Arancino.set("EX_04_2_pressure", 1023);
+  Arancino.set("EX_04_2_humidity", 67.5);
+  Arancino.set("EX_04_2_temperature", 24.4);
 
 }
 
@@ -59,8 +64,9 @@ void loop() {
 
   ArancinoPacket apckt = Arancino.keys<ArancinoPacket>();
   char** keys = apckt.response.stringArray;
-  if (apckt.isError == 0)
-  {
+  
+  if (apckt.isError == 0){
+
     Serial.println("KEYS OK");
     Serial.print("Response code: ");
     Serial.println(apckt.responseCode);
@@ -72,21 +78,21 @@ void loop() {
     //pressure
     //humidity
     //temperature
-
   }
-  else
-  {
+  else{
     Serial.println("KEYS ERROR");    
   }
+
   Arancino.free(keys); //delete the array from memory
   Arancino.free(apckt);
   
   //delay(1000); //wait 1 seconds
 
-  apckt = Arancino.keys<ArancinoPacket>("ex04p_temp*");
+  apckt = Arancino.keys<ArancinoPacket>("EX_04_2_temp*");
   keys = apckt.response.stringArray;
-  if (apckt.isError == 0)
-  {
+  
+  if (apckt.isError == 0){
+
     Serial.println("KEYS OK");
     Serial.print("Response code: ");
     Serial.println(apckt.responseCode);
@@ -98,10 +104,10 @@ void loop() {
     // temperature
 
   }
-  else
-  {
+  else{
     Serial.println("KEYS ERROR");    
   }
+
   Arancino.free(keys); //delete the array from memory
   Arancino.free(apckt);
   //delay(1000); //wait 1 seconds

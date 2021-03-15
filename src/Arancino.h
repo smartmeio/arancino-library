@@ -22,7 +22,9 @@ under the License
 #define ARANCINO_H_
 
 #include <Arduino.h>
+#include <ArancinoDefinitions.h>
 #include <ArancinoConfig.h>
+
 #include <Stream.h>
 #include <stdlib.h>
 #include <cstdlib>
@@ -91,6 +93,11 @@ typedef struct {
 	char* tzoffset;
 } ArancinoMetadata;
 
+
+
+
+
+
 class ArancinoClass {
 	public:
 		/***** API ADVANCED *****/
@@ -106,11 +113,13 @@ class ArancinoClass {
 
 		
 		/***** API BASIC *****/
-		//METADATA
-		void metadata(ArancinoMetadata meta);
+		void metadata(ArancinoMetadata amdata);
 
 		//BEGIN
-		void begin(bool useid = false, int timeout = TIMEOUT);
+		[[deprecated]]
+		void begin(ArancinoMetadata amdata, bool useid = false, int timeout = TIMEOUT );
+		void begin(ArancinoMetadata amdata, ArancinoConfig aconfig);
+		//void begin(ArancinoMetadata amdata);
 
 		//MSET
 		ArancinoPacket mset(char** keys, char** values, uint len);
@@ -238,7 +247,7 @@ class ArancinoClass {
 		const char endTXStr[2] = {END_TX_CHAR, '\0'};
 		const char nullStr[2] = {NULL_CHAR, '\0'};
 
-		ArancinoMetadata _meta = {
+		ArancinoMetadata _metadata = {
 			"",
 			"",
 			"+0000"

@@ -32,21 +32,27 @@
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "09.1 - HVals Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
 
-  Arancino.begin();
+  Arancino.begin(amdata);
   Serial.begin(115200);
 
-  Arancino.hset("ex09_foo", "bar", "yeah");
-  Arancino.hset("ex09_foo", "baz", "whoo");
+  Arancino.hset("EX_09_1_foo", "bar", "yeah");
+  Arancino.hset("EX_09_1_foo", "baz", "whoo");
 
 }
 
 void loop() {
 
-  char** values = Arancino.hvals("ex09_foo");
+  char** values = Arancino.hvals("EX_09_1_foo");
   for (int i = 0; i < Arancino.getArraySize(values); i++) {
-    Serial.print("ex09_foo -> ");
+    Serial.print("EX_09_1_foo -> ");
     Serial.println(values[i]);
     // foo -> yeah
     // foo -> whoo

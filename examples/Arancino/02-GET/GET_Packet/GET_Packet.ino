@@ -36,17 +36,25 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "2.2 - Get w/ Packet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
-  Arancino.begin();
+  
+  Arancino.begin(amdata);
   Serial.begin(115200);
+
 }
 
 void loop() {
 
   //sets the value 'bar' into the 'foo' key
-  Arancino.set("ex02p_foo","bar");
+  Arancino.set("EX_02_2_foo","bar");
 
-  ArancinoPacket apckt = Arancino.get<ArancinoPacket>("ex02p_foo");
+  ArancinoPacket apckt = Arancino.get<ArancinoPacket>("EX_02_2_foo");
   if (!apckt.isError)
   {
     Serial.println("GET OK");
@@ -55,7 +63,7 @@ void loop() {
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
 
-    Serial.print("ex02p_foo -> ");
+    Serial.print("EX_02_2_foo -> ");
     Serial.println(apckt.response.string);
     //foo -> bar
     
@@ -67,4 +75,5 @@ void loop() {
 
   Arancino.free(apckt); //delete packet from memory
   delay(2000); //wait 2 seconds
+
 }

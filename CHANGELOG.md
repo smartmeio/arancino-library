@@ -1,5 +1,9 @@
 # Changelog
 
+#### v 1.4.0 - 2021.03.15
+* Upd: Metadata structure is now mandatory to the `begin` function. [#aex3e4](https://app.clickup.com/t/aex3e4)
+* Add: New `ArancinoConfig` Class used to pass configuration at `begin`. [#fd4ped](https://app.clickup.com/t/fd4ped)
+
 #### v 1.3.1 - 2021.02.08
 * Fix: Fixed a memory leak bug's `get`-based functions [#c8y3rg](https://app.clickup.com/t/c8y3rg)
 * Add: Utility to use for UTF-8 verification [#cq2620](https://app.clickup.com/t/cq2620)
@@ -23,7 +27,6 @@
 * Add: Receive timestamp from Arancino Module #71
 * Fix: Fixed a bug of timeout in serial comm, it introduces synch error #57
 * Fix: Introduced checks to avoid NULL keys and values #58
-
 
 #### v 1.1.0 - 2020.03.16
 * Fix: CI script to push even master branch to GitHub #52

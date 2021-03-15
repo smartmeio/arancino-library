@@ -4,6 +4,12 @@
 TaskHandle_t blinkHandle;
 TaskHandle_t task0Handle, task1Handle, task2Handle;
 
+ArancinoMetadata amdata = {
+  .fwname = "Heavy Test w/ FreeRTOS",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 
 void blink(void *pvPramaters)
 {
@@ -165,7 +171,7 @@ void task2(void *pvPramaters)
 
 void setup() {
 
-  Arancino.begin();
+  Arancino.begin(amdata);
   pinMode(LED_PIN, OUTPUT);
   Serial.begin(115200);
   Serial.println(sizeof(char));

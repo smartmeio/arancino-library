@@ -33,25 +33,32 @@ Return value - char** reply:
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "08.1 - HKeys Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
 
-  Arancino.begin();
+  Arancino.begin(amdata);
   Serial.begin(115200);
   
-  Arancino.hset("ex08_foo","bar","yeah");
-  Arancino.hset("ex08_foo","baz","whoo");
+  Arancino.hset("EX_08_1_foo","bar","yeah");
+  Arancino.hset("EX_08_1_foo","baz","whoo");
 
 }
 
 void loop() {
 
-  char** fields = Arancino.hkeys("ex08_foo");
+  char** fields = Arancino.hkeys("EX_08_1_foo");
   for (int i = 0; i < Arancino.getArraySize(fields); i++) {
-    Serial.print("ex08_foo -> ");
+    Serial.print("EX_08_1_foo -> ");
     Serial.println(fields[i]);
     // foo -> bar
     // foo -> baz
   }
+
   Arancino.free(fields);
 
   delay(5000); //wait 5 seconds

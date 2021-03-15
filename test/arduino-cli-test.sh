@@ -1,19 +1,26 @@
 #!/bin/bash
 
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+ORANGE='\033[0;33m'
+NC='\033[0m' # No Color
+
 build_examples () {
 
   PREFIX="${HOME}/Arduino/libraries/Arancino"
   
   echo -e "\n"
-  echo "############################################"
-  echo -e "# Building plain Arancino Library examples #"
-  echo -e "############################################\n"
+  echo -e "${RED}############################################"
+  echo -e "${RED}# Building plain Arancino Library examples #"
+  echo -e "${RED}############################################\n"
   sleep 1
 
   for sketch in `find ${PREFIX}/examples/Arancino -name '*.ino'`
   do
+	echo -e "${BLUE}"
     echo -e '\n\n' `basename $sketch`
     sleep 1
+	echo -e "${ORANGE}"
     arduino-cli compile -vvv --fqbn smartme.IO:samd:$1 $sketch
     
     local rc=$?
@@ -21,15 +28,17 @@ build_examples () {
   done
   
   echo -e "\n"
-  echo "######################################"
-  echo -e "# Building unit tests #"
-  echo -e "######################################\n"
+  echo -e "${RED}######################################"
+  echo -e "${RED}# Building unit tests #"
+  echo -e "${RED}######################################\n"
   sleep 1
 
   for sketch_test in `find ${PREFIX}/test/Arancino_tests -name '*.ino'`
   do
+	echo -e "${BLUE}"
     echo -e '\n\n' `basename $sketch_test`
     sleep 1
+	echo -e "${ORANGE}"
     arduino-cli compile -vvv --fqbn smartme.IO:samd:$1 $sketch_test
 
     local rctest=$?
@@ -37,9 +46,9 @@ build_examples () {
   done
   
   echo -e "\n"
-  echo "######################################"
-  echo -e "# Building FreeRTOS Library examples #"
-  echo -e "######################################\n"
+  echo -e "${RED}######################################"
+  echo -e "${RED}# Building FreeRTOS Library examples #"
+  echo -e "${RED}######################################\n"
   sleep 1
 
   RTOS_INO=(
@@ -48,17 +57,21 @@ build_examples () {
     ${PREFIX}/test/Arancino_heavy_test/Arancino_heavy_test.ino
     )
 
-  for sketch_rtos in "${RTOS_INO[@]}"; do
-      echo -e '\n\n' `basename $sketch_rtos`
-      sleep 1
-      arduino-cli compile --fqbn smartme.IO:samd:$1 \
-        -vvv $sketch_rtos \
-        --build-properties build.memory_wrapping_flags='-Wl,--wrap=malloc -Wl,--wrap=free -Wl,--wrap=calloc -Wl,--wrap=realloc' \
-        --build-properties build.arancino_extra_flags=-DUSEFREERTOS
+  for sketch_rtos in "${RTOS_INO[@]}"
+  do
+	echo -e "${BLUE}"
+	echo -e '\n\n' `basename $sketch_rtos`
+	sleep 1
+	echo -e "${ORANGE}"
+	arduino-cli compile --fqbn smartme.IO:samd:$1 \
+		-vvv $sketch_rtos \
+		--build-properties build.arancino_extra_flags=-DUSEFREERTOS
       
-      local rcrtos=$?
-      error_check $rcrtos `basename $sketch_rtos`
+	local rcrtos=$?
+	error_check $rcrtos `basename $sketch_rtos`
   done
+
+  echo -e "${NC}"
 }
 
 error_check () {

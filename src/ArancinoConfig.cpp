@@ -18,11 +18,4 @@ License for the specific language governing permissions and limitations
 under the License
 */
 
-#include <ArancinoDefinitions.h>
-
-class ArancinoConfig{
-	public:
-		bool _USEID = false;
-		int _TIMEOUT = TIMEOUT;
-
-};
+#include "ArancinoConfig.h"

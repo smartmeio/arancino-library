@@ -42,13 +42,20 @@
 
 #include <Arancino.h>
 
-void setup() {
-  Serial.begin(115200);
-  Arancino.begin();
+ArancinoMetadata amdata = {
+  .fwname = "04.1 - Keys Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
 
-  Arancino.set("ex04_pressure", 1023);
-  Arancino.set("ex04_humidity", 67.5);
-  Arancino.set("ex04_temperature", 24.4);
+void setup() {
+  
+  Arancino.begin(amdata);
+  Serial.begin(115200);
+
+  Arancino.set("EX_04_1_pressure", 1023);
+  Arancino.set("EX_04_1_humidity", 67.5);
+  Arancino.set("EX_04_1_temperature", 24.4);
 }
 
 void loop() {
@@ -64,10 +71,11 @@ void loop() {
 
   delay(1000); //wait 1 seconds
 
-  keys = Arancino.keys("ex04_temp*");  //return all the keys that contains temp pattern
+  keys = Arancino.keys("EX_04_1_temp*");  //return all the keys that contains "temp" pattern
   for (int i = 0; i < Arancino.getArraySize(keys) ; i++) {
     Serial.println(keys[i]);      //temperature
   }
+  
   Arancino.free(keys); //delete the array from memory
 
   delay(1000); //wait 1 seconds

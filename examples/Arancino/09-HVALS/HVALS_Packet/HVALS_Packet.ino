@@ -34,36 +34,43 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "09.2 - HVals w/ Packet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
 
-  Arancino.begin();
+  Arancino.begin(amdata);
   Serial.begin(115200);
 
-  Arancino.hset("ex09p_foo", "bar", "yeah");
-  Arancino.hset("ex09p_foo", "baz", "whoo");
+  Arancino.hset("EX_09_2_foo", "bar", "yeah");
+  Arancino.hset("EX_09_2_foo", "baz", "whoo");
 
 }
 
 void loop() {
-  ArancinoPacket apckt = Arancino.hvals<ArancinoPacket>("ex09p_foo");
+  
+  ArancinoPacket apckt = Arancino.hvals<ArancinoPacket>("EX_09_2_foo");
   char** values = apckt.response.stringArray;
-  if (!apckt.isError)
-  {
+  
+  if (!apckt.isError){
+
     Serial.println("HVALS OK");
     Serial.print("Response code: ");
     Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
     for (int i = 0; i < Arancino.getArraySize(values); i++) {
-      Serial.print("ex09p_foo -> ");
+      Serial.print("EX_09_2_foo -> ");
       Serial.println(values[i]);
       // foo -> yeah
       // foo -> whoo
     }
     Arancino.free(values);
   }
-  else
-  {
+  else{
     Serial.println("HVALS ERROR");
   }  
 

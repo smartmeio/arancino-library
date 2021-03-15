@@ -38,10 +38,16 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 #include <Arancino.h>
 
-void setup() {
-  Arancino.begin();
+ArancinoMetadata amdata = {
+  .fwname = "05.2 - HSet w/ Packet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
 
-  ArancinoPacket apckt = Arancino.hset("ex05p_foo", "bar", "yeah");
+void setup() {
+  Arancino.begin(amdata);
+
+  ArancinoPacket apckt = Arancino.hset("EX_05_2_foo", "bar", "yeah");
 
   if (apckt.isError == 0)
   {

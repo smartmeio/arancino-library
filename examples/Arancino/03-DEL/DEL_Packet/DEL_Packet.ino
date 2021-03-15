@@ -35,14 +35,23 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
-void setup() {
-  Serial.begin(115200);
-  Arancino.begin();
-  Arancino.set("ex03p_foo","bar");
+ArancinoMetadata amdata = {
+  .fwname = "03.2 - Del w/ Packet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
 
-  ArancinoPacket apckt = Arancino.del<ArancinoPacket>("ex03p_baz");
-  if (apckt.isError == 0)
-  {
+void setup() {
+
+  Arancino.begin(amdata);
+  Serial.begin(115200);
+
+  Arancino.set("EX_03_2_foo","bar");
+
+  ArancinoPacket apckt = Arancino.del<ArancinoPacket>("EX_03_2_baz");
+  
+  if (apckt.isError == 0){
+
     Serial.println("DEL OK");
     Serial.print("Response code: ");
     Serial.println(apckt.responseCode);
@@ -51,15 +60,16 @@ void setup() {
     Serial.println(apckt.response.integer ? "Key deleted" : "Key not found");
     //0
   }
-  else
-  {
+  else{
     Serial.println("DEL ERROR");    
   }
+  
   Arancino.free(apckt); //delete packet from memory
 
-  apckt = Arancino.del<ArancinoPacket>("ex03p_foo");
-  if (apckt.isError == 0)
-  {
+  apckt = Arancino.del<ArancinoPacket>("EX_03_2_foo");
+  
+  if (apckt.isError == 0){
+    
     Serial.println("DEL OK");
     Serial.print("Response code: ");
     Serial.println(apckt.responseCode);
@@ -68,10 +78,10 @@ void setup() {
     Serial.println(apckt.response.integer ? "Key deleted" : "Key not found");
     //1
   }
-  else
-  {
+  else{
     Serial.println("DEL ERROR");    
   }
+  
   Arancino.free(apckt); //delete packet from memory
 
 }

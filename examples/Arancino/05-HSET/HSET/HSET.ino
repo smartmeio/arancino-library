@@ -41,8 +41,15 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "05.1 - HSet Example",
+  .fwversion = "1.0.1",
+  .tzoffset = "+1000" 
+};
+
 void setup() {
-  Arancino.begin();
+  
+  Arancino.begin(amdata);
 
   Arancino.hset("ex05_foo","bar","yeah");
   Arancino.hset("ex05_foo","bar","whoo");
