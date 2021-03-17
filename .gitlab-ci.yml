@@ -121,7 +121,7 @@ package_release:
     #- DATE="$(cat tmp/date.tmp)"
     # packaging for PlatformIO
     - jq --arg tag_ver ${CI_COMMIT_TAG} '.version = $tag_ver' library.json|sponge library.json
-    # - pio package pack -o /tmp
+    - pio package pack -o /tmp
     # standard packaging as ZIP archive
     - sed -i "s/version=.*/version=${CI_COMMIT_TAG}/g" library.properties
     - PKG_NAME=$CI_PROJECT_NAME-$CI_COMMIT_TAG
@@ -173,7 +173,10 @@ upload:
     # Upload to Artifactory
     - curl -u $REPO_USR:$REPO_PWD -T tmp/$PKG_NAME.zip "${REPO_BASE_URL}/artifactory/${REPO_NAME}/${TARGET_PATH}/${PKG_NAME}.zip"
     # publishing to PlatformIO
-    # - pio package publish --owner smartme-io /tmp/Arancino-${CI_COMMIT_TAG}.tar.gz
+    - >
+      if [[ ${PRE_RELEASE} == "" ]]; then
+        pio package publish --owner smartme-io /tmp/Arancino-${CI_COMMIT_TAG}.tar.gz
+      fi
 
 #################################
 #######      CLEANUP      #######
