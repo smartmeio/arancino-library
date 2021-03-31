@@ -201,8 +201,8 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response`: `NULL`;
 
 
-###### Note: [2](###notes)
-###### Note: [5](###notes)
+###### Note: [2](#notes), [5](#notes)
+
 ___
 ### get
 ##### *char&ast; get(char&ast; key)*
@@ -227,7 +227,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.string`: `char*` pointer that can contain the value of selected *key* or `NULL` if the *key* doesn't exist.
 
 
-###### Note: [1](###notes), [4](###notes)
+###### Note: [1](#notes), [4](#notes)
 
 ___
 
@@ -247,7 +247,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `responseType`: `VOID`;
   * `response`: `NULL`;
 
-###### Note: [3](###notes)
+###### Note: [3](#notes)
 
 ### mget
 ##### *char&ast;&ast; mget(char&ast;&ast; keys, char&ast;&ast; values, uint len)*
@@ -273,7 +273,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.stringarray`: `char**` pointer that points to the start of the returned array of strings.
 
 
-###### Note: [1](###notes), [4](###notes)
+###### Note: [1](#notes), [4](#notes)
 
 ### del
 ##### *int del(char&ast; key )*
@@ -296,7 +296,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.integer`: The number of keys that were removed.
 
 
-###### Note: [1](###notes)
+###### Note: [1](#notes)
 
 ___
 ### keys
@@ -352,7 +352,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response`: `NULL`;
 
 
-###### Note: [2](###notes)
+###### Note: [2](#notes)
 
 ___
 ### hget
@@ -378,7 +378,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.string`: `char*` pointer that can contain the *value* if a value is stored in *field* at *key* or `NULL` if there isn't a value stored.
 
 
-###### Note: [1](###notes), [4](###notes)
+###### Note: [1](#notes), [4](#notes)
 
 ___
 ### hgetall
@@ -401,7 +401,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `responseType`: `STRING_ARRAY`;
   * `response.stringArray`: `char**` pointer that can contain the string array of field and value matching *key*
 
-###### Note: [1](###notes), [4](###notes)
+###### Note: [1](#notes), [4](#notes)
 
 ___
 ### hkeys
@@ -425,7 +425,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.stringArray`: `char**` pointer to the string array of *fields* matching *key*.
 
 
-###### Note: [1](###notes), [4](###notes)
+###### Note: [1](#notes), [4](#notes)
 
 ___
 ### hvals
@@ -448,7 +448,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.stringArray`: `char**` pointer to the string array of *values* matching *key*.
 
 
-###### Note: [1](###notes), [4](###notes)
+###### Note: [1](#notes), [4](#notes)
 
 ___
 ### hdel
@@ -475,7 +475,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.integer`: 1 if the *field* is removed from hash or 0 if the *field* or the *key* does not exist in the hash.
 
 
-###### Note: [1](###notes)
+###### Note: [1](#notes)
 
 ___
 ### flush
