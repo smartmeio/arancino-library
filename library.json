@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/smartmeio/arancino-library.git"
   },
-  "version": "1.4.0",
+  "version": "1.4.1",
   "authors": {
     "name": "smartme.IO",
     "url": "https://www.arancino.cc"
