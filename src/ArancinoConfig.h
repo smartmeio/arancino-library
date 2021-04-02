@@ -24,5 +24,7 @@ class ArancinoConfig{
 	public:
 		bool _USEID = false;
 		int _TIMEOUT = TIMEOUT;
-
+		bool USE_ID = false;
+		int SERIAL_TIMEOUT = 100;		//timeout 100 ms
+		int DECIMAL_DIGITS = 4;			//4 decimal digits (float and double type)
 };

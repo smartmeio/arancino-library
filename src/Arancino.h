@@ -32,7 +32,7 @@ under the License
 
 //#define USEFREERTOS
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-	
+
 	// #if !defined(__MEM_WRAP__)
 	// 	#error You are using Arancino Library, please select Menu -> Tools -> Using Arancino Library?: Yes
 	// #endif
@@ -42,7 +42,7 @@ extern "C" {
 }
 #endif
 
-	
+
 
 
 
@@ -104,14 +104,14 @@ class ArancinoClass {
 
 		//Serial port id
 		char *id;
-		
+
 		//START SCHEDULER
 		void startScheduler();
-		
+
 		//SET RESERVED COMMUNICATION MODE
 		void setReservedCommunicationMode(int mode);
 
-		
+
 		/***** API BASIC *****/
 		void metadata(ArancinoMetadata amdata);
 
@@ -124,7 +124,7 @@ class ArancinoClass {
 		//MSET
 		ArancinoPacket mset(char** keys, char** values, uint len);
 
-		//SET	
+		//SET
 		// ArancinoPacket set(char* key, int value);
 		// ArancinoPacket set(char* key, double value);
 		// ArancinoPacket set(char* key, uint32_t value);
@@ -132,10 +132,11 @@ class ArancinoClass {
 
 		ArancinoPacket set(char* key, int value, bool isPersistent = false);
 		ArancinoPacket set(char* key, double value, bool isPersistent = false);
+		ArancinoPacket set(char* key, float value, bool isPersistent = false);
 		ArancinoPacket set(char* key, long value, bool isPersistent = false);
-		ArancinoPacket set(char* key, char* value, bool isPersistent = false); 
-		ArancinoPacket set(char* key, uint32_t value, bool isPersistent = false); 
-		
+		ArancinoPacket set(char* key, char* value, bool isPersistent = false);
+		ArancinoPacket set(char* key, uint32_t value, bool isPersistent = false);
+
 		//GET
 		//ArancinoPacket getPacket(char* key);
 		//char* get(char* key);
@@ -152,13 +153,14 @@ class ArancinoClass {
 		//HSET
 		ArancinoPacket hset(char* key, char* field, char* value);
 		ArancinoPacket hset(char* key, char* field, int value);
+		ArancinoPacket hset(char* key, char* field, float value);
 		ArancinoPacket hset(char* key, char* field, double value);
 		ArancinoPacket hset(char* key, char* field, uint32_t value);
 		ArancinoPacket hset(char* key, char* field, long value);
 
 		//MGET
 		template<class T = char**> T mget(char** keys, uint len);
-		
+
 		//HGET
 		// ArancinoPacket hgetPacket(char* key, char* field);
 		// char* hget(char* key, char* field);
@@ -195,13 +197,13 @@ class ArancinoClass {
 		//KEYS W TEMPALTE
 		template<class T = char**> T keys(char* pattern="*");
 
-		//PUBLISH		
+		//PUBLISH
 		ArancinoPacket publish(char* channel, char* msg);
 		ArancinoPacket publish(char* channel, double msg);
 		ArancinoPacket publish(char* channel, int msg);
 		ArancinoPacket publish(char* channel, uint32_t msg);
 		ArancinoPacket publish(char* channel, long msg);
-		
+
 		//FLUSH
 		ArancinoPacket flush(void);
 
@@ -237,9 +239,10 @@ class ArancinoClass {
 		bool started;
 		bool comm_timeout = false;
 		bool arancino_id_prefix;
+		int decimal_digits;
 		int idSize;
 		char *timestamp;
-		
+
 		char reservedKey[RESERVED_KEY_ARRAY_SIZE][RESERVED_KEY_MAX_LENGTH]; //max 10 char for key
 		int COMM_MODE = SYNCH;
 		const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
@@ -256,7 +259,7 @@ class ArancinoClass {
 		//API WRAPPED
 		void _freeArray(char** _array);
 		void _freePacket(ArancinoPacket packet);
-		
+
 		ArancinoPacket __set(char* key, char* value, bool isPersistent);
 		ArancinoPacket __publish(char* channel, char* msg);
 
@@ -266,17 +269,18 @@ class ArancinoClass {
 		void _sendArancinoCommand(char command);
 
 		char* _receiveArancinoResponse(char terminator);
-		
+
 		//bool _isReservedKey(String key);
 		bool _isReservedKey(char* key);
 		void _doubleToString(double value, unsigned int _nDecimal, char* str); //truncation!
+		void _floatToString(float value, unsigned int _nDecimal, char* str);
 		int _getDigit(long value);
-		
+
 		// ArancinoPacket _sendViaCOMM_MODE(char* key, char* value);
 		ArancinoPacket _sendViaCOMM_MODE(char* key, char* value, bool isPersistent = false);
 
 		int _getResponseCode(char* data);
-		
+
 		char* _parse(char* message);
 		char** _parseArray(char* message);
 
@@ -286,7 +290,7 @@ class ArancinoClass {
 
 		// ArancinoPacket _delPacket(char* key);
 		// int _del(char* key);
-	
+
 		// ArancinoPacket _hgetPacket(char* key, char* field);
 		// char* _hget(char* key, char* field);
 

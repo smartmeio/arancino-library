@@ -63,6 +63,7 @@ typedef struct {
 ```c++
 		bool _USEID = false;
 		int _TIMEOUT = TIMEOUT; // 100 ms for samd21
+		int DECIMAL_DIGITS = 4;
 ```
 
 
@@ -101,7 +102,7 @@ typedef struct {
 ## API
 
 
-> Note: when you get a value using api like `get`, `hget`, etc. please keep in mind to free memory each time using the `free` api. 
+> Note: when you get a value using api like `get`, `hget`, etc. please keep in mind to free memory each time using the `free` api.
 >
 > To prevent memory leak, code like this must be avoided:
 > ```c++
@@ -132,15 +133,15 @@ Stores the metadata to use later during the `START` command in `begin` API.
 ArancinoMetadata amdata = {
   .fwname = "Arancino Firmware",
   .fwversion = "1.0.0",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
-  
+
   // deprecated: do not use the .metadata function directly. Use the mandatory metadata argument in the begin function instead.
   // This will be removed in the next major relase
   //Arancino.metadata(meta);
-  
+
   //
   Arancino.begin(amdata);
 }
@@ -163,8 +164,9 @@ From version
 - ArancinoConfig: is class composed only by attributes:
   - `_TIMEOUT`: (see the following paragraph: `timeout`)
   - `_USEID`: (see the following paragraph: `useid`)
+	- `DECIMAL_DIGITS`: (see the following paragraph: `decimal_digits`)
 
-The convenience of using class X is to be able to increase the number of parameters without necessarily having to change the prototypes. 
+The convenience of using class X is to be able to increase the number of parameters without necessarily having to change the prototypes.
 
 
 The use of the following is deprecated and will be remove in the next major release.
@@ -176,7 +178,10 @@ The use of the following is deprecated and will be remove in the next major rele
         It's useful when you connect multiple microntroller with the same firmware (using the same keys) to
         one Arancino Module; By this way, at the application level, you can distinguish keys by
         microntroller id.
-
+- **`decimal_digits`**: Default `4`. Represents the number to the right of the decimal point for the float and double data types.
+				With float data type is possible to represent 7 decimal digits of precision, while with double data type
+				has up to 15 digits. The decimal digits of precision is the total number of digits, not the number to the right of the decimal point.
+				There is a check to verify the number of digits and if the number exceed the maximum allowed for the type(float or double), the decimal part will be truncate (rounded up or rounded down).
 
 ___
 ### set
@@ -253,7 +258,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
 ##### *char&ast;&ast; mget(char&ast;&ast; keys, char&ast;&ast; values, uint len)*
 ##### *ArancinoPacket mget\<ArancinoPacket>(char&ast;&ast; keys, uint len)*
 
-Retrieves multiple keys from redis. 
+Retrieves multiple keys from redis.
 
 ##### Parameters
 * **`keys`**: array containing keys to retrieve;
@@ -638,9 +643,9 @@ void setup() {
 
 void loop() {
   char* str = "Test";
-  if(isValidUTF8(str)) 
+  if(isValidUTF8(str))
         Arancino.set("key3", str);
- 
+
 }
 ```
 ### Notes
@@ -661,9 +666,9 @@ void loop() {
 5. When using `set`-type functions, make sure that the value is correctly formatted with *utf-8* standard. Is recommended to use the internal function `isValidUTF8` before the `set` to avoid decoding errors on Arancino Module. Example:
 ```c++
       char* value="test";
-      if(isValidUTF8(value)) 
+      if(isValidUTF8(value))
         Arancino.set("key3", value);
-      
+
       ```
 
 ## Cortex Protocol
