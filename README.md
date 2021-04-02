@@ -61,11 +61,25 @@ typedef struct {
 ### ArancinoConfig
 `ArancinoConfig` is class composed only by attributes used to configure the Arancino Library behaviour. It replaces the use of direct configuration arguments of the `begin` function.
 ```c++
-		bool _USEID = false;
-		int _TIMEOUT = TIMEOUT; // 100 ms for samd21
-		int DECIMAL_DIGITS = 4;
+    int _TIMEOUT = 100 ;  // *DEPRECATED* Use SERIAL_TIMEOUT
+    bool _USEID;          // *DEPRECATED* Use USE_PORT_ID_PREFIX_KEY
+    int DECIMAL_DIGITS = 4; 
+    int SERIAL_TIMEOUT = 100;
+    bool USE_PORT_ID_PREFIX_KEY = false;
+
 ```
 
+- **`SERIAL_TIMEOUT`**:  Represents the time that each command sent (via API call) will wait
+            for a response. Otherwise the delayed command will be skipped. When the
+            `begin` function is called w/o `timeout` it is assumed `100ms` as
+            default value of timeout.
+- **`USE_PORT_ID_PREFIX_KEY`**: Default `false`. If `true` each key setted up is prefixed with ID of the microntroller.
+        It's useful when you connect multiple microntroller with the same firmware (using the same keys) to
+        one Arancino Module; By this way, at the application level, you can distinguish keys by
+        microntroller id.
+- **`DECIMAL_DIGITS`**: Default `4`. Represents the number to the right of the decimal point for the float and double data types.
+				Float data type has 7 digits, while double data type has up to 15 digits, including decimal digits.
+        If the digits exceed the maximum allowed for the type(float or double), the decimal part will be truncated and rounded up or rounded down.
 
 ##### Variables
 * `isError`: indicates the outcome of an API call. Its value is `False` (0) when everything is OK or `True` (1) when an error occurs. Both in positive and negative cases is possible to check `responseCode` for more details;
@@ -161,27 +175,15 @@ From version `1.4.0` the `ArancinoMetadata` argument became mandatory, becouse t
 From version
 
 ##### Parameters
-- ArancinoConfig: is class composed only by attributes:
-  - `_TIMEOUT`: (see the following paragraph: `timeout`)
-  - `_USEID`: (see the following paragraph: `useid`)
-	- `DECIMAL_DIGITS`: (see the following paragraph: `decimal_digits`)
+- ArancinoConfig: is class composed only by attributes (see the following paragraph: [`Arancino Config`](#ArancinoConfig)):
+  - `DECIMAL_DIGITS` 
+  - `SERIAL_TIMEOUT`
+  - `PORT_ID_PREFIX_KEY`
 
-The convenience of using class X is to be able to increase the number of parameters without necessarily having to change the prototypes.
-
-
-The use of the following is deprecated and will be remove in the next major release.
-- **`timeout`**:  Represents the time that each command sent (via API call) will wait
-            for a response. Otherwise the delayed command will be skipped. When the
-            `begin` function is called w/o `timeout` it is assumed `100ms` as
-            default value of timeout.
-- **`useid`**: Default `false`. If `true` each key setted up is prefixed with ID of the microntroller.
-        It's useful when you connect multiple microntroller with the same firmware (using the same keys) to
-        one Arancino Module; By this way, at the application level, you can distinguish keys by
-        microntroller id.
-- **`decimal_digits`**: Default `4`. Represents the number to the right of the decimal point for the float and double data types.
-				With float data type is possible to represent 7 decimal digits of precision, while with double data type
-				has up to 15 digits. The decimal digits of precision is the total number of digits, not the number to the right of the decimal point.
-				There is a check to verify the number of digits and if the number exceed the maximum allowed for the type(float or double), the decimal part will be truncate (rounded up or rounded down).
+The convenience of using class ArancinoConfig is to be able to increase the number of parameters without necessarily having to change the prototypes.
+The use of the following arguments in the `begin` function is deprecated and will be removed in the next major release.
+- **`timeout`**
+- **`useid`**
 
 ___
 ### set
