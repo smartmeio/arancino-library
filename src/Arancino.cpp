@@ -1606,8 +1606,7 @@ void ArancinoClass::println(String value) {
 }
 
 void ArancinoClass::println(int value) {
-	print(String(value));
-	print("\n");
+	print(String(value) + String('\n')) ;
 }
 
 /*void ArancinoClass::println(float value) {
