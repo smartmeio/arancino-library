@@ -61,7 +61,7 @@ void setup() {
 
   // Arancino Configuration
   ArancinoConfig acfg;
-  acfg._TIMEOUT = 200;
+  acfg.SERIAL_TIMEOUT = 200;
   acfg.DECIMAL_DIGITS=4;
 
   //calls begin w/o paramenter: it is assumed 100ms timeout by default

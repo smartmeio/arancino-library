@@ -217,10 +217,12 @@ class ArancinoClass {
 		void print(String value);
 		void print(char* value);
 		void print(int value);
+		void print(float value);
 		void print(double value);
 		void println(String value);
 		void println(int value);
 		void println(double value);
+		void println(float value);
 
 		//GET ARRAY SIZE
 		int getArraySize(char** _array);

@@ -80,15 +80,11 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	SERIAL_PORT.begin(BAUDRATE);
 	// SERIAL_PORT.setTimeout(TIMEOUT);
 	// arancino_id_prefix = false;
-	arancino_id_prefix = _acfg._USEID;
-	SERIAL_PORT.setTimeout(_acfg._TIMEOUT);
+	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
+	SERIAL_PORT.setTimeout(_acfg.SERIAL_TIMEOUT);
 	decimal_digits=_acfg.DECIMAL_DIGITS;
 
 	_metadata = _amdata;
-
-	/*Serial.begin(115200);
-	Serial.println(_acfg._USEID);
-	Serial.println(_acfg._TIMEOUT);*/
 
 	int fwnameLength = strlen(_metadata.fwname);
 	int fwversionLength = strlen(_metadata.fwversion);
@@ -1587,11 +1583,11 @@ void ArancinoClass::print(int value) {
 	print(str);
 }
 
-/*void ArancinoClass::print(float value) {
+void ArancinoClass::print(float value) {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
 	print(str);
-}*/
+}
 
 void ArancinoClass::print(double value) {
 	char str[20] = "";
@@ -1606,21 +1602,19 @@ void ArancinoClass::println(String value) {
 }
 
 void ArancinoClass::println(int value) {
-	print(String(value) + String('\n')) ;
+	print(String(value)+String('\n'));
 }
 
-/*void ArancinoClass::println(float value) {
+void ArancinoClass::println(float value) {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
-	print(str);
-	print("\n");
-}*/
+	print(str+String('\n'));
+}
 
 void ArancinoClass::println(double value) {
 	char str[20] = "";
 	_doubleToString(value, decimal_digits, str);
-	print(str);
-	print("\n");
+	print(str+String('\n'));
 }
 
 // ????
@@ -1713,9 +1707,6 @@ void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char* 
 	char val[20]="";
 	sprintf(val, "%d", int(value));
 	int valueLength=strlen(val);
-	Serial.println(val);
-	Serial.println(valueLength);
-	Serial.println(_nDecimal);
 	if(valueLength+_nDecimal>15){			//The double data type has 15 decimal digits of precision
       _nDecimal=15-valueLength;
       if(_nDecimal<0){
@@ -1729,9 +1720,6 @@ void ArancinoClass::_floatToString(float value, unsigned int _nDecimal, char* st
 	char val[20]="";
 	sprintf(val, "%d", int(value));
 	int valueLength=strlen(val);
-	Serial.println(val);
-	Serial.println(valueLength);
-	Serial.println(_nDecimal);
 	if(valueLength+_nDecimal>7){			//The float data type has 7 decimal digits of precision
       _nDecimal=7-valueLength;
       if(_nDecimal<0){
