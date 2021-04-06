@@ -19,6 +19,7 @@ under the License
 */
 
 #include "Arancino.h"
+#include <avr/dtostrf.h>
 
 #define DEBUG 0
 
@@ -79,15 +80,11 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	SERIAL_PORT.begin(BAUDRATE);
 	// SERIAL_PORT.setTimeout(TIMEOUT);
 	// arancino_id_prefix = false;
-	arancino_id_prefix = _acfg._USEID;
-	SERIAL_PORT.setTimeout(_acfg._TIMEOUT);
-	
-	
-	_metadata = _amdata;
+	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
+	SERIAL_PORT.setTimeout(_acfg.SERIAL_TIMEOUT);
+	decimal_digits=_acfg.DECIMAL_DIGITS;
 
-	Serial.begin(115200);
-	Serial.println(_acfg._USEID);
-	Serial.println(_acfg._TIMEOUT);
+	_metadata = _amdata;
 
 	int fwnameLength = strlen(_metadata.fwname);
 	int fwversionLength = strlen(_metadata.fwversion);
@@ -104,7 +101,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	int commandLength = strlen(START_COMMAND);
 	int argLength = strlen(LIB_VERSION);
 	int strLength = commandLength + 1 + argLength + 1 + fwnameLength + 1 + fwversionLength + 1 + dateLength + 1 + timeLength + 1 + localtoffsetLength + arancinocoreversionLength + 1 + 1;
-	
+
 	char* str = (char *)calloc(strLength, sizeof(char));
 
 	//reserved Key
@@ -119,7 +116,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 		Serial.begin(115200);
 	}
 	#endif
-	
+
 	strcpy(str, START_COMMAND);
 	strcat(str, dataSplitStr);
 
@@ -137,13 +134,13 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	strcat(str, " ");
 	strcat(str, _metadata.tzoffset);
 	strcat(str, dataSplitStr);
-	
+
 	#ifdef ARANCINO_CORE_VERSION
 	strcat(str, ARANCINO_CORE_VERSION);
 	#endif
 
 	strcat(str, endTXStr);
-	
+
 	ArancinoPacket packet;
 	// Start communication with serial module on CPU
 	do{
@@ -155,18 +152,18 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 			Serial.print(SENT_STRING);
 		}
 		#endif
-		
-		
+
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		
+
 		if (message != NULL)
 		{
 			//ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}};
 			ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
 
 			packet = temp;
-			
+
 			if(packet.responseCode == RSP_OK){
 				//store arancino serial port id
 				idSize = strlen(packet.response.stringArray[0]);
@@ -184,7 +181,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 		{
 			packet = communicationErrorPacket;
 		}
-		
+
 	}while (packet.isError == true || packet.responseCode != RSP_OK);
 	std::free(str);
 
@@ -201,7 +198,7 @@ TaskHandle_t commTaskHandle;
 
 void ArancinoClass::startScheduler() {
 	vSetErrorLed(LED_BUILTIN, HIGH);
-	
+
 	/*
 	 * Uncomment this if you want run loop() as a dedicated task.
 	 * If loop() doesn't run as dedicated task, should not contain blocking code.
@@ -232,7 +229,7 @@ ArancinoPacket ArancinoClass::mset(char** keys, char** values, uint len) {
 	for (uint i = 0; i < len; i ++) {
 		char* key = keys[i];
 		char* value = values[i];
-		
+
 		uint keyLength = strlen(key);
 
 		// if arancino_id has to be prepended we take into account its length and _ char
@@ -272,17 +269,17 @@ ArancinoPacket ArancinoClass::mset(char** keys, char** values, uint len) {
 		}
 
 		strcat(keysPointer, key);
-		
+
 		if (i == len - 1) { // If it's the last key we have to use #(\4) instead of %(\16)
 			strcat(keysPointer, dataSplitStr);
 		} else {
 			strcat(keysPointer, arraySplitStr);
 		}
 
-		// We use memcpy rather than strcat here because it would append \0, 
+		// We use memcpy rather than strcat here because it would append \0,
 		// thus terminating the string prematurely
 		valuesPointer -= strlen(value) + 1;
-		
+
 		memcpy(valuesPointer, value, strlen(value));
 
 		if (i == 0) {
@@ -304,7 +301,7 @@ ArancinoPacket ArancinoClass::mset(char** keys, char** values, uint len) {
 			vTaskSuspendAll();
 		}
 	#endif
-	
+
 	_sendArancinoCommand(str);
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
 	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -338,7 +335,7 @@ template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, uint 
 	// Calculating Cortex Protocol command length
 	for (uint i = 0; i < len; i ++) {
 		char* key = keys[i];
-		
+
 		uint keyLength = strlen(key);
 
 		// if arancino_id has to be prepended we take into account its length and _ char
@@ -368,7 +365,7 @@ template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, uint 
 	}
 
 	strcat(str, endTXStr);
-	
+
 	#if defined(__SAMD21G18A__)
 		if(!digitalRead(DBG_PIN)){
 			Serial.print(SENT_STRING);
@@ -381,7 +378,7 @@ template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, uint 
 			vTaskSuspendAll();
 		}
 	#endif
-	
+
 	_sendArancinoCommand(str);
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
 	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -431,10 +428,15 @@ ArancinoPacket ArancinoClass::set( char* key, long value, bool isPersistent) {
 	return set(key, str, isPersistent);
 }
 
+ArancinoPacket ArancinoClass::set( char* key, float value, bool isPersistent) {
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	return set(key, str, isPersistent);
+}
 
 ArancinoPacket ArancinoClass::set( char* key, double value, bool isPersistent) {
 	char str[20] = "";
-	_doubleToString(value, 4, str);
+	_doubleToString(value, decimal_digits, str);
 	return set(key, str, isPersistent);
 }
 
@@ -707,9 +709,15 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field, int value ) {
 	return hset(key, field, str);
 }
 
+ArancinoPacket ArancinoClass::hset( char* key, char* field, float value ) {
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	return hset(key, field, str);
+}
+
 ArancinoPacket ArancinoClass::hset( char* key, char* field, double value ) {
 	char str[20] = "";
-	_doubleToString(value, 4, str);
+	_doubleToString(value, decimal_digits, str);
 	return hset(key, field, str);
 }
 
@@ -1292,7 +1300,7 @@ template<> ArancinoPacket ArancinoClass::keys<ArancinoPacket> (char* pattern){
 		}
 	}
 	else{
-		packet = invalidCommandErrorPacket;	
+		packet = invalidCommandErrorPacket;
 	}
 
 	return packet;
@@ -1396,7 +1404,7 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 
 	ArancinoPacket ArancinoClass::publish(char* channel, double msg){
 		char str[20] = "";
-		_doubleToString(msg, 4, str);
+		_doubleToString(msg, decimal_digits, str);
 
 		return __publish(channel, str);
 	}
@@ -1514,25 +1522,25 @@ bool ArancinoClass::isValidUTF8(const char * string) //From: https://stackoverfl
     {
         if ((*bytes & 0x80) == 0x00)
         {
-            // U+0000 to U+007F 
+            // U+0000 to U+007F
             cp = (*bytes & 0x7F);
             num = 1;
         }
         else if ((*bytes & 0xE0) == 0xC0)
         {
-            // U+0080 to U+07FF 
+            // U+0080 to U+07FF
             cp = (*bytes & 0x1F);
             num = 2;
         }
         else if ((*bytes & 0xF0) == 0xE0)
         {
-            // U+0800 to U+FFFF 
+            // U+0800 to U+FFFF
             cp = (*bytes & 0x0F);
             num = 3;
         }
         else if ((*bytes & 0xF8) == 0xF0)
         {
-            // U+10000 to U+10FFFF 
+            // U+10000 to U+10FFFF
             cp = (*bytes & 0x07);
             num = 4;
         }
@@ -1575,9 +1583,15 @@ void ArancinoClass::print(int value) {
 	print(str);
 }
 
+void ArancinoClass::print(float value) {
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	print(str);
+}
+
 void ArancinoClass::print(double value) {
 	char str[20] = "";
-	_doubleToString(value, 4, str);
+	_doubleToString(value, decimal_digits, str);
 	print(str);
 }
 
@@ -1588,15 +1602,19 @@ void ArancinoClass::println(String value) {
 }
 
 void ArancinoClass::println(int value) {
-	print(String(value));
-	print("\n");
+	print(String(value)+String('\n'));
+}
+
+void ArancinoClass::println(float value) {
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	print(str+String('\n'));
 }
 
 void ArancinoClass::println(double value) {
 	char str[20] = "";
-	_doubleToString(value, 4, str);
-	print(str);
-	print("\n");
+	_doubleToString(value, decimal_digits, str);
+	print(str+String('\n'));
 }
 
 // ????
@@ -1618,7 +1636,7 @@ int ArancinoClass::getArraySize(String* _array) {
 void ArancinoClass::_sendArancinoCommand(char* command) {
 	//check communication timeout with arancino module
 	if (comm_timeout){
-		/*  
+		/*
 			Flush data on serial communication to avoid of lost
 			synchronization between arancino library and arancino module.
 			By this way I prevent to receive reposonse of a previous sent command.
@@ -1661,7 +1679,7 @@ char* ArancinoClass::_receiveArancinoResponse(char terminator) {
 	if( str == ""){
 		//enable timeout check
 		comm_timeout = true;
-	} 
+	}
 	else {
 		int responseLength = strlen(str.begin());
 		if (responseLength > 0)
@@ -1685,32 +1703,30 @@ bool ArancinoClass::_isReservedKey(char* key) {
 	return false;
 }
 
-void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char* str) {//truncation!
-	uint8_t sign = (value < 0);
-	uint8_t dot = (_nDecimal > 0);
-	long integer = ( sign ? ceil(value) : floor(value) );
-	double _decimal = (value - integer); //without integer part
-	integer = abs(integer);
+void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char* str) {
+	char val[20]="";
+	sprintf(val, "%d", int(value));
+	int valueLength=strlen(val);
+	if(valueLength+_nDecimal>15){			//The double data type has 15 decimal digits of precision
+      _nDecimal=15-valueLength;
+      if(_nDecimal<0){
+        _nDecimal=0;
+      }
+  }
+	dtostrf(value, valueLength, _nDecimal, str);
+}
 
-	for (int i = 0; i < _nDecimal; i++)
-		_decimal *= 10;
-
-	long decimal = (_decimal < 0) ? ceil(_decimal - 0.5) : floor(_decimal + 0.5);
-	decimal = abs(decimal);
-
-	int integerDigit = integer != 0 ? _getDigit(integer) : 1;
-	int decimalDigit = _nDecimal;
-
-	str[0] = '-';
-	ltoa(integer, &str[sign], 10);
-	if (dot)
-	{
-		str[sign + integerDigit] = '.';
-		ltoa(decimal, &str[sign + integerDigit + 1], 10);
-		for (int i = 1; decimal == 0 && i < decimalDigit; i++)
-			ltoa(decimal, &str[sign + integerDigit + i + 1], 10);
-	}
-	str[sign + integerDigit + dot + decimalDigit] = '\0';
+void ArancinoClass::_floatToString(float value, unsigned int _nDecimal, char* str) {
+	char val[20]="";
+	sprintf(val, "%d", int(value));
+	int valueLength=strlen(val);
+	if(valueLength+_nDecimal>7){			//The float data type has 7 decimal digits of precision
+      _nDecimal=7-valueLength;
+      if(_nDecimal<0){
+        _nDecimal=0;
+      }
+  }
+	dtostrf(value, valueLength, _nDecimal, str);
 }
 
 int ArancinoClass::_getDigit(long value) {
@@ -1879,7 +1895,7 @@ char** ArancinoClass::_parseArray(char* data) {
 			DSCIndex = strchr(previousDSCIndex + 1, DATA_SPLIT_CHAR);
 
 			if (DSCIndex != NULL)
-			{	
+			{
 				if (strncmp(previousDSCIndex, nullStr, DSCIndex - previousDSCIndex) == 0){
 					arrayParsed[i] = NULL;
 				} else {

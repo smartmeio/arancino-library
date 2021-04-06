@@ -32,8 +32,8 @@ Parameters:
   - _TIMEOUT: (see the following paragraph)
   - _USEID: (see the following paragraph)
 
-  The convenience of using class X is to be able to increase the number of parameters 
-  without necessarily having to change the prototypes. 
+  The convenience of using class X is to be able to increase the number of parameters
+  without necessarily having to change the prototypes.
 
 
 the use of the following is deprecated and will be remove in the next major release.
@@ -54,18 +54,18 @@ the use of the following is deprecated and will be remove in the next major rele
 ArancinoMetadata amdata = {
   .fwname = "00.1 - Begin Example",
   .fwversion = "1.0.0",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
 
   // Arancino Configuration
   ArancinoConfig acfg;
-  acfg._TIMEOUT = 200;
-
+  acfg.SERIAL_TIMEOUT = 200;
+  acfg.DECIMAL_DIGITS=4;
 
   //calls begin w/o paramenter: it is assumed 100ms timeout by default
-  Arancino.begin(amdata);
+  Arancino.begin(amdata, acfg);
 
   //calls begin w/ 200ms timeout trough Arancino Config
   //Arancino.begin(amdata, acfg);

@@ -61,10 +61,25 @@ typedef struct {
 ### ArancinoConfig
 `ArancinoConfig` is class composed only by attributes used to configure the Arancino Library behaviour. It replaces the use of direct configuration arguments of the `begin` function.
 ```c++
-		bool _USEID = false;
-		int _TIMEOUT = TIMEOUT; // 100 ms for samd21
+    int _TIMEOUT = 100 ;  // *DEPRECATED* Use SERIAL_TIMEOUT
+    bool _USEID;          // *DEPRECATED* Use USE_PORT_ID_PREFIX_KEY
+    int DECIMAL_DIGITS = 4; 
+    int SERIAL_TIMEOUT = 100;
+    bool USE_PORT_ID_PREFIX_KEY = false;
+
 ```
 
+- **`SERIAL_TIMEOUT`**:  Represents the time that each command sent (via API call) will wait
+            for a response. Otherwise the delayed command will be skipped. When the
+            `begin` function is called w/o `timeout` it is assumed `100ms` as
+            default value of timeout.
+- **`USE_PORT_ID_PREFIX_KEY`**: Default `false`. If `true` each key setted up is prefixed with ID of the microntroller.
+        It's useful when you connect multiple microntroller with the same firmware (using the same keys) to
+        one Arancino Module; By this way, at the application level, you can distinguish keys by
+        microntroller id.
+- **`DECIMAL_DIGITS`**: Default `4`. Represents the number to the right of the decimal point for the float and double data types.
+				Float data type has 7 digits, while double data type has up to 15 digits, including decimal digits.
+        If the digits exceed the maximum allowed for the type(float or double), the decimal part will be truncated and rounded up or rounded down.
 
 ##### Variables
 * `isError`: indicates the outcome of an API call. Its value is `False` (0) when everything is OK or `True` (1) when an error occurs. Both in positive and negative cases is possible to check `responseCode` for more details;
@@ -101,7 +116,7 @@ typedef struct {
 ## API
 
 
-> Note: when you get a value using api like `get`, `hget`, etc. please keep in mind to free memory each time using the `free` api. 
+> Note: when you get a value using api like `get`, `hget`, etc. please keep in mind to free memory each time using the `free` api.
 >
 > To prevent memory leak, code like this must be avoided:
 > ```c++
@@ -132,15 +147,15 @@ Stores the metadata to use later during the `START` command in `begin` API.
 ArancinoMetadata amdata = {
   .fwname = "Arancino Firmware",
   .fwversion = "1.0.0",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
-  
+
   // deprecated: do not use the .metadata function directly. Use the mandatory metadata argument in the begin function instead.
   // This will be removed in the next major relase
   //Arancino.metadata(meta);
-  
+
   //
   Arancino.begin(amdata);
 }
@@ -160,23 +175,15 @@ From version `1.4.0` the `ArancinoMetadata` argument became mandatory, becouse t
 From version
 
 ##### Parameters
-- ArancinoConfig: is class composed only by attributes:
-  - `_TIMEOUT`: (see the following paragraph: `timeout`)
-  - `_USEID`: (see the following paragraph: `useid`)
+- ArancinoConfig: is class composed only by attributes (see the following paragraph: [`Arancino Config`](#ArancinoConfig)):
+  - `DECIMAL_DIGITS` 
+  - `SERIAL_TIMEOUT`
+  - `PORT_ID_PREFIX_KEY`
 
-The convenience of using class X is to be able to increase the number of parameters without necessarily having to change the prototypes. 
-
-
-The use of the following is deprecated and will be remove in the next major release.
-- **`timeout`**:  Represents the time that each command sent (via API call) will wait
-            for a response. Otherwise the delayed command will be skipped. When the
-            `begin` function is called w/o `timeout` it is assumed `100ms` as
-            default value of timeout.
-- **`useid`**: Default `false`. If `true` each key setted up is prefixed with ID of the microntroller.
-        It's useful when you connect multiple microntroller with the same firmware (using the same keys) to
-        one Arancino Module; By this way, at the application level, you can distinguish keys by
-        microntroller id.
-
+The convenience of using class ArancinoConfig is to be able to increase the number of parameters without necessarily having to change the prototypes.
+The use of the following arguments in the `begin` function is deprecated and will be removed in the next major release.
+- **`timeout`**
+- **`useid`**
 
 ___
 ### set
@@ -201,8 +208,8 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response`: `NULL`;
 
 
-###### Note: [2](###notes)
-###### Note: [5](###notes)
+###### Note: [2](#notes), [5](#notes)
+
 ___
 ### get
 ##### *char&ast; get(char&ast; key)*
@@ -227,7 +234,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.string`: `char*` pointer that can contain the value of selected *key* or `NULL` if the *key* doesn't exist.
 
 
-###### Note: [1](###notes), [4](###notes)
+###### Note: [1](#notes), [4](#notes)
 
 ___
 
@@ -247,13 +254,13 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `responseType`: `VOID`;
   * `response`: `NULL`;
 
-###### Note: [3](###notes)
+###### Note: [3](#notes)
 
 ### mget
 ##### *char&ast;&ast; mget(char&ast;&ast; keys, char&ast;&ast; values, uint len)*
 ##### *ArancinoPacket mget\<ArancinoPacket>(char&ast;&ast; keys, uint len)*
 
-Retrieves multiple keys from redis. 
+Retrieves multiple keys from redis.
 
 ##### Parameters
 * **`keys`**: array containing keys to retrieve;
@@ -273,7 +280,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.stringarray`: `char**` pointer that points to the start of the returned array of strings.
 
 
-###### Note: [1](###notes), [4](###notes)
+###### Note: [1](#notes), [4](#notes)
 
 ### del
 ##### *int del(char&ast; key )*
@@ -296,7 +303,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.integer`: The number of keys that were removed.
 
 
-###### Note: [1](###notes)
+###### Note: [1](#notes)
 
 ___
 ### keys
@@ -352,7 +359,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response`: `NULL`;
 
 
-###### Note: [2](###notes)
+###### Note: [2](#notes)
 
 ___
 ### hget
@@ -378,7 +385,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.string`: `char*` pointer that can contain the *value* if a value is stored in *field* at *key* or `NULL` if there isn't a value stored.
 
 
-###### Note: [1](###notes), [4](###notes)
+###### Note: [1](#notes), [4](#notes)
 
 ___
 ### hgetall
@@ -401,7 +408,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `responseType`: `STRING_ARRAY`;
   * `response.stringArray`: `char**` pointer that can contain the string array of field and value matching *key*
 
-###### Note: [1](###notes), [4](###notes)
+###### Note: [1](#notes), [4](#notes)
 
 ___
 ### hkeys
@@ -425,7 +432,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.stringArray`: `char**` pointer to the string array of *fields* matching *key*.
 
 
-###### Note: [1](###notes), [4](###notes)
+###### Note: [1](#notes), [4](#notes)
 
 ___
 ### hvals
@@ -448,7 +455,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.stringArray`: `char**` pointer to the string array of *values* matching *key*.
 
 
-###### Note: [1](###notes), [4](###notes)
+###### Note: [1](#notes), [4](#notes)
 
 ___
 ### hdel
@@ -475,7 +482,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.integer`: 1 if the *field* is removed from hash or 0 if the *field* or the *key* does not exist in the hash.
 
 
-###### Note: [1](###notes)
+###### Note: [1](#notes)
 
 ___
 ### flush
@@ -638,9 +645,9 @@ void setup() {
 
 void loop() {
   char* str = "Test";
-  if(isValidUTF8(str)) 
+  if(isValidUTF8(str))
         Arancino.set("key3", str);
- 
+
 }
 ```
 ### Notes
@@ -661,9 +668,9 @@ void loop() {
 5. When using `set`-type functions, make sure that the value is correctly formatted with *utf-8* standard. Is recommended to use the internal function `isValidUTF8` before the `set` to avoid decoding errors on Arancino Module. Example:
 ```c++
       char* value="test";
-      if(isValidUTF8(value)) 
+      if(isValidUTF8(value))
         Arancino.set("key3", value);
-      
+
       ```
 
 ## Cortex Protocol

@@ -1,5 +1,9 @@
 # Changelog
 
+#### v 1.4.1 - 2021.04.06
+* Fix: Fixed bug with `println` function. [#gk5z1y](https://app.clickup.com/t/gk5z1y)
+* Fix: Fixed bug with float's and double's types in `set` function. [#g71qk9](https://app.clickup.com/t/g71qk9)
+
 #### v 1.4.0 - 2021.03.15
 * Upd: Metadata structure is now mandatory to the `begin` function. [#aex3e4](https://app.clickup.com/t/aex3e4)
 * Add: New `ArancinoConfig` Class used to pass configuration at `begin`. [#fd4ped](https://app.clickup.com/t/fd4ped)
