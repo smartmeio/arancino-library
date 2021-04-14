@@ -47,6 +47,7 @@ under the License
 #define HVALS_COMMAND			"HVALS"
 #define PUBLISH_COMMAND			"PUB"
 #define FLUSH_COMMAND			"FLUSH"
+#define STORE_COMMAND           "STORE"
 
 #define SENT_STRING				"Sent Command: "
 #define RCV_STRING				"Received Response: "
@@ -70,6 +71,7 @@ under the License
 #define ERR_REDIS_KEY_EXISTS_IN_STD	    207		//Key exists in the Standard Data Store
 #define ERR_REDIS_KEY_EXISTS_IN_PERS	208		//Key exists in the Persistent Data Store
 #define ERR_NON_COMPATIBILITY		    209		//Non compatibility between Arancino Module and Library
+#define ERR_STORE_CONVERSION		    211		//Non compatibility between Arancino Module and Library
 
 #define DBG_PIN					26		//pin used to Debug Message
 //#define PWR_PIN				??		//pin used for Power Management
@@ -78,7 +80,7 @@ under the License
 #define LIBVERS_KEY				"___LIBVERS___"
 #define MODVERS_KEY				"___MODVERS___"
 #define POWER_KEY				"___POWER___"
-#define LIB_VERSION				"1.4.1"	//library version 
+#define LIB_VERSION				"2.0.0"	//library version 
 
 //RESPONSE CODE
 #define INVALID_VALUE_ERROR     -4

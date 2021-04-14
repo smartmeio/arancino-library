@@ -117,6 +117,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	}
 	#endif
 
+	//RTC
+	rtc.begin();
+
 	strcpy(str, START_COMMAND);
 	strcat(str, dataSplitStr);
 
@@ -170,9 +173,10 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 				id = (char *)calloc(idSize+1, sizeof(char));
 				memcpy(id,packet.response.stringArray[0],idSize);
 				//timestamp from arancino module
-				int timeStampSize = strlen(packet.response.stringArray[1]);
-				timestamp = (char *)calloc(timeStampSize+1, sizeof(char));
-				memcpy(timestamp,packet.response.stringArray[1],timeStampSize);
+				char * tmstp = strtok(packet.response.stringArray[1], ".");
+				rtc.setEpoch(atol(tmstp));
+  				tmstp = strtok(NULL, ".");  
+				timestampMillis = atol(tmstp) / 1000 ; //only milliseconds part
 			}
 
 			std::free(message);
@@ -1482,6 +1486,133 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 
 	}
 
+	/******** API BASIC :: STORE *********/
+
+	ArancinoPacket ArancinoClass::store( char* key, int value, char* tmstp) {
+		char str[20] = "";
+		itoa(value, str, 10);
+		return __store(key, str, tmstp);
+	}
+
+	ArancinoPacket ArancinoClass::store( char* key, uint32_t value, char* tmstp) {
+		char str[20] = "";
+		itoa(value, str, 10);
+		return __store(key, str, tmstp);
+	}
+
+	ArancinoPacket ArancinoClass::store( char* key, long value, char* tmstp) {
+		char str[20] = "";
+		itoa(value, str, 10);
+		return __store(key, str, tmstp);
+	}
+
+	ArancinoPacket ArancinoClass::store( char* key, float value, char* tmstp) {
+		char str[20] = "";
+		_floatToString(value, decimal_digits, str);
+		return __store(key, str, tmstp);
+	}
+
+	ArancinoPacket ArancinoClass::store( char* key, double value, char* tmstp) {
+		char str[20] = "";
+		return __store(key, str, tmstp);
+	}
+
+	ArancinoPacket ArancinoClass::store( char* key, int value) {
+		char* ts = getTimestamp();
+		return store(key, value, ts);
+	}
+
+	ArancinoPacket ArancinoClass::store( char* key, uint32_t value) {
+		char* ts = getTimestamp();
+		return store(key, value, ts);
+	}
+
+	ArancinoPacket ArancinoClass::store( char* key, long value) {
+		char* ts = getTimestamp();
+		return store(key, value, ts);
+	}
+
+	ArancinoPacket ArancinoClass::store( char* key, float value) {
+		char* ts = getTimestamp();
+		return store(key, value, ts);
+	}
+
+	ArancinoPacket ArancinoClass::store( char* key, double value) {
+		char* ts = getTimestamp();
+		return store(key, value, ts);
+	}
+
+	ArancinoPacket ArancinoClass::__store( char* key, char* value, char* tmstp) {
+		if(_isReservedKey(key)){
+			//TODO maybe it's better to print a log
+			return reservedKeyErrorPacket;
+		}
+		ArancinoPacket packet;
+		if(key != NULL && value != NULL && strcmp(key, "") != 0){
+
+			int	commandLength = strlen(STORE_COMMAND);
+			// 
+			int keyLength = strlen(key);
+			int valueLength = strlen(value);
+			int tmstpLength = strlen(tmstp);
+			int strLength = commandLength + 1 + keyLength + 1 + valueLength + 1 + tmstpLength + 1 + 1;
+
+			//set("ttss",tmstp);
+			char* str = (char *)calloc(strLength, sizeof(char));
+			#if defined(__SAMD21G18A__)
+			if(!digitalRead(DBG_PIN)){
+				Serial.print(SENT_STRING);
+			}
+			#endif
+
+			strcpy(str, STORE_COMMAND);
+			strcat(str, dataSplitStr);
+			if(arancino_id_prefix){
+				strcat(str, id);
+				strcat(str, ID_SEPARATOR);
+			}
+			strcat(str, key);
+			strcat(str, dataSplitStr);
+			strcat(str, value);
+			strcat(str, dataSplitStr);
+			strcat(str, tmstp);
+			strcat(str, endTXStr);
+
+			#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+			if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+			{
+				vTaskSuspendAll();
+			}
+			#endif
+			_sendArancinoCommand(str);
+			char* message = _receiveArancinoResponse(END_TX_CHAR);
+			#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+			if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+			{
+				xTaskResumeAll();
+			}
+			#endif
+
+			std::free(str);
+
+			if (message != NULL)
+			{
+				ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
+				packet = temp;
+				std::free(message);
+			}
+			else
+			{
+				packet = communicationErrorPacket;
+			}
+
+		}else{
+				packet = invalidCommandErrorPacket;
+		}
+
+		return packet;
+	}
+
 /******** API UTILITY :: FREE *********/
 
 void ArancinoClass::free(char* str){
@@ -1629,7 +1760,17 @@ int ArancinoClass::getArraySize(String* _array) {
 	return (dummy[0] != "") ? dummy[0].toInt() : 0;
 }
 
+char* ArancinoClass::getTimestamp() {
 
+	unsigned long ts = rtc.getEpoch();
+	unsigned long mls = (millis()+ timestampMillis) % 1000; 
+	itoa(ts, timestamp, 10);
+	//strcat(timestamp,".");
+	char mill[]="";
+	sprintf(mill, "%03d", mls); 
+	strcat(timestamp, mill);
+	return timestamp;
+}
 
 /******** INTERNAL UTILS :: FREE *********/
 

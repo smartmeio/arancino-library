@@ -24,6 +24,7 @@ under the License
 #include <Arduino.h>
 #include <ArancinoDefinitions.h>
 #include <ArancinoConfig.h>
+#include <RTCZero.h>
 
 #include <Stream.h>
 #include <stdlib.h>
@@ -207,6 +208,18 @@ class ArancinoClass {
 		//FLUSH
 		ArancinoPacket flush(void);
 
+		//STORE
+		ArancinoPacket store(char* key, int value);
+		ArancinoPacket store(char* key, uint32_t value);
+		ArancinoPacket store(char* key, double value);
+		ArancinoPacket store(char* key, float value);
+		ArancinoPacket store(char* key, long value);
+		ArancinoPacket store(char* key, int value, char* tmstp);
+		ArancinoPacket store(char* key, uint32_t value, char* tmstp);
+		ArancinoPacket store(char* key, double value, char* tmstp);
+		ArancinoPacket store(char* key, float value, char* tmstp);
+		ArancinoPacket store(char* key, long value, char* tmstp);
+
 		/***** API UTILS *****/
 		//FREE
 		void free(char* str);
@@ -227,13 +240,14 @@ class ArancinoClass {
 		//GET ARRAY SIZE
 		int getArraySize(char** _array);
 		int getArraySize(String* _array);
+		//GET ARRAY SIZE
+		char* getTimestamp();
 
 		//CHECK UTF-8
 		bool isValidUTF8(const char * string);
 
 		//TEMPLATE TEST
 		//template<class T = char*> T ArancinoGet(char* key);
-
 
 	private:
 		//void dropAll();
@@ -243,7 +257,9 @@ class ArancinoClass {
 		bool arancino_id_prefix;
 		int decimal_digits;
 		int idSize;
-		char *timestamp;
+		char timestamp[15];
+		unsigned long timestampMillis;
+		RTCZero rtc;
 
 		char reservedKey[RESERVED_KEY_ARRAY_SIZE][RESERVED_KEY_MAX_LENGTH]; //max 10 char for key
 		int COMM_MODE = SYNCH;
@@ -264,6 +280,7 @@ class ArancinoClass {
 
 		ArancinoPacket __set(char* key, char* value, bool isPersistent);
 		ArancinoPacket __publish(char* channel, char* msg);
+		ArancinoPacket __store(char* key, char* value, char* tmstp);
 
 		//INTERNAL UTILS
 		//void _sendArancinoCommand(String command);
