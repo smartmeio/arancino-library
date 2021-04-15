@@ -94,8 +94,8 @@ push:
 #######    CLI Sketch Test Job    #######
 cli-test:
   stage: test
-  #only: ['tags']
-  #except: ['master', 'branches']
+  only: ['tags']
+  except: ['master', 'branches']
 
   # copying the Library source to the Arduino libraries folder
   before_script:
@@ -186,8 +186,8 @@ upload:
 #######    Cleanup Job    #######
 cleanup:
   stage: cleanup
-  #only: ['tags']
-  #except: ['master', 'branches']
+  only: ['tags']
+  except: ['master', 'branches']
 
   variables:
     GIT_STRATEGY: none
