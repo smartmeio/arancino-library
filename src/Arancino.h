@@ -24,7 +24,6 @@ under the License
 #include <Arduino.h>
 #include <ArancinoDefinitions.h>
 #include <ArancinoConfig.h>
-#include <RTCZero.h>
 
 #include <Stream.h>
 #include <stdlib.h>
@@ -214,11 +213,6 @@ class ArancinoClass {
 		ArancinoPacket store(char* key, double value);
 		ArancinoPacket store(char* key, float value);
 		ArancinoPacket store(char* key, long value);
-		ArancinoPacket store(char* key, int value, char* tmstp);
-		ArancinoPacket store(char* key, uint32_t value, char* tmstp);
-		ArancinoPacket store(char* key, double value, char* tmstp);
-		ArancinoPacket store(char* key, float value, char* tmstp);
-		ArancinoPacket store(char* key, long value, char* tmstp);
 
 		/***** API UTILS *****/
 		//FREE
@@ -257,9 +251,11 @@ class ArancinoClass {
 		bool arancino_id_prefix;
 		int decimal_digits;
 		int idSize;
-		char timestamp[15];
+		char timestamp[13];
 		unsigned long timestampMillis;
-		RTCZero rtc;
+		unsigned long tmst_sup;
+		unsigned long tmst_inf;
+		unsigned long millis_previous;
 
 		char reservedKey[RESERVED_KEY_ARRAY_SIZE][RESERVED_KEY_MAX_LENGTH]; //max 10 char for key
 		int COMM_MODE = SYNCH;
@@ -267,6 +263,12 @@ class ArancinoClass {
 		const char arraySplitStr[2] = {ARRAY_SPLIT_CHAR, '\0'};
 		const char endTXStr[2] = {END_TX_CHAR, '\0'};
 		const char nullStr[2] = {NULL_CHAR, '\0'};
+
+		ArancinoPacket store(char* key, int value, char* tmstp);
+		ArancinoPacket store(char* key, uint32_t value, char* tmstp);
+		ArancinoPacket store(char* key, double value, char* tmstp);
+		ArancinoPacket store(char* key, float value, char* tmstp);
+		ArancinoPacket store(char* key, long value, char* tmstp);
 
 		ArancinoMetadata _metadata = {
 			"",

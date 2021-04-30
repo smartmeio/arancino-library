@@ -80,7 +80,7 @@ under the License
 #define LIBVERS_KEY				"___LIBVERS___"
 #define MODVERS_KEY				"___MODVERS___"
 #define POWER_KEY				"___POWER___"
-#define LIB_VERSION				"2.0.0"	//library version 
+#define LIB_VERSION				"2.0.0"	//library version
 
 //RESPONSE CODE
 #define INVALID_VALUE_ERROR     -4
@@ -97,3 +97,6 @@ under the License
 //RESERVED KEYS ARRAY DEF
 #define RESERVED_KEY_ARRAY_SIZE		4   // Array dimension of Reserved Keys
 #define RESERVED_KEY_MAX_LENGTH		11  // Max length of a Reserved Key name
+
+//MAX UNSIGNED LONG VALUE
+#define MAX_UNSIGNED_LONG_VALUE     4294967295

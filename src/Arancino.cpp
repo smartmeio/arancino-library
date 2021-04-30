@@ -118,8 +118,6 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	#endif
 
 	//RTC
-	rtc.begin();
-
 	strcpy(str, START_COMMAND);
 	strcat(str, dataSplitStr);
 
@@ -173,10 +171,13 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 				id = (char *)calloc(idSize+1, sizeof(char));
 				memcpy(id,packet.response.stringArray[0],idSize);
 				//timestamp from arancino module
-				char * tmstp = strtok(packet.response.stringArray[1], ".");
-				rtc.setEpoch(atol(tmstp));
-  				tmstp = strtok(NULL, ".");  
-				timestampMillis = atol(tmstp) / 1000 ; //only milliseconds part
+				memcpy(timestamp, packet.response.stringArray[1],13);
+				char tmst_part[5];
+				memcpy(tmst_part,timestamp, 4);  //first 4 digits of epoch
+				tmst_sup=atoi(tmst_part);
+				tmst_inf=atoi(&timestamp[4]);  //last 9 digits of epoch
+				millis_previous=millis();
+
 			}
 
 			std::free(message);
@@ -1551,7 +1552,7 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		if(key != NULL && value != NULL && strcmp(key, "") != 0){
 
 			int	commandLength = strlen(STORE_COMMAND);
-			// 
+			//
 			int keyLength = strlen(key);
 			int valueLength = strlen(value);
 			int tmstpLength = strlen(tmstp);
@@ -1762,15 +1763,53 @@ int ArancinoClass::getArraySize(String* _array) {
 
 char* ArancinoClass::getTimestamp() {
 
-	unsigned long ts = rtc.getEpoch();
-	unsigned long mls = (millis()+ timestampMillis) % 1000; 
-	itoa(ts, timestamp, 10);
-	//strcat(timestamp,".");
-	char mill[]="";
-	sprintf(mill, "%03d", mls); 
-	strcat(timestamp, mill);
+	//unsigned long ts = rtc.getEpoch(); //10 digits
+	unsigned long millis_current = millis();
+	unsigned long mls_tmp = millis_current - millis_previous;
+	millis_previous=millis_current;
+	if(mls_tmp < 0){	//overflow of millis
+		mls_tmp=MAX_UNSIGNED_LONG_VALUE-millis_previous+millis_current;
+	}
+	tmst_inf=tmst_inf+mls_tmp;
+	if(tmst_inf > 999999999){
+		tmst_sup=tmst_sup+1;
+		tmst_inf=tmst_inf % 1000000000;
+	}
+	char ts_sup_tmp[4];
+	sprintf(ts_sup_tmp, "%04d", tmst_sup); //4 digits 
+	memcpy(timestamp,ts_sup_tmp,4);
+	char ts_inf_tmp[9];
+	sprintf(ts_inf_tmp, "%09d", tmst_inf); //9 digits
+	memcpy(&timestamp[4],ts_inf_tmp,9);
 	return timestamp;
 }
+
+/*char* ArancinoClass::getTimestamp() {
+
+	unsigned long ts = rtc.getEpoch(); //10 digits
+	unsigned long mls_tmp = (millis() - millis_start) % 1000;
+	unsigned int ts_inf = ts % 1000000000; //last 9 digits of epoch
+  unsigned int ts_sup = ts/1000000000; //first digits of epoch
+	unsigned int mls =mls_tmp; //+ timestampMillis ; //millis + delta;
+	if(mls > 999){ //millis + delta is greater than 1 seconds (1000)
+		ts_inf=ts_inf+1;
+		if(ts_inf> 999999999){
+			ts_sup=ts_sup+1;
+			ts_inf=0;
+		}
+	}
+	mls=mls % 1000; //last 3 digits of millis
+
+	itoa(ts_sup, timestamp, 10);
+	char ts_tmp[9];
+	sprintf(ts_tmp, "%09d", ts_inf);
+	strcat(timestamp, ts_tmp);
+	char mill[6];
+	sprintf(mill, "%03d", mls);
+	strcat(timestamp, mill);
+	//itoa(ts, timestamp, 10);
+	return timestamp;
+}*/
 
 /******** INTERNAL UTILS :: FREE *********/
 
