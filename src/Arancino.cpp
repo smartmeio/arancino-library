@@ -99,10 +99,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	char* str = (char *)calloc(strLength, sizeof(char));
 
 	//reserved Key
-	strcpy(reservedKey[0], MONITOR_KEY);
-	strcpy(reservedKey[1], LIBVERS_KEY);
-	strcpy(reservedKey[2], MODVERS_KEY);
-	strcpy(reservedKey[3], POWER_KEY);
+	// strcpy(reservedKey[0], MONITOR_KEY);
+	// strcpy(reservedKey[1], MODVERS_KEY);
+	// strcpy(reservedKey[2], POWER_KEY);
 	//DEBUG
 	#if defined(__SAMD21G18A__)
 	pinMode(DBG_PIN,INPUT);
@@ -185,8 +184,6 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	std::free(str);
 
 	strcpy(LOG_LEVEL,getModuleLogLevel());
-	//lib version is sent via start command.
-	//_sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
 
 }
 
@@ -208,12 +205,6 @@ void ArancinoClass::startScheduler() {
 	vTaskStartScheduler();
 }
 #endif
-
-/******** API ADVANCED :: SET RESERVED COMMUNICATION MODE *********/
-
-void ArancinoClass::setReservedCommunicationMode(int mode){
-	COMM_MODE = mode;
-}
 
 /******** API BASIC :: MSET *********/
 
@@ -456,10 +447,10 @@ ArancinoPacket ArancinoClass::set( char* key, char* value, bool isPersistent) {
 }
 
 ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent) {
-	if(_isReservedKey(key)){
-		//TODO maybe it's better to print a log
-		return reservedKeyErrorPacket;
-	}
+	// if(_isReservedKey(key)){
+	// 	//TODO maybe it's better to print a log
+	// 	return reservedKeyErrorPacket;
+	// }
 
 	ArancinoPacket packet;
 	if(key != NULL && value != NULL && strcmp(key, "") != 0){
@@ -545,10 +536,10 @@ ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent) 
 /******** API BASIC :: GET *********/
 
 template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
-	if(_isReservedKey(key)){
-		//TODO maybe it's better to print a log
-		return reservedKeyErrorPacket;
-	}
+	// if(_isReservedKey(key)){
+	// 	//TODO maybe it's better to print a log
+	// 	return reservedKeyErrorPacket;
+	// }
 
 	ArancinoPacket packet;
 	if(key != NULL && strcmp(key, "") != 0 ){
@@ -631,10 +622,6 @@ template<> char* ArancinoClass::get(char* key){
 /******** API BASIC :: GETRESERVED *********/
 
 template<> ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char* key){
-	if(_isReservedKey(key)){
-		//TODO maybe it's better to print a log
-		return reservedKeyErrorPacket;
-	}
 
 	ArancinoPacket packet;
 	if(key != NULL && strcmp(key, "") != 0 ){
@@ -732,10 +719,6 @@ char* ArancinoClass::getModuleLogLevel(){
 /******** API BASIC :: DEL *********/
 
 template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
-	if(_isReservedKey(key)){
-		//TODO maybe it's better to print a log
-		return reservedKeyErrorPacket;
-	}
 
 	ArancinoPacket packet;
 	if(key != NULL && strcmp(key, "") != 0 ){
@@ -847,11 +830,6 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field, long value, bool isP
 
 ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value, bool isPersistent) {
 
-	if(_isReservedKey(key)){
-		//TODO maybe it's better to print a log
-		return reservedKeyErrorPacket;
-	}
-
 	ArancinoPacket packet;
 	if(key != NULL && field != NULL && value != NULL && strcmp(key, "") != 0 && strcmp(field, "") != 0){
 		uint commandLength = 0;
@@ -938,10 +916,6 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value, bool i
 /******** API BASIC :: HGET *********/
 
 template<> ArancinoPacket ArancinoClass::hget<ArancinoPacket> (char* key, char* field){
-	if(_isReservedKey(key)){
-		//TODO maybe it's better to print a log
-		return reservedKeyErrorPacket;
-	}
 
 	ArancinoPacket packet;
 	if(key != NULL && field != NULL && strcmp(key, "") != 0 && strcmp(field, "") != 0 ){
@@ -1028,10 +1002,6 @@ template<> char* ArancinoClass::hget(char* key, char* field){
 /******** API BASIC :: HGETALL PACKET *********/
 
 template<> ArancinoPacket ArancinoClass::hgetall<ArancinoPacket> (char* key){
-	if(_isReservedKey(key)){
-		//TODO maybe it's better to print a log
-		return reservedKeyErrorPacket;
-	}
 
 	ArancinoPacket packet;
 	if(key != NULL && strcmp(key, "") != 0 ){
@@ -1115,10 +1085,6 @@ template<> char** ArancinoClass::hgetall(char* key){
 /******** API BASIC :: HKEYS *********/
 
 template<> ArancinoPacket ArancinoClass::hkeys<ArancinoPacket> (char* key){
-	if(_isReservedKey(key)){
-		//TODO maybe it's better to print a log
-		return reservedKeyErrorPacket;
-	}
 
 	ArancinoPacket packet;
 	if(key != NULL && strcmp(key, "") != 0 ){
@@ -1202,10 +1168,6 @@ template<> char** ArancinoClass::hkeys(char* key){
 /******** API BASIC :: HVALS *********/
 
 template<> ArancinoPacket ArancinoClass::hvals<ArancinoPacket> (char* key){
-	if(_isReservedKey(key)){
-		//TODO maybe it's better to print a log
-		return reservedKeyErrorPacket;
-	}
 
 	ArancinoPacket packet;
 	if(key != NULL && strcmp(key, "") != 0 ){
@@ -1289,10 +1251,6 @@ template<> char** ArancinoClass::hvals(char* key){
 /******** API BASIC :: HDEL *********/
 
 template<> ArancinoPacket ArancinoClass::hdel<ArancinoPacket> (char* key, char* field){
-	if(_isReservedKey(key)){
-		//TODO maybe it's better to print a log
-		return reservedKeyErrorPacket;
-	}
 
 	ArancinoPacket packet;
 	if(key != NULL && field != NULL && strcmp(key,"") && strcmp(field, "") != 0 ){
@@ -1449,10 +1407,6 @@ template<> char** ArancinoClass::keys(char* pattern){
 /******** API BASIC :: PUBLISH *********/
 
 ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
-	if(_isReservedKey(channel)){
-		//TODO maybe it's better to print a log
-		return reservedKeyErrorPacket;
-	}
 
 	ArancinoPacket packet;
 	if(channel != NULL && msg != NULL && strcmp(channel,"") != 0 ){
@@ -1640,10 +1594,7 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 	}
 
 	ArancinoPacket ArancinoClass::__store( char* key, char* value) {
-		if(_isReservedKey(key)){
-			//TODO maybe it's better to print a log
-			return reservedKeyErrorPacket;
-		}
+
 		ArancinoPacket packet;
 
 		char* ts = getTimestamp();

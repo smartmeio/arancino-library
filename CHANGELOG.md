@@ -1,6 +1,9 @@
 # Changelog
 
 #### v 2.0.0 - 2021.05.03
+* Upd: removed check on reserved command. [fv2dmy] (https://app.clickup.com/t/fv2dmy)
+* Upd: updated sync/async mode. [fd59jj] (https://app.clickup.com/t/fd59jj)
+* Add: added persistent mode to `mset` and `hset` function. [aex4by] (https://app.clickup.com/t/aex4by)
 * Add: added `getReserved` function. [g31n4z](https://app.clickup.com/t/g31n4z)
 * Add: added `store` function. [#gk4cn8](https://app.clickup.com/t/gk4cn8)
 * Add: added `storetags` function. [#hf2fg6](https://app.clickup.com/t/hf2fg6)

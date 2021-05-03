@@ -81,7 +81,6 @@ under the License
 //#define PWR_PIN				??		//pin used for Power Management
 
 #define MONITOR_KEY				"___MONITOR___"
-#define LIBVERS_KEY				"___LIBVERS___"
 #define POWER_KEY				"___POWER___"
 #define MODVERS_KEY				"___MODVERS___"
 #define MODLOGLVL_KEY			"___MODLOGLVL___"

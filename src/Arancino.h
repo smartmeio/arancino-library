@@ -108,10 +108,6 @@ class ArancinoClass {
 		//START SCHEDULER
 		void startScheduler();
 
-		//SET RESERVED COMMUNICATION MODE
-		void setReservedCommunicationMode(int mode);
-
-
 		/***** API BASIC *****/
 		void metadata(ArancinoMetadata amdata);
 
