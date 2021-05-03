@@ -51,7 +51,7 @@ under the License
 #define FLUSH_COMMAND			"FLUSH"
 #define STORE_COMMAND			"STORE"
 #define STORETAGS_COMMAND		"STORETAGS"
-#define GETRESERVED_COMMAND		"GETRESERVED"
+#define GETRESERVED_COMMAND		"GETRSVD"
 
 #define SENT_STRING				"Sent Command: "
 #define RCV_STRING				"Received Response: "

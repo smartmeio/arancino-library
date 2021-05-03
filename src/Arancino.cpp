@@ -52,12 +52,6 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 					API FUNCTIONS
 ********************************************************/
 
-/******** API BASIC :: METADATA *********/
-
-[[deprecated("Pass ArancinoMetadata to the Arancino.begin function.")]]
-void ArancinoClass::metadata(ArancinoMetadata _amdata) {
-	_metadata = _amdata;
-}
 
 /******** API BASIC :: BEGIN *********/
 
@@ -662,7 +656,7 @@ template<> ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char* key){
 		}
 		#endif
 
-		strcpy(str, GET_COMMAND);
+		strcpy(str, GETRESERVED_COMMAND);
 		strcat(str, dataSplitStr);
 		if(arancino_id_prefix){
 			strcat(str, id);
