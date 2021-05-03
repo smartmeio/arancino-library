@@ -33,6 +33,7 @@ under the License
 
 #define START_COMMAND			"START"
 #define MSET_COMMAND            "MSET"
+#define MSET_PERS_COMMAND       "MSETPERS"
 #define SET_COMMAND 			"SET"
 #define SET_PERS_COMMAND 		"SETPERS"
 #define MGET_COMMAND            "MGET"
@@ -44,6 +45,7 @@ under the License
 #define HKEYS_COMMAND			"HKEYS"
 #define HDEL_COMMAND			"HDEL"
 #define HSET_COMMAND			"HSET"
+#define HSET_PERS_COMMAND		"HSETPERS"
 #define HVALS_COMMAND			"HVALS"
 #define PUBLISH_COMMAND			"PUB"
 #define FLUSH_COMMAND			"FLUSH"
@@ -80,7 +82,6 @@ under the License
 
 #define MONITOR_KEY				"___MONITOR___"
 #define LIBVERS_KEY				"___LIBVERS___"
-#define MODVERS_KEY				"___MODVERS___"
 #define POWER_KEY				"___POWER___"
 #define MODVERS_KEY				"___MODVERS___"
 #define MODLOGLVL_KEY			"___MODLOGLVL___"

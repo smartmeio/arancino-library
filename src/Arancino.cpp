@@ -222,12 +222,19 @@ void ArancinoClass::setReservedCommunicationMode(int mode){
 
 /******** API BASIC :: MSET *********/
 
-ArancinoPacket ArancinoClass::mset(char** keys, char** values, uint len) {
+ArancinoPacket ArancinoClass::mset(char** keys, char** values, uint len, bool isPersistent) {
 	if ((keys == NULL) || (values == NULL) || (len <= 0)) {
 		return invalidCommandErrorPacket;
 	}
 
-	uint commandLength = strlen(MSET_COMMAND);
+	uint commandLength=0;
+	if(isPersistent){
+		commandLength = strlen(MSET_PERS_COMMAND);
+	}
+	else
+	{
+		commandLength = strlen(MSET_COMMAND);
+	}
 	uint strLength = commandLength + 1; // Counting the # character (data split chr)
 
 	// Calculating Cortex Protocol command length
@@ -252,7 +259,11 @@ ArancinoPacket ArancinoClass::mset(char** keys, char** values, uint len) {
 	}
 
 	char* str = (char*) calloc(strLength + 1, sizeof(char));
-	strcat(str, MSET_COMMAND);
+	if(isPersistent){
+		strcat(str, MSET_PERS_COMMAND);
+	}else{
+		strcat(str, MSET_COMMAND);
+	}
 	strcat(str, dataSplitStr);
 
 	// Points to the memory area where keys have to be written
@@ -708,26 +719,26 @@ template<> char* ArancinoClass::getReserved(char* key){
 	return retString;
 }
 
-template<> ArancinoPacket ArancinoClass::getModuleVersion<ArancinoPacket>(){
+/*template<> ArancinoPacket ArancinoClass::getModuleVersion<ArancinoPacket>(){
 	char key[strlen(MODVERS_KEY)+1];
 	strcat(key,MODVERS_KEY);
 	ArancinoPacket packet=getReserved<ArancinoPacket>(key);
 	return packet;
-}
+}*/
 
 template<> char* ArancinoClass::getModuleVersion(){
 	char key[strlen(MODVERS_KEY)+1];
-	strcat(key,MODVERS_KEY);
+	strcpy(key,MODVERS_KEY);
 	char* retString = getReserved(key);
 	return retString;
 }
 
-template<> ArancinoPacket ArancinoClass::getModuleLogLevel<ArancinoPacket>(){
-	char key[strlen(MODLOGLVL_KEY)+1];
-	strcat(key,MODLOGLVL_KEY);
-	ArancinoPacket packet=getReserved<ArancinoPacket>(key);
-	return packet;
-}
+// template<> ArancinoPacket ArancinoClass::getModuleLogLevel<ArancinoPacket>(){
+// 	char key[strlen(MODLOGLVL_KEY)+1];
+// 	strcat(key,MODLOGLVL_KEY);
+// 	ArancinoPacket packet=getReserved<ArancinoPacket>(key);
+// 	return packet;
+// }
 
 template<> char* ArancinoClass::getModuleLogLevel(){
 	char key[strlen(MODLOGLVL_KEY)+1];
@@ -823,37 +834,37 @@ template<> int ArancinoClass::del(char* key){
 
 /******** API BASIC :: HSET *********/
 
-ArancinoPacket ArancinoClass::hset( char* key, char* field, int value ) {
+ArancinoPacket ArancinoClass::hset( char* key, char* field, int value, bool isPersistent) {
 	char str[20];
 	itoa(value, str, 10);
 	return hset(key, field, str);
 }
 
-ArancinoPacket ArancinoClass::hset( char* key, char* field, float value ) {
+ArancinoPacket ArancinoClass::hset( char* key, char* field, float value, bool isPersistent) {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
 	return hset(key, field, str);
 }
 
-ArancinoPacket ArancinoClass::hset( char* key, char* field, double value ) {
+ArancinoPacket ArancinoClass::hset( char* key, char* field, double value, bool isPersistent) {
 	char str[20] = "";
 	_doubleToString(value, decimal_digits, str);
 	return hset(key, field, str);
 }
 
-ArancinoPacket ArancinoClass::hset( char* key, char* field, uint32_t value ) {
+ArancinoPacket ArancinoClass::hset( char* key, char* field, uint32_t value, bool isPersistent) {
 	char str[20];
 	itoa(value, str, 10);
 	return hset(key, field, str);
 }
 
-ArancinoPacket ArancinoClass::hset( char* key, char* field, long value ) {
+ArancinoPacket ArancinoClass::hset( char* key, char* field, long value, bool isPersistent) {
 	char str[20];
 	itoa(value, str, 10);
 	return hset(key, field, str);
 }
 
-ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
+ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value, bool isPersistent) {
 
 	if(_isReservedKey(key)){
 		//TODO maybe it's better to print a log
@@ -862,17 +873,24 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 
 	ArancinoPacket packet;
 	if(key != NULL && field != NULL && value != NULL && strcmp(key, "") != 0 && strcmp(field, "") != 0){
-		int commandLength = strlen(HSET_COMMAND);
-		int keyLength;
+		uint commandLength = 0;
+		if(isPersistent){
+			commandLength = strlen(HSET_PERS_COMMAND);
+		}
+		else
+		{
+			commandLength = strlen(HSET_COMMAND);
+		}
+		uint keyLength;
 		if(arancino_id_prefix){
 			keyLength = strlen(key)+idSize+1;
 		}
 		else{
 			keyLength = strlen(key);
 		}
-		int fieldLength = strlen(field);
-		int valueLength = strlen(value);
-		int strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + valueLength + 1 + 1;
+		uint fieldLength = strlen(field);
+		uint valueLength = strlen(value);
+		uint strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + valueLength + 1 + 1;
 
 		char* str = (char *)calloc(strLength, sizeof(char));
 		#if defined(__SAMD21G18A__)
@@ -880,7 +898,13 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 			Serial.print(SENT_STRING);
 		}
 		#endif
-		strcpy(str, HSET_COMMAND);
+		if(isPersistent){
+			strcpy(str, HSET_PERS_COMMAND);
+		}
+		else
+		{
+			strcpy(str, HSET_COMMAND);
+		}
 		strcat(str, dataSplitStr);
 		if(arancino_id_prefix){
 			strcat(str, id);

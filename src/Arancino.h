@@ -122,7 +122,7 @@ class ArancinoClass {
 		//void begin(ArancinoMetadata amdata);
 
 		//MSET
-		ArancinoPacket mset(char** keys, char** values, uint len);
+		ArancinoPacket mset(char** keys, char** values, uint len, bool isPersistent = false);
 
 		//SET
 		// ArancinoPacket set(char* key, int value);
@@ -154,12 +154,12 @@ class ArancinoClass {
 		template<class T = int> T del(char* key);
 
 		//HSET
-		ArancinoPacket hset(char* key, char* field, char* value);
-		ArancinoPacket hset(char* key, char* field, int value);
-		ArancinoPacket hset(char* key, char* field, float value);
-		ArancinoPacket hset(char* key, char* field, double value);
-		ArancinoPacket hset(char* key, char* field, uint32_t value);
-		ArancinoPacket hset(char* key, char* field, long value);
+		ArancinoPacket hset(char* key, char* field, char* value, bool isPersistent = false);
+		ArancinoPacket hset(char* key, char* field, int value, bool isPersistent = false);
+		ArancinoPacket hset(char* key, char* field, float value, bool isPersistent = false);
+		ArancinoPacket hset(char* key, char* field, double value, bool isPersistent = false);
+		ArancinoPacket hset(char* key, char* field, uint32_t value, bool isPersistent = false);
+		ArancinoPacket hset(char* key, char* field, long value, bool isPersistent = false);
 
 		//MGET
 		template<class T = char**> T mget(char** keys, uint len);
