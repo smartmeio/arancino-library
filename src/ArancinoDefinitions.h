@@ -48,6 +48,7 @@ under the License
 #define PUBLISH_COMMAND			"PUB"
 #define FLUSH_COMMAND			"FLUSH"
 #define STORE_COMMAND           "STORE"
+#define STORETAGS_COMMAND       "STORETAGS"
 
 #define SENT_STRING				"Sent Command: "
 #define RCV_STRING				"Received Response: "
@@ -96,7 +97,7 @@ under the License
 
 //RESERVED KEYS ARRAY DEF
 #define RESERVED_KEY_ARRAY_SIZE		4   // Array dimension of Reserved Keys
-#define RESERVED_KEY_MAX_LENGTH		11  // Max length of a Reserved Key name
+#define RESERVED_KEY_MAX_LENGTH		12  // Max length of a Reserved Key name
 
 //MAX UNSIGNED LONG VALUE
 #define MAX_UNSIGNED_LONG_VALUE     4294967295

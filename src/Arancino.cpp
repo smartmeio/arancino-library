@@ -1489,76 +1489,60 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 
 	/******** API BASIC :: STORE *********/
 
-	ArancinoPacket ArancinoClass::store( char* key, int value, char* tmstp) {
-		char str[20] = "";
-		itoa(value, str, 10);
-		return __store(key, str, tmstp);
-	}
-
-	ArancinoPacket ArancinoClass::store( char* key, uint32_t value, char* tmstp) {
-		char str[20] = "";
-		itoa(value, str, 10);
-		return __store(key, str, tmstp);
-	}
-
-	ArancinoPacket ArancinoClass::store( char* key, long value, char* tmstp) {
-		char str[20] = "";
-		itoa(value, str, 10);
-		return __store(key, str, tmstp);
-	}
-
-	ArancinoPacket ArancinoClass::store( char* key, float value, char* tmstp) {
-		char str[20] = "";
-		_floatToString(value, decimal_digits, str);
-		return __store(key, str, tmstp);
-	}
-
-	ArancinoPacket ArancinoClass::store( char* key, double value, char* tmstp) {
-		char str[20] = "";
-		return __store(key, str, tmstp);
-	}
-
 	ArancinoPacket ArancinoClass::store( char* key, int value) {
-		char* ts = getTimestamp();
-		return store(key, value, ts);
+		char str[20] = "";
+		itoa(value, str, 10);
+		return __store(key, str);
 	}
 
 	ArancinoPacket ArancinoClass::store( char* key, uint32_t value) {
-		char* ts = getTimestamp();
-		return store(key, value, ts);
+		char str[20] = "";
+		itoa(value, str, 10);
+		return __store(key, str);
 	}
 
 	ArancinoPacket ArancinoClass::store( char* key, long value) {
-		char* ts = getTimestamp();
-		return store(key, value, ts);
+		char str[20] = "";
+		itoa(value, str, 10);
+		return __store(key, str);
 	}
 
 	ArancinoPacket ArancinoClass::store( char* key, float value) {
-		char* ts = getTimestamp();
-		return store(key, value, ts);
+		char str[20] = "";
+		_floatToString(value, decimal_digits, str);
+		return __store(key, str);
 	}
 
 	ArancinoPacket ArancinoClass::store( char* key, double value) {
-		char* ts = getTimestamp();
-		return store(key, value, ts);
+		char str[20] = "";
+		_doubleToString(value, decimal_digits, str);
+		return __store(key, str);
 	}
 
-	ArancinoPacket ArancinoClass::__store( char* key, char* value, char* tmstp) {
+	ArancinoPacket ArancinoClass::__store( char* key, char* value) {
 		if(_isReservedKey(key)){
 			//TODO maybe it's better to print a log
 			return reservedKeyErrorPacket;
 		}
 		ArancinoPacket packet;
+
+		char* ts = getTimestamp();
+
 		if(key != NULL && value != NULL && strcmp(key, "") != 0){
 
-			int	commandLength = strlen(STORE_COMMAND);
+			uint	commandLength = strlen(STORE_COMMAND);
 			//
-			int keyLength = strlen(key);
-			int valueLength = strlen(value);
-			int tmstpLength = strlen(tmstp);
-			int strLength = commandLength + 1 + keyLength + 1 + valueLength + 1 + tmstpLength + 1 + 1;
+			uint keyLength;
+			if(arancino_id_prefix){
+				keyLength = strlen(key) + idSize +1;
+			}
+			else{
+				keyLength = strlen(key);
+			}
+			uint valueLength = strlen(value);
+			uint tsLength = strlen(ts);
+			uint strLength = commandLength + 1 + keyLength + 1 + valueLength + 1 + tsLength + 1 + 1;
 
-			//set("ttss",tmstp);
 			char* str = (char *)calloc(strLength, sizeof(char));
 			#if defined(__SAMD21G18A__)
 			if(!digitalRead(DBG_PIN)){
@@ -1576,7 +1560,7 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 			strcat(str, dataSplitStr);
 			strcat(str, value);
 			strcat(str, dataSplitStr);
-			strcat(str, tmstp);
+			strcat(str, ts);
 			strcat(str, endTXStr);
 
 			#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -1613,6 +1597,122 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 
 		return packet;
 	}
+
+/******** API BASIC :: STORETAGS *********/
+
+ArancinoPacket ArancinoClass::storetags(char* key, char** tags, char** values, uint len) {
+	if ((key == NULL) || (tags == NULL) || (values == NULL) || (len <= 0)) {
+		return invalidCommandErrorPacket;
+	}
+
+	char* ts = getTimestamp();
+	uint commandLength = strlen(STORETAGS_COMMAND);
+	uint keyLength = strlen(key);
+	uint tsLength = strlen(ts);
+		// if arancino_id has to be prepended we take into account its length and _ char
+	if (arancino_id_prefix) {
+		keyLength += idSize + 1;
+	}
+	
+	uint strLength = commandLength + 1 + keyLength + 1 + tsLength + 1 ; // Counting the # character (data split chr)
+	
+	// Calculating Cortex Protocol command length
+	for (uint i = 0; i < len; i ++) {
+		char* tag = tags[i];
+		char* value = values[i];
+
+		uint tagLength = strlen(tag);
+		uint valueLength = strlen(value);
+		// For every key-value pair the length of both tag and value is added
+		// two 1s are added in order to take into account the % chr and
+		// the # and @ chrs in the case of last tag or last value respectively
+		strLength += tagLength + 1 + valueLength + 1;
+	}
+
+	char* str = (char*) calloc(strLength + 1, sizeof(char));
+	strcat(str, STORETAGS_COMMAND);
+	strcat(str, dataSplitStr);
+	if(arancino_id_prefix){
+		strcat(str, id);
+		strcat(str, ID_SEPARATOR);
+	}
+	strcat(str, key);
+	strcat(str, dataSplitStr);
+	// Points to the memory area where tags have to be written
+	char* tagsPointer;// = str + strlen(STORETAGS_COMMAND) + strlen(dataSplitStr) + strlen(key) + strlen(dataSplitStr); 
+	if(arancino_id_prefix){
+		tagsPointer = str + strlen(STORETAGS_COMMAND) + strlen(dataSplitStr) + strlen(id) + strlen(ID_SEPARATOR) + strlen(key) + strlen(dataSplitStr);
+	}else{
+		tagsPointer = str + strlen(STORETAGS_COMMAND) + strlen(dataSplitStr) + strlen(key) + strlen(dataSplitStr);
+	}
+
+	// Points at the end of the string less the space reserved to timestamp
+	char* valuesPointer = str + strLength - strlen(ts) - strlen(endTXStr);
+
+	// The string to send is built in 1 single loop.
+	// keys are copied from first to last (left to right in string)
+	// and values are copied from last to first (right to left in string)
+	for(uint i = 0; i < len; i ++) {
+		char* tag = tags[i];
+		char* value = values[len - (i + 1)];
+
+		strcat(tagsPointer, tag);
+
+		if (i == len - 1) { // If it's the last key we have to use #(\4) instead of %(\16)
+			strcat(tagsPointer, dataSplitStr);
+		} else {
+			strcat(tagsPointer, arraySplitStr);
+		}
+
+		// We use memcpy rather than strcat here because it would append \0,
+		// thus terminating the string prematurely
+		valuesPointer -= strlen(value) + 1;
+
+		memcpy(valuesPointer, value, strlen(value));
+
+		if (i == 0) {
+			memcpy(valuesPointer + strlen(value), dataSplitStr, 1);
+		} else {
+			memcpy(valuesPointer + strlen(value), arraySplitStr, 1);
+		}
+	}
+	//timestamp
+	strcat(str, ts);
+	strcat(str, endTXStr);
+
+	#if defined(__SAMD21G18A__)
+		if(!digitalRead(DBG_PIN)){
+			Serial.print(SENT_STRING);
+		}
+	#endif
+
+	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+		{
+			vTaskSuspendAll();
+		}
+	#endif
+
+	_sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+		{
+			xTaskResumeAll();
+		}
+	#endif
+
+	std::free(str);
+
+
+	if (message == NULL) return communicationErrorPacket;
+
+	ArancinoPacket packet = {false, _getResponseCode(message), VOID, {.string = NULL}};
+	std::free(message);
+
+	return packet;
+}
+
 
 /******** API UTILITY :: FREE *********/
 
@@ -1775,11 +1875,11 @@ char* ArancinoClass::getTimestamp() {
 		tmst_sup=tmst_sup+1;
 		tmst_inf=tmst_inf % 1000000000;
 	}
-	char ts_sup_tmp[4];
-	sprintf(ts_sup_tmp, "%04d", tmst_sup); //4 digits 
+	char ts_sup_tmp[5];
+	sprintf(ts_sup_tmp, "%04ld", tmst_sup); //4 digits 
 	memcpy(timestamp,ts_sup_tmp,4);
-	char ts_inf_tmp[9];
-	sprintf(ts_inf_tmp, "%09d", tmst_inf); //9 digits
+	char ts_inf_tmp[10];
+	sprintf(ts_inf_tmp, "%09ld", tmst_inf); //9 digits
 	memcpy(&timestamp[4],ts_inf_tmp,9);
 	return timestamp;
 }

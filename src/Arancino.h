@@ -214,6 +214,9 @@ class ArancinoClass {
 		ArancinoPacket store(char* key, float value);
 		ArancinoPacket store(char* key, long value);
 
+		//STORE TAGS
+		ArancinoPacket storetags(char* key, char** tags, char** values, uint len);
+
 		/***** API UTILS *****/
 		//FREE
 		void free(char* str);
@@ -264,12 +267,6 @@ class ArancinoClass {
 		const char endTXStr[2] = {END_TX_CHAR, '\0'};
 		const char nullStr[2] = {NULL_CHAR, '\0'};
 
-		ArancinoPacket store(char* key, int value, char* tmstp);
-		ArancinoPacket store(char* key, uint32_t value, char* tmstp);
-		ArancinoPacket store(char* key, double value, char* tmstp);
-		ArancinoPacket store(char* key, float value, char* tmstp);
-		ArancinoPacket store(char* key, long value, char* tmstp);
-
 		ArancinoMetadata _metadata = {
 			"",
 			"",
@@ -282,7 +279,7 @@ class ArancinoClass {
 
 		ArancinoPacket __set(char* key, char* value, bool isPersistent);
 		ArancinoPacket __publish(char* channel, char* msg);
-		ArancinoPacket __store(char* key, char* value, char* tmstp);
+		ArancinoPacket __store(char* key, char* value);
 
 		//INTERNAL UTILS
 		//void _sendArancinoCommand(String command);

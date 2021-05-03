@@ -2,6 +2,7 @@
 
 #### v 2.0.0 - 2021.04.14
 * Add: added `store` function. [#gk4cn8](https://app.clickup.com/t/gk4cn8)
+* Add: added `storetags` function. [#hf2fg6](https://app.clickup.com/t/hf2fg6)
 
 #### v 1.4.1 - 2021.04.06
 * Fix: Fixed bug with `println` function. [#gk5z1y](https://app.clickup.com/t/gk5z1y)
