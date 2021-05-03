@@ -144,8 +144,8 @@ class ArancinoClass {
 		template<class T = char*> T get(char* key);
 
 		//GETRESERVED 
-		template<class T = char*> T getModuleVersion();
-		template<class T = char*> T getModuleLogLevel();
+		char* getModuleVersion();
+		char* getModuleLogLevel();
 
 		//DEL
 		// ArancinoPacket delPacket(char* key);

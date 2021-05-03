@@ -719,30 +719,16 @@ template<> char* ArancinoClass::getReserved(char* key){
 	return retString;
 }
 
-/*template<> ArancinoPacket ArancinoClass::getModuleVersion<ArancinoPacket>(){
-	char key[strlen(MODVERS_KEY)+1];
-	strcat(key,MODVERS_KEY);
-	ArancinoPacket packet=getReserved<ArancinoPacket>(key);
-	return packet;
-}*/
-
-template<> char* ArancinoClass::getModuleVersion(){
+char* ArancinoClass::getModuleVersion(){
 	char key[strlen(MODVERS_KEY)+1];
 	strcpy(key,MODVERS_KEY);
 	char* retString = getReserved(key);
 	return retString;
 }
 
-// template<> ArancinoPacket ArancinoClass::getModuleLogLevel<ArancinoPacket>(){
-// 	char key[strlen(MODLOGLVL_KEY)+1];
-// 	strcat(key,MODLOGLVL_KEY);
-// 	ArancinoPacket packet=getReserved<ArancinoPacket>(key);
-// 	return packet;
-// }
-
-template<> char* ArancinoClass::getModuleLogLevel(){
+char* ArancinoClass::getModuleLogLevel(){
 	char key[strlen(MODLOGLVL_KEY)+1];
-	strcat(key,MODLOGLVL_KEY);
+	strcpy(key,MODLOGLVL_KEY);
 	char* retString = getReserved(key);
 	return retString;
 }
