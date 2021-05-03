@@ -47,8 +47,9 @@ under the License
 #define HVALS_COMMAND			"HVALS"
 #define PUBLISH_COMMAND			"PUB"
 #define FLUSH_COMMAND			"FLUSH"
-#define STORE_COMMAND           "STORE"
-#define STORETAGS_COMMAND       "STORETAGS"
+#define STORE_COMMAND			"STORE"
+#define STORETAGS_COMMAND		"STORETAGS"
+#define GETRESERVED_COMMAND		"GETRESERVED"
 
 #define SENT_STRING				"Sent Command: "
 #define RCV_STRING				"Received Response: "
@@ -81,6 +82,8 @@ under the License
 #define LIBVERS_KEY				"___LIBVERS___"
 #define MODVERS_KEY				"___MODVERS___"
 #define POWER_KEY				"___POWER___"
+#define MODVERS_KEY				"___MODVERS___"
+#define MODLOGLVL_KEY			"___MODLOGLVL___"
 #define LIB_VERSION				"2.0.0"	//library version
 
 //RESPONSE CODE

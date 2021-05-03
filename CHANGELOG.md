@@ -1,6 +1,7 @@
 # Changelog
 
-#### v 2.0.0 - 2021.04.14
+#### v 2.0.0 - 2021.05.03
+* Add: added `getReserved` function. [g31n4z](https://app.clickup.com/t/g31n4z)
 * Add: added `store` function. [#gk4cn8](https://app.clickup.com/t/gk4cn8)
 * Add: added `storetags` function. [#hf2fg6](https://app.clickup.com/t/hf2fg6)
 

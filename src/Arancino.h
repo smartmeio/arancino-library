@@ -143,6 +143,9 @@ class ArancinoClass {
 		//GET W/ TEMPLATE
 		template<class T = char*> T get(char* key);
 
+		//GETRESERVED 
+		template<class T = char*> T getModuleVersion();
+		template<class T = char*> T getModuleLogLevel();
 
 		//DEL
 		// ArancinoPacket delPacket(char* key);
@@ -280,6 +283,8 @@ class ArancinoClass {
 		ArancinoPacket __set(char* key, char* value, bool isPersistent);
 		ArancinoPacket __publish(char* channel, char* msg);
 		ArancinoPacket __store(char* key, char* value);
+		
+		template<class T = char*> T getReserved(char* key);
 
 		//INTERNAL UTILS
 		//void _sendArancinoCommand(String command);

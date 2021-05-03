@@ -622,6 +622,121 @@ template<> char* ArancinoClass::get(char* key){
 	return retString;
 }
 
+/******** API BASIC :: GETRESERVED *********/
+
+template<> ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char* key){
+	if(_isReservedKey(key)){
+		//TODO maybe it's better to print a log
+		return reservedKeyErrorPacket;
+	}
+
+	ArancinoPacket packet;
+	if(key != NULL && strcmp(key, "") != 0 ){
+
+		int commandLength = strlen(GETRESERVED_COMMAND);
+		int keyLength ;
+		if(arancino_id_prefix){
+			keyLength = strlen(key)+idSize+1;
+		}
+		else{
+			keyLength = strlen(key);
+		}
+		int strLength = commandLength + 1 + keyLength + 1 + 1;
+
+		char* str = (char *)calloc(strLength, sizeof(char));
+		#if defined(__SAMD21G18A__)
+		if(!digitalRead(DBG_PIN)){
+			Serial.print(SENT_STRING);
+		}
+		#endif
+
+		strcpy(str, GET_COMMAND);
+		strcat(str, dataSplitStr);
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
+		strcat(str, key);
+		strcat(str, endTXStr);
+
+		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+		{
+			vTaskSuspendAll();
+		}
+		#endif
+		_sendArancinoCommand(str);
+		char* message = _receiveArancinoResponse(END_TX_CHAR);
+		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+		{
+			xTaskResumeAll();
+		}
+		#endif
+		std::free(str);
+
+		if (message != NULL)
+		{
+			ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}};
+			packet = temp;
+			std::free(message);
+		}
+		else
+		{
+			packet = communicationErrorPacket;
+		}
+	}
+	else{
+		packet = invalidCommandErrorPacket;
+	}
+
+	return packet;
+}
+
+template<> char* ArancinoClass::getReserved(char* key){
+	ArancinoPacket packet = getReserved<ArancinoPacket>(key);
+
+	char* retString;
+	if (!packet.isError)
+	{
+		retString = packet.response.string;
+	}
+	else
+	{
+		retString = NULL;
+	}
+	return retString;
+}
+
+template<> ArancinoPacket ArancinoClass::getModuleVersion<ArancinoPacket>(){
+	char key[strlen(MODVERS_KEY)+1];
+	strcat(key,MODVERS_KEY);
+	ArancinoPacket packet=getReserved<ArancinoPacket>(key);
+	return packet;
+}
+
+template<> char* ArancinoClass::getModuleVersion(){
+	char key[strlen(MODVERS_KEY)+1];
+	strcat(key,MODVERS_KEY);
+	char* retString = getReserved(key);
+	return retString;
+}
+
+template<> ArancinoPacket ArancinoClass::getModuleLogLevel<ArancinoPacket>(){
+	char key[strlen(MODLOGLVL_KEY)+1];
+	strcat(key,MODLOGLVL_KEY);
+	ArancinoPacket packet=getReserved<ArancinoPacket>(key);
+	return packet;
+}
+
+template<> char* ArancinoClass::getModuleLogLevel(){
+	char key[strlen(MODLOGLVL_KEY)+1];
+	strcat(key,MODLOGLVL_KEY);
+	char* retString = getReserved(key);
+	return retString;
+}
+
+
 /******** API BASIC :: DEL *********/
 
 template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
