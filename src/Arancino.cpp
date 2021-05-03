@@ -190,6 +190,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	}while (packet.isError == true || packet.responseCode != RSP_OK);
 	std::free(str);
 
+	strcpy(LOG_LEVEL,getModuleLogLevel());
 	//lib version is sent via start command.
 	//_sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
 
@@ -2146,23 +2147,12 @@ int ArancinoClass::_getDigit(long value) {
 }
 
 ArancinoPacket ArancinoClass::_sendViaCOMM_MODE(char* key, char* value, bool isPersistent) {
-	switch (COMM_MODE) {
-		case SYNCH:
-			return __set(key, value, isPersistent);
-		break;
-
-		case ASYNCH:
-			return __publish(key, value);
-		break;
-
-		case BOTH:
-			return __publish(key, value);
-			return __set(key, value, isPersistent);
-		break;
-
-		default:
-			return __set(key, value, isPersistent);
-		break;
+	if(strcmp(LOG_LEVEL, "DEBUG") == 0){
+		__publish(key, value);
+		__set(key, value, isPersistent);
+	}
+	else{
+		__set(key, value, isPersistent);	
 	}
 }
 

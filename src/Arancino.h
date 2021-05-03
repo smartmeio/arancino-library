@@ -265,6 +265,7 @@ class ArancinoClass {
 
 		char reservedKey[RESERVED_KEY_ARRAY_SIZE][RESERVED_KEY_MAX_LENGTH]; //max 10 char for key
 		int COMM_MODE = SYNCH;
+		char LOG_LEVEL[10]="INFO";
 		const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
 		const char arraySplitStr[2] = {ARRAY_SPLIT_CHAR, '\0'};
 		const char endTXStr[2] = {END_TX_CHAR, '\0'};
