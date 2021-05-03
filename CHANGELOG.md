@@ -1,6 +1,7 @@
 # Changelog
 
 #### v 2.0.0 - 2021.05.03
+* Upd: removed `metadata` function. [fb6hyw] (https://app.clickup.com/t/fb6hyw)
 * Upd: removed check on reserved command. [fv2dmy] (https://app.clickup.com/t/fv2dmy)
 * Upd: updated sync/async mode. [fd59jj] (https://app.clickup.com/t/fd59jj)
 * Add: added persistent mode to `mset` and `hset` function. [aex4by] (https://app.clickup.com/t/aex4by)

@@ -109,7 +109,6 @@ class ArancinoClass {
 		void startScheduler();
 
 		/***** API BASIC *****/
-		void metadata(ArancinoMetadata amdata);
 
 		//BEGIN
 		[[deprecated]]
