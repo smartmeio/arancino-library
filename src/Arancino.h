@@ -42,32 +42,6 @@ extern "C" {
 }
 #endif
 
-
-
-
-
-//RESERVED KEYS ARRAY DEF
-#define RESERVED_KEY_ARRAY_SIZE 4   // Array dimension of Reserved Keys
-
-/*
-Reserved keys communication mode
-0 -> SYNC MODE (Default)
-1 -> ASYNC MODE
-2 -> BOTH (SYNC and ASYNC)
-
-to redifine the value in user space, use #define RSVD_COMM <new value> before #include <Arancino.h>
-*/
-// #ifndef RSVD_COMM
-// #define RSVD_COMM 0
-// #endif
-
-//Reserverd Communication Mode
-enum RSVD_COMM_MODE {
-	SYNCH = 0,
-	ASYNCH = 1,
-	BOTH = 2
-};
-
 //Power Mode
 enum POWER_MODE {
 	BATTERY = 0,
@@ -111,10 +85,7 @@ class ArancinoClass {
 		/***** API BASIC *****/
 
 		//BEGIN
-		[[deprecated]]
-		void begin(ArancinoMetadata amdata, bool useid = false, int timeout = TIMEOUT );
 		void begin(ArancinoMetadata amdata, ArancinoConfig aconfig);
-		//void begin(ArancinoMetadata amdata);
 
 		//MSET
 		ArancinoPacket mset(char** keys, char** values, uint len, bool isPersistent = false);
@@ -258,8 +229,6 @@ class ArancinoClass {
 		unsigned long tmst_inf;
 		unsigned long millis_previous;
 
-		char reservedKey[RESERVED_KEY_ARRAY_SIZE][RESERVED_KEY_MAX_LENGTH]; //max 10 char for key
-		int COMM_MODE = SYNCH;
 		char LOG_LEVEL[10]="INFO";
 		const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
 		const char arraySplitStr[2] = {ARRAY_SPLIT_CHAR, '\0'};
@@ -288,9 +257,6 @@ class ArancinoClass {
 		void _sendArancinoCommand(char command);
 
 		char* _receiveArancinoResponse(char terminator);
-
-		//bool _isReservedKey(String key);
-		bool _isReservedKey(char* key);
 		void _doubleToString(double value, unsigned int _nDecimal, char* str); //truncation!
 		void _floatToString(float value, unsigned int _nDecimal, char* str);
 		int _getDigit(long value);

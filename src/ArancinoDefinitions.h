@@ -98,9 +98,9 @@ under the License
 #define STRING			2
 #define STRING_ARRAY	3
 
-//RESERVED KEYS ARRAY DEF
-#define RESERVED_KEY_ARRAY_SIZE		4   // Array dimension of Reserved Keys
-#define RESERVED_KEY_MAX_LENGTH		12  // Max length of a Reserved Key name
+// //RESERVED KEYS ARRAY DEF
+// #define RESERVED_KEY_ARRAY_SIZE		4   // Array dimension of Reserved Keys
+// #define RESERVED_KEY_MAX_LENGTH		12  // Max length of a Reserved Key name
 
 //MAX UNSIGNED LONG VALUE
 #define MAX_UNSIGNED_LONG_VALUE     4294967295

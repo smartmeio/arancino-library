@@ -1,6 +1,7 @@
 # Changelog
 
 #### v 2.0.0 - 2021.05.03
+* Upd: removed deprecated arguments on the `begin` function. [fb6jve] (https://app.clickup.com/t/fb6jve)
 * Upd: removed `metadata` function. [fb6hyw] (https://app.clickup.com/t/fb6hyw)
 * Upd: removed check on reserved command. [fv2dmy] (https://app.clickup.com/t/fv2dmy)
 * Upd: updated sync/async mode. [fd59jj] (https://app.clickup.com/t/fd59jj)

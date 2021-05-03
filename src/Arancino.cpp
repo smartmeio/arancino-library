@@ -55,21 +55,6 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 
 /******** API BASIC :: BEGIN *********/
 
-// void ArancinoClass::begin(ArancinoMetadata _amdata, bool useid, int timeout) {
-// 	ArancinoConfig _acfg;
-// 	_acfg._USEID = useid;
-// 	_acfg._TIMEOUT = timeout;
-// 	begin(_amdata, _acfg);
-// }
-
-
-void ArancinoClass::begin(ArancinoMetadata _amdata, bool useid, int timeout) {
-	ArancinoConfig _acfg;
-	_acfg._USEID = useid;
-	_acfg._TIMEOUT = timeout;
-	begin(_amdata, _acfg);
-}
-
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	SERIAL_PORT.begin(BAUDRATE);
 	// SERIAL_PORT.setTimeout(TIMEOUT);
@@ -2042,16 +2027,6 @@ char* ArancinoClass::_receiveArancinoResponse(char terminator) {
 		}
 	}
 	return response;
-}
-
-bool ArancinoClass::_isReservedKey(char* key) {
-	//int keyCount = sizeof(reservedKey) / sizeof(reservedKey[0]);
-	for(int i = 0; i < RESERVED_KEY_ARRAY_SIZE; i++)
-	{
-		if(strcmp(reservedKey[i], key) == 0)
-			return true;
-	}
-	return false;
 }
 
 void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char* str) {
