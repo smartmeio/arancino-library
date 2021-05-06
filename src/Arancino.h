@@ -86,6 +86,7 @@ class ArancinoClass {
 
 		//BEGIN
 		void begin(ArancinoMetadata amdata, ArancinoConfig aconfig);
+		void begin(ArancinoMetadata amdata);
 
 		//MSET
 		ArancinoPacket mset(char** keys, char** values, uint len, bool isPersistent = false);

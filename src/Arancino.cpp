@@ -55,6 +55,12 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 
 /******** API BASIC :: BEGIN *********/
 
+void ArancinoClass::begin(ArancinoMetadata _amdata) {
+	ArancinoConfig _acfg;
+	//setting default configuration value
+	begin(_amdata,_acfg);
+}
+
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	SERIAL_PORT.begin(BAUDRATE);
 	// SERIAL_PORT.setTimeout(TIMEOUT);
