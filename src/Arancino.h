@@ -184,6 +184,9 @@ class ArancinoClass {
 		ArancinoPacket store(char* key, float value);
 		ArancinoPacket store(char* key, long value);
 
+		//MSTORE
+		ArancinoPacket mstore(char** keys, char** values, uint len);
+
 		//STORE TAGS
 		ArancinoPacket storetags(char* key, char** tags, char** values, uint len);
 
