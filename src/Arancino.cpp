@@ -19,7 +19,7 @@ under the License
 */
 
 #include "Arancino.h"
-#include <avr/dtostrf.h>
+
 
 #define DEBUG 0
 
@@ -175,7 +175,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 				memcpy(timestamp,packet.response.stringArray[1],timeStampSize);
 			}
 
-			std::free(message);
+			free(message);
 		}
 		else
 		{
@@ -183,7 +183,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 		}
 
 	}while (packet.isError == true || packet.responseCode != RSP_OK);
-	std::free(str);
+	free(str);
 
 	//lib version is sent via start command.
 	//_sendViaCOMM_MODE(LIBVERS_KEY, LIB_VERSION);
@@ -217,27 +217,27 @@ void ArancinoClass::setReservedCommunicationMode(int mode){
 
 /******** API BASIC :: MSET *********/
 
-ArancinoPacket ArancinoClass::mset(char** keys, char** values, uint len) {
+ArancinoPacket ArancinoClass::mset(char** keys, char** values, int len) {
 	if ((keys == NULL) || (values == NULL) || (len <= 0)) {
 		return invalidCommandErrorPacket;
 	}
 
-	uint commandLength = strlen(MSET_COMMAND);
-	uint strLength = commandLength + 1; // Counting the # character (data split chr)
+	int commandLength = strlen(MSET_COMMAND);
+	int strLength = commandLength + 1; // Counting the # character (data split chr)
 
 	// Calculating Cortex Protocol command length
-	for (uint i = 0; i < len; i ++) {
+	for (int i = 0; i < len; i ++) {
 		char* key = keys[i];
 		char* value = values[i];
 
-		uint keyLength = strlen(key);
+		int keyLength = strlen(key);
 
 		// if arancino_id has to be prepended we take into account its length and _ char
 		if (arancino_id_prefix) {
 			keyLength += idSize + 1;
 		}
 
-		uint valueLength = strlen(value);
+		int valueLength = strlen(value);
 
 
 		// For every key-value pair the length of both key and value is added
@@ -259,7 +259,7 @@ ArancinoPacket ArancinoClass::mset(char** keys, char** values, uint len) {
 	// The string to send is built in 1 single loop.
 	// keys are copied from first to last (left to right in string)
 	// and values are copied from last to first (right to left in string)
-	for(uint i = 0; i < len; i ++) {
+	for(int i = 0; i < len; i ++) {
 		char* key = keys[i];
 		char* value = values[len - (i + 1)];
 
@@ -311,32 +311,32 @@ ArancinoPacket ArancinoClass::mset(char** keys, char** values, uint len) {
 		}
 	#endif
 
-	std::free(str);
+	free(str);
 
 
 	if (message == NULL) return communicationErrorPacket;
 
 	ArancinoPacket packet = {false, _getResponseCode(message), VOID, {.string = NULL}};
-	std::free(message);
+	free(message);
 
 	return packet;
 }
 
 /******** API BASIC :: MGET *********/
 
-template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, uint len){
+template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, int len){
 	if ((keys == NULL) || (len <= 0)) {
 		return invalidCommandErrorPacket;
 	}
 
-	uint commandLength = strlen(MSET_COMMAND);
-	uint strLength = commandLength + 1; // Counting the # character (data split chr)
+	int commandLength = strlen(MSET_COMMAND);
+	int strLength = commandLength + 1; // Counting the # character (data split chr)
 
 	// Calculating Cortex Protocol command length
-	for (uint i = 0; i < len; i ++) {
+	for (int i = 0; i < len; i ++) {
 		char* key = keys[i];
 
-		uint keyLength = strlen(key);
+		int keyLength = strlen(key);
 
 		// if arancino_id has to be prepended we take into account its length and _ char
 		if (arancino_id_prefix) {
@@ -352,7 +352,7 @@ template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, uint 
 
 
 	// Building the string
-	for(uint i = 0; i < len; i ++) {
+	for(int i = 0; i < len; i ++) {
 		char* key = keys[i];
 
 		if(arancino_id_prefix){
@@ -388,18 +388,18 @@ template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, uint 
 		}
 	#endif
 
-	std::free(str);
+	free(str);
 
 
 	if (message == NULL) return communicationErrorPacket;
 
 	ArancinoPacket packet = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
-	std::free(message);
+	free(message);
 
 	return packet;
 }
 
-template<> char** ArancinoClass::mget(char** keys, uint len) {
+template<> char** ArancinoClass::mget(char** keys, int len) {
 
 	ArancinoPacket packet = mget<ArancinoPacket>(keys, len);
 
@@ -511,13 +511,13 @@ ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent) 
 		}
 		#endif
 
-		std::free(str);
+		free(str);
 
 		if (message != NULL)
 		{
 			ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
 			packet = temp;
-			std::free(message);
+			free(message);
 		}
 		else
 		{
@@ -582,13 +582,13 @@ template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
 			xTaskResumeAll();
 		}
 		#endif
-		std::free(str);
+		free(str);
 
 		if (message != NULL)
 		{
 			ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}};
 			packet = temp;
-			std::free(message);
+			free(message);
 		}
 		else
 		{
@@ -669,15 +669,15 @@ template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
 		}
 		#endif
 
-		std::free(str);
+		free(str);
 
 		if (message != NULL)
 		{
 			char* messageParsed = _parse(message);
 			ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
 			packet = temp;
-			std::free(messageParsed);
-			std::free(message);
+			free(messageParsed);
+			free(message);
 		}
 		else
 		{
@@ -788,7 +788,7 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 		}
 		#endif
 
-		std::free(str);
+		free(str);
 
 		if (message != NULL)
 		{
@@ -796,7 +796,7 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 			packet.responseCode = _getResponseCode(message);
 			packet.responseType = VOID;
 			packet.response.string = NULL;
-			std::free(message);
+			free(message);
 		}
 		else
 		{
@@ -864,13 +864,13 @@ template<> ArancinoPacket ArancinoClass::hget<ArancinoPacket> (char* key, char* 
 		}
 		#endif
 
-		std::free(str);
+		free(str);
 
 		if (message != NULL)
 		{
 			ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}}; //TODO getStatus to _getResponseCode
 			packet = temp;
-			std::free(message);
+			free(message);
 		}
 		else
 		{
@@ -952,13 +952,13 @@ template<> ArancinoPacket ArancinoClass::hgetall<ArancinoPacket> (char* key){
 		}
 		#endif
 
-		std::free(str);
+		free(str);
 
 		if (message != NULL)
 		{
 			ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
 			packet = temp;
-			std::free(message);
+			free(message);
 		}
 		else
 		{
@@ -1039,13 +1039,13 @@ template<> ArancinoPacket ArancinoClass::hkeys<ArancinoPacket> (char* key){
 		}
 		#endif
 
-		std::free(str);
+		free(str);
 
 		if (message != NULL)
 		{
 			ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
 			packet = temp;
-			std::free(message);
+			free(message);
 		}
 		else
 		{
@@ -1126,13 +1126,13 @@ template<> ArancinoPacket ArancinoClass::hvals<ArancinoPacket> (char* key){
 		}
 		#endif
 
-		std::free(str);
+		free(str);
 
 		if (message != NULL)
 		{
 			ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
 			packet = temp;
-			std::free(message);
+			free(message);
 		}
 		else
 		{
@@ -1216,15 +1216,15 @@ template<> ArancinoPacket ArancinoClass::hdel<ArancinoPacket> (char* key, char* 
 		}
 		#endif
 
-		std::free(str);
+		free(str);
 
 		if (message != NULL)
 		{
 			char* messageParsed = _parse(message);
 			ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
 			packet = temp;
-			std::free(messageParsed);
-			std::free(message);
+			free(messageParsed);
+			free(message);
 		}
 		else
 		{
@@ -1286,13 +1286,13 @@ template<> ArancinoPacket ArancinoClass::keys<ArancinoPacket> (char* pattern){
 		}
 		#endif
 
-		std::free(str);
+		free(str);
 
 		if (message != NULL)
 		{
 			ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
 			packet = temp;
-			std::free(message);
+			free(message);
 		}
 		else
 		{
@@ -1376,15 +1376,15 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		}
 		#endif
 
-		std::free(str);
+		free(str);
 
 		if (message != NULL)
 		{
 			char* messageParsed = _parse(message);
 			ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
 			packet = temp;
-			std::free(messageParsed);
-			std::free(message);
+			free(messageParsed);
+			free(message);
 		}
 		else
 		{
@@ -1461,7 +1461,7 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		}
 		#endif
 
-		std::free(str);
+		free(str);
 
 		ArancinoPacket packet;
 
@@ -1470,8 +1470,8 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 			char* messageParsed = _parse(message);
 			ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
 			packet = temp;
-			std::free(messageParsed);
-			std::free(message);
+			free(messageParsed);
+			free(message);
 		}
 		else
 		{
@@ -1485,22 +1485,22 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 /******** API UTILITY :: FREE *********/
 
 void ArancinoClass::free(char* str){
-	std::free(str);
+	::free(str);
 }
 
 void ArancinoClass::free(char** _array){
 	char** dummy = (_array != NULL) ? _array - sizeof(char) : NULL;
 
 	if (*_array != NULL)
-		std::free(*_array);
+		::free(*_array);
 	if (dummy != NULL)
-		std::free(dummy);
+		::free(dummy);
 }
 
 void ArancinoClass::free(ArancinoPacket packet){
 	if (packet.responseType == STRING)
 	{
-		std::free(packet.response.string);
+		::free(packet.response.string);
 	}
 	else if (packet.responseType == STRING_ARRAY)
 	{
@@ -1665,7 +1665,7 @@ void ArancinoClass::_sendArancinoCommand(char command) {
 	c[0] = command;
 	c[1] = '\0';
 	_sendArancinoCommand(c);
-	std::free(c);
+	::free(c);
 }
 
 /*
@@ -1779,7 +1779,7 @@ int ArancinoClass::_getResponseCode(char* message) {
 	  temp[separatorIndex] = '\0'; //replace separator with null-character
 
 	  value = atoi(temp);
-	  std::free(temp);
+	  free(temp);
 	}
 	else
 	{
@@ -1834,10 +1834,10 @@ char* ArancinoClass::_parse(char* message) {
 	}
 	#endif
 
-	std::free(status);
+	free(status);
 
 	if (strcmp(value, nullStr) == 0){
-		std::free(value);
+		free(value);
 		return NULL;
 	}else{
 		return value;
@@ -1911,7 +1911,7 @@ char** ArancinoClass::_parseArray(char* data) {
 		}
 
 		if (data != NULL) {
-			std::free(data);
+			free(data);
 		}
 	}
 
