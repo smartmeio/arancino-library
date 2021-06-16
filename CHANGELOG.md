@@ -1,5 +1,9 @@
 # Changelog
 
+#### v 1.4.2 - 2021.06.15
+* Fix: Fixed bug with `free` function for avr board. [#mhcbn0](https://app.clickup.com/t/mhcbn0)
+* Fix: Fixed bug with uint type for avr board. [#mhcbn0](https://app.clickup.com/t/mhcbn0)
+
 #### v 1.4.1 - 2021.04.06
 * Fix: Fixed bug with `println` function. [#gk5z1y](https://app.clickup.com/t/gk5z1y)
 * Fix: Fixed bug with float's and double's types in `set` function. [#g71qk9](https://app.clickup.com/t/g71qk9)

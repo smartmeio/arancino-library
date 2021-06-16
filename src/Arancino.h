@@ -27,8 +27,10 @@ under the License
 
 #include <Stream.h>
 #include <stdlib.h>
-#include <cstdlib>
-#include <type_traits>
+#if ! defined(__AVR__)
+#include <avr/dtostrf.h>
+#endif
+
 
 //#define USEFREERTOS
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -122,7 +124,7 @@ class ArancinoClass {
 		//void begin(ArancinoMetadata amdata);
 
 		//MSET
-		ArancinoPacket mset(char** keys, char** values, uint len);
+		ArancinoPacket mset(char** keys, char** values, int len);
 
 		//SET
 		// ArancinoPacket set(char* key, int value);
@@ -159,7 +161,7 @@ class ArancinoClass {
 		ArancinoPacket hset(char* key, char* field, long value);
 
 		//MGET
-		template<class T = char**> T mget(char** keys, uint len);
+		template<class T = char**> T mget(char** keys, int len);
 
 		//HGET
 		// ArancinoPacket hgetPacket(char* key, char* field);
