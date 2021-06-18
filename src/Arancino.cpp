@@ -89,10 +89,17 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 
 	char* str = (char *)calloc(strLength, sizeof(char));
 
-	//reserved Key
-	// strcpy(reservedKey[0], MONITOR_KEY);
-	// strcpy(reservedKey[1], MODVERS_KEY);
-	// strcpy(reservedKey[2], POWER_KEY);
+	//firmware build time
+	char str_build_time[strlen(__DATE__)+1+strlen(__TIME__)+1+strlen(_metadata.tzoffset)]="";
+	strcpy(str_build_time, __DATE__);
+	strcat(str_build_time, " ");
+	strcat(str_build_time, __TIME__);
+	strcat(str_build_time, " ");
+	strcat(str_build_time, _metadata.tzoffset);
+
+	char* keys[] = {"LIB_VER","FW_NAME","FW_VER","FW_BUILD_TIME","FW_CORE_VER"};
+	char* values[] = {LIB_VERSION, _metadata.fwname,_metadata.fwversion,str_build_time,ARANCINO_CORE_VERSION};
+
 	//DEBUG
 	#if defined(__SAMD21G18A__)
 	pinMode(DBG_PIN,INPUT);
@@ -101,30 +108,89 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	}
 	#endif
 
-	//RTC
-	strcpy(str, START_COMMAND);
+	start(keys,values,5);
+
+	strcpy(LOG_LEVEL,getModuleLogLevel());
+
+}
+
+/******** API BASIC :: START *********/
+
+void ArancinoClass::start(char** keys, char** values, int len) {
+
+	int commandLength=strlen(START_COMMAND);
+	
+	int strLength = commandLength + 1; // Counting the # character (data split chr)
+
+	// Calculating Cortex Protocol command length
+	for (int i = 0; i < len; i ++) {
+		char* key = keys[i];
+		char* value = values[i];
+
+		int keyLength = strlen(key);
+
+		// if arancino_id has to be prepended we take into account its length and _ char
+		if (arancino_id_prefix) {
+			keyLength += idSize + 1;
+		}
+
+		int valueLength = strlen(value);
+
+
+		// For every key-value pair the length of both key and value is added
+		// two 1s are added in order to take into account the % chr and
+		// the # and @ chrs in the case of last key or last value respectively
+		strLength += keyLength + 1 + valueLength + 1;
+	}
+
+	char* str = (char*) calloc(strLength + 1, sizeof(char));
+	strcat(str, START_COMMAND);
 	strcat(str, dataSplitStr);
 
-	strcat(str, LIB_VERSION);
-	strcat(str, dataSplitStr);
+	// Points to the memory area where keys have to be written
+	char* keysPointer = str + strlen(START_COMMAND) + strlen(dataSplitStr);
 
-	strcat(str, _metadata.fwname);
-	strcat(str, dataSplitStr);
-	strcat(str, _metadata.fwversion);
-	strcat(str, dataSplitStr);
+	// Points at the end of the string
+	char* valuesPointer = str + strLength;
 
-	strcat(str, __DATE__);
-	strcat(str, " ");
-	strcat(str, __TIME__);
-	strcat(str, " ");
-	strcat(str, _metadata.tzoffset);
-	strcat(str, dataSplitStr);
+	// The string to send is built in 1 single loop.
+	// keys are copied from first to last (left to right in string)
+	// and values are copied from last to first (right to left in string)
+	for(uint i = 0; i < len; i ++) {
+		char* key = keys[i];
+		char* value = values[len - (i + 1)];
 
-	#ifdef ARANCINO_CORE_VERSION
-	strcat(str, ARANCINO_CORE_VERSION);
+		if(arancino_id_prefix){
+			strcat(keysPointer, id);
+			strcat(keysPointer, ID_SEPARATOR);
+		}
+
+		strcat(keysPointer, key);
+
+		if (i == len - 1) { // If it's the last key we have to use #(\4) instead of %(\16)
+			strcat(keysPointer, dataSplitStr);
+		} else {
+			strcat(keysPointer, arraySplitStr);
+		}
+
+		// We use memcpy rather than strcat here because it would append \0,
+		// thus terminating the string prematurely
+		valuesPointer -= strlen(value) + 1;
+
+		memcpy(valuesPointer, value, strlen(value));
+
+		if (i == 0) {
+			memcpy(valuesPointer + strlen(value), endTXStr, 1);
+		} else {
+			memcpy(valuesPointer + strlen(value), arraySplitStr, 1);
+		}
+	}
+
+	#if defined(__SAMD21G18A__)
+		if(!digitalRead(DBG_PIN)){
+			Serial.print(SENT_STRING);
+		}
 	#endif
-
-	strcat(str, endTXStr);
 
 	ArancinoPacket packet;
 	// Start communication with serial module on CPU
@@ -138,9 +204,22 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 		}
 		#endif
 
+		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+		{
+			vTaskSuspendAll();
+		}
+		#endif
 
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
+
+		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+		{
+			xTaskResumeAll();
+		}
+		#endif
 
 		if (message != NULL)
 		{
@@ -173,9 +252,6 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 
 	}while (packet.isError == true || packet.responseCode != RSP_OK);
 	std::free(str);
-
-	strcpy(LOG_LEVEL,getModuleLogLevel());
-
 }
 
 
@@ -322,7 +398,7 @@ template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, uint 
 		return invalidCommandErrorPacket;
 	}
 
-	uint commandLength = strlen(MSET_COMMAND);
+	uint commandLength = strlen(MGET_COMMAND);
 	uint strLength = commandLength + 1; // Counting the # character (data split chr)
 
 	// Calculating Cortex Protocol command length

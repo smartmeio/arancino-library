@@ -245,6 +245,9 @@ class ArancinoClass {
 			"+0000"
 		};
 
+		//START
+		void start(char** keys, char** values, int len); 
+
 		//API WRAPPED
 		void _freeArray(char** _array);
 		void _freePacket(ArancinoPacket packet);
