@@ -86,6 +86,7 @@ under the License
 #define POWER_KEY				"___POWER___"
 #define MODVERS_KEY				"___MODVERS___"
 #define MODLOGLVL_KEY			"___MODLOGLVL___"
+#define BLINK_ID_KEY    		"___BLINK_ID___"
 #define LIB_VERSION				"2.0.0"	//library version
 
 //RESPONSE CODE

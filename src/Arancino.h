@@ -24,7 +24,6 @@ under the License
 #include <Arduino.h>
 #include <ArancinoDefinitions.h>
 #include <ArancinoConfig.h>
-
 #include <Stream.h>
 #include <stdlib.h>
 #include <cstdlib>
@@ -113,6 +112,10 @@ class ArancinoClass {
 		//GETRESERVED 
 		char* getModuleVersion();
 		char* getModuleLogLevel();
+		char* getBlinkId();
+
+		//SETRESERVED
+		ArancinoPacket setBlinkId(int value) ;
 
 		//DEL
 		// ArancinoPacket delPacket(char* key);
@@ -195,6 +198,8 @@ class ArancinoClass {
 		void free(char* str);
 		void free(char** _array);
 		void free(ArancinoPacket packet);
+		void * calloc(size_t nmemb, size_t _size);
+		void * malloc(size_t size); 
 
 		//PRINT
 		void print(String value);
@@ -256,7 +261,6 @@ class ArancinoClass {
 		ArancinoPacket __publish(char* channel, char* msg);
 		ArancinoPacket __store(char* key, char* value);
 		
-		//RESERVED
 		template<class T = char*> T getReserved(char* key);
 		ArancinoPacket setReserved( char* key, char* value);
 
