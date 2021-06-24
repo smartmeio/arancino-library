@@ -686,6 +686,78 @@ template<> char* ArancinoClass::get(char* key){
 	return retString;
 }
 
+/******** API BASIC :: SETRESERVED *********/
+
+ArancinoPacket ArancinoClass::setReserved( char* key, char* value) {
+
+	ArancinoPacket packet;
+	if(key != NULL && value != NULL && strcmp(key, "") != 0){
+
+		int commandLength = strlen(SETRESERVED_COMMAND);
+
+		int keyLength ;
+		if(arancino_id_prefix){
+			keyLength = strlen(key)+idSize+1;
+		}
+		else{
+			keyLength = strlen(key);
+		}
+		int valueLength = strlen(value);
+		int strLength = commandLength + 1 + keyLength + 1 + valueLength + 1 + 1;
+
+		char* str = (char *)calloc(strLength, sizeof(char));
+		#if defined(__SAMD21G18A__)
+		if(!digitalRead(DBG_PIN)){
+			Serial.print(SENT_STRING);
+		}
+		#endif
+
+		strcpy(str, SETRESERVED_COMMAND);
+		strcat(str, dataSplitStr);
+		// if(arancino_id_prefix){
+		// 	strcat(str, id);
+		// 	strcat(str, ID_SEPARATOR);
+		// }
+		strcat(str, key);
+		strcat(str, dataSplitStr);
+		strcat(str, value);
+		strcat(str, endTXStr);
+
+		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+		{
+			vTaskSuspendAll();
+		}
+		#endif
+		_sendArancinoCommand(str);
+		char* message = _receiveArancinoResponse(END_TX_CHAR);
+		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+		{
+			xTaskResumeAll();
+		}
+		#endif
+
+		free(str);
+
+		if (message != NULL)
+		{
+			ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
+			packet = temp;
+			free(message);
+		}
+		else
+		{
+			packet = communicationErrorPacket;
+		}
+
+	}else{
+			packet = invalidCommandErrorPacket;
+	}
+
+	return packet;
+}
+
 /******** API BASIC :: GETRESERVED *********/
 
 template<> ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char* key){

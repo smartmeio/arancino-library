@@ -53,6 +53,7 @@ under the License
 #define MSTORE_COMMAND			"MSTORE"
 #define STORETAGS_COMMAND		"STORETAGS"
 #define GETRESERVED_COMMAND		"GETRSVD"
+#define SETRESERVED_COMMAND		"SETRSVD"
 
 #define SENT_STRING				"Sent Command: "
 #define RCV_STRING				"Received Response: "

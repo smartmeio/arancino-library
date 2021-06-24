@@ -256,7 +256,9 @@ class ArancinoClass {
 		ArancinoPacket __publish(char* channel, char* msg);
 		ArancinoPacket __store(char* key, char* value);
 		
+		//RESERVED
 		template<class T = char*> T getReserved(char* key);
+		ArancinoPacket setReserved( char* key, char* value);
 
 		//INTERNAL UTILS
 		//void _sendArancinoCommand(String command);
