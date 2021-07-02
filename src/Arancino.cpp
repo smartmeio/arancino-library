@@ -20,7 +20,7 @@ under the License
 
 #include "Arancino.h"
 #include "ArancinoTasks.h"
-#include <avr/dtostrf.h>
+//#include <avr/dtostrf.h>
 
 #define DEBUG 0
 
@@ -218,22 +218,12 @@ void ArancinoClass::start(char** keys, char** values, int len) {
 		}
 		#endif
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
 
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+		taskResume();
 
 		if (message != NULL)
 		{
@@ -378,21 +368,12 @@ ArancinoPacket ArancinoClass::mset(char** keys, char** values, uint len, bool is
 		}
 	#endif
 
-	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-	#endif
+	taskSuspend();
 
 	_sendArancinoCommand(str);
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
-	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-	#endif
+
+	taskResume();
 
 	free(str);
 
@@ -454,22 +435,13 @@ template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, uint 
 			Serial.print(SENT_STRING);
 		}
 	#endif
-
-	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-	#endif
+		
+	taskSuspend();
 
 	_sendArancinoCommand(str);
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
-	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-	#endif
+	
+	taskResume();
 
 	free(str);
 
@@ -579,20 +551,12 @@ ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent) 
 		strcat(str, value);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+
+		taskResume();
 
 		free(str);
 
@@ -651,20 +615,13 @@ template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
 		strcat(str, key);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+
+		taskResume();
+
 		free(str);
 
 		if (message != NULL)
@@ -737,20 +694,12 @@ ArancinoPacket ArancinoClass::setReserved( char* key, char* value) {
 		strcat(str, value);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+
+		taskResume();
 
 		free(str);
 
@@ -805,20 +754,13 @@ template<> ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char* key){
 		strcat(str, key);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+
+		taskResume();
+
 		free(str);
 
 		if (message != NULL)
@@ -917,20 +859,12 @@ template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
 		strcat(str, key);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+
+		taskResume();
 
 		free(str);
 
@@ -1044,20 +978,12 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value, bool i
 		strcat(str, value);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+		
+		taskResume();
 
 		free(str);
 
@@ -1116,20 +1042,12 @@ template<> ArancinoPacket ArancinoClass::hget<ArancinoPacket> (char* key, char* 
 		strcat(str, field);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+
+		taskResume();
 
 		free(str);
 
@@ -1200,20 +1118,12 @@ template<> ArancinoPacket ArancinoClass::hgetall<ArancinoPacket> (char* key){
 		strcat(str, key);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+		
+		taskResume();
 
 		free(str);
 
@@ -1283,20 +1193,12 @@ template<> ArancinoPacket ArancinoClass::hkeys<ArancinoPacket> (char* key){
 		strcat(str, key);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+		
+		taskResume();
 
 		free(str);
 
@@ -1366,20 +1268,12 @@ template<> ArancinoPacket ArancinoClass::hvals<ArancinoPacket> (char* key){
 		strcat(str, key);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+
+		taskResume();
 
 		free(str);
 
@@ -1452,20 +1346,12 @@ template<> ArancinoPacket ArancinoClass::hdel<ArancinoPacket> (char* key, char* 
 		strcat(str, field);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+
+		taskResume();
 
 		free(str);
 
@@ -1522,20 +1408,12 @@ template<> ArancinoPacket ArancinoClass::keys<ArancinoPacket> (char* pattern){
 		strcat(str, pattern);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+
+		taskResume();
 
 		free(str);
 
@@ -1608,20 +1486,12 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		strcat(str, msg);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+
+		taskResume();
 
 		free(str);
 
@@ -1693,20 +1563,12 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		strcpy(str, FLUSH_COMMAND);
 		strcat(str, endTXStr);
 
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-		#endif
+		taskSuspend();
+
 		_sendArancinoCommand(str);
 		char* message = _receiveArancinoResponse(END_TX_CHAR);
-		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-		#endif
+
+		taskResume();
 
 		free(str);
 
@@ -1801,20 +1663,12 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 			strcat(str, ts);
 			strcat(str, endTXStr);
 
-			#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-			if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-			{
-				vTaskSuspendAll();
-			}
-			#endif
+			taskSuspend();
+
 			_sendArancinoCommand(str);
 			char* message = _receiveArancinoResponse(END_TX_CHAR);
-			#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-			if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-			{
-				xTaskResumeAll();
-			}
-			#endif
+			
+			taskResume();
 
 			free(str);
 
@@ -1926,21 +1780,12 @@ ArancinoPacket ArancinoClass::mstore(char** keys, char** values, uint len) {
 		}
 	#endif
 
-	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-	#endif
+	taskSuspend();
 
 	_sendArancinoCommand(str);
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
-	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-	#endif
+
+	taskResume();
 
 	free(str);
 
@@ -2041,21 +1886,12 @@ ArancinoPacket ArancinoClass::storetags(char* key, char** tags, char** values, u
 		}
 	#endif
 
-	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-		{
-			vTaskSuspendAll();
-		}
-	#endif
+	taskSuspend();
 
 	_sendArancinoCommand(str);
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
-	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
-		if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
-		{
-			xTaskResumeAll();
-		}
-	#endif
+	
+	taskResume();
 
 	free(str);
 
@@ -2372,6 +2208,7 @@ char* ArancinoClass::_receiveArancinoResponse(char terminator) {
 }
 
 void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char* str) {
+	noInterrupts();
 	char val[20]="";
 	sprintf(val, "%d", int(value));
 	int valueLength=strlen(val);
@@ -2380,11 +2217,24 @@ void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char* 
       if(_nDecimal<0){
         _nDecimal=0;
       }
-  }
-	dtostrf(value, valueLength, _nDecimal, str);
+  	}
+	double rounding = 0.5;
+	rounding /=pow(10,_nDecimal);
+	int decimalPart = pow(10,_nDecimal) * (value - int(value) + rounding);
+	char dec[2];
+	itoa(_nDecimal,dec,10);
+	char param[10];
+	strcpy(param,"%d.%0");
+	strcat(param,dec);
+  	strcat(param,"d");
+	sprintf(str,param, int(value), decimalPart);
+	interrupts();
+	//return str;
+	//dtostrf(value, valueLength, _nDecimal, str);
 }
 
 void ArancinoClass::_floatToString(float value, unsigned int _nDecimal, char* str) {
+	noInterrupts();
 	char val[20]="";
 	sprintf(val, "%d", int(value));
 	int valueLength=strlen(val);
@@ -2393,8 +2243,19 @@ void ArancinoClass::_floatToString(float value, unsigned int _nDecimal, char* st
       if(_nDecimal<0){
         _nDecimal=0;
       }
-  }
-	dtostrf(value, valueLength, _nDecimal, str);
+  	}
+	double rounding = 0.5;
+	rounding /=pow(10,_nDecimal);
+	int decimalPart = pow(10,_nDecimal) * (value - int(value) + rounding);
+	char dec[2];
+	itoa(_nDecimal,dec,10);
+	char param[10];
+	strcpy(param,"%d.%0");
+	strcat(param,dec);
+  	strcat(param,"d");
+	sprintf (str,param, int(value), decimalPart);
+	interrupts();
+	//return str;
 }
 
 int ArancinoClass::_getDigit(long value) {
@@ -2581,6 +2442,22 @@ char** ArancinoClass::_parseArray(char* data) {
   }
 }*/
 
+void ArancinoClass::taskSuspend(){
+	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+	#endif
+}
 
+void ArancinoClass::taskResume(){
+	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+		xTaskResumeAll();
+	}
+	#endif
+}
 
 ArancinoClass Arancino;

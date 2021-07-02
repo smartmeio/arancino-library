@@ -282,6 +282,9 @@ class ArancinoClass {
 		char* _parse(char* message);
 		char** _parseArray(char* message);
 
+		void taskSuspend();
+		void taskResume();
+
 		//TEMPLATE WRAPPED
 		// ArancinoPacket _getPacket(char* key);
 		// char* _get(char* key);
