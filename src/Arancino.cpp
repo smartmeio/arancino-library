@@ -259,7 +259,7 @@ void ArancinoClass::start(char** keys, char** values, int len) {
 }
 
 
-#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+#if  defined(USEFREERTOS)
 TaskHandle_t commTaskHandle;
 
 /******** API ADVANCED :: START SCHEDULER *********/
@@ -2443,7 +2443,7 @@ char** ArancinoClass::_parseArray(char* data) {
 }*/
 
 void ArancinoClass::taskSuspend(){
-	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	#if  defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
 		vTaskSuspendAll();
@@ -2452,7 +2452,7 @@ void ArancinoClass::taskSuspend(){
 }
 
 void ArancinoClass::taskResume(){
-	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	#if  defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
 	{
 		xTaskResumeAll();

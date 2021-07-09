@@ -30,7 +30,8 @@ under the License
 #include <type_traits>
 
 //#define USEFREERTOS
-#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+#if defined(USEFREERTOS)
+#if defined(__SAMD21G18A__) 
 
 	// #if !defined(__MEM_WRAP__)
 	// 	#error You are using Arancino Library, please select Menu -> Tools -> Using Arancino Library?: Yes
@@ -41,6 +42,13 @@ extern "C" {
 }
 #endif
 
+#elif defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI) 
+
+extern "C" {
+#include <STM32FreeRTOS.h>
+}
+#endif
+#endif//end USEFREERTOS
 //Power Mode
 enum POWER_MODE {
 	BATTERY = 0,
