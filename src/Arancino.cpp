@@ -121,8 +121,8 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	#if defined(USEFREERTOS)
 	//TASK
 	ArancinoTasks _atask;
-	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, tskIDLE_PRIORITY, &arancinoHandle1);
-	xTaskCreate(_atask.interoception, "interoception", 256, NULL, tskIDLE_PRIORITY, &arancinoHandle2);
+	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, 9, &arancinoHandle1);
+	xTaskCreate(_atask.interoception, "interoception", 256, NULL, 1, &arancinoHandle2);
 	startScheduler();
 	#endif
 
@@ -1625,67 +1625,58 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 
 	ArancinoPacket ArancinoClass::__store( char* key, char* value) {
 
-		ArancinoPacket packet;
-
 		char* ts = getTimestamp();
 
-		if(key != NULL && value != NULL && strcmp(key, "") != 0){
-
-			uint commandLength = strlen(STORE_COMMAND);
-			//
-			uint keyLength = strlen(key);
-
-			if(arancino_id_prefix){
-				keyLength += idSize +1;
-			}
-	
-			uint valueLength = strlen(value);
-			uint tsLength = strlen(ts);
-			uint strLength = commandLength + 1 + keyLength + 1 + valueLength + 1 + tsLength + 1 + 1;
-
-			char* str = (char *)calloc(strLength, sizeof(char));
-			#if defined(__SAMD21G18A__)
-			if(!digitalRead(DBG_PIN)){
-				Serial.print(SENT_STRING);
-			}
-			#endif
-
-			strcpy(str, STORE_COMMAND);
-			strcat(str, dataSplitStr);
-			if(arancino_id_prefix){
-				strcat(str, id);
-				strcat(str, ID_SEPARATOR);
-			}
-			strcat(str, key);
-			strcat(str, dataSplitStr);
-			strcat(str, value);
-			strcat(str, dataSplitStr);
-			strcat(str, ts);
-			strcat(str, endTXStr);
-
-			taskSuspend();
-
-			_sendArancinoCommand(str);
-			char* message = _receiveArancinoResponse(END_TX_CHAR);
-			
-			taskResume();
-
-			free(str);
-
-			if (message != NULL)
-			{
-				ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
-				packet = temp;
-				free(message);
-			}
-			else
-			{
-				packet = communicationErrorPacket;
-			}
-
-		}else{
-				packet = invalidCommandErrorPacket;
+		if(key == NULL && value == NULL && strcmp(key, "") == 0){
+			return invalidCommandErrorPacket;
 		}
+
+		int commandLength = strlen(STORE_COMMAND);
+		//
+		int keyLength = strlen(key);
+
+		if(arancino_id_prefix){
+			keyLength += idSize +1;
+		}
+
+		uint valueLength = strlen(value);
+		uint tsLength = strlen(ts);
+		uint strLength = commandLength + 1 + keyLength + 1 + valueLength + 1 + tsLength + 1 + 1;
+
+		char* str = (char *)calloc(strLength, sizeof(char));
+		#if defined(__SAMD21G18A__)
+		if(!digitalRead(DBG_PIN)){
+			Serial.print(SENT_STRING);
+		}
+		#endif
+
+		strcpy(str, STORE_COMMAND);
+		strcat(str, dataSplitStr);
+		if(arancino_id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
+		strcat(str, key);
+		strcat(str, dataSplitStr);
+		strcat(str, value);
+		strcat(str, dataSplitStr);
+		strcat(str, ts);
+		strcat(str, endTXStr);
+
+		taskSuspend();
+
+		_sendArancinoCommand(str);
+		char* message = _receiveArancinoResponse(END_TX_CHAR);
+		
+		taskResume();
+
+		free(str);
+
+		if (message == NULL)
+			return communicationErrorPacket;
+		
+		ArancinoPacket packet = {false, _getResponseCode(message), STRING, {.string = _parse(message)}};
+		free(message);
 
 		return packet;
 	}
@@ -1789,10 +1780,10 @@ ArancinoPacket ArancinoClass::mstore(char** keys, char** values, uint len) {
 
 	free(str);
 
+	if (message == NULL) 
+		return communicationErrorPacket;
 
-	if (message == NULL) return communicationErrorPacket;
-
-	ArancinoPacket packet = {false, _getResponseCode(message), VOID, {.string = NULL}};
+	ArancinoPacket packet = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
 	free(message);
 
 	return packet;
@@ -1895,8 +1886,8 @@ ArancinoPacket ArancinoClass::storetags(char* key, char** tags, char** values, u
 
 	free(str);
 
-
-	if (message == NULL) return communicationErrorPacket;
+	if (message == NULL)
+		return communicationErrorPacket;
 
 	ArancinoPacket packet = {false, _getResponseCode(message), VOID, {.string = NULL}};
 	free(message);
@@ -1937,7 +1928,6 @@ void ArancinoClass::free(char** _array){
 void ArancinoClass::free(ArancinoPacket packet){
 	if (packet.responseType == STRING)
 	{
-
 		#if defined(USEFREERTOS)
 		vPortFree(packet.response.string);
 		#else		
@@ -1946,11 +1936,7 @@ void ArancinoClass::free(ArancinoPacket packet){
 	}
 	else if (packet.responseType == STRING_ARRAY)
 	{
-		#if defined(USEFREERTOS)
-		vPortFree(packet.response.stringArray);
-		#else
-		std::free(packet.response.stringArray);
-		#endif
+		free(packet.response.stringArray);
 	}
 }
 

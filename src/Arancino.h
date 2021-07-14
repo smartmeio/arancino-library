@@ -40,7 +40,6 @@ under the License
 extern "C" {
 #include <FreeRTOS_SAMD21.h>
 }
-#endif
 
 #elif defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI) 
 
