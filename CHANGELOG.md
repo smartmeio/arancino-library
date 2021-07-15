@@ -1,6 +1,7 @@
 # Changelog
 
-#### v 2.0.0 - 2021.06.24
+#### v 2.0.0 - 2021.07.14
+* Add: Arduino `loop` as FreeRtos task. [#p59vhb](https://app.clickup.com/t/p59vhb)
 * Fix: fixed bug with float and double using FreeRtos. [#n990qu](https://app.clickup.com/t/n990qu)
 * Add: added interocep function. [#d2x5yt](https://app.clickup.com/t/d2x5yt)
 * Add: added `setReserved` function. [#n1amcu](https://app.clickup.com/t/n1amcu)

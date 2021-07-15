@@ -25,6 +25,9 @@ class ArancinoConfig{
 		bool _USEID = false;
 		int _TIMEOUT = TIMEOUT;
 		bool USE_PORT_ID_PREFIX_KEY = false;
-		int SERIAL_TIMEOUT = 100;		//timeout 100 ms
+		int SERIAL_TIMEOUT = 5000;		//timeout 100 ms
 		int DECIMAL_DIGITS = 4;			//4 decimal digits (float and double type)
+		bool USE_LOOP_AS_TASK= true;	//default enable loop as task
+		int LOOP_TASK_STACK=256;		//basic stack allocated for loop
+		int LOOP_TASK_PRIORITY=0;			//basic priority for loop
 };
