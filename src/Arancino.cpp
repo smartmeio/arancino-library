@@ -90,8 +90,8 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	ArancinoTasks _atask;
 	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, 9, &arancinoHandle1);
 	xTaskCreate(_atask.interoception, "interoception", 256, NULL, 1, &arancinoHandle2);
-	if(_acfg.USE_LOOP_AS_TASK)
-		runLoopAsTask(_acfg.LOOP_TASK_STACK,_acfg.LOOP_TASK_PRIORITY);
+	if(_acfg.FREERTOS_LOOP_TASK_ENABLE)
+		runLoopAsTask(_acfg.FREERTOS_LOOP_TASK_STACK_SIZE,_acfg.FREERTOS_LOOP_TASK_PRIORITY);
 	startScheduler();
 	#endif
 }
