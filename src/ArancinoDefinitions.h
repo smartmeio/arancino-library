@@ -31,29 +31,29 @@ under the License
 
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
 
-#define START_COMMAND			"START"
-#define MSET_COMMAND            "MSET"
-#define MSET_PERS_COMMAND       "MSETPERS"
-#define SET_COMMAND 			"SET"
-#define SET_PERS_COMMAND 		"SETPERS"
-#define MGET_COMMAND            "MGET"
-#define GET_COMMAND 			"GET"
-#define DEL_COMMAND 			"DEL"
-#define KEYS_COMMAND			"KEYS"
-#define HGET_COMMAND			"HGET"
-#define HGETALL_COMMAND		    "HGETALL"
-#define HKEYS_COMMAND			"HKEYS"
-#define HDEL_COMMAND			"HDEL"
-#define HSET_COMMAND			"HSET"
-#define HSET_PERS_COMMAND		"HSETPERS"
-#define HVALS_COMMAND			"HVALS"
-#define PUBLISH_COMMAND			"PUB"
-#define FLUSH_COMMAND			"FLUSH"
-#define STORE_COMMAND			"STORE"
-#define MSTORE_COMMAND			"MSTORE"
-#define STORETAGS_COMMAND		"STORETAGS"
-#define GETRESERVED_COMMAND		"GETRSVD"
-#define SETRESERVED_COMMAND		"SETRSVD"
+#define START_COMMAND			(char*)"START"
+#define MSET_COMMAND            (char*)"MSET"
+#define MSET_PERS_COMMAND       (char*)"MSETPERS"
+#define SET_COMMAND 			(char*)"SET"
+#define SET_PERS_COMMAND 		(char*)"SETPERS"
+#define MGET_COMMAND            (char*)"MGET"
+#define GET_COMMAND 			(char*)"GET"
+#define DEL_COMMAND 			(char*)"DEL"
+#define KEYS_COMMAND			(char*)"KEYS"
+#define HGET_COMMAND			(char*)"HGET"
+#define HGETALL_COMMAND		    (char*)"HGETALL"
+#define HKEYS_COMMAND			(char*)"HKEYS"
+#define HDEL_COMMAND			(char*)"HDEL"
+#define HSET_COMMAND			(char*)"HSET"
+#define HSET_PERS_COMMAND		(char*)"HSETPERS"
+#define HVALS_COMMAND			(char*)"HVALS"
+#define PUBLISH_COMMAND			(char*)"PUB"
+#define FLUSH_COMMAND			(char*)"FLUSH"
+#define STORE_COMMAND			(char*)"STORE"
+#define MSTORE_COMMAND			(char*)"MSTORE"
+#define STORETAGS_COMMAND		(char*)"STORETAGS"
+#define GETRESERVED_COMMAND		(char*)"GETRSVD"
+#define SETRESERVED_COMMAND		(char*)"SETRSVD"
 
 #define SENT_STRING				"Sent Command: "
 #define RCV_STRING				"Received Response: "
@@ -82,12 +82,12 @@ under the License
 #define DBG_PIN					26		//pin used to Debug Message
 //#define PWR_PIN				??		//pin used for Power Management
 
-#define MONITOR_KEY				"___MONITOR___"
-#define POWER_KEY				"___POWER___"
-#define MODVERS_KEY				"___MODVERS___"
-#define MODLOGLVL_KEY			"___MODLOGLVL___"
-#define BLINK_ID_KEY    		"___BLINK_ID___"
-#define LIB_VERSION				"2.0.0"	//library version
+#define MONITOR_KEY				(char*)"___MONITOR___"
+#define POWER_KEY				(char*)"___POWER___"
+#define MODVERS_KEY				(char*)"___MODVERS___"
+#define MODLOGLVL_KEY			(char*)"___MODLOGLVL___"
+#define BLINK_ID_KEY    		(char*)"___BLINK_ID___"
+#define LIB_VERSION				(char*)"2.0.0"	//library version
 
 //RESPONSE CODE
 #define INVALID_VALUE_ERROR     -4
@@ -96,10 +96,10 @@ under the License
 #define GENERIC_ERROR			-1
 
 //RESPONSE TYPE
-#define VOID			0
-#define INT				1
-#define STRING			2
-#define STRING_ARRAY	3
+#define VOID			(int)0
+#define INT				(int)1
+#define STRING			(int)2
+#define STRING_ARRAY	(int)3
 
 // //RESERVED KEYS ARRAY DEF
 // #define RESERVED_KEY_ARRAY_SIZE		4   // Array dimension of Reserved Keys

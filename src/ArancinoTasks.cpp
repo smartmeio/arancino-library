@@ -25,6 +25,9 @@ under the License
 /******** TASK DEVICE IDENTIFICATION *********/
 
 #if defined(USEFREERTOS)
+
+ArancinoTasks arancinoTask;
+
 void ArancinoTasks::deviceIdentification(void *pvPramaters){
   pinMode(LED_BUILTIN,OUTPUT);
   while (1)
@@ -46,8 +49,6 @@ void ArancinoTasks::deviceIdentification(void *pvPramaters){
 }
 
 void ArancinoTasks::interoception(void *pvPramaters){
-  TemperatureZero TempZero = TemperatureZero();
-  TempZero.init();
   while (1)
   { 
     //free memory
@@ -55,7 +56,7 @@ void ArancinoTasks::interoception(void *pvPramaters){
     char mem_free[20];
     itoa(memory_free,mem_free,10);
     //mcu temperature
-    float temperature = TempZero.readInternalTemperature();
+    float temperature = arancinoTask.mcuTemp();
     char temp[20];
     dtostrf(temperature,4,2,temp);
     //total memory
@@ -65,11 +66,42 @@ void ArancinoTasks::interoception(void *pvPramaters){
     //used memory
     char mem_used[20];
     itoa(memory_used, mem_used, 10);
-    char* keys[] = {"MEM_FREE","MEM_USED","MEM_TOT","TEMP"};
+    char mem_free_key[]="MEM_FREE";
+    char mem_used_key[]="MEM_USED";
+    char mem_tot_key[]="MEM_TOT";
+    char temp_key[]="TEMP";
+    char* keys[] = {mem_free_key,mem_used_key,mem_tot_key,temp_key};
     char* values[] = {mem_free,mem_used,mem_tot,temp};
-    Arancino.mstore(keys,values,4);
+    ArancinoPacket acpkt = Arancino.mstore<ArancinoPacket>(keys,values,4);
+    Arancino.free(acpkt);
     vTaskDelay(60000); //wait 60 seconds (non-blocking delay)
   }
 
 }
+
+#if defined(__SAMD21G18A__)
+float ArancinoTasks::mcuTemp(){
+  TemperatureZero tempZero;
+  if(!temp_initialized){
+    tempZero = TemperatureZero();
+    tempZero.init();
+    temp_initialized=true;
+  }
+  return tempZero.readInternalTemperature();
+}
+#elif defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI) 
+float ArancinoTasks::mcuTemp(){
+  // TemperatureZero tempZero;
+  // if(!temp_initialized){
+  //   tempZero = TemperatureZero();
+  //   tempZero.init();
+  //   temp_initialized=true;
+  // }
+  return 0;
+}
+#else
+float ArancinoTasks::mcuTemp(){
+  return 0;
+}
+#endif
 #endif

@@ -95,13 +95,7 @@ class ArancinoClass {
 		void begin(ArancinoMetadata amdata);
 
 		//MSET
-		ArancinoPacket mset(char** keys, char** values, uint len, bool isPersistent = false);
-
-		//SET
-		// ArancinoPacket set(char* key, int value);
-		// ArancinoPacket set(char* key, double value);
-		// ArancinoPacket set(char* key, uint32_t value);
-		// ArancinoPacket set(char* key, char* value);
+		ArancinoPacket mset(char** keys, char** values, int len, bool isPersistent = false);
 
 		ArancinoPacket set(char* key, int value, bool isPersistent = false);
 		ArancinoPacket set(char* key, double value, bool isPersistent = false);
@@ -111,9 +105,6 @@ class ArancinoClass {
 		ArancinoPacket set(char* key, uint32_t value, bool isPersistent = false);
 
 		//GET
-		//ArancinoPacket getPacket(char* key);
-		//char* get(char* key);
-		//GET W/ TEMPLATE
 		template<class T = char*> T get(char* key);
 
 		//GETRESERVED 
@@ -125,9 +116,6 @@ class ArancinoClass {
 		ArancinoPacket setBlinkId(int value) ;
 
 		//DEL
-		// ArancinoPacket delPacket(char* key);
-		// int del(char* key);
-		//DEL W/ TEMPLATE
 		template<class T = int> T del(char* key);
 
 		//HSET
@@ -139,66 +127,48 @@ class ArancinoClass {
 		ArancinoPacket hset(char* key, char* field, long value, bool isPersistent = false);
 
 		//MGET
-		template<class T = char**> T mget(char** keys, uint len);
+		template<class T = char**> T mget(char** keys, int len);
 
 		//HGET
-		// ArancinoPacket hgetPacket(char* key, char* field);
-		// char* hget(char* key, char* field);
-		//HGET W TEMPALTE
 		template<class T = char*> T hget(char* key, char* field);
 
 		//HGETALL
-		//ArancinoPacket hgetallPacket(char* key);
-		//char** hgetall(char* key);
-		//HGETALL W TEMPALTE
 		template<class T = char**> T hgetall(char* key);
 
 		//HKEYS
-		// ArancinoPacket hkeysPacket(char* key);
-		// char** hkeys(char* key);
-		//HKEYS W TEMPALTE
 		template<class T = char**> T hkeys(char* key);
 
 		//HVALS
-		// ArancinoPacket hvalsPacket(char* key);
-		// char** hvals(char* key);
-		//HVALS W TEMPALTE
 		template<class T = char**> T hvals(char* key);
 
 		//HDEL
-		// ArancinoPacket hdelPacket(char* key, char* field);
-		// int hdel(char* key, char* field);
-		//HDEL W TEMPALTE
 		template<class T = int> T hdel(char* key, char* field);
 
 		//KEYS
-		// ArancinoPacket keysPacket(char* pattern="");
-		// char** keys(char* pattern="");
-		//KEYS W TEMPALTE
 		template<class T = char**> T keys(char* pattern="*");
 
 		//PUBLISH
-		ArancinoPacket publish(char* channel, char* msg);
-		ArancinoPacket publish(char* channel, double msg);
-		ArancinoPacket publish(char* channel, int msg);
-		ArancinoPacket publish(char* channel, uint32_t msg);
-		ArancinoPacket publish(char* channel, long msg);
+		template<class T = int> T publish(char* channel, char* msg);
+		template<class T = int> T publish(char* channel, double msg);
+		template<class T = int> T publish(char* channel, int msg);
+		template<class T = int> T publish(char* channel, uint32_t msg);
+		template<class T = int> T publish(char* channel, long msg);
 
 		//FLUSH
 		ArancinoPacket flush(void);
 
 		//STORE
-		ArancinoPacket store(char* key, int value);
-		ArancinoPacket store(char* key, uint32_t value);
-		ArancinoPacket store(char* key, double value);
-		ArancinoPacket store(char* key, float value);
-		ArancinoPacket store(char* key, long value);
+		template<class T = char*> T store(char* key, int value);
+		template<class T = char*> T store(char* key, uint32_t value);
+		template<class T = char*> T store(char* key, double value);
+		template<class T = char*> T store(char* key, float value);
+		template<class T = char*> T store(char* key, long value);
 
 		//MSTORE
-		ArancinoPacket mstore(char** keys, char** values, uint len);
+		template<class T = char**> T mstore(char** keys, char** values, int len);
 
 		//STORE TAGS
-		ArancinoPacket storetags(char* key, char** tags, char** values, uint len);
+		ArancinoPacket storetags(char* key, char** tags, char** values, int len);
 
 		/***** API UTILS *****/
 		//FREE
@@ -228,9 +198,6 @@ class ArancinoClass {
 		//CHECK UTF-8
 		bool isValidUTF8(const char * string);
 
-		//TEMPLATE TEST
-		//template<class T = char*> T ArancinoGet(char* key);
-
 	private:
 		//void dropAll();
 
@@ -252,9 +219,9 @@ class ArancinoClass {
 		const char nullStr[2] = {NULL_CHAR, '\0'};
 
 		ArancinoMetadata _metadata = {
-			"",
-			"",
-			"+0000"
+			(char*)"",
+			(char*)"",
+			(char*)"+0000"
 		};
 
 		//START
@@ -282,7 +249,7 @@ class ArancinoClass {
 		int _getDigit(long value);
 
 		// ArancinoPacket _sendViaCOMM_MODE(char* key, char* value);
-		ArancinoPacket _sendViaCOMM_MODE(char* key, char* value, bool isPersistent = false);
+		void _sendViaCOMM_MODE(char* key, char* value, bool isPersistent = false);
 
 		int _getResponseCode(char* data);
 
@@ -292,6 +259,10 @@ class ArancinoClass {
 		void taskSuspend();
 		void taskResume();
 
+		//execute command
+		ArancinoPacket executeCommand(char* command_id, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int response_type);
+		ArancinoPacket executeCommand(char* command_id, char* param1, char* param2, char*param3, bool id_prefix, int response_type);
+		ArancinoPacket createArancinoPacket(char* response_raw, int response_type);
 		//TEMPLATE WRAPPED
 		// ArancinoPacket _getPacket(char* key);
 		// char* _get(char* key);
