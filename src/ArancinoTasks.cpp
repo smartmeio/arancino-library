@@ -21,6 +21,12 @@ under the License
 #include <ArancinoTasks.h>
 #include <TemperatureZero.h>
 #include <avr/dtostrf.h>
+#if defined defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
+#include "stm32yyxx_ll_adc.h"
+#define CALX_TEMP 25
+#define LL_ADC_RESOLUTION LL_ADC_RESOLUTION_12B
+#define ADC_RANGE 4096
+#endif
 
 /******** TASK DEVICE IDENTIFICATION *********/
 
@@ -89,15 +95,27 @@ float ArancinoTasks::mcuTemp(){
   }
   return tempZero.readInternalTemperature();
 }
-#elif defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI) 
+#elif defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
+
+
 float ArancinoTasks::mcuTemp(){
-  // TemperatureZero tempZero;
-  // if(!temp_initialized){
-  //   tempZero = TemperatureZero();
-  //   tempZero.init();
-  //   temp_initialized=true;
-  // }
-  return 0;
+  #ifdef ATEMP
+  int32_t Vref;
+    #ifdef __LL_ADC_CALC_VREFANALOG_VOLTAGE
+       Vref= (__LL_ADC_CALC_VREFANALOG_VOLTAGE(analogRead(AVREF), LL_ADC_RESOLUTION));
+    #else
+       Vref= (VREFINT * ADC_RANGE / analogRead(AVREF)); // ADC sample to mV
+    #endif
+    #ifdef __LL_ADC_CALC_TEMPERATURE
+      return (__LL_ADC_CALC_TEMPERATURE(VRef, analogRead(ATEMP), LL_ADC_RESOLUTION));
+    #elif defined(__LL_ADC_CALC_TEMPERATURE_TYP_PARAMS)
+      return (__LL_ADC_CALC_TEMPERATURE_TYP_PARAMS(AVG_SLOPE, V25, CALX_TEMP, VRef, analogRead(ATEMP), LL_ADC_RESOLUTION));
+    #else
+      return 0;
+    #endif
+  #else
+    return 0;
+  #endif
 }
 #else
 float ArancinoTasks::mcuTemp(){
