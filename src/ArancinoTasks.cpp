@@ -100,11 +100,11 @@ float ArancinoTasks::mcuTemp(){
 
 float ArancinoTasks::mcuTemp(){
   #ifdef ATEMP
-  int32_t Vref;
+  int32_t VRef;
     #ifdef __LL_ADC_CALC_VREFANALOG_VOLTAGE
-       Vref= (__LL_ADC_CALC_VREFANALOG_VOLTAGE(analogRead(AVREF), LL_ADC_RESOLUTION));
+       VRef= __LL_ADC_CALC_VREFANALOG_VOLTAGE(analogRead(AVREF), LL_ADC_RESOLUTION));
     #else
-       Vref= (VREFINT * ADC_RANGE / analogRead(AVREF)); // ADC sample to mV
+       VRef= (VREFINT * ADC_RANGE / analogRead(AVREF)); // ADC sample to mV
     #endif
     #ifdef __LL_ADC_CALC_TEMPERATURE
       return (__LL_ADC_CALC_TEMPERATURE(VRef, analogRead(ATEMP), LL_ADC_RESOLUTION));
