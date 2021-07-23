@@ -51,7 +51,7 @@ class ArancinoConfig{
 		/*
 			Enables by default the Arduino Loop function as a FreeRTOS Task.
 		*/
-		bool FREERTOS_LOOP_TASK_ENABLE = true;
+		bool FREERTOS_LOOP_TASK_ENABLE = false;
 
 
 		/*

@@ -88,11 +88,11 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	#if defined(USEFREERTOS)
 	//TASK
 	ArancinoTasks _atask;
-	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, 9, &arancinoHandle1);
+	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, 0, &arancinoHandle1);
 	xTaskCreate(_atask.interoception, "interoception", 256, NULL, 1, &arancinoHandle2);
-	if(_acfg.FREERTOS_LOOP_TASK_ENABLE)
-		runLoopAsTask(_acfg.FREERTOS_LOOP_TASK_STACK_SIZE,_acfg.FREERTOS_LOOP_TASK_PRIORITY);
-	startScheduler();
+	// if(_acfg.FREERTOS_LOOP_TASK_ENABLE)
+	// 	runLoopAsTask(_acfg.FREERTOS_LOOP_TASK_STACK_SIZE,_acfg.FREERTOS_LOOP_TASK_PRIORITY);
+	//startScheduler();
 	#endif
 }
 
@@ -101,6 +101,8 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 void ArancinoClass::start(char** keys, char** values, int len) {
 	ArancinoPacket packet;
 	do{
+		//try to start comunication every 2,5 seconds.
+		delay(2500);
 		packet = executeCommand(START_COMMAND, NULL, keys, values,NULL, len, false, STRING_ARRAY);
 		if(packet.responseCode == RSP_OK){
 			//store arancino serial port id

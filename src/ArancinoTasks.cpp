@@ -21,7 +21,7 @@ under the License
 #include <ArancinoTasks.h>
 #include <TemperatureZero.h>
 #include <avr/dtostrf.h>
-#if defined defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
+#if defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
 #include "stm32yyxx_ll_adc.h"
 #define CALX_TEMP 25
 #define LL_ADC_RESOLUTION LL_ADC_RESOLUTION_12B
@@ -87,12 +87,8 @@ void ArancinoTasks::interoception(void *pvPramaters){
 
 #if defined(__SAMD21G18A__)
 float ArancinoTasks::mcuTemp(){
-  TemperatureZero tempZero;
-  if(!temp_initialized){
-    tempZero = TemperatureZero();
-    tempZero.init();
-    temp_initialized=true;
-  }
+  TemperatureZero tempZero = TemperatureZero();
+  tempZero.init();
   return tempZero.readInternalTemperature();
 }
 #elif defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
