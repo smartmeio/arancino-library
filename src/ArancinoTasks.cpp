@@ -87,12 +87,8 @@ void ArancinoTasks::interoception(void *pvPramaters){
 
 #if defined(__SAMD21G18A__)
 float ArancinoTasks::mcuTemp(){
-  TemperatureZero tempZero;
-  if(!temp_initialized){
-    tempZero = TemperatureZero();
-    tempZero.init();
-    temp_initialized=true;
-  }
+  TemperatureZero tempZero = TemperatureZero();
+  tempZero.init();
   return tempZero.readInternalTemperature();
 }
 
