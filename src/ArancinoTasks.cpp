@@ -19,7 +19,9 @@ under the License
 */
 
 #include <ArancinoTasks.h>
+#if defined(__SAMD21G18A__)
 #include <TemperatureZero.h>
+#endif
 #include <avr/dtostrf.h>
 #if defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
 #include "stm32yyxx_ll_adc.h"
@@ -80,7 +82,7 @@ void ArancinoTasks::interoception(void *pvPramaters){
     char* values[] = {mem_free,mem_used,mem_tot,temp};
     ArancinoPacket acpkt = Arancino.mstore<ArancinoPacket>(keys,values,4);
     Arancino.free(acpkt);
-    vTaskDelay(10000); //wait 60 seconds (non-blocking delay)
+    vTaskDelay(60000); //wait 60 seconds (non-blocking delay)
   }
 
 }
@@ -120,7 +122,7 @@ float ArancinoTasks::mcuTemp(){
 #else
 
 float ArancinoTasks::mcuTemp(){
-  return 1;
+  return 0;
 }
 #endif
 #endif

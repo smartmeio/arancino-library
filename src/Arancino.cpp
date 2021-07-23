@@ -79,7 +79,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	#if defined(__SAMD21G18A__)
 	pinMode(DBG_PIN,INPUT);
 	if(!digitalRead(DBG_PIN))
-		Serial.begin(4000000);
+		Serial.begin(115200);
 	#endif
 
 	start(keys,values,5);
@@ -88,7 +88,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	#if defined(USEFREERTOS)
 	//TASK
 	ArancinoTasks _atask;
-	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, 0, &arancinoHandle1);
+	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, 9, &arancinoHandle1);
 	xTaskCreate(_atask.interoception, "interoception", 256, NULL, 1, &arancinoHandle2);
 	#endif
 }
@@ -210,7 +210,7 @@ ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent) 
 template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
 	if(key == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
-	char* param = NULL; 
+	char* param = NULL;
 	return executeCommand(GET_COMMAND,key,param,param,true,STRING);
 }
 
@@ -287,7 +287,7 @@ template<> int ArancinoClass::del(char* key){
 	ArancinoPacket packet = del<ArancinoPacket>(key);
 	if (!packet.isError)
 		return packet.response.integer;
-	else 
+	else
 		return 0;
 }
 
@@ -614,7 +614,7 @@ ArancinoPacket ArancinoClass::__store( char* key, char* value) {
 	if(key == NULL && value == NULL && strcmp(key, "") == 0){
 		return invalidCommandErrorPacket;
 	}
-	return executeCommand(STORE_COMMAND,key,value,ts,true,STRING);		
+	return executeCommand(STORE_COMMAND,key,value,ts,true,STRING);
 }
 
 /******** API BASIC :: MSTORE *********/
@@ -678,7 +678,7 @@ void ArancinoClass::free(ArancinoPacket packet){
 	{
 		#if defined(USEFREERTOS)
 		vPortFree(packet.response.string);
-		#else		
+		#else
 		std::free(packet.response.string);
 		#endif
 	}
@@ -693,12 +693,12 @@ void * ArancinoClass::malloc(size_t _size)
     /* Call the FreeRTOS version of malloc. */
 	#if defined(USEFREERTOS)
 	return pvPortMalloc(_size);
-	#else		
+	#else
 	return std::malloc(_size);
 	#endif
 }
 
-void * ArancinoClass::calloc (size_t nmemb, size_t _size) 
+void * ArancinoClass::calloc (size_t nmemb, size_t _size)
 {
     /* Call the FreeRTOS version of malloc. */
 	#if defined(USEFREERTOS)
@@ -707,9 +707,9 @@ void * ArancinoClass::calloc (size_t nmemb, size_t _size)
         	#else
 		return pvPortCalloc(nmemb, _size);
 		#endif
-	#else		
+	#else
 	return std::calloc(nmemb, _size);
-	#endif 
+	#endif
 }
 
 /******** API UTILITY :: CHECK-UTF8 *********/
@@ -848,7 +848,7 @@ char* ArancinoClass::getTimestamp() {
 		tmst_inf=tmst_inf % 1000000000;
 	}
 	char ts_sup_tmp[5];
-	sprintf(ts_sup_tmp, "%04ld", tmst_sup); //4 digits 
+	sprintf(ts_sup_tmp, "%04ld", tmst_sup); //4 digits
 	memcpy(timestamp,ts_sup_tmp,4);
 	char ts_inf_tmp[10];
 	sprintf(ts_inf_tmp, "%09ld", tmst_inf); //9 digits
@@ -898,7 +898,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 		}
 		strLength += param1_length + 1;
 	}
-	
+
 	// Calculating Cortex Protocol command length
 	for (int i = 0; i < len; i ++) {
 		char* param2 = params2[i];
@@ -913,7 +913,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 		// For every key-value pair the length of both tag and value is added
 		// two 1s are added in order to take into account the % chr and
 		// the # and @ chrs in the case of last tag or last value respectively
-		strLength += param2_length + 1; 
+		strLength += param2_length + 1;
 		if(params3 != NULL)
 			strLength +=param3_length + 1;
 	}
@@ -941,7 +941,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 
 	// Points at the end of the string less the space reserved to timestamp
 	char* params3Pointer = NULL;
-	if(params3 != NULL) 
+	if(params3 != NULL)
 		params3Pointer = str + strLength;
 	if(param4 != NULL)
 		params3Pointer = params3Pointer - param4_length - strlen(endTXStr);
@@ -952,7 +952,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	for(int i = 0; i < len; i ++) {
 		char* param2 = params2[i];
 		char* param3 = NULL;
-		if(params3 != NULL) 
+		if(params3 != NULL)
 			param3 = params3[len - (i + 1)];
 
 		strcat(params2Pointer, param2);
@@ -994,7 +994,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 
 	_sendArancinoCommand(str);
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
-	
+
 	taskResume();
 
 	free(str);
@@ -1063,9 +1063,9 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 
 	//parse response
 	ArancinoPacket packet = createArancinoPacket(message, type_return);
-		
+
 	free(message);
-	
+
 	return packet;
 
 }
@@ -1074,7 +1074,7 @@ ArancinoPacket ArancinoClass::createArancinoPacket(char* message, int type_retur
 	ArancinoPacket packet;
 	if (message == NULL)
 		return communicationErrorPacket;
-	
+
 	if(type_return == VOID){
 		ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
 		packet = temp;
@@ -1228,7 +1228,7 @@ void ArancinoClass::_sendViaCOMM_MODE(char* key, char* value, bool isPersistent)
 		__set(key, value, isPersistent);
 	}
 	else{
-		__set(key, value, isPersistent);	
+		__set(key, value, isPersistent);
 	}
 }
 
