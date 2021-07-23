@@ -34,16 +34,16 @@ under the License
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
 
 #define START_COMMAND			(char*)"START"
-#define MSET_COMMAND            (char*)"MSET"
-#define MSET_PERS_COMMAND       (char*)"MSETPERS"
+#define MSET_COMMAND			(char*)"MSET"
+#define MSET_PERS_COMMAND		(char*)"MSETPERS"
 #define SET_COMMAND 			(char*)"SET"
 #define SET_PERS_COMMAND 		(char*)"SETPERS"
-#define MGET_COMMAND            (char*)"MGET"
+#define MGET_COMMAND			(char*)"MGET"
 #define GET_COMMAND 			(char*)"GET"
 #define DEL_COMMAND 			(char*)"DEL"
 #define KEYS_COMMAND			(char*)"KEYS"
 #define HGET_COMMAND			(char*)"HGET"
-#define HGETALL_COMMAND		    (char*)"HGETALL"
+#define HGETALL_COMMAND			(char*)"HGETALL"
 #define HKEYS_COMMAND			(char*)"HKEYS"
 #define HDEL_COMMAND			(char*)"HDEL"
 #define HSET_COMMAND			(char*)"HSET"
@@ -62,20 +62,20 @@ under the License
 
 #define END_TX_CHAR				(char)4 //'@' //
 #define DATA_SPLIT_CHAR			(char)30 //'#' //
-#define ARRAY_SPLIT_CHAR        (char)16 //'%' //
-#define NULL_CHAR               (char)25
-#define ID_SEPARATOR            "_"
+#define ARRAY_SPLIT_CHAR		(char)16 //'%' //
+#define NULL_CHAR				(char)25
+#define ID_SEPARATOR			"_"
 
-#define RSP_OK					100
-#define RSP_HSET_NEW			101
-#define RSP_HSET_UPD			102
-#define ERR						200		//Generic Error
-#define ERR_NULL				201		//Null value
-#define ERR_SET					202		//Error during SET
-#define ERR_CMD_NOT_FND			203		//Command Not Found
-#define ERR_CMD_NOT_RCV			204		//Command Not Received
-#define ERR_CMD_PRM_NUM			205		//Invalid parameter number
-#define ERR_REDIS				206		//Generic Redis Error
+#define RSP_OK							100
+#define RSP_HSET_NEW					101
+#define RSP_HSET_UPD					102
+#define ERR								200		//Generic Error
+#define ERR_NULL						201		//Null value
+#define ERR_SET							202		//Error during SET
+#define ERR_CMD_NOT_FND					203		//Command Not Found
+#define ERR_CMD_NOT_RCV					204		//Command Not Received
+#define ERR_CMD_PRM_NUM					205		//Invalid parameter number
+#define ERR_REDIS						206		//Generic Redis Error
 #define ERR_REDIS_KEY_EXISTS_IN_STD	    207		//Key exists in the Standard Data Store
 #define ERR_REDIS_KEY_EXISTS_IN_PERS	208		//Key exists in the Persistent Data Store
 #define ERR_NON_COMPATIBILITY		    209		//Non compatibility between Arancino Module and Library
@@ -88,7 +88,7 @@ under the License
 #define POWER_KEY				(char*)"___POWER___"
 #define MODVERS_KEY				(char*)"___MODVERS___"
 #define MODLOGLVL_KEY			(char*)"___MODLOGLVL___"
-#define BLINK_ID_KEY    		(char*)"___BLINK_ID___"
+#define BLINK_ID_KEY			(char*)"___BLINK_ID___"
 #define LIB_VERSION				(char*)"2.0.0"	//library version
 
 //RESPONSE CODE
