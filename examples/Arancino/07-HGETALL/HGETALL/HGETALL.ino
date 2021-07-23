@@ -35,30 +35,43 @@
 ArancinoMetadata amdata = {
   .fwname = "07.1 - HGetAll Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
+
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
 
 void setup() {
 
-  Arancino.begin(amdata);
   Serial.begin(115200);
+  Arancino.begin(amdata);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
 
   Arancino.hset("EX_07_1_foo", "bar", "yeah");
   Arancino.hset("EX_07_1_foo", "baz", "whoo");
 
+  Arancino.startScheduler();
+
 }
 
-void loop() {
-  char** values = Arancino.hgetall("EX_07_1_foo");
-  int arraySize = Arancino.getArraySize(values);
-  for (int i = 0; i < arraySize; i += 2)
-  {
-    Serial.print("foo ");
-    Serial.print(values[i]);
-    Serial.print(" = ");
-    Serial.println(values[i + 1]);
-  }
-  Arancino.free(values); //delete the array from memory
+void loop(){
+  //empty
+}
 
-  delay(5000); //wait 5 seconds
+void loopTask(void *pvParameters){
+  while(1){
+    char** values = Arancino.hgetall("EX_07_1_foo");
+    int arraySize = Arancino.getArraySize(values);
+    for (int i = 0; i < arraySize; i += 2)
+    {
+      Serial.print("foo ");
+      Serial.print(values[i]);
+      Serial.print(" = ");
+      Serial.println(values[i + 1]);
+    }
+    Arancino.free(values); //delete the array from memory
+
+    vTaskDelay(5000); //wait 5 seconds
+  }
 }

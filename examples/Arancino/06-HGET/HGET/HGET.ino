@@ -39,33 +39,45 @@ Return value - char* reply:
 ArancinoMetadata amdata = {
   .fwname = "06.1 - HGet Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
+
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
 
 void setup() {
 
-  Arancino.begin(amdata);
   Serial.begin(115200);
+
+  Arancino.begin(amdata);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
 
   Arancino.hset("EX_06_1_foo","bar","yeah");
   Arancino.hset("EX_06_1_foo","baz","whoo");
 
+  Arancino.startScheduler();
+
 }
 
-void loop() {
-  
-  char* value = Arancino.hget("EX_06_1_foo","bar");
-  Serial.print("foo bar -> ");
-  Serial.println(value);
-  //foo bar -> yeah
-  Arancino.free(value);
-  
-  value = Arancino.hget("EX_06_1_foo","baz");
-  Serial.print("foo baz -> ");
-  Serial.println(value);
-  //foo bar -> whoo
-  Arancino.free(value);
+void loop(){
+  //empty
+}
 
-  delay(5000); //wait 5 seconds
+void loopTask(void *pvParameters){
+  while(1){
+    char* value = Arancino.hget("EX_06_1_foo","bar");
+    Serial.print("foo bar -> ");
+    Serial.println(value);
+    //foo bar -> yeah
+    Arancino.free(value);
 
+    value = Arancino.hget("EX_06_1_foo","baz");
+    Serial.print("foo baz -> ");
+    Serial.println(value);
+    //foo bar -> whoo
+    Arancino.free(value);
+
+    vTaskDelay(5000); //wait 5 seconds
+  }
 }

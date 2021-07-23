@@ -35,30 +35,42 @@
 ArancinoMetadata amdata = {
   .fwname = "09.1 - HVals Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
+
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
 
 void setup() {
 
-  Arancino.begin(amdata);
   Serial.begin(115200);
+
+  Arancino.begin(amdata,acfg);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
 
   Arancino.hset("EX_09_1_foo", "bar", "yeah");
   Arancino.hset("EX_09_1_foo", "baz", "whoo");
 
+  Arancino.startScheduler();
+
 }
 
-void loop() {
+void loop(){
+  //empty
+}
 
-  char** values = Arancino.hvals("EX_09_1_foo");
-  for (int i = 0; i < Arancino.getArraySize(values); i++) {
-    Serial.print("EX_09_1_foo -> ");
-    Serial.println(values[i]);
-    // foo -> yeah
-    // foo -> whoo
+void loopTask(void *pvParameters) {
+  while(1){
+    char** values = Arancino.hvals("EX_09_1_foo");
+    for (int i = 0; i < Arancino.getArraySize(values); i++) {
+      Serial.print("EX_09_1_foo -> ");
+      Serial.println(values[i]);
+      // foo -> yeah
+      // foo -> whoo
+    }
+    Arancino.free(values);
+
+    vTaskDelay(5000); //wait 5 seconds
   }
-  Arancino.free(values);
-
-
-  delay(5000); //wait 5 seconds
 }

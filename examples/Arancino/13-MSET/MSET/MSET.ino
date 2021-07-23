@@ -27,7 +27,7 @@ Sets the given `keys` to their respective `values` MSET replaces existing values
 Parameters:
 - key: the key name
 - value: the value for the specified key. can be char*, int, long or float
-- isPersistent: optional boolean value to specify if value must be stored 
+- isPersistent: optional boolean value to specify if value must be stored
     persistently or not. Default is `false`.
 
 - keys: keys to set;
@@ -47,16 +47,22 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 ArancinoMetadata amdata = {
   .fwname = "13.1 - MSet Example",
   .fwversion = "1.0.0",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
+
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
 
 char* keys[] = {"EX_13_1_foo1", "EX_13_1_foo2", "EX_13_1_foo3"};
 char* values[] = {"value1", "value2", "value3"};
 
 void setup(){
 
-  Arancino.begin(amdata);
   Serial.begin(115200);
+
+  Arancino.begin(amdata);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
 
   ArancinoPacket apckt = Arancino.mset(keys, values, 3);
 
@@ -76,7 +82,9 @@ void setup(){
   }
 
   Arancino.free(apckt);
-  
+
+  Arancino.startScheduler();
+
 }
 
 void loop() {

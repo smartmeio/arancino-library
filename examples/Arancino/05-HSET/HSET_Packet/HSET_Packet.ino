@@ -45,6 +45,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
+
+  Serial.begin(115200);
   Arancino.begin(amdata);
 
   ArancinoPacket apckt = Arancino.hset("EX_05_2_foo", "bar", "yeah");
@@ -63,6 +65,8 @@ void setup() {
   }
 
   Arancino.free(apckt);
+
+  Arancino.startScheduler();
 }
 
 void loop() {

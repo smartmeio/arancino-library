@@ -35,8 +35,8 @@ Parameters:
 * **`len`**: number of keys to set, namely the length of `keys` array.
 
 Return value - chars
-In this case an array of `char*` in returned. Every element contains 
-the value stored in the corresponding key in the `keys` parameter. 
+In this case an array of `char*` in returned. Every element contains
+the value stored in the corresponding key in the `keys` parameter.
 If a key doesn't exist the corresponding element in the returned array is `NULL`.
 
 */
@@ -46,15 +46,22 @@ If a key doesn't exist the corresponding element in the returned array is `NULL`
 ArancinoMetadata amdata = {
   .fwname = "14.1 - MGet Example",
   .fwversion = "1.0.0",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
+
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
 
 char* keys[] = {"EX_14_1_foo1", "EX_14_1_foo2", "EX_14_1_foo3"};
 
 void setup() {
-  
-  Arancino.begin(amdata);
+
   Serial.begin(115200);
+
+  Arancino.begin(amdata,acfg);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  Arancino.startScheduler();
 
   Arancino.set("EX_14_1_foo1", "a");
   Arancino.set("EX_14_1_foo3", "c");
@@ -62,17 +69,21 @@ void setup() {
 
 }
 
-void loop() {
+void loop(){
+  //empty
+}
 
-  char** result = Arancino.mget(keys, 3);
+void loopTask(void *pvParameters) {
+  while(1){
+    char** result = Arancino.mget(keys, 3);
 
-  for(int i = 0; i < Arancino.getArraySize(result); i++) {
-    Serial.print(keys[i]);
-    Serial.print(" -> ");
-    Serial.println(result[i]);
+    for(int i = 0; i < Arancino.getArraySize(result); i++) {
+      Serial.print(keys[i]);
+      Serial.print(" -> ");
+      Serial.println(result[i]);
+    }
+
+    Arancino.free(result);
+    vTaskDelay(5000);
   }
-
-  Arancino.free(result);
-  delay(5000);
-  
 }

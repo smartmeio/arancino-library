@@ -28,8 +28,8 @@ Parameters:
 - channel: channel where message will be send
 - message: message to send
 
-Return value - int reply: 
-- the number of clients that received the message.
+Return value - int reply:
+- the number of clients that have received the message.
 
 - void flush()
 
@@ -41,18 +41,21 @@ Return value - void reply
 ArancinoMetadata amdata = {
   .fwname = "12.1 - Publish Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
+
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
 
 void setup() {
 
+  Serial.begin(115200);
+
   Arancino.begin(amdata);
-  
-  //char*
-  char* channel1 = "EX_12_1_channel1";
-  char* message1 = "hooray";
-  //publish the value 'hooray' into the 'EX_12_1_channel1' channel
-  Arancino.publish(channel1, message1);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+
+  Arancino.set("num",num_client);
 
   //int
   char* channel2 = "EX_12_1_channel2";
@@ -65,10 +68,24 @@ void setup() {
   double message3 = 123.456;
   //publish the value 123.456 into the 'EX_12_1_channel3' channel
   Arancino.publish(channel3, message3);
+  Arancino.startScheduler();
 
 }
 
-void loop() {
-  // do something
+void loop(){
+  //empty
 }
 
+void loopTask(void *pvParameters) {
+  while(1){
+    char* channel1 = "EX_12_1_channel1";
+    char* message1 = "hooray";
+    //publish the value 'hooray' into the 'EX_12_1_channel1' channel
+    int num_client = Arancino.publish(channel1, message1);
+
+    Serial.print("message received by ");
+    Serial.print(value);
+    Serial.println(" clients");
+    vTaskDelay(10000);
+  }
+}

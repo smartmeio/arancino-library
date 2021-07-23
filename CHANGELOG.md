@@ -1,6 +1,9 @@
 # Changelog
 
-#### v 2.0.0 - 2021.07.14
+#### v 2.0.0 - 2021.07.23
+
+* Udp: examples revision. [#j58vz6] (https://app.clickup.com/t/j58vz6)
+* Add: read internal temperature for STM32. [#pbbnm1] (https://app.clickup.com/t/pbbnm1)
 * Add: Arduino `loop` as FreeRtos task. [#p59vhb](https://app.clickup.com/t/p59vhb)
 * Fix: fixed bug with float and double using FreeRtos. [#n990qu](https://app.clickup.com/t/n990qu)
 * Add: added interocep function. [#d2x5yt](https://app.clickup.com/t/d2x5yt)

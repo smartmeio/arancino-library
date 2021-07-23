@@ -41,9 +41,8 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  Arancino.begin(amdata);
   Serial.begin(115200);
-  
+  Arancino.begin(amdata);
   Arancino.set("EX_03_1_foo","bar");
 
   int num = Arancino.del("EX_03_1_baz");
@@ -52,6 +51,7 @@ void setup() {
   num = Arancino.del("EX_03_1_foo");
   Serial.println(num ? "Key deleted" : "Key not found");
   //1
+  Arancino.startScheduler();
 }
 
 void loop() {

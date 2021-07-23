@@ -19,8 +19,8 @@ under the License
 */
 
 /*
-Removes the specified field from the hash stored at key. 
-If field is specified and it does not exist within this hash, this command returns 0. 
+Removes the specified field from the hash stored at key.
+If field is specified and it does not exist within this hash, this command returns 0.
 If the key does not exist, it is treated as an empty hash and this command returns 0.
 
 - char* hdel( char* key, char* field )
@@ -40,24 +40,31 @@ Return value - int reply:
 ArancinoMetadata amdata = {
   .fwname = "10.1 - HDel Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
+
+//FreeRtos
+//TaskHandle_t loopTaskHandle;
+//void loopTask(void *pvParameters);
 
 void setup() {
 
-  Arancino.begin(amdata);
   Serial.begin(115200);
+
+  Arancino.begin(amdata);
+  //xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
 
   Arancino.hset("EX_10_1_foo","bar","yeah");
   Arancino.hset("EX_10_1_foo","baz","whoo");
-  
+
   int value = Arancino.hdel("EX_10_1_foo","bar"); //return 1
   char* str = Arancino.hget("EX_10_1_foo","bar"); //return NULL
-  
+
   Serial.print("HGet: ");
   Serial.println(str);
-  
+
   Arancino.free(str);
+  Arancino.startScheduler();
 
 }
 

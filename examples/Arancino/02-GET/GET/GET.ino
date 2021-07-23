@@ -36,39 +36,50 @@ Return value - String reply:
 ArancinoMetadata amdata = {
   .fwname = "2.1 - Get Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
+
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
 
 void setup() {
 
-  Arancino.begin(amdata);
   Serial.begin(115200);
+
+  Arancino.begin(amdata);
+	xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  Arancino.startScheduler();
 
 }
 
-void loop() {
+void loop(){
+  //empty
+}
 
-  //sets the value 'bar' into the 'foo' key
-  Arancino.set("EX_02_1_foo","bar");
+void loopTask(void *pvParameters){
+  while(1){
+    //sets the value 'bar' into the 'foo' key
+    Arancino.set("EX_02_1_foo","bar");
 
-  //gets the value from the 'foo' key
-  char* value = Arancino.get("EX_02_1");
-  Serial.print("EX_02_1 -> ");
-  Serial.println(value);
-  //foo -> bar
-  Arancino.free(value); //frees memory
+    //gets the value from the 'foo' key
+    char* value = Arancino.get("EX_02_1");
+    Serial.print("EX_02_1 -> ");
+    Serial.println(value);
+    //foo -> bar
+    Arancino.free(value); //frees memory
 
-  delay(2000); //wait 2 seconds
+    vTaskDelay(2000); //wait 2 seconds
 
-  Arancino.set("EX_02_1","baz");
+    Arancino.set("EX_02_1","baz");
 
-  //gets the value from the 'foo' key
-  value = Arancino.get("EX_02_1");
-  Serial.print("EX_02_1 -> ");
-  Serial.println(value);
-  //foo -> baz
-  Arancino.free(value); //frees memory
-  
-  delay(2000); //wait 2 seconds
+    //gets the value from the 'foo' key
+    value = Arancino.get("EX_02_1");
+    Serial.print("EX_02_1 -> ");
+    Serial.println(value);
+    //foo -> baz
+    Arancino.free(value); //frees memory
 
+    vTaskDelay(2000); //wait 2 seconds
+  }
 }

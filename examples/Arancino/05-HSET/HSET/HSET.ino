@@ -50,9 +50,10 @@ ArancinoMetadata amdata = {
 void setup() {
   
   Arancino.begin(amdata);
-
   Arancino.hset("ex05_foo","bar","yeah");
   Arancino.hset("ex05_foo","bar","whoo");
+  Arancino.startScheduler();
+
 }
 
 void loop() {

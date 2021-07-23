@@ -50,6 +50,7 @@ ArancinoMetadata amdata = {
   .tzoffset = "+1000" 
 };
 
+
 void setup() {
   
   Arancino.begin(amdata);
@@ -71,6 +72,8 @@ void setup() {
   double value3 = 123.456;
   //sets the value 123.456 into the 'baz' key
   Arancino.set(key3, value3);
+
+  Arancino.startScheduler();
 
 }
 

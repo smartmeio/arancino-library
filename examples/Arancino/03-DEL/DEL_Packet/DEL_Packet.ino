@@ -43,8 +43,8 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  Arancino.begin(amdata);
   Serial.begin(115200);
+  Arancino.begin(amdata);
 
   Arancino.set("EX_03_2_foo","bar");
 
@@ -83,9 +83,11 @@ void setup() {
   }
   
   Arancino.free(apckt); //delete packet from memory
+  
+  Arancino.startScheduler();
 
 }
 
-void loop() {
-  //do something
+void loop(){
+  //empty
 }

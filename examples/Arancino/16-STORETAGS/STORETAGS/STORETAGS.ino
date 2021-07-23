@@ -1,9 +1,9 @@
 /*
 SPDX-license-identifier: Apache-2.0
 
-Copyright (C) 2019 SmartMe.IO
+Copyright (C) 2020 SmartMe.IO
 
-Authors:  Andrea Cannistra <andrea@smartme.io>
+Authors:  Alessio Cosenza <alessio@smartme.io>
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -19,23 +19,25 @@ under the License
 */
 
 /*
-Returns all field names in the hash stored at key.
 
-- char** hkeys( char* key )
+- ArancinoPacket storetags(char* keys, char** tags, char** values, uint len)
 
-Parameters
-- key: the name of the key which holds the hash.
+Parameters:
+- key: key to store;
+- tags:  the name of the tags to store;
+- values: the value to store with the specified tag;
+- len: number of tags.
 
-Return value - char** reply:
-- list of fields matching key.
+Return value - void
 
 */
 
 #include <Arancino.h>
+#include <avr/dtostrf.h>
 
 ArancinoMetadata amdata = {
-  .fwname = "08.1 - HKeys Example",
-  .fwversion = "1.0.1",
+  .fwname = "16.1 - StoreTags Example",
+  .fwversion = "1.0.0",
   .tzoffset = "+1000"
 };
 
@@ -43,17 +45,15 @@ ArancinoMetadata amdata = {
 TaskHandle_t loopTaskHandle;
 void loopTask(void *pvParameters);
 
+char* key = "EX_sample_1";
+char* tags[] = {"EX_tags_1", "EX_tags_2", "EX_tags_3"};
+
+
 void setup() {
-
   Serial.begin(115200);
-  Arancino.begin(amdata,acfg);
+  Arancino.begin(amdata);
   xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
-
-  Arancino.hset("EX_08_1_foo","bar","yeah");
-  Arancino.hset("EX_08_1_foo","baz","whoo");
-
   Arancino.startScheduler();
-
 }
 
 void loop(){
@@ -62,15 +62,19 @@ void loop(){
 
 void loopTask(void *pvParameters) {
   while(1){
-    char** fields = Arancino.hkeys("EX_08_1_foo");
-    for (int i = 0; i < Arancino.getArraySize(fields); i++) {
-      Serial.print("EX_08_1_foo -> ");
-      Serial.println(fields[i]);
-      // foo -> bar
-      // foo -> baz
-    }
-    Arancino.free(fields);
+    int val1 = random(1,10);
+    float val2 = random(150.00,350.00)/13.00;
+    int val3 = random(20,35);
+    char value1[2];
+    char value2[10];
+    char value3[10];
+    itoa(val1,value1,10);
+    dtostrf(val2,2,3,value2);
+    itoa(val3,value3,10);
 
-    vTaskDelay(5000); //wait 5 seconds
+    char* samples[]={value1,value2,value3};
+    Arancino.storetags(key, tags, samples, 3);
+
+    vTaskDelay(5000);
   }
 }

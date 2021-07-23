@@ -1,16 +1,16 @@
 /*
   SPDX-license-identifier: Apache-2.0
-  
+
   Copyright (C) 2019 SmartMe.IO
-  
+
   Authors:  Dario Gogliandolo
-  
+
   Licensed under the Apache License, Version 2.0 (the "License"); you may
   not use this file except in compliance with the License. You may obtain
   a copy of the License at
-  
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -24,7 +24,7 @@ ArancinoPacket hvalsPacket(char* key )
 
 Parameters:
   - key: the name of the key which holds the hash.
-  
+
 Return value
 ArancinoPacket reply: ArancinoPacket containing:
   - isError: API call outcome (true or false);
@@ -37,43 +37,56 @@ ArancinoPacket reply: ArancinoPacket containing:
 ArancinoMetadata amdata = {
   .fwname = "09.2 - HVals w/ Packet Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
+
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
 
 void setup() {
 
-  Arancino.begin(amdata);
   Serial.begin(115200);
+
+  Arancino.begin(amdata,acfg);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  Arancino.startScheduler();
 
   Arancino.hset("EX_09_2_foo", "bar", "yeah");
   Arancino.hset("EX_09_2_foo", "baz", "whoo");
 
 }
 
-void loop() {
-  
-  ArancinoPacket apckt = Arancino.hvals<ArancinoPacket>("EX_09_2_foo");
-  char** values = apckt.response.stringArray;
-  
-  if (!apckt.isError){
+void loop(){
+  //empty
+}
 
-    Serial.println("HVALS OK");
-    Serial.print("Response code: ");
-    Serial.println(apckt.responseCode);
-    Serial.print("Response type: ");
-    Serial.println(apckt.responseType);
-    for (int i = 0; i < Arancino.getArraySize(values); i++) {
-      Serial.print("EX_09_2_foo -> ");
-      Serial.println(values[i]);
-      // foo -> yeah
-      // foo -> whoo
+void loopTask(void *pvParameters) {
+  while(1){
+
+    ArancinoPacket apckt = Arancino.hvals<ArancinoPacket>("EX_09_2_foo");
+    char** values = apckt.response.stringArray;
+
+    if (!apckt.isError){
+
+      Serial.println("HVALS OK");
+      Serial.print("Response code: ");
+      Serial.println(apckt.responseCode);
+      Serial.print("Response type: ");
+      Serial.println(apckt.responseType);
+      for (int i = 0; i < Arancino.getArraySize(values); i++) {
+        Serial.print("EX_09_2_foo -> ");
+        Serial.println(values[i]);
+        // foo -> yeah
+        // foo -> whoo
+      }
+      Arancino.free(values);
     }
-    Arancino.free(values);
-  }
-  else{
-    Serial.println("HVALS ERROR");
-  }  
+    else{
+      Serial.println("HVALS ERROR");
+    }
 
-  Arancino.free(apckt);
-  delay(5000); //wait 5 seconds
+    Arancino.free(apckt);
+    vTaskDelay(5000); //wait 5 seconds
+  }
 }

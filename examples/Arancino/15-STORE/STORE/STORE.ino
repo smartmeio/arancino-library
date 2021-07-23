@@ -1,9 +1,9 @@
 /*
 SPDX-license-identifier: Apache-2.0
 
-Copyright (C) 2019 SmartMe.IO
+Copyright (C) 2020 SmartMe.IO
 
-Authors:  Andrea Cannistra <andrea@smartme.io>
+Authors:  Andrea CAnnistrà <andrea@smartme.io>
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may
 not use this file except in compliance with the License. You may obtain
@@ -19,22 +19,27 @@ under the License
 */
 
 /*
-Returns all field names in the hash stored at key.
+Append (or create and append) a new sample to the series specified by key.
 
-- char** hkeys( char* key )
 
-Parameters
-- key: the name of the key which holds the hash.
+- ArancinoPacket store(char* key, int value)
+- ArancinoPacket store(char* key, float value)
+- ArancinoPacket store(char* key, long value)
+- ArancinoPacket store(char* key, uint32_t value)
 
-Return value - char** reply:
-- list of fields matching key.
+Parameters:
+- key: key to store
+- value: the value for the specified key. can be int, long or float
 
+Return value - String reply:
+- insertion timestamp.
 */
+
 
 #include <Arancino.h>
 
 ArancinoMetadata amdata = {
-  .fwname = "08.1 - HKeys Example",
+  .fwname = "15.1 - Store Example",
   .fwversion = "1.0.1",
   .tzoffset = "+1000"
 };
@@ -44,16 +49,11 @@ TaskHandle_t loopTaskHandle;
 void loopTask(void *pvParameters);
 
 void setup() {
-
   Serial.begin(115200);
-  Arancino.begin(amdata,acfg);
+
+  Arancino.begin(amdata);
   xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
-
-  Arancino.hset("EX_08_1_foo","bar","yeah");
-  Arancino.hset("EX_08_1_foo","baz","whoo");
-
   Arancino.startScheduler();
-
 }
 
 void loop(){
@@ -62,15 +62,15 @@ void loop(){
 
 void loopTask(void *pvParameters) {
   while(1){
-    char** fields = Arancino.hkeys("EX_08_1_foo");
-    for (int i = 0; i < Arancino.getArraySize(fields); i++) {
-      Serial.print("EX_08_1_foo -> ");
-      Serial.println(fields[i]);
-      // foo -> bar
-      // foo -> baz
-    }
-    Arancino.free(fields);
+    //do something
+    char* key1 = "EX_sample_1";
+    long sample1 = random(100,400)/36;
+    char* timestamp = Arancino.store(key1, sample1);
+    Serial.print("timestamp -> ");
+    Serial.println(timestamp);
 
-    vTaskDelay(5000); //wait 5 seconds
+    Arancino.free(timestamp);
+
+    vTaskDelay(2000);
   }
 }

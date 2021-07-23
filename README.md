@@ -63,7 +63,7 @@ typedef struct {
 ```c++
     int _TIMEOUT = 100 ;  // *DEPRECATED* Use SERIAL_TIMEOUT
     bool _USEID;          // *DEPRECATED* Use USE_PORT_ID_PREFIX_KEY
-    int DECIMAL_DIGITS = 4; 
+    int DECIMAL_DIGITS = 4;
     int SERIAL_TIMEOUT = 100;
     bool USE_PORT_ID_PREFIX_KEY = false;
 
@@ -176,7 +176,7 @@ From version
 
 ##### Parameters
 - ArancinoConfig: is class composed only by attributes (see the following paragraph: [`Arancino Config`](#ArancinoConfig)):
-  - `DECIMAL_DIGITS` 
+  - `DECIMAL_DIGITS`
   - `SERIAL_TIMEOUT`
   - `PORT_ID_PREFIX_KEY`
 
@@ -520,6 +520,66 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
   * `response.integer`: the number of clients that received the message.
 
 
+___
+### store
+##### *ArancinoPacket store(char&ast; key, int value)*
+##### *ArancinoPacket store(char&ast; key, float value)*
+##### *ArancinoPacket store(char&ast; key, long value)*
+##### *ArancinoPacket store(char&ast; key, uint32_t value)*
+
+Append (or create and append) a new sample to the series specified by key.
+
+##### Parameters
+* **`key`**: *key* to store.
+* **`value`**: the *value* for the specified key.
+
+##### Return value
+char&ast; reply: the insertion timestamp.
+
+or
+
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `STRING`;
+  * `response.string`: `char*` pointer that contain the insertion timestamp to the series.
+___
+### mstore
+##### *ArancinoPacket mstore(char&ast;&ast; key, char&ast;&ast; value, int len)*
+
+Append new samples to a list of series.
+
+##### Parameters
+* **`keys`**: the list of *keys* to store.
+* **`values`**: corresponding values of the keys;
+* **`len`**: number of keys to set, namely the length of keys array.
+
+##### Return value
+char&ast;&ast; reply: list of insertion timestamps.
+
+or
+
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `STRING_ARRAY`;
+  * `response.stringArray`: `char**` pointer that points to the start of the returned array of insertion timestamps to the series.
+___
+### storetags
+##### *ArancinoPacket storetags(char&ast; key, char&ast;&ast; tags, char&ast;&ast; value, int len)*
+
+##### Parameters
+* **`key`**: the *key* to store.
+* **`tags`**: the list of the *tags* to store.
+* **`values`**: corresponding values of the *tags*;
+* **`len`**: number of tags to set, namely the length of keys array.
+
+##### Return value
+ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
+  * `isError`: API call outcome (`true` or `false`);
+  * `responseCode`: the [response code](#variables) value.
+  * `responseType`: `VOID`;
+  * `response`: `NULL`;
 ___
 ### print
 ##### *void print(char&ast; message)*
@@ -868,8 +928,14 @@ Configure the `LED_BUILTIN` for debug and start the FreeRTOS scheduler. When a f
 ```c++
 #include <Arancino.h>
 
+ArancinoMetadata amdata = {
+  .fwname = "00.1 - Start Scheduler Example",
+  .fwversion = "1.0.0",
+  .tzoffset = "+1000"
+};
+
 void setup() {
-  Arancino.begin();
+  Arancino.begin(amdata);
   Arancino.startScheduler();
 }
 
@@ -920,10 +986,9 @@ void loop2(void *pvPramaters)
 }
 
 void setup() {
+	Serial.begin(115200);
   Arancino.begin();
   pinMode(LED_BUILTIN, OUTPUT);
-  Serial.begin(115200);
-
   xTaskCreate(loop2,     "Loop 2",       256, NULL, tskIDLE_PRIORITY, &loop2Handle);
   Arancino.startScheduler();
 }

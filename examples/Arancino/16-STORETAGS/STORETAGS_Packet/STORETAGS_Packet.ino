@@ -19,34 +19,29 @@ under the License
 */
 
 /*
-Returns the `values` of all specified `keys`
 
-- ArancinoPacket mset(char** keys, char**; values, uint len)
-
-- char** mget(char** keys, char** values, uint len)
-- ArancinoPacket mget<ArancinoPacket>(char** keys, uint len)
+- ArancinoPacket storetags(char* keys, char** tags, char** values, uint len)
 
 Parameters:
-* `keys`: array containing keys to retrieve;
-* `len`: number of keys to retrieve.
-
-- keys: keys to set;
-* values`**: corresponding values of the keys;
-* **`len`**: number of keys to set, namely the length of `keys` array.
-
+- key: key to store;
+- tags:  the name of the tags to store;
+- values: the value to store with the specified tag;
+- len: number of tags.
 
 Return value:
 ArancinoPacket reply: ArancinoPacket containing:
 - isError: API call outcome (true or false);
 - responseCode: the response code value. (Response code -> https://git.smartme.io/smartme.io/arancino/arancino-library#variables)
 - responseType: STRING_ARRAY;
-- response.stringarray: char** pointer that points to the start of the returned array of strings.
+- response.stringarray: char** pointer that points to the start of the returned array of insertion timestamps to the series.
+
 */
 
 #include <Arancino.h>
+#include <avr/dtostrf.h>
 
 ArancinoMetadata amdata = {
-  .fwname = "14.2 - MGet w/ Packet Example",
+  .fwname = "16.1 - StoreTags Packet Example",
   .fwversion = "1.0.0",
   .tzoffset = "+1000"
 };
@@ -55,21 +50,16 @@ ArancinoMetadata amdata = {
 TaskHandle_t loopTaskHandle;
 void loopTask(void *pvParameters);
 
-char* keys[] = {"EX_14_2_foo1", "EX_14_2_foo2", "EX_14_2_foo3"};
+char* key = "EX_sample_1";
+char* tags[] = {"EX_tags_1", "EX_tags_2", "EX_tags_3"};
+
 
 void setup() {
-
   Serial.begin(115200);
 
   Arancino.begin(amdata);
   xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
-
-  Arancino.set("EX_14_2_foo1", "a");
-  Arancino.set("EX_14_2_foo2", "b");
-  Arancino.set("EX_14_2_foo3", "c");
-
   Arancino.startScheduler();
-
 }
 
 void loop(){
@@ -78,28 +68,33 @@ void loop(){
 
 void loopTask(void *pvParameters) {
   while(1){
+    int val1 = random(1,10);
+    float val2 = random(150.00,350.00)/13.00;
+    int val3 = random(20,35);
+    char value1[2];
+    char value2[10];
+    char value3[10];
+    itoa(val1,value1,10);
+    dtostrf(val2,2,3,value2);
+    itoa(val3,value3,10);
 
-    ArancinoPacket apckt = Arancino.mget<ArancinoPacket>(keys, 3);
+    char* samples[]={value1,value2,value3};
+    ArancinoPacket apckt = Arancino.storetags(key, tags, samples, 3);
 
     if (!apckt.isError)
     {
-      Serial.println("MGET OK");
-      Serial.print("Response code: ");
-      Serial.println(apckt.responseCode);
-      Serial.print("Response type: ");
-      Serial.println(apckt.responseType);
-
-      for(int i = 0; i < Arancino.getArraySize(apckt.response.stringArray); i++) {
-        Serial.print(keys[i]);
-        Serial.print(" -> ");
-        Serial.println(apckt.response.stringArray[i]);
-      }
-      Arancino.free(apckt); //delete the string from memory
+        Serial.println("STORETAGS OK");
+        Serial.print("Response code: ");
+        Serial.println(apckt.responseCode);
+        Serial.print("Response type: ");
+        Serial.println(apckt.responseType);
     }
     else
     {
-      Serial.println("MGET ERROR");
+        Serial.println("STORETAGS ERROR");
     }
+
+    Arancino.free(apckt); //delete the string from memory
 
     vTaskDelay(5000);
   }
