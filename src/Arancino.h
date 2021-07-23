@@ -29,7 +29,7 @@ under the License
 #include <cstdlib>
 #include <type_traits>
 
-//#define USEFREERTOS
+#define USEFREERTOS
 #if defined(USEFREERTOS)
 #if defined(__SAMD21G18A__) 
 

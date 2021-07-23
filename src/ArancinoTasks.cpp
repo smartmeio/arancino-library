@@ -21,7 +21,7 @@ under the License
 #include <ArancinoTasks.h>
 #include <TemperatureZero.h>
 #include <avr/dtostrf.h>
-#if defined defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
+#if defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
 #include "stm32yyxx_ll_adc.h"
 #define CALX_TEMP 25
 #define LL_ADC_RESOLUTION LL_ADC_RESOLUTION_12B
@@ -80,7 +80,7 @@ void ArancinoTasks::interoception(void *pvPramaters){
     char* values[] = {mem_free,mem_used,mem_tot,temp};
     ArancinoPacket acpkt = Arancino.mstore<ArancinoPacket>(keys,values,4);
     Arancino.free(acpkt);
-    vTaskDelay(60000); //wait 60 seconds (non-blocking delay)
+    vTaskDelay(10000); //wait 60 seconds (non-blocking delay)
   }
 
 }
@@ -95,6 +95,7 @@ float ArancinoTasks::mcuTemp(){
   }
   return tempZero.readInternalTemperature();
 }
+
 #elif defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
 
 
@@ -102,7 +103,7 @@ float ArancinoTasks::mcuTemp(){
   #ifdef ATEMP
   int32_t VRef;
     #ifdef __LL_ADC_CALC_VREFANALOG_VOLTAGE
-       VRef= __LL_ADC_CALC_VREFANALOG_VOLTAGE(analogRead(AVREF), LL_ADC_RESOLUTION));
+       VRef= (__LL_ADC_CALC_VREFANALOG_VOLTAGE(analogRead(AVREF), LL_ADC_RESOLUTION));
     #else
        VRef= (VREFINT * ADC_RANGE / analogRead(AVREF)); // ADC sample to mV
     #endif
@@ -116,10 +117,14 @@ float ArancinoTasks::mcuTemp(){
   #else
     return 0;
   #endif
+
 }
+
+
 #else
+
 float ArancinoTasks::mcuTemp(){
-  return 0;
+  return 1;
 }
 #endif
 #endif

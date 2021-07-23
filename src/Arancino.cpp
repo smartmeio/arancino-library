@@ -79,7 +79,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	#if defined(__SAMD21G18A__)
 	pinMode(DBG_PIN,INPUT);
 	if(!digitalRead(DBG_PIN))
-		Serial.begin(115200);
+		Serial.begin(4000000);
 	#endif
 
 	start(keys,values,5);
@@ -90,9 +90,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	ArancinoTasks _atask;
 	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, 9, &arancinoHandle1);
 	xTaskCreate(_atask.interoception, "interoception", 256, NULL, 1, &arancinoHandle2);
-	if(_acfg.FREERTOS_LOOP_TASK_ENABLE)
-		runLoopAsTask(_acfg.FREERTOS_LOOP_TASK_STACK_SIZE,_acfg.FREERTOS_LOOP_TASK_PRIORITY);
-	startScheduler();
+	//if(_acfg.FREERTOS_LOOP_TASK_ENABLE)
+		//runLoopAsTask(_acfg.FREERTOS_LOOP_TASK_STACK_SIZE,_acfg.FREERTOS_LOOP_TASK_PRIORITY);
+	//startScheduler();
 	#endif
 }
 
@@ -101,6 +101,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 void ArancinoClass::start(char** keys, char** values, int len) {
 	ArancinoPacket packet;
 	do{
+		//try to start comunication every 2,5 seconds.
+		delay(2500);
+
 		packet = executeCommand(START_COMMAND, NULL, keys, values,NULL, len, false, STRING_ARRAY);
 		if(packet.responseCode == RSP_OK){
 			//store arancino serial port id
@@ -123,7 +126,9 @@ void ArancinoClass::start(char** keys, char** values, int len) {
 /******** API ADVANCED :: START SCHEDULER *********/
 
 void ArancinoClass::startScheduler() {
+#if defined(__SAMD21G18A__)
 	vSetErrorLed(LED_BUILTIN, HIGH);
+#endif
 	/*
 	 * Uncomment this if you want run loop() as a dedicated task.
 	 * If loop() doesn't run as dedicated task, should not contain blocking code.
@@ -700,7 +705,11 @@ void * ArancinoClass::calloc (size_t nmemb, size_t _size)
 {
     /* Call the FreeRTOS version of malloc. */
 	#if defined(USEFREERTOS)
-	return pvPortCalloc(nmemb, _size);
+		#if defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
+		return malloc(nmemb*(_size));
+        	#else
+		return pvPortCalloc(nmemb, _size);
+		#endif
 	#else		
 	return std::calloc(nmemb, _size);
 	#endif 
