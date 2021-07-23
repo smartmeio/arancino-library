@@ -92,5 +92,5 @@ void loopTask(void *pvParameters){
     Arancino.free(keys); //delete the array from memory
 
     vTaskDelay(1000); //wait 1 seconds
-
+  }
 }

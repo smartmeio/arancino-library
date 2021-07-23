@@ -59,12 +59,13 @@ void setup() {
 
   Serial.begin(115200);
 
-  Arancino.begin(amdata,acfg);
+  Arancino.begin(amdata);
   xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
-  Arancino.startScheduler();
 
   Arancino.set("EX_14_1_foo1", "a");
   Arancino.set("EX_14_1_foo3", "c");
+
+  Arancino.startScheduler();
 
 
 }

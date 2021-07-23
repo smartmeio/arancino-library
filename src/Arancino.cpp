@@ -227,7 +227,7 @@ template<> char* ArancinoClass::get(char* key){
 ArancinoPacket ArancinoClass::setReserved( char* key, char* value) {
 	if(key == NULL && value == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
-	return executeCommand(SETRESERVED_COMMAND,key,value,NULL,false,VOID);
+	return executeCommand(SETRESERVED_COMMAND,key,value,NULL,true,VOID);
 }
 
 /******** API BASIC :: GETRESERVED *********/
@@ -235,7 +235,7 @@ ArancinoPacket ArancinoClass::setReserved( char* key, char* value) {
 template<> ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char* key){
 	if(key == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
-	return executeCommand(GETRESERVED_COMMAND,key,NULL,NULL,NULL,STRING);
+	return executeCommand(GETRESERVED_COMMAND,key,NULL,NULL,true,STRING);
 }
 
 template<> char* ArancinoClass::getReserved(char* key){
@@ -641,7 +641,7 @@ ArancinoPacket ArancinoClass::storetags(char* key, char** tags, char** values, i
 	char* ts = getTimestamp();
 	if ((key == NULL) || (tags == NULL) || (values == NULL) || (len <= 0))
 		return invalidCommandErrorPacket;
-	return executeCommand(STORETAGS_COMMAND,key,tags,values,ts,len,false,VOID);
+	return executeCommand(STORETAGS_COMMAND,key,tags,values,ts,len,true,VOID);
 }
 
 /******** API UTILITY :: FREE *********/
@@ -907,6 +907,9 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 			param3 = params3[i];
 
 		int param2_length = strlen(param2);
+		if(id_prefix && arancino_id_prefix && param1 == NULL){
+			param2_length += idSize + 1;
+		}
 		int param3_length = 0;
 		if(params3 != NULL)
 			param3_length = strlen(param3);
@@ -955,6 +958,10 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 		if(params3 != NULL)
 			param3 = params3[len - (i + 1)];
 
+		if(id_prefix && arancino_id_prefix && param1 == NULL){
+			strcat(params2Pointer, id);
+			strcat(params2Pointer, ID_SEPARATOR);
+		}	
 		strcat(params2Pointer, param2);
 
 		if (i == len - 1) { // If it's the last key we have to use #(\4) instead of %(\16)

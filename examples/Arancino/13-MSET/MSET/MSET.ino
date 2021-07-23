@@ -50,10 +50,6 @@ ArancinoMetadata amdata = {
   .tzoffset = "+1000"
 };
 
-//FreeRtos
-TaskHandle_t loopTaskHandle;
-void loopTask(void *pvParameters);
-
 char* keys[] = {"EX_13_1_foo1", "EX_13_1_foo2", "EX_13_1_foo3"};
 char* values[] = {"value1", "value2", "value3"};
 
@@ -62,7 +58,6 @@ void setup(){
   Serial.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
 
   ArancinoPacket apckt = Arancino.mset(keys, values, 3);
 

@@ -55,8 +55,6 @@ void setup() {
   Arancino.begin(amdata);
   xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
 
-  Arancino.set("num",num_client);
-
   //int
   char* channel2 = "EX_12_1_channel2";
   int message2 = 123;
@@ -84,7 +82,7 @@ void loopTask(void *pvParameters) {
     int num_client = Arancino.publish(channel1, message1);
 
     Serial.print("message received by ");
-    Serial.print(value);
+    Serial.print(num_client);
     Serial.println(" clients");
     vTaskDelay(10000);
   }

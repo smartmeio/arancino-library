@@ -49,7 +49,7 @@ void loopTask(void *pvParameters);
 void setup() {
 
   Serial.begin(115200);
-  Arancino.begin(amdata,acfg);
+  Arancino.begin(amdata);
   //create a task for loop
   xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
   Arancino.startScheduler();

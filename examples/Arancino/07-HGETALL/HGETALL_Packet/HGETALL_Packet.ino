@@ -58,7 +58,7 @@ void setup() {
   Arancino.startScheduler();
 }
 
-void loop{
+void loop(){
   //empty
 }
 

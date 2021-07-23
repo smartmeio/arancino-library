@@ -46,7 +46,7 @@ void setup() {
 
   Serial.begin(115200);
 
-  Arancino.begin(amdata,acfg);
+  Arancino.begin(amdata);
   xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
 
   Arancino.hset("EX_09_1_foo", "bar", "yeah");
