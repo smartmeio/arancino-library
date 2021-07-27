@@ -44,7 +44,7 @@ class ArancinoConfig{
 			Is a time period which a sent command can waits for the response.
 				It's expressed in milliseconds.
 		*/
-		int SERIAL_TIMEOUT = 100;
+		int SERIAL_TIMEOUT = 500;
 		int _TIMEOUT = TIMEOUT;	//Deprecated
 
 

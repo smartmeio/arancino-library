@@ -703,7 +703,14 @@ void * ArancinoClass::calloc (size_t nmemb, size_t _size)
     /* Call the FreeRTOS version of malloc. */
 	#if defined(USEFREERTOS)
 		#if defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
-		return malloc(nmemb*(_size));
+		uint8_t *ptr=(uint8_t *)malloc(nmemb*(_size));
+		//clear the buffer,hopefully fix the mstore,mset... 203 error bug
+		for (uint32_t i = 0; i < nmemb; i++) 
+	  	{	 
+			ptr[i] = 0; 
+		} 
+		//end fix
+		return ptr;
         	#else
 		return pvPortCalloc(nmemb, _size);
 		#endif
@@ -927,6 +934,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	}
 
 	char* str = (char*) calloc(strLength, sizeof(char));
+	
 	strcpy(str, command);
 	if(param1 != NULL){
 		strcat(str, dataSplitStr);
@@ -998,11 +1006,15 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	#endif
 
 	taskSuspend();
-
+	
+        
 	_sendArancinoCommand(str);
+ 
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
+	
 
 	taskResume();
+ 
 
 	free(str);
 
@@ -1034,6 +1046,8 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	int strLength = commandLength + 1 + param1_length + 1 + param2_length + 1 + param3_length + 1 + 1;
 
 	char* str = (char *)calloc(strLength, sizeof(char));
+	
+	
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
@@ -1060,12 +1074,12 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	strcat(str, endTXStr);
 
 	taskSuspend();
-
+	
 	_sendArancinoCommand(str);
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
 
 	taskResume();
-
+        
 	free(str);
 
 	//parse response

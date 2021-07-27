@@ -80,9 +80,10 @@ void ArancinoTasks::interoception(void *pvPramaters){
     char temp_key[]="TEMP";
     char* keys[] = {mem_free_key,mem_used_key,mem_tot_key,temp_key};
     char* values[] = {mem_free,mem_used,mem_tot,temp};
+    //char* values[] = {"1","1","1","1"};
     ArancinoPacket acpkt = Arancino.mstore<ArancinoPacket>(keys,values,4);
     Arancino.free(acpkt);
-    vTaskDelay(60000); //wait 60 seconds (non-blocking delay)
+    vTaskDelay(1000); //wait 60 seconds (non-blocking delay)
   }
 
 }
