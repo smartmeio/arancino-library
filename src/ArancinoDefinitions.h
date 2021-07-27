@@ -24,8 +24,7 @@ under the License
 #define TIMEOUT 100
 #define SERIAL_PORT SerialUSB
 #else
-#define BAUDRATE 4000000
-//ex256000
+#define BAUDRATE 256000
 #define TIMEOUT 10000
 #define SERIAL_PORT Serial
 #endif
