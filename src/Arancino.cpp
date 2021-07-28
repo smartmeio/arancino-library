@@ -704,12 +704,7 @@ void * ArancinoClass::calloc (size_t nmemb, size_t _size)
 	#if defined(USEFREERTOS)
 		#if defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
 		uint8_t *ptr=(uint8_t *)malloc(nmemb*(_size));
-		//clear the buffer,hopefully fix the mstore,mset... 203 error bug
-		for (uint32_t i = 0; i < nmemb; i++) 
-	  	{	 
-			ptr[i] = 0; 
-		} 
-		//end fix
+		memset(ptr,0,nmemb);//clear the buffer #pte4c0
 		return ptr;
         	#else
 		return pvPortCalloc(nmemb, _size);
