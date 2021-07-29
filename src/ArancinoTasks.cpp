@@ -23,7 +23,7 @@ under the License
 #include <TemperatureZero.h>
 #endif
 #include <avr/dtostrf.h>
-#if defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
+#if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
 #include "stm32yyxx_ll_adc.h"
 #define CALX_TEMP 25
 #define LL_ADC_RESOLUTION LL_ADC_RESOLUTION_12B
@@ -94,7 +94,7 @@ float ArancinoTasks::mcuTemp(){
   return tempZero.readInternalTemperature();
 }
 
-#elif defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
+#elif defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
 
 
 float ArancinoTasks::mcuTemp(){

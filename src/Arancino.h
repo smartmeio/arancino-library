@@ -41,7 +41,7 @@ extern "C" {
 #include <FreeRTOS_SAMD21.h>
 }
 
-#elif defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI) 
+#elif defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
 
 extern "C" {
 #include <STM32FreeRTOS.h>

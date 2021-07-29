@@ -28,7 +28,7 @@ under the License
 #define TIMEOUT 10000
 #define SERIAL_PORT Serial
 #endif
-#if defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
+#if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
 #define ARANCINO_CORE_VERSION (char*)"2.0.0"
 #endif
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)

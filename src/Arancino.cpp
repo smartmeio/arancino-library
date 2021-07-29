@@ -702,7 +702,7 @@ void * ArancinoClass::calloc (size_t nmemb, size_t _size)
 {
     /* Call the FreeRTOS version of malloc. */
 	#if defined(USEFREERTOS)
-		#if defined (ARDUINO_ArancinoV12_H743ZI2)|| defined (ARDUINO_ArancinoV12_H743ZI)
+		#if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
 		uint8_t *ptr=(uint8_t *)malloc(nmemb*(_size));
 		memset(ptr,0,nmemb);//clear the buffer #pte4c0
 		return ptr;
