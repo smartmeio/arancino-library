@@ -31,7 +31,7 @@ under the License
 
 //#define USEFREERTOS
 #if defined(USEFREERTOS)
-#if defined(__SAMD21G18A__) 
+#if defined(__SAMD21G18A__)
 
 	// #if !defined(__MEM_WRAP__)
 	// 	#error You are using Arancino Library, please select Menu -> Tools -> Using Arancino Library?: Yes
@@ -46,7 +46,12 @@ extern "C" {
 extern "C" {
 #include <STM32FreeRTOS.h>
 }
+#elif defined (ARDUINO_ARANCINO_VOLANTE)
+//need to serial
+#include <Adafruit_TinyUSB.h>
 #endif
+
+
 #endif//end USEFREERTOS
 //Power Mode
 enum POWER_MODE {
@@ -107,7 +112,7 @@ class ArancinoClass {
 		//GET
 		template<class T = char*> T get(char* key);
 
-		//GETRESERVED 
+		//GETRESERVED
 		char* getModuleVersion();
 		char* getModuleLogLevel();
 		char* getBlinkId();
@@ -176,7 +181,7 @@ class ArancinoClass {
 		void free(char** _array);
 		void free(ArancinoPacket packet);
 		void * calloc(size_t nmemb, size_t _size);
-		void * malloc(size_t size); 
+		void * malloc(size_t size);
 
 		//PRINT
 		void print(String value);
@@ -225,7 +230,7 @@ class ArancinoClass {
 		};
 
 		//START
-		void start(char** keys, char** values, int len); 
+		void start(char** keys, char** values, int len);
 
 		//API WRAPPED
 		void _freeArray(char** _array);
@@ -234,7 +239,7 @@ class ArancinoClass {
 		ArancinoPacket __set(char* key, char* value, bool isPersistent);
 		ArancinoPacket __publish(char* channel, char* msg);
 		ArancinoPacket __store(char* key, char* value);
-		
+
 		template<class T = char*> T getReserved(char* key);
 		ArancinoPacket setReserved( char* key, char* value);
 

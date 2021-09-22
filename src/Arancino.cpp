@@ -130,7 +130,10 @@ void ArancinoClass::startScheduler() {
 	 * Uncomment this if you want run loop() as a dedicated task.
 	 * If loop() doesn't run as dedicated task, should not contain blocking code.
 	 */
+	//task started in main.c (core) 
+	#if !defined (ARDUINO_ARANCINO_VOLANTE)
 	vTaskStartScheduler();
+	#endif
 }
 #endif
 
@@ -702,7 +705,7 @@ void * ArancinoClass::calloc (size_t nmemb, size_t _size)
 {
     /* Call the FreeRTOS version of malloc. */
 	#if defined(USEFREERTOS)
-		#if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
+		#if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2) || defined (ARDUINO_ARANCINO_VOLANTE)
 		uint8_t *ptr=(uint8_t *)malloc(nmemb*(_size));
 		memset(ptr,0,nmemb);//clear the buffer #pte4c0
 		return ptr;
@@ -929,7 +932,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	}
 
 	char* str = (char*) calloc(strLength, sizeof(char));
-	
+
 	strcpy(str, command);
 	if(param1 != NULL){
 		strcat(str, dataSplitStr);
@@ -964,7 +967,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 		if(id_prefix && arancino_id_prefix && param1 == NULL){
 			strcat(params2Pointer, id);
 			strcat(params2Pointer, ID_SEPARATOR);
-		}	
+		}
 		strcat(params2Pointer, param2);
 
 		if (i == len - 1) { // If it's the last key we have to use #(\4) instead of %(\16)
@@ -1001,15 +1004,15 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	#endif
 
 	taskSuspend();
-	
-        
+
+
 	_sendArancinoCommand(str);
- 
+
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
-	
+
 
 	taskResume();
- 
+
 
 	free(str);
 
@@ -1041,8 +1044,8 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	int strLength = commandLength + 1 + param1_length + 1 + param2_length + 1 + param3_length + 1 + 1;
 
 	char* str = (char *)calloc(strLength, sizeof(char));
-	
-	
+
+
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
@@ -1069,12 +1072,12 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	strcat(str, endTXStr);
 
 	taskSuspend();
-	
+
 	_sendArancinoCommand(str);
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
 
 	taskResume();
-        
+
 	free(str);
 
 	//parse response
