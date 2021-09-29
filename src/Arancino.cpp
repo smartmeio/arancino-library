@@ -88,8 +88,8 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	#if defined(USEFREERTOS)
 	//TASK
 	ArancinoTasks _atask;
-	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, 9, &arancinoHandle1);
-	xTaskCreate(_atask.interoception, "interoception", 256, NULL, 1, &arancinoHandle2);
+	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
+	xTaskCreate(_atask.interoception, "interoception", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle2);
 	#endif
 }
 
@@ -130,7 +130,7 @@ void ArancinoClass::startScheduler() {
 	 * Uncomment this if you want run loop() as a dedicated task.
 	 * If loop() doesn't run as dedicated task, should not contain blocking code.
 	 */
-	//task started in main.c (core) 
+	//task started in main.c (core)
 	#if !defined (ARDUINO_ARANCINO_VOLANTE)
 	vTaskStartScheduler();
 	#endif
