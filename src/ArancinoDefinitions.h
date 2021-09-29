@@ -23,10 +23,12 @@ under the License
 #define BAUDRATE 4000000
 #define TIMEOUT 100
 #define SERIAL_PORT SerialUSB
+#define SERIAL_DEBUG Serial
 #else
 #define BAUDRATE 256000
 #define TIMEOUT 10000
 #define SERIAL_PORT Serial
+#define SERIAL_DEBUG Serial1
 #endif
 #if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
 #define ARANCINO_CORE_VERSION (char*)"2.0.0"
