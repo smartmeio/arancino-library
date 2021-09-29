@@ -59,10 +59,10 @@ char* keys[] = {"EX_14_2_foo1", "EX_14_2_foo2", "EX_14_2_foo3"};
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.set("EX_14_2_foo1", "a");
   Arancino.set("EX_14_2_foo2", "b");
@@ -83,22 +83,22 @@ void loopTask(void *pvParameters) {
 
     if (!apckt.isError)
     {
-      Serial.println("MGET OK");
-      Serial.print("Response code: ");
-      Serial.println(apckt.responseCode);
-      Serial.print("Response type: ");
-      Serial.println(apckt.responseType);
+      SERIAL_DEBUG.println("MGET OK");
+      SERIAL_DEBUG.print("Response code: ");
+      SERIAL_DEBUG.println(apckt.responseCode);
+      SERIAL_DEBUG.print("Response type: ");
+      SERIAL_DEBUG.println(apckt.responseType);
 
       for(int i = 0; i < Arancino.getArraySize(apckt.response.stringArray); i++) {
-        Serial.print(keys[i]);
-        Serial.print(" -> ");
-        Serial.println(apckt.response.stringArray[i]);
+        SERIAL_DEBUG.print(keys[i]);
+        SERIAL_DEBUG.print(" -> ");
+        SERIAL_DEBUG.println(apckt.response.stringArray[i]);
       }
       Arancino.free(apckt); //delete the string from memory
     }
     else
     {
-      Serial.println("MGET ERROR");
+      SERIAL_DEBUG.println("MGET ERROR");
     }
 
     vTaskDelay(5000);

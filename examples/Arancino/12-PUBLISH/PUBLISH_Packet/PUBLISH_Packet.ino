@@ -49,10 +49,10 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
@@ -65,19 +65,19 @@ void loopTask(void *pvParameters) {
   while(1){
     ArancinoPacket apckt = Arancino.publish<ArancinoPacket>("EX_12_2","Hello from Arancino");
     if (!apckt.isError){
-       Serial.println("PUBLISH OK");
-       Serial.print("Response code: ");
-       Serial.println(apckt.responseCode);
-       Serial.print("Response type: ");
-       Serial.println(apckt.responseType);
+       SERIAL_DEBUG.println("PUBLISH OK");
+       SERIAL_DEBUG.print("Response code: ");
+       SERIAL_DEBUG.println(apckt.responseCode);
+       SERIAL_DEBUG.print("Response type: ");
+       SERIAL_DEBUG.println(apckt.responseType);
        int resp = apckt.response.integer;
-       Serial.print("Message sent to ");
-       Serial.print(resp);
-       Serial.println(" clients");
+       SERIAL_DEBUG.print("Message sent to ");
+       SERIAL_DEBUG.print(resp);
+       SERIAL_DEBUG.println(" clients");
        //Message sent to 0 client
      }
      else{
-       Serial.println("PUBLISH ERROR");
+       SERIAL_DEBUG.println("PUBLISH ERROR");
      }
 
     Arancino.free(apckt);

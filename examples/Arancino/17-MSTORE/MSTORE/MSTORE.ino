@@ -50,10 +50,10 @@ char* keys[] = {"EX_sample_foo1", "EX_sample_foo2", "EX_sample_foo3"};
 
 void setup(){
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
@@ -81,10 +81,10 @@ void loopTask(void *pvParameters){
     int arraySize = Arancino.getArraySize(timestamps);
 
     for (int i = 0; i < arraySize; i++){
-      Serial.print("timestamp ");
-      Serial.print(keys[i]);
-      Serial.print(" -> ");
-      Serial.println(timestamps[i]);
+      SERIAL_DEBUG.print("timestamp ");
+      SERIAL_DEBUG.print(keys[i]);
+      SERIAL_DEBUG.print(" -> ");
+      SERIAL_DEBUG.println(timestamps[i]);
 
     }
     Arancino.free(timestamps);

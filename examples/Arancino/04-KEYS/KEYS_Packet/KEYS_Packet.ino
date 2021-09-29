@@ -55,9 +55,9 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.set("EX_04_2_pressure", 1023);
   Arancino.set("EX_04_2_humidity", 67.5);
   Arancino.set("EX_04_2_temperature", 24.4);
@@ -78,20 +78,20 @@ void loopTask(void *pvParameters){
 
     if (apckt.isError == 0){
 
-      Serial.println("KEYS OK");
-      Serial.print("Response code: ");
-      Serial.println(apckt.responseCode);
-      Serial.print("Response type: ");
-      Serial.println(apckt.responseType);
+      SERIAL_DEBUG.println("KEYS OK");
+      SERIAL_DEBUG.print("Response code: ");
+      SERIAL_DEBUG.println(apckt.responseCode);
+      SERIAL_DEBUG.print("Response type: ");
+      SERIAL_DEBUG.println(apckt.responseType);
       for (int i = 0; i < Arancino.getArraySize(keys); i++) {
-        Serial.println(keys[i]);
+        SERIAL_DEBUG.println(keys[i]);
       }
       //pressure
       //humidity
       //temperature
     }
     else{
-      Serial.println("KEYS ERROR");
+      SERIAL_DEBUG.println("KEYS ERROR");
     }
 
     Arancino.free(keys); //delete the array from memory
@@ -104,19 +104,19 @@ void loopTask(void *pvParameters){
 
     if (apckt.isError == 0){
 
-      Serial.println("KEYS OK");
-      Serial.print("Response code: ");
-      Serial.println(apckt.responseCode);
-      Serial.print("Response type: ");
-      Serial.println(apckt.responseType);
+      SERIAL_DEBUG.println("KEYS OK");
+      SERIAL_DEBUG.print("Response code: ");
+      SERIAL_DEBUG.println(apckt.responseCode);
+      SERIAL_DEBUG.print("Response type: ");
+      SERIAL_DEBUG.println(apckt.responseType);
       for (int i = 0; i < Arancino.getArraySize(keys); i++) {
-        Serial.println(keys[i]);
+        SERIAL_DEBUG.println(keys[i]);
       }
       // temperature
 
     }
     else{
-      Serial.println("KEYS ERROR");
+      SERIAL_DEBUG.println("KEYS ERROR");
     }
 
     Arancino.free(keys); //delete the array from memory

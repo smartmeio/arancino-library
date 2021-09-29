@@ -46,10 +46,10 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
   Arancino.hset("EX_09_2_foo", "bar", "yeah");
@@ -69,21 +69,21 @@ void loopTask(void *pvParameters) {
 
     if (!apckt.isError){
 
-      Serial.println("HVALS OK");
-      Serial.print("Response code: ");
-      Serial.println(apckt.responseCode);
-      Serial.print("Response type: ");
-      Serial.println(apckt.responseType);
+      SERIAL_DEBUG.println("HVALS OK");
+      SERIAL_DEBUG.print("Response code: ");
+      SERIAL_DEBUG.println(apckt.responseCode);
+      SERIAL_DEBUG.print("Response type: ");
+      SERIAL_DEBUG.println(apckt.responseType);
       for (int i = 0; i < Arancino.getArraySize(values); i++) {
-        Serial.print("EX_09_2_foo -> ");
-        Serial.println(values[i]);
+        SERIAL_DEBUG.print("EX_09_2_foo -> ");
+        SERIAL_DEBUG.println(values[i]);
         // foo -> yeah
         // foo -> whoo
       }
       Arancino.free(values);
     }
     else{
-      Serial.println("HVALS ERROR");
+      SERIAL_DEBUG.println("HVALS ERROR");
     }
 
     Arancino.free(apckt);

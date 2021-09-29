@@ -44,10 +44,10 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.hset("EX_09_1_foo", "bar", "yeah");
   Arancino.hset("EX_09_1_foo", "baz", "whoo");
@@ -64,8 +64,8 @@ void loopTask(void *pvParameters) {
   while(1){
     char** values = Arancino.hvals("EX_09_1_foo");
     for (int i = 0; i < Arancino.getArraySize(values); i++) {
-      Serial.print("EX_09_1_foo -> ");
-      Serial.println(values[i]);
+      SERIAL_DEBUG.print("EX_09_1_foo -> ");
+      SERIAL_DEBUG.println(values[i]);
       // foo -> yeah
       // foo -> whoo
     }

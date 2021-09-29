@@ -43,7 +43,7 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
   Arancino.begin(amdata);
 
   Arancino.set("EX_03_2_foo","bar");
@@ -52,16 +52,16 @@ void setup() {
   
   if (apckt.isError == 0){
 
-    Serial.println("DEL OK");
-    Serial.print("Response code: ");
-    Serial.println(apckt.responseCode);
-    Serial.print("Response type: ");
-    Serial.println(apckt.responseType);
-    Serial.println(apckt.response.integer ? "Key deleted" : "Key not found");
+    SERIAL_DEBUG.println("DEL OK");
+    SERIAL_DEBUG.print("Response code: ");
+    SERIAL_DEBUG.println(apckt.responseCode);
+    SERIAL_DEBUG.print("Response type: ");
+    SERIAL_DEBUG.println(apckt.responseType);
+    SERIAL_DEBUG.println(apckt.response.integer ? "Key deleted" : "Key not found");
     //0
   }
   else{
-    Serial.println("DEL ERROR");    
+    SERIAL_DEBUG.println("DEL ERROR");    
   }
   
   Arancino.free(apckt); //delete packet from memory
@@ -70,16 +70,16 @@ void setup() {
   
   if (apckt.isError == 0){
     
-    Serial.println("DEL OK");
-    Serial.print("Response code: ");
-    Serial.println(apckt.responseCode);
-    Serial.print("Response type: ");
-    Serial.println(apckt.responseType);
-    Serial.println(apckt.response.integer ? "Key deleted" : "Key not found");
+    SERIAL_DEBUG.println("DEL OK");
+    SERIAL_DEBUG.print("Response code: ");
+    SERIAL_DEBUG.println(apckt.responseCode);
+    SERIAL_DEBUG.print("Response type: ");
+    SERIAL_DEBUG.println(apckt.responseType);
+    SERIAL_DEBUG.println(apckt.response.integer ? "Key deleted" : "Key not found");
     //1
   }
   else{
-    Serial.println("DEL ERROR");    
+    SERIAL_DEBUG.println("DEL ERROR");    
   }
   
   Arancino.free(apckt); //delete packet from memory

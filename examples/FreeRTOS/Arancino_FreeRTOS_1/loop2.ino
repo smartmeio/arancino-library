@@ -6,8 +6,8 @@ void loop2(void *pvPramaters)
 
     //gets the value from the 'foo1' key
     char* value = Arancino.get("exrtos_foo1");
-    Serial.print("exrtos_foo1 -> ");
-    Serial.println(value);
+    SERIAL_DEBUG.print("exrtos_foo1 -> ");
+    SERIAL_DEBUG.println(value);
     //foo1 -> baz
     Arancino.free(value);
 

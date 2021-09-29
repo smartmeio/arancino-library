@@ -44,7 +44,7 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
 
@@ -55,14 +55,14 @@ void setup() {
   ArancinoPacket apckt = Arancino.flush();
 
   if (!apckt.isError){
-    Serial.println("FLUSH OK");
-    Serial.print("Response code: ");
-    Serial.println(apckt.responseCode);
-    Serial.print("Response type: ");
-    Serial.println(apckt.responseType);
+    SERIAL_DEBUG.println("FLUSH OK");
+    SERIAL_DEBUG.print("Response code: ");
+    SERIAL_DEBUG.println(apckt.responseCode);
+    SERIAL_DEBUG.print("Response type: ");
+    SERIAL_DEBUG.println(apckt.responseType);
   }
   else{
-    Serial.println("FLUSH ERROR");
+    SERIAL_DEBUG.println("FLUSH ERROR");
   }
 
   Arancino.free(apckt);

@@ -44,9 +44,9 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.hset("EX_07_1_foo", "bar", "yeah");
   Arancino.hset("EX_07_1_foo", "baz", "whoo");
@@ -65,10 +65,10 @@ void loopTask(void *pvParameters){
     int arraySize = Arancino.getArraySize(values);
     for (int i = 0; i < arraySize; i += 2)
     {
-      Serial.print("foo ");
-      Serial.print(values[i]);
-      Serial.print(" = ");
-      Serial.println(values[i + 1]);
+      SERIAL_DEBUG.print("foo ");
+      SERIAL_DEBUG.print(values[i]);
+      SERIAL_DEBUG.print(" = ");
+      SERIAL_DEBUG.println(values[i + 1]);
     }
     Arancino.free(values); //delete the array from memory
 

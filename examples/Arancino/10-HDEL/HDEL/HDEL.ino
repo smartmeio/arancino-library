@@ -49,10 +49,10 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  //xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  //xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.hset("EX_10_1_foo","bar","yeah");
   Arancino.hset("EX_10_1_foo","baz","whoo");
@@ -60,8 +60,8 @@ void setup() {
   int value = Arancino.hdel("EX_10_1_foo","bar"); //return 1
   char* str = Arancino.hget("EX_10_1_foo","bar"); //return NULL
 
-  Serial.print("HGet: ");
-  Serial.println(str);
+  SERIAL_DEBUG.print("HGet: ");
+  SERIAL_DEBUG.println(str);
 
   Arancino.free(str);
   Arancino.startScheduler();

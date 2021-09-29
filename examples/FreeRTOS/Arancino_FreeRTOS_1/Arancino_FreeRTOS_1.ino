@@ -13,7 +13,7 @@ void setup() {
   
   Arancino.begin(amdata);
   pinMode(LED_PIN, OUTPUT);
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
   
   xTaskCreate(loop2,     "Task 1",       256, NULL, tskIDLE_PRIORITY, &task1Handle);
   Arancino.startScheduler();

@@ -47,10 +47,10 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  //xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  //xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.hset("EX_10_2_foo","bar","yeah");
   Arancino.hset("EX_10_2_foo","baz","whoo");
@@ -59,17 +59,17 @@ void setup() {
 
   if (!apckt.isError)
   {
-    Serial.println("HDEL OK");
-    Serial.print("Response code: ");
-    Serial.println(apckt.responseCode);
-    Serial.print("Response type: ");
-    Serial.println(apckt.responseType);
+    SERIAL_DEBUG.println("HDEL OK");
+    SERIAL_DEBUG.print("Response code: ");
+    SERIAL_DEBUG.println(apckt.responseCode);
+    SERIAL_DEBUG.print("Response type: ");
+    SERIAL_DEBUG.println(apckt.responseType);
     int value = apckt.response.integer;
-    Serial.println(value ? "Field removed" : "Field/key not found");
+    SERIAL_DEBUG.println(value ? "Field removed" : "Field/key not found");
   }
   else
   {
-    Serial.println("HDEL ERROR");
+    SERIAL_DEBUG.println("HDEL ERROR");
   }
 
   Arancino.free(apckt);

@@ -48,9 +48,9 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
   Arancino.begin(amdata);
-	xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+	xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.hset("EX_07_02_foo", "bar", "yeah");
   Arancino.hset("EX_07_02_foo", "baz", "whoo");
@@ -69,25 +69,25 @@ void loopTask(void *pvParameters){
 
     if (!apckt.isError){
 
-      Serial.println("HGETALL OK");
-      Serial.print("Response code: ");
-      Serial.println(apckt.responseCode);
-      Serial.print("Response type: ");
-      Serial.println(apckt.responseType);
+      SERIAL_DEBUG.println("HGETALL OK");
+      SERIAL_DEBUG.print("Response code: ");
+      SERIAL_DEBUG.println(apckt.responseCode);
+      SERIAL_DEBUG.print("Response type: ");
+      SERIAL_DEBUG.println(apckt.responseType);
 
       char** values = apckt.response.stringArray;
       int arraySize = Arancino.getArraySize(values);
 
       for (int i = 0; i < arraySize; i += 2){
-        Serial.print("foo ");
-        Serial.print(values[i]);
-        Serial.print(" = ");
-        Serial.println(values[i + 1]);
+        SERIAL_DEBUG.print("foo ");
+        SERIAL_DEBUG.print(values[i]);
+        SERIAL_DEBUG.print(" = ");
+        SERIAL_DEBUG.println(values[i + 1]);
       }
       Arancino.free(values); //delete the array from memory
     }
     else{
-      Serial.print("HGETALL ERROR");
+      SERIAL_DEBUG.print("HGETALL ERROR");
     }
 
     Arancino.free(apckt); //delete the array from memory

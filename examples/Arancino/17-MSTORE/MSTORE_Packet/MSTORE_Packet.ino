@@ -54,10 +54,10 @@ char* keys[] = {"EX_sample_foo1", "EX_sample_foo2", "EX_sample_foo3"};
 
 void setup(){
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
@@ -83,23 +83,23 @@ void loopTask(void *pvParameters){
 
     if (!apckt.isError){
 
-      Serial.println("MSTORE OK");
-      Serial.print("Response code: ");
-      Serial.println(apckt.responseCode);
-      Serial.print("Response type: ");
-      Serial.println(apckt.responseType);
+      SERIAL_DEBUG.println("MSTORE OK");
+      SERIAL_DEBUG.print("Response code: ");
+      SERIAL_DEBUG.println(apckt.responseCode);
+      SERIAL_DEBUG.print("Response type: ");
+      SERIAL_DEBUG.println(apckt.responseType);
 
       char** values = apckt.response.stringArray;
       int arraySize = Arancino.getArraySize(values);
 
       for (int i = 0; i < arraySize; i++){
-        Serial.print(" timestamp ");
-        Serial.print(keys[i]);
-        Serial.print(" -> ");
-        Serial.println(values[0]);
+        SERIAL_DEBUG.print(" timestamp ");
+        SERIAL_DEBUG.print(keys[i]);
+        SERIAL_DEBUG.print(" -> ");
+        SERIAL_DEBUG.println(values[0]);
       }
     }else{
-      Serial.println("MSTORE ERROR");
+      SERIAL_DEBUG.println("MSTORE ERROR");
     }
 
     Arancino.free(apckt);

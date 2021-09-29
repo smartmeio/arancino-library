@@ -46,22 +46,22 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
   Arancino.begin(amdata);
 
   ArancinoPacket apckt = Arancino.hset("EX_05_2_foo", "bar", "yeah");
 
   if (apckt.isError == 0)
   {
-    Serial.println("HSET OK");
-    Serial.print("Response code: ");
-    Serial.println(apckt.responseCode);
-    Serial.print("Response type: ");
-    Serial.println(apckt.responseType);
+    SERIAL_DEBUG.println("HSET OK");
+    SERIAL_DEBUG.print("Response code: ");
+    SERIAL_DEBUG.println(apckt.responseCode);
+    SERIAL_DEBUG.print("Response type: ");
+    SERIAL_DEBUG.println(apckt.responseType);
   }
   else
   {
-    Serial.println("HSET ERROR");
+    SERIAL_DEBUG.println("HSET ERROR");
   }
 
   Arancino.free(apckt);

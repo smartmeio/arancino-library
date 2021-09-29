@@ -54,10 +54,10 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-	xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+	xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.set("EX_04_1_pressure", 1023);
   Arancino.set("EX_04_1_humidity", 67.5);
@@ -75,7 +75,7 @@ void loopTask(void *pvParameters){
 
     char** keys = Arancino.keys();
     for (int i = 0; i < Arancino.getArraySize(keys); i++) {
-      Serial.println(keys[i]);
+      SERIAL_DEBUG.println(keys[i]);
     }
     //pressure
     //humidity
@@ -86,7 +86,7 @@ void loopTask(void *pvParameters){
 
     keys = Arancino.keys("EX_04_1_temp*");  //return all the keys that contains "temp" pattern
     for (int i = 0; i < Arancino.getArraySize(keys) ; i++) {
-      Serial.println(keys[i]);      //temperature
+      SERIAL_DEBUG.println(keys[i]);      //temperature
     }
 
     Arancino.free(keys); //delete the array from memory

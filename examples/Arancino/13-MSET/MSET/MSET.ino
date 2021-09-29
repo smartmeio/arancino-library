@@ -55,7 +55,7 @@ char* values[] = {"value1", "value2", "value3"};
 
 void setup(){
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
 
@@ -63,17 +63,17 @@ void setup(){
 
   if (apckt.isError == 0)
   {
-    Serial.println("MSET OK");
-    Serial.print("Response code: ");
-    Serial.println(apckt.responseCode);
-    Serial.print("Response type: ");
-    Serial.println(apckt.responseType);
-    Serial.print("Response value: ");
-    Serial.println(apckt.response.integer);
+    SERIAL_DEBUG.println("MSET OK");
+    SERIAL_DEBUG.print("Response code: ");
+    SERIAL_DEBUG.println(apckt.responseCode);
+    SERIAL_DEBUG.print("Response type: ");
+    SERIAL_DEBUG.println(apckt.responseType);
+    SERIAL_DEBUG.print("Response value: ");
+    SERIAL_DEBUG.println(apckt.response.integer);
   }
   else
   {
-    Serial.println("MSET ERROR");
+    SERIAL_DEBUG.println("MSET ERROR");
   }
 
   Arancino.free(apckt);

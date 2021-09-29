@@ -48,10 +48,10 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
   Arancino.begin(amdata);
   //create a task for loop
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
@@ -68,20 +68,20 @@ void loopTask(void *pvParameters){
     ArancinoPacket apckt = Arancino.get<ArancinoPacket>("EX_02_2_foo");
     if (!apckt.isError)
     {
-      Serial.println("GET OK");
-      Serial.print("Response code: ");
-      Serial.println(apckt.responseCode);
-      Serial.print("Response type: ");
-      Serial.println(apckt.responseType);
+      SERIAL_DEBUG.println("GET OK");
+      SERIAL_DEBUG.print("Response code: ");
+      SERIAL_DEBUG.println(apckt.responseCode);
+      SERIAL_DEBUG.print("Response type: ");
+      SERIAL_DEBUG.println(apckt.responseType);
 
-      Serial.print("EX_02_2_foo -> ");
-      Serial.println(apckt.response.string);
+      SERIAL_DEBUG.print("EX_02_2_foo -> ");
+      SERIAL_DEBUG.println(apckt.response.string);
       //foo -> bar
 
     }
     else
     {
-      Serial.println("GET ERROR");
+      SERIAL_DEBUG.println("GET ERROR");
     }
 
     Arancino.free(apckt); //delete packet from memory

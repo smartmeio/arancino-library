@@ -49,10 +49,10 @@ TaskHandle_t loopTaskHandle;
 void loopTask(void *pvParameters);
 
 void setup() {
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }
 
@@ -66,8 +66,8 @@ void loopTask(void *pvParameters) {
     char* key1 = "EX_sample_1";
     long sample1 = random(100,400)/36;
     char* timestamp = Arancino.store(key1, sample1);
-    Serial.print("timestamp -> ");
-    Serial.println(timestamp);
+    SERIAL_DEBUG.print("timestamp -> ");
+    SERIAL_DEBUG.println(timestamp);
 
     Arancino.free(timestamp);
 

@@ -52,10 +52,10 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
@@ -72,17 +72,17 @@ void loopTask(void *pvParameters) {
 
     if (apckt.isError == 0)
     {
-      Serial.println("STORE OK");
-      Serial.print("Response code: ");
-      Serial.println(apckt.responseCode);
-      Serial.print("Response type: ");
-      Serial.println(apckt.responseType);
-      Serial.print("foo baz -> ");
-      Serial.println(apckt.response.string);
+      SERIAL_DEBUG.println("STORE OK");
+      SERIAL_DEBUG.print("Response code: ");
+      SERIAL_DEBUG.println(apckt.responseCode);
+      SERIAL_DEBUG.print("Response type: ");
+      SERIAL_DEBUG.println(apckt.responseType);
+      SERIAL_DEBUG.print("foo baz -> ");
+      SERIAL_DEBUG.println(apckt.response.string);
     }
     else
     {
-      Serial.println("STORE ERROR");
+      SERIAL_DEBUG.println("STORE ERROR");
     }
 
     vTaskDelay(2000);

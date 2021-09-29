@@ -48,10 +48,10 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.hset("EX_06_1_foo","bar","yeah");
   Arancino.hset("EX_06_1_foo","baz","whoo");
@@ -67,14 +67,14 @@ void loop(){
 void loopTask(void *pvParameters){
   while(1){
     char* value = Arancino.hget("EX_06_1_foo","bar");
-    Serial.print("foo bar -> ");
-    Serial.println(value);
+    SERIAL_DEBUG.print("foo bar -> ");
+    SERIAL_DEBUG.println(value);
     //foo bar -> yeah
     Arancino.free(value);
 
     value = Arancino.hget("EX_06_1_foo","baz");
-    Serial.print("foo baz -> ");
-    Serial.println(value);
+    SERIAL_DEBUG.print("foo baz -> ");
+    SERIAL_DEBUG.println(value);
     //foo bar -> whoo
     Arancino.free(value);
 

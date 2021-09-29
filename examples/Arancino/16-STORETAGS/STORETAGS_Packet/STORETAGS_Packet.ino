@@ -55,10 +55,10 @@ char* tags[] = {"EX_tags_1", "EX_tags_2", "EX_tags_3"};
 
 
 void setup() {
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }
 
@@ -83,15 +83,15 @@ void loopTask(void *pvParameters) {
 
     if (!apckt.isError)
     {
-        Serial.println("STORETAGS OK");
-        Serial.print("Response code: ");
-        Serial.println(apckt.responseCode);
-        Serial.print("Response type: ");
-        Serial.println(apckt.responseType);
+        SERIAL_DEBUG.println("STORETAGS OK");
+        SERIAL_DEBUG.print("Response code: ");
+        SERIAL_DEBUG.println(apckt.responseCode);
+        SERIAL_DEBUG.print("Response type: ");
+        SERIAL_DEBUG.println(apckt.responseType);
     }
     else
     {
-        Serial.println("STORETAGS ERROR");
+        SERIAL_DEBUG.println("STORETAGS ERROR");
     }
 
     Arancino.free(apckt); //delete the string from memory

@@ -57,10 +57,10 @@ char* keys[] = {"EX_14_1_foo1", "EX_14_1_foo2", "EX_14_1_foo3"};
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.set("EX_14_1_foo1", "a");
   Arancino.set("EX_14_1_foo3", "c");
@@ -79,9 +79,9 @@ void loopTask(void *pvParameters) {
     char** result = Arancino.mget(keys, 3);
 
     for(int i = 0; i < Arancino.getArraySize(result); i++) {
-      Serial.print(keys[i]);
-      Serial.print(" -> ");
-      Serial.println(result[i]);
+      SERIAL_DEBUG.print(keys[i]);
+      SERIAL_DEBUG.print(" -> ");
+      SERIAL_DEBUG.println(result[i]);
     }
 
     Arancino.free(result);

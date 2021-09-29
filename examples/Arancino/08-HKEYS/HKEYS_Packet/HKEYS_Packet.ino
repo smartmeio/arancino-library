@@ -46,10 +46,10 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 0, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.hset("EX_08_2_foo","bar","yeah");
   Arancino.hset("EX_08_2_foo","baz","whoo");
@@ -68,14 +68,14 @@ void loopTask(void *pvParameters) {
     char** fields = apckt.response.stringArray;
     if (!apckt.isError)
     {
-      Serial.println("HKEYS OK");
-      Serial.print("Response code: ");
-      Serial.println(apckt.responseCode);
-      Serial.print("Response type: ");
-      Serial.println(apckt.responseType);
+      SERIAL_DEBUG.println("HKEYS OK");
+      SERIAL_DEBUG.print("Response code: ");
+      SERIAL_DEBUG.println(apckt.responseCode);
+      SERIAL_DEBUG.print("Response type: ");
+      SERIAL_DEBUG.println(apckt.responseType);
       for (int i = 0; i < Arancino.getArraySize(fields); i++) {
-        Serial.print("EX_08_2_foo -> ");
-        Serial.println(fields[i]);
+        SERIAL_DEBUG.print("EX_08_2_foo -> ");
+        SERIAL_DEBUG.println(fields[i]);
         // foo -> bar
         // foo -> baz
       }
@@ -83,7 +83,7 @@ void loopTask(void *pvParameters) {
     }
     else
     {
-      Serial.println("HKEYS ERROR");
+      SERIAL_DEBUG.println("HKEYS ERROR");
     }
 
     Arancino.free(apckt);
