@@ -22,9 +22,9 @@ under the License
 
 class ArancinoConfig{
 	public:
-		
+
 		/*
-			It is intended as the precision number of decimal digits for float and 
+			It is intended as the precision number of decimal digits for float and
 				double data types.
 		*/
 		int DECIMAL_DIGITS = 4;
@@ -33,19 +33,17 @@ class ArancinoConfig{
 
 		/*
 			Attach the Port ID (the ID of the microcontroller) as a prefix of a key name.
-				This is useful when you have multiple Ports connectected using the same 
+				This is useful when you have multiple Ports connectected using the same
 				key name.
 		*/
 		bool USE_PORT_ID_PREFIX_KEY = false;
-		bool _USEID = false; //Deprecated
 
 
-		/*			
+		/*
 			Is a time period which a sent command can waits for the response.
 				It's expressed in milliseconds.
 		*/
-		int SERIAL_TIMEOUT = 100;
-		int _TIMEOUT = TIMEOUT;	//Deprecated
+		int SERIAL_TIMEOUT = TIMEOUT;
 
 
 		/*
@@ -55,7 +53,7 @@ class ArancinoConfig{
 
 
 		/*
-			Sets the default stack size available for the Arduino Loop function when it's managed 
+			Sets the default stack size available for the Arduino Loop function when it's managed
 				as a FreeRTOS Task. 256 Bytes by default.
 		*/
 		int FREERTOS_LOOP_TASK_STACK_SIZE = 256;
