@@ -30,9 +30,7 @@ under the License
 #define SERIAL_PORT Serial
 #define SERIAL_DEBUG Serial1
 #endif
-#if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
-#define ARANCINO_CORE_VERSION (char*)"2.0.0"
-#endif
+
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
 
 #define START_COMMAND			(char*)"START"
