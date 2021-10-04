@@ -43,11 +43,11 @@ void task0(void *pvPramaters)
 
     if (strcmp(_str, "qwe") == 0)
     {
-      str = "asd OK\t\terrCount: " + (String)errorCount + "\t\t- rqst: " + (String)++rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec + "\t\trate (rqst/sec): " + rqstCount / _sec + "\t\theap: " + (String)xPortGetFreeHeapSize();
+      str = "asd OK\t\terrCount: " + (String)errorCount + "\t\t- rqst: " + (String)++rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec + "\t\trate (rqst/sec): " + rqstCount / _sec;
     }
     else
     {
-      str = "ERRORE asd - heap: " + (String)xPortGetFreeHeapSize() + " error: " + (String)++errorCount +  "\trqst: " + (String)rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec;
+      str = "ERRORE asd - error: " + (String)++errorCount +  "\trqst: " + (String)rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec;
     }
     vTaskSuspendAll();
     SERIAL_DEBUG.println(str);
