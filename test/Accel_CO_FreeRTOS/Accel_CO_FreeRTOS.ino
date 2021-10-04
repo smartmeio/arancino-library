@@ -20,7 +20,7 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  Arancino.SERIAL_DEBUG.(amdata);
+  Arancino.begin(amdata);
   pinMode(LED_PIN, OUTPUT);
   SERIAL_DEBUG.begin(115200);
 
