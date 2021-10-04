@@ -1,5 +1,5 @@
 #include <Arancino.h>
-#define LED_PIN 13
+#define LED_BUILTIN 13
 #define DELAY 0
 TaskHandle_t blinkHandle;
 TaskHandle_t task0Handle, task1Handle, task2Handle;
@@ -15,9 +15,9 @@ void blink(void *pvPramaters)
 {
   while (1)
   {
-    digitalWrite(LED_PIN, HIGH);
+    digitalWrite(LED_BUILTIN, HIGH);
     vTaskDelay(1000);
-    digitalWrite(LED_PIN, LOW);
+    digitalWrite(LED_BUILTIN, LOW);
     vTaskDelay(1000);
   }
 }
@@ -138,7 +138,7 @@ void task2(void *pvPramaters)
 void setup() {
 
   Arancino.begin(amdata);
-  pinMode(LED_PIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
   SERIAL_DEBUG.begin(115200);
   SERIAL_DEBUG.println(sizeof(char));
   delay(1000);
