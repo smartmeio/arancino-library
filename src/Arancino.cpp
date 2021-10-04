@@ -1657,8 +1657,6 @@ void ArancinoClass::Mqtt::arancinoConnect(){
 
 	while (!Arancino.MQTT.connected()){
 		if (Arancino.MQTT.connect(Arancino.MQTT._uniqueName)){
-			//lmao - Test purpose
-			Arancino.MQTT.publish("isConnected", "yep");
 			Arancino.MQTT.subscribe(Arancino.MQTT.getTopic(true));
 		} else {
 			// Wait 5 seconds before retrying

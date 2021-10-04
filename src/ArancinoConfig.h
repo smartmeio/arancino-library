@@ -47,5 +47,8 @@ class ArancinoConfig{
 		bool USE_PORT_ID_PREFIX_KEY = false;
 		int SERIAL_TIMEOUT = 100;		//timeout 100 ms
 		int DECIMAL_DIGITS = 4;			//4 decimal digits (float and double type)
+
+		#if defined(ARANCINOMQTT)
 		MqttConfig* mqttConfig;
+		#endif
 };

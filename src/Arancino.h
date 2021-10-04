@@ -44,10 +44,6 @@ extern "C" {
 }
 #endif
 
-
-
-
-
 //RESERVED KEYS ARRAY DEF
 #define RESERVED_KEY_ARRAY_SIZE 4   // Array dimension of Reserved Keys
 
@@ -94,8 +90,6 @@ typedef struct {
 	char* fwversion;
 	char* tzoffset;
 } ArancinoMetadata;
-
-
 
 
 
