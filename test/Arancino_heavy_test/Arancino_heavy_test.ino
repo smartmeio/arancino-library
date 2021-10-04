@@ -83,11 +83,11 @@ void task1(void *pvPramaters)
     if ((strcmp(values[0], "bar") == 0 && strcmp(values[1], "yeah") == 0 && strcmp(values[2], "baz") == 0 && strcmp(values[3], "whoo") == 0) ||
         (strcmp(values[0], "baz") == 0 && strcmp(values[1], "whoo") == 0 && strcmp(values[2], "bar") == 0 && strcmp(values[3], "yeah") == 0))
     {
-      str = "HGET OK\t\terrCount: " + (String)errorCount + "\t\t- rqst: " + (String)++rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec + "\t\trate (rqst/sec): " + rqstCount / _sec + "\t\theap: " + (String)xPortGetFreeHeapSize();
+      str = "HGET OK\t\terrCount: " + (String)errorCount + "\t\t- rqst: " + (String)++rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec + "\t\trate (rqst/sec): " + rqstCount / _sec;
     }
     else
     {
-      str = "ERRORE HGET - heap: " + (String)xPortGetFreeHeapSize() + " error: " + (String)++errorCount +  "\trqst: " + (String)rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec;
+      str = "ERRORE HGET - error: " + (String)++errorCount +  "\trqst: " + (String)rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec;
     }
     vTaskSuspendAll();
     SERIAL_DEBUG.println(str);
@@ -120,11 +120,11 @@ void task2(void *pvPramaters)
 
     if (strcmp(_str, "pop") == 0)
     {
-      str = "pip OK\t\terrCount: " + (String)errorCount + "\t\t- rqst: " + (String)++rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec + "\t\trate (rqst/sec): " + rqstCount / _sec + "\t\theap: " + (String)xPortGetFreeHeapSize();
+      str = "pip OK\t\terrCount: " + (String)errorCount + "\t\t- rqst: " + (String)++rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec + "\t\trate (rqst/sec): " + rqstCount / _sec;
     }
     else
     {
-      str = "ERRORE pip\t\theap: " + (String)xPortGetFreeHeapSize() + "\t\terror: " + (String)++errorCount + "\trqst: " + (String)rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec;
+      str = "ERRORE pip\t\terror: " + (String)++errorCount + "\trqst: " + (String)rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec;
     }
     vTaskSuspendAll();
     SERIAL_DEBUG.println(str);
@@ -161,7 +161,4 @@ void loop() {
   //delay(300);
   //free(_str);
   //delay(300);
-  String str = "free memory: " + (String)xPortGetFreeHeapSize();
-  SERIAL_DEBUG.println(str);
-  delay(1000);
 }
