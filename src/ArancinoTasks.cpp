@@ -41,8 +41,7 @@ void ArancinoTasks::deviceIdentification(void *pvPramaters){
   while (1)
   {
     char* value = Arancino.getBlinkId();
-    int val = atoi(value);
-    if(val){
+    if(!strcmp(value,"1")){
         for(int i=0;i < 20; i++){
             #if defined (ARDUINO_ARANCINO_VOLANTE)
             digitalWrite(LED_BUILTIN,LOW);
