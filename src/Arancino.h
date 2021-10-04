@@ -33,6 +33,7 @@ under the License
 
 
 //#define USEFREERTOS
+
 #if defined(__SAMD21G18A__) && defined(USEFREERTOS)
 
 	// #if !defined(__MEM_WRAP__)
@@ -43,6 +44,7 @@ extern "C" {
 #include <FreeRTOS_SAMD21.h>
 }
 #endif
+
 
 //RESERVED KEYS ARRAY DEF
 #define RESERVED_KEY_ARRAY_SIZE 4   // Array dimension of Reserved Keys
@@ -90,6 +92,8 @@ typedef struct {
 	char* fwversion;
 	char* tzoffset;
 } ArancinoMetadata;
+
+
 
 
 
@@ -229,6 +233,28 @@ class ArancinoClass {
 
 		//TEMPLATE TEST
 		//template<class T = char*> T ArancinoGet(char* key);
+
+		#if defined(ARANCINOMQTT)
+
+		class Mqtt : public PubSubClient
+		{
+			public:
+			//Constructor
+			
+			void setDefault(ArancinoConfig aconfig);
+			void arancinoConnect();
+			char* inputBuffer;
+			bool newIncomingMessage = false;
+			char* getTopic(bool isIn);
+
+			private:
+			char* _uniqueName;
+			static void _arancinoCallback(char* topic, byte* payload, unsigned int lenght);
+		};
+
+		Mqtt MQTT;
+
+		#endif /* ARANCINOMQTT */
 
 
 	private:

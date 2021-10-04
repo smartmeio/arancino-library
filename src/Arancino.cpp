@@ -78,8 +78,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, bool useid, int timeout) {
 }
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
+	
+	// SERIAL_PORT.setTimeout(TIMEOUT);
 	// arancino_id_prefix = false;
-
 	#if defined(ARANCINOMQTT)
 	Arancino.MQTT.setDefault(_acfg);
 	Arancino.MQTT.arancinoConnect();
@@ -1637,10 +1638,11 @@ int ArancinoClass::getArraySize(String* _array) {
 }
 
 
-
 /******** INTERNAL UTILS :: MQTT *********/
-
 #if defined(ARANCINOMQTT)
+
+//Arancino library is currently master branch. Here calloc is defined as non member function of ArancinoClass
+//remember to call it as parent.calloc inside dev branch (object is already designed for that)
 
 void ArancinoClass::Mqtt::setDefault(ArancinoConfig aconfig){
 	// Configure MQTT client 
@@ -1657,6 +1659,8 @@ void ArancinoClass::Mqtt::arancinoConnect(){
 
 	while (!Arancino.MQTT.connected()){
 		if (Arancino.MQTT.connect(Arancino.MQTT._uniqueName)){
+			//lmao - Test purpose
+			Arancino.MQTT.publish("isConnected", "yep");
 			Arancino.MQTT.subscribe(Arancino.MQTT.getTopic(true));
 		} else {
 			// Wait 5 seconds before retrying
@@ -1719,6 +1723,8 @@ char* ArancinoClass::_receiveArancinoResponse(char terminator){
 }
 
 #else
+
+/******** INTERNAL UTILS :: FREE *********/
 
 void ArancinoClass::_sendArancinoCommand(char* command) {
 	//check communication timeout with arancino module
