@@ -592,7 +592,7 @@ Set the *message* as a *value* for the reserved *key* `___MONITOR___`. To do tha
 void setup() {
 
   Arancino.begin();
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
 }
 
@@ -625,7 +625,7 @@ int reply: string count.
 #include <Arancino.h>
 
 void setup() {
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
   Arancino.begin();
 
   Arancino.set("exgetarraysize_pressure",1023);
@@ -637,8 +637,8 @@ void setup() {
 void loop() {
   char** key = Arancino.keys();
   int count = Arancino.getArraySize(key);
-  Serial.print("Key count: ");
-  Serial.println(count);
+  SERIAL_DEBUG.print("Key count: ");
+  SERIAL_DEBUG.println(count);
   Arancino.free(key);
 }
 ```
@@ -660,7 +660,7 @@ frees the memory used by a `char*` string, `char**` array string, or by an Aranc
 #include <Arancino.h>
 
 void setup() {
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
   Arancino.begin();
 
   Arancino.set("exfree_foo", "bar");
@@ -699,7 +699,7 @@ Check if the string is valid and correct for the utf-8 standard.
 #include <Arancino.h>
 
 void setup() {
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
   Arancino.begin();
 }
 
@@ -986,7 +986,7 @@ void loop2(void *pvPramaters)
 }
 
 void setup() {
-	Serial.begin(115200);
+	SERIAL_DEBUG.begin(115200);
   Arancino.begin();
   pinMode(LED_BUILTIN, OUTPUT);
   xTaskCreate(loop2,     "Loop 2",       256, NULL, tskIDLE_PRIORITY, &loop2Handle);

@@ -28,7 +28,7 @@ under the License
  #include <Arancino.h>
 
  #define redPin 12
- #define greenPin 
+ #define greenPin 9
  #define bluePin 24
 
 //FreeRtos
@@ -37,7 +37,7 @@ TaskHandle_t loopTaskHandle;
 ArancinoMetadata amdata = {
   .fwname = "CS.2 - Smart_Light",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 char* keys[] = {"CS_2-Red", "CS_2-Green", "CS_2-Blue"};

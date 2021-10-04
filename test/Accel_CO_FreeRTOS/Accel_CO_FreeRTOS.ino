@@ -15,15 +15,15 @@
 ArancinoMetadata amdata = {
   .fwname = "Accel CO w/ FreeRTOS",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
-  
-  Arancino.begin(amdata);
+
+  Arancino.SERIAL_DEBUG.(amdata);
   pinMode(LED_PIN, OUTPUT);
-  Serial.begin(115200);
-  
+  SERIAL_DEBUG.begin(115200);
+
   Arancino.flush();
   Arancino.set("CO", 0);
 
@@ -41,9 +41,9 @@ void setup() {
 
 void loop() {
   String mem = "free memory: " + (String)xPortGetFreeHeapSize();
-  Serial.println(mem);
+  SERIAL_DEBUG.println(mem);
   digitalWrite(LED_PIN, (millis() / 1000) % 2);
-  
+
   delay(200);
 
 }

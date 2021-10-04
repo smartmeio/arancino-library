@@ -42,9 +42,6 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
-non è samd21
-#define Serial Serial1
-
 ArancinoMetadata amdata = {
   .fwname = "01.2 - Set w/ Packet Example",
   .fwversion = "1.0.1",
@@ -53,7 +50,7 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  Serial.begin(115200);
+  SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
 
@@ -61,17 +58,17 @@ void setup() {
 
   if (apckt.isError == 0){
 
-    Serial.println("SET OK");
-    Serial.print("Response code: ");
-    Serial.println(apckt.responseCode);
-    Serial.print("Response type: ");
-    Serial.println(apckt.responseType);
-    Serial.print("Response value: ");
-    Serial.println(apckt.response.integer);
+    SERIAL_DEBUG.println("SET OK");
+    SERIAL_DEBUG.print("Response code: ");
+    SERIAL_DEBUG.println(apckt.responseCode);
+    SERIAL_DEBUG.print("Response type: ");
+    SERIAL_DEBUG.println(apckt.responseType);
+    SERIAL_DEBUG.print("Response value: ");
+    SERIAL_DEBUG.println(apckt.response.integer);
 
   }
   else{
-    Serial.println("SET ERROR");
+    SERIAL_DEBUG.println("SET ERROR");
   }
 
   Arancino.free(apckt); //delete packet from memory

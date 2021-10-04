@@ -7,7 +7,7 @@ TaskHandle_t task0Handle, task1Handle, task2Handle;
 ArancinoMetadata amdata = {
   .fwname = "Heavy Test w/ FreeRTOS",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 
@@ -50,7 +50,7 @@ void task0(void *pvPramaters)
       str = "ERRORE asd - heap: " + (String)xPortGetFreeHeapSize() + " error: " + (String)++errorCount +  "\trqst: " + (String)rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec;
     }
     vTaskSuspendAll();
-    Serial.println(str);
+    SERIAL_DEBUG.println(str);
     xTaskResumeAll();
 
     Arancino.free(_str);
@@ -80,26 +80,6 @@ void task1(void *pvPramaters)
 
     String str;
 
-    /*for (int i = 0; i < Arancino.getArraySize(values); i += 1) {
-      Serial.print(i);
-      Serial.print(" ");
-      Serial.print("len: ");
-      Serial.print(strlen(values[i]));
-      Serial.print(" ");
-      for (int k = 0; k < strlen(values[i]) + 1; k++)
-      {
-        if (values[i][k] < 32)
-        {
-          Serial.print("|");
-          Serial.print(values[i][k], DEC);
-          Serial.print("|");
-        }
-        else
-          Serial.print(values[i][k]);
-      }
-      Serial.println("");
-      }*/
-
     if ((strcmp(values[0], "bar") == 0 && strcmp(values[1], "yeah") == 0 && strcmp(values[2], "baz") == 0 && strcmp(values[3], "whoo") == 0) ||
         (strcmp(values[0], "baz") == 0 && strcmp(values[1], "whoo") == 0 && strcmp(values[2], "bar") == 0 && strcmp(values[3], "yeah") == 0))
     {
@@ -110,7 +90,7 @@ void task1(void *pvPramaters)
       str = "ERRORE HGET - heap: " + (String)xPortGetFreeHeapSize() + " error: " + (String)++errorCount +  "\trqst: " + (String)rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec;
     }
     vTaskSuspendAll();
-    Serial.println(str);
+    SERIAL_DEBUG.println(str);
     xTaskResumeAll();
     Arancino.free(values);
 
@@ -138,20 +118,6 @@ void task2(void *pvPramaters)
     char* _str = temp.response.string;
     char* response = _str;
 
-
-    /*Serial.print("received get: ");
-      for (int i = 0; i < strlen(response); i++)
-      {
-      if (response[i] < 32)
-      {
-        Serial.print("|");
-        Serial.print(response[i], DEC);
-        Serial.print("|");
-      }
-      else
-        Serial.print(response[i]);
-      }
-      Serial.println("");*/
     if (strcmp(_str, "pop") == 0)
     {
       str = "pip OK\t\terrCount: " + (String)errorCount + "\t\t- rqst: " + (String)++rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec + "\t\trate (rqst/sec): " + rqstCount / _sec + "\t\theap: " + (String)xPortGetFreeHeapSize();
@@ -161,7 +127,7 @@ void task2(void *pvPramaters)
       str = "ERRORE pip\t\theap: " + (String)xPortGetFreeHeapSize() + "\t\terror: " + (String)++errorCount + "\trqst: " + (String)rqstCount + "\t\t- time: " + ore + ":" + minut + ":" + sec;
     }
     vTaskSuspendAll();
-    Serial.println(str);
+    SERIAL_DEBUG.println(str);
     xTaskResumeAll();
     Arancino.free(temp);
 
@@ -173,8 +139,8 @@ void setup() {
 
   Arancino.begin(amdata);
   pinMode(LED_PIN, OUTPUT);
-  Serial.begin(115200);
-  Serial.println(sizeof(char));
+  SERIAL_DEBUG.begin(115200);
+  SERIAL_DEBUG.println(sizeof(char));
   delay(1000);
   //Arancino.flush();
   Arancino.hset("foo", "bar", "yeah");
@@ -196,6 +162,6 @@ void loop() {
   //free(_str);
   //delay(300);
   String str = "free memory: " + (String)xPortGetFreeHeapSize();
-  Serial.println(str);
+  SERIAL_DEBUG.println(str);
   delay(1000);
 }
