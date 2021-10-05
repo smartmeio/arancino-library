@@ -94,7 +94,6 @@ void loopTask(void *pvParameters){
       SERIAL_DEBUG.println("KEYS ERROR");
     }
 
-    Arancino.free(keys); //delete the array from memory
     Arancino.free(apckt);
 
     vTaskDelay(1000); //wait 1 seconds
@@ -119,7 +118,6 @@ void loopTask(void *pvParameters){
       SERIAL_DEBUG.println("KEYS ERROR");
     }
 
-    Arancino.free(keys); //delete the array from memory
     Arancino.free(apckt);
     vTaskDelay(1000); //wait 1 seconds
   }

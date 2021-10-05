@@ -79,7 +79,6 @@ void loopTask(void *pvParameters) {
         // foo -> bar
         // foo -> baz
       }
-      Arancino.free(fields);
     }
     else
     {

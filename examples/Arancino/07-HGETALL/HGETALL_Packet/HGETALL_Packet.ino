@@ -84,7 +84,6 @@ void loopTask(void *pvParameters){
         SERIAL_DEBUG.print(" = ");
         SERIAL_DEBUG.println(values[i + 1]);
       }
-      Arancino.free(values); //delete the array from memory
     }
     else{
       SERIAL_DEBUG.print("HGETALL ERROR");

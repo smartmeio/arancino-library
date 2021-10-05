@@ -80,7 +80,6 @@ void loopTask(void *pvParameters) {
         // foo -> yeah
         // foo -> whoo
       }
-      Arancino.free(values);
     }
     else{
       SERIAL_DEBUG.println("HVALS ERROR");
