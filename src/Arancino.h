@@ -246,7 +246,7 @@ class ArancinoClass {
 		//INTERNAL UTILS
 		//void _sendArancinoCommand(String command);
 		void _sendArancinoCommand(char* command);
-		void _sendArancinoCommand(char command);
+		//void _sendArancinoCommand(char command);
 
 		char* _receiveArancinoResponse(char terminator);
 		void _doubleToString(double value, unsigned int _nDecimal, char* str); //truncation!

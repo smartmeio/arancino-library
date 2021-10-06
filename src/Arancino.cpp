@@ -1146,14 +1146,6 @@ void ArancinoClass::_sendArancinoCommand(char* command) {
 	#endif
 }
 
-void ArancinoClass::_sendArancinoCommand(char command) {
-	char* c = (char *)calloc(2, sizeof(char));
-	c[0] = command;
-	c[1] = '\0';
-	_sendArancinoCommand(c);
-	free(c);
-}
-
 /*
  * 'terminator' char is used only for non-freeRTOS implementations.
  * For freeRTOS implementations is always used END_TX_CHAR as terminator char (see commTask()).
