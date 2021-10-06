@@ -83,8 +83,10 @@ void generateResults(){
   for (int i=0; i<SAMPLES; i++){
     char buff[5];
     itoa(i, buff, 10);
+
+    char* value = Arancino.hget("samples", buff);
     
-    tempValues[i] = atof(Arancino.hget("samples", buff))/1024;  // percentage of input reading
+    tempValues[i] = atof(value)/1024;  // percentage of input reading
     tempValues[i] = tempValues[i] * 5;  // get voltage
     tempValues[i] = tempValues[i] - 0.5;  // subtract the offset
     tempValues[i] = tempValues[i]  * 100;  // convert to degrees
@@ -103,6 +105,7 @@ void generateResults(){
   float stdDev = sqrt(sqDevSum/SAMPLES);
 
   // Save generated results alongside their timestamp
+  Arancino.free(value);
   Arancino.store("Means", mean);
   Arancino.store("StdDevs", stdDev);
 }

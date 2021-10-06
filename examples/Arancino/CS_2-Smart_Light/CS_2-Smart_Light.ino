@@ -60,6 +60,7 @@ void loopTask(void *pvParameters){
     char** result = Arancino.mget(keys,3);
     //Set newly fetched values
     setRGBValues(atoi(result[0]), atoi(result[1]), atoi(result[2]));
+    Arancino.free(result);
     vTaskDelay(500);
   }
 }
