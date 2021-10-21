@@ -18,6 +18,9 @@ License for the specific language governing permissions and limitations
 under the License
 */
 
+#ifndef MCU_FAMILY
+#define MCU_FAMILY (char*)"undefined"
+#endif
 
 #if defined(__SAMD21G18A__)
 #define BAUDRATE 4000000
