@@ -94,11 +94,7 @@ class ArancinoClass {
 		/***** API ADVANCED *****/
 
 		//Serial port id
-		#if defined(ARANCINOMQTT)
-		char id[32];
-		#else
-		char id*;
-		#endif //
+		char* id;
 
 		//START SCHEDULER
 		void startScheduler();
@@ -220,7 +216,7 @@ class ArancinoClass {
 			public:
 			void setDefault(ArancinoConfig aconfig);
 			void requestDiscovery();
-			char* inputBuffer;
+			char inputBuffer[255];
 			bool newIncomingMessage = false;
 			char* getTopic(bool isIn);
 

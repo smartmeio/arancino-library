@@ -47,7 +47,8 @@ void ArancinoClass::begin(ArancinoMetadata _amdata) {
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	#if defined(ARANCINOMQTT)
-	MicroID.getUniqueIDString(Arancino.id);
+	Arancino.id = (char*)Arancino.calloc(strlen("AB19587650593054392E3120FF090A34"), sizeof(char));
+	strcpy(Arancino.id, "AB19587650593054392E3120FF090A34");
 	Arancino.MQTT.setDefault(_acfg);
 	Arancino.MQTT.requestDiscovery();
 	#else
@@ -1143,7 +1144,7 @@ void ArancinoClass::Mqtt::requestDiscovery(){
 
 	while (!Arancino.MQTT.connected()){
 		if (Arancino.MQTT.connect(Arancino.id)){
-			Arancino.MQTT.subscribe("arancino/discovery");
+			Arancino.MQTT.subscribe("arancino/discovery_in");
 			Arancino.MQTT.publish("arancino/discovery", Arancino.id);
 
 			int counter = 0;
@@ -1173,19 +1174,8 @@ void ArancinoClass::Mqtt::requestDiscovery(){
 
 void ArancinoClass::Mqtt::_arancinoCallback(char* topic, byte* payload, unsigned int lenght){
 	// This function will be called for every recieved message
-	char* _topic = Arancino.MQTT.getTopic(true);
-
-	//Regular data exchange
-	if ((strcmp(topic, _topic) == 0)){
-		Arancino.MQTT.inputBuffer = (char*)Arancino.calloc(lenght + 1, sizeof(char));
-		for (int i=0; i<lenght; i++){
-			Arancino.MQTT.inputBuffer[i] = (char)payload[i];
-		}
-		Arancino.MQTT.inputBuffer[lenght+1] = END_TX_CHAR;
-		Arancino.MQTT.newIncomingMessage = true;
-
 	//Discovery
-	} else if (strcmp(topic, "arancino/discovery") == 0) {
+	if (strcmp(topic, "arancino/discovery_in") == 0) {
 		for (int i=0; i<lenght; i++){
 			Arancino.MQTT.inputBuffer[i] = (char)payload[i];
 		}
@@ -1193,23 +1183,21 @@ void ArancinoClass::Mqtt::_arancinoCallback(char* topic, byte* payload, unsigned
 			Arancino.MQTT.newIncomingMessage = true;
 		}
 	}
-
-	Arancino.free(_topic);
 }
 
 char* ArancinoClass::Mqtt::getTopic(bool isIn){
 	// Simple topic string generator
 	char* topic = NULL;
 	if (isIn){
-		topic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(Arancino.id) + strlen("rsp_to_mcu"), sizeof(char));
-		strcat(topic, "Arancino_In/");
+		topic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(Arancino.id) + strlen("/rsp_to_mcu"), sizeof(char));
+		strcat(topic, "arancino/cortex/");
 		strcat(topic, Arancino.id);
-		strcat(topic, "rsp_to_mcu");
+		strcat(topic, "/rsp_to_mcu");
 	} else {
-		topic = (char*)Arancino.calloc(strlen("Arancino_Out/") + strlen(Arancino.id) + strlen("rsp_to_mcu"), sizeof(char));
-		strcat(topic, "Arancino_Out/");
+		topic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(Arancino.id) + strlen("/rsp_from_mcu"), sizeof(char));
+		strcat(topic, "arancino/cortex/");
 		strcat(topic, Arancino.id);
-		strcat(topic, "rsp_from_mcu");
+		strcat(topic, "/rsp_from_mcu");
 	}
 
 	return topic;
@@ -1230,7 +1218,7 @@ char* ArancinoClass::_receiveArancinoResponse(char terminator){
 			counter++;
 			delay(10);
 		} else {
-			Arancino.MQTT.inputBuffer = NULL;
+			//Arancino.MQTT.inputBuffer = NULL;
 			break;
 		}
 	}
