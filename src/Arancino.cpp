@@ -1139,7 +1139,7 @@ void ArancinoClass::Mqtt::setDefault(ArancinoConfig aconfig){
 	Arancino.MQTT.setCallback(ArancinoClass::Mqtt::_arancinoCallback);
 }
 
-void ArancinoClass::Mqtt::arancinoRequestDiscovery(){
+void ArancinoClass::Mqtt::requestDiscovery(){
 
 	while (!Arancino.MQTT.connected()){
 		if (Arancino.MQTT.connect(Arancino.id)){
@@ -1147,7 +1147,7 @@ void ArancinoClass::Mqtt::arancinoRequestDiscovery(){
 			Arancino.MQTT.publish("arancino/discovery", Arancino.id);
 
 			int counter = 0;
-			while(Arancino.MQTT.newIncomingMessage){
+			while(!Arancino.MQTT.newIncomingMessage){
 				if (counter < MQTT_RX_RETRIES){
 					Arancino.MQTT.loop();
 					counter++;
@@ -1164,35 +1164,49 @@ void ArancinoClass::Mqtt::arancinoRequestDiscovery(){
 		
 	}
 
-	char* _topic = Arancino.MQTT.getTopic(true)
+	char* _topic = Arancino.MQTT.getTopic(true);
 	Arancino.MQTT.subscribe(_topic);
-	free(_topic);
+	Arancino.free(_topic);
 	Arancino.MQTT.subscribe("arancino/service");
 }
 
 
 void ArancinoClass::Mqtt::_arancinoCallback(char* topic, byte* payload, unsigned int lenght){
 	// This function will be called for every recieved message
-	if ((strcmp(topic, Arancino.MQTT.getTopic(true)) == 0)){
-		Arancino.MQTT.inputBuffer = (char*)calloc(lenght + 1, sizeof(char));
+	char* _topic = Arancino.MQTT.getTopic(true);
+
+	//Regular data exchange
+	if ((strcmp(topic, _topic) == 0)){
+		Arancino.MQTT.inputBuffer = (char*)Arancino.calloc(lenght + 1, sizeof(char));
 		for (int i=0; i<lenght; i++){
 			Arancino.MQTT.inputBuffer[i] = (char)payload[i];
 		}
 		Arancino.MQTT.inputBuffer[lenght+1] = END_TX_CHAR;
 		Arancino.MQTT.newIncomingMessage = true;
+
+	//Discovery
+	} else if (strcmp(topic, "arancino/discovery") == 0) {
+		for (int i=0; i<lenght; i++){
+			Arancino.MQTT.inputBuffer[i] = (char)payload[i];
+		}
+		if (strcmp(Arancino.MQTT.inputBuffer, Arancino.id) == 0){
+			Arancino.MQTT.newIncomingMessage = true;
+		}
 	}
+
+	Arancino.free(_topic);
 }
 
 char* ArancinoClass::Mqtt::getTopic(bool isIn){
 	// Simple topic string generator
 	char* topic = NULL;
 	if (isIn){
-		topic = (char*)calloc(strlen("arancino/cortex/") + strlen(Arancino.id) + strlen("rsp_to_mcu"), sizeof(char));
+		topic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(Arancino.id) + strlen("rsp_to_mcu"), sizeof(char));
 		strcat(topic, "Arancino_In/");
 		strcat(topic, Arancino.id);
 		strcat(topic, "rsp_to_mcu");
 	} else {
-		topic = (char*)calloc(strlen("Arancino_Out/") + strlen(Arancino.id) + strlen("rsp_to_mcu"), sizeof(char));
+		topic = (char*)Arancino.calloc(strlen("Arancino_Out/") + strlen(Arancino.id) + strlen("rsp_to_mcu"), sizeof(char));
 		strcat(topic, "Arancino_Out/");
 		strcat(topic, Arancino.id);
 		strcat(topic, "rsp_from_mcu");
@@ -1202,11 +1216,9 @@ char* ArancinoClass::Mqtt::getTopic(bool isIn){
 }
 
 void ArancinoClass::_sendArancinoCommand(char* command) {
-	Arancino.MQTT.publish(Arancino.MQTT.getTopic(false), command);
-}
-
-void ArancinoClass::_sendArancinoCommand(char command) {
-	Arancino.MQTT.publish(Arancino.MQTT.getTopic(false), &command);
+	char* _topic = Arancino.MQTT.getTopic(true);
+	Arancino.MQTT.publish(_topic, command);
+	Arancino.free(_topic);
 }
 
 char* ArancinoClass::_receiveArancinoResponse(char terminator){
