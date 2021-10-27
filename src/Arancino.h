@@ -21,20 +21,23 @@ under the License
 #ifndef ARANCINO_H_
 #define ARANCINO_H_
 
+#define ARANCINOMQTT
+
 #include <Arduino.h>
 #include <ArancinoDefinitions.h>
 #include <ArancinoConfig.h>
-
 #include <Stream.h>
 #include <stdlib.h>
-#if ! defined(__AVR__)
-#include <avr/dtostrf.h>
+#include <cstdlib>
+#include <type_traits>
+
+#if defined(ARANCINOMQTT)
+#include <MicrocontrollerID.h>
 #endif
 
-
 //#define USEFREERTOS
-
-#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+#if defined(USEFREERTOS)
+#if defined(__SAMD21G18A__)
 
 	// #if !defined(__MEM_WRAP__)
 	// 	#error You are using Arancino Library, please select Menu -> Tools -> Using Arancino Library?: Yes
@@ -43,31 +46,19 @@ under the License
 extern "C" {
 #include <FreeRTOS_SAMD21.h>
 }
+
+#elif defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
+
+extern "C" {
+#include <STM32FreeRTOS.h>
+}
+#elif defined (ARDUINO_ARANCINO_VOLANTE)
+//need to serial
+#include <Adafruit_TinyUSB.h>
 #endif
 
 
-//RESERVED KEYS ARRAY DEF
-#define RESERVED_KEY_ARRAY_SIZE 4   // Array dimension of Reserved Keys
-
-/*
-Reserved keys communication mode
-0 -> SYNC MODE (Default)
-1 -> ASYNC MODE
-2 -> BOTH (SYNC and ASYNC)
-
-to redifine the value in user space, use #define RSVD_COMM <new value> before #include <Arancino.h>
-*/
-// #ifndef RSVD_COMM
-// #define RSVD_COMM 0
-// #endif
-
-//Reserverd Communication Mode
-enum RSVD_COMM_MODE {
-	SYNCH = 0,
-	ASYNCH = 1,
-	BOTH = 2
-};
-
+#endif//end USEFREERTOS
 //Power Mode
 enum POWER_MODE {
 	BATTERY = 0,
@@ -103,32 +94,23 @@ class ArancinoClass {
 		/***** API ADVANCED *****/
 
 		//Serial port id
-		char *id;
+		#if defined(ARANCINOMQTT)
+		char id[32];
+		#else
+		char id*;
+		#endif //
 
 		//START SCHEDULER
 		void startScheduler();
 
-		//SET RESERVED COMMUNICATION MODE
-		void setReservedCommunicationMode(int mode);
-
-
 		/***** API BASIC *****/
-		void metadata(ArancinoMetadata amdata);
 
 		//BEGIN
-		[[deprecated]]
-		void begin(ArancinoMetadata amdata, bool useid = false, int timeout = TIMEOUT );
 		void begin(ArancinoMetadata amdata, ArancinoConfig aconfig);
-		//void begin(ArancinoMetadata amdata);
+		void begin(ArancinoMetadata amdata);
 
 		//MSET
-		ArancinoPacket mset(char** keys, char** values, int len);
-
-		//SET
-		// ArancinoPacket set(char* key, int value);
-		// ArancinoPacket set(char* key, double value);
-		// ArancinoPacket set(char* key, uint32_t value);
-		// ArancinoPacket set(char* key, char* value);
+		ArancinoPacket mset(char** keys, char** values, int len, bool isPersistent = false);
 
 		ArancinoPacket set(char* key, int value, bool isPersistent = false);
 		ArancinoPacket set(char* key, double value, bool isPersistent = false);
@@ -138,80 +120,78 @@ class ArancinoClass {
 		ArancinoPacket set(char* key, uint32_t value, bool isPersistent = false);
 
 		//GET
-		//ArancinoPacket getPacket(char* key);
-		//char* get(char* key);
-		//GET W/ TEMPLATE
 		template<class T = char*> T get(char* key);
 
+		//GETRESERVED
+		char* getModuleVersion();
+		char* getModuleLogLevel();
+		char* getBlinkId();
+
+		//SETRESERVED
+		ArancinoPacket setBlinkId(int value) ;
 
 		//DEL
-		// ArancinoPacket delPacket(char* key);
-		// int del(char* key);
-		//DEL W/ TEMPLATE
 		template<class T = int> T del(char* key);
 
 		//HSET
-		ArancinoPacket hset(char* key, char* field, char* value);
-		ArancinoPacket hset(char* key, char* field, int value);
-		ArancinoPacket hset(char* key, char* field, float value);
-		ArancinoPacket hset(char* key, char* field, double value);
-		ArancinoPacket hset(char* key, char* field, uint32_t value);
-		ArancinoPacket hset(char* key, char* field, long value);
+		ArancinoPacket hset(char* key, char* field, char* value, bool isPersistent = false);
+		ArancinoPacket hset(char* key, char* field, int value, bool isPersistent = false);
+		ArancinoPacket hset(char* key, char* field, float value, bool isPersistent = false);
+		ArancinoPacket hset(char* key, char* field, double value, bool isPersistent = false);
+		ArancinoPacket hset(char* key, char* field, uint32_t value, bool isPersistent = false);
+		ArancinoPacket hset(char* key, char* field, long value, bool isPersistent = false);
 
 		//MGET
 		template<class T = char**> T mget(char** keys, int len);
 
 		//HGET
-		// ArancinoPacket hgetPacket(char* key, char* field);
-		// char* hget(char* key, char* field);
-		//HGET W TEMPALTE
 		template<class T = char*> T hget(char* key, char* field);
 
 		//HGETALL
-		//ArancinoPacket hgetallPacket(char* key);
-		//char** hgetall(char* key);
-		//HGETALL W TEMPALTE
 		template<class T = char**> T hgetall(char* key);
 
 		//HKEYS
-		// ArancinoPacket hkeysPacket(char* key);
-		// char** hkeys(char* key);
-		//HKEYS W TEMPALTE
 		template<class T = char**> T hkeys(char* key);
 
 		//HVALS
-		// ArancinoPacket hvalsPacket(char* key);
-		// char** hvals(char* key);
-		//HVALS W TEMPALTE
 		template<class T = char**> T hvals(char* key);
 
 		//HDEL
-		// ArancinoPacket hdelPacket(char* key, char* field);
-		// int hdel(char* key, char* field);
-		//HDEL W TEMPALTE
 		template<class T = int> T hdel(char* key, char* field);
 
 		//KEYS
-		// ArancinoPacket keysPacket(char* pattern="");
-		// char** keys(char* pattern="");
-		//KEYS W TEMPALTE
 		template<class T = char**> T keys(char* pattern="*");
 
 		//PUBLISH
-		ArancinoPacket publish(char* channel, char* msg);
-		ArancinoPacket publish(char* channel, double msg);
-		ArancinoPacket publish(char* channel, int msg);
-		ArancinoPacket publish(char* channel, uint32_t msg);
-		ArancinoPacket publish(char* channel, long msg);
+		template<class T = int> T publish(char* channel, char* msg);
+		template<class T = int> T publish(char* channel, double msg);
+		template<class T = int> T publish(char* channel, int msg);
+		template<class T = int> T publish(char* channel, uint32_t msg);
+		template<class T = int> T publish(char* channel, long msg);
 
 		//FLUSH
 		ArancinoPacket flush(void);
+
+		//STORE
+		template<class T = char*> T store(char* key, int value);
+		template<class T = char*> T store(char* key, uint32_t value);
+		template<class T = char*> T store(char* key, double value);
+		template<class T = char*> T store(char* key, float value);
+		template<class T = char*> T store(char* key, long value);
+
+		//MSTORE
+		template<class T = char**> T mstore(char** keys, char** values, int len);
+
+		//STORE TAGS
+		ArancinoPacket storetags(char* key, char** tags, char** values, int len);
 
 		/***** API UTILS *****/
 		//FREE
 		void free(char* str);
 		void free(char** _array);
 		void free(ArancinoPacket packet);
+		void * calloc(size_t nmemb, size_t _size);
+		void * malloc(size_t size);
 
 		//PRINT
 		void print(String value);
@@ -227,35 +207,30 @@ class ArancinoClass {
 		//GET ARRAY SIZE
 		int getArraySize(char** _array);
 		int getArraySize(String* _array);
+		//GET ARRAY SIZE
+		char* getTimestamp();
 
 		//CHECK UTF-8
 		bool isValidUTF8(const char * string);
-
-		//TEMPLATE TEST
-		//template<class T = char*> T ArancinoGet(char* key);
 
 		#if defined(ARANCINOMQTT)
 
 		class Mqtt : public PubSubClient
 		{
 			public:
-			//Constructor
-			
 			void setDefault(ArancinoConfig aconfig);
-			void arancinoConnect();
+			void requestDiscovery();
 			char* inputBuffer;
 			bool newIncomingMessage = false;
 			char* getTopic(bool isIn);
 
 			private:
-			char* _uniqueName;
 			static void _arancinoCallback(char* topic, byte* payload, unsigned int lenght);
 		};
 
 		Mqtt MQTT;
 
 		#endif /* ARANCINOMQTT */
-
 
 	private:
 		//void dropAll();
@@ -265,20 +240,26 @@ class ArancinoClass {
 		bool arancino_id_prefix;
 		int decimal_digits;
 		int idSize;
-		char *timestamp;
+		char timestamp[13];
+		unsigned long timestampMillis;
+		unsigned long tmst_sup;
+		unsigned long tmst_inf;
+		unsigned long millis_previous;
 
-		char reservedKey[RESERVED_KEY_ARRAY_SIZE][RESERVED_KEY_MAX_LENGTH]; //max 10 char for key
-		int COMM_MODE = SYNCH;
+		char LOG_LEVEL[10]="INFO";
 		const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
 		const char arraySplitStr[2] = {ARRAY_SPLIT_CHAR, '\0'};
 		const char endTXStr[2] = {END_TX_CHAR, '\0'};
 		const char nullStr[2] = {NULL_CHAR, '\0'};
 
 		ArancinoMetadata _metadata = {
-			"",
-			"",
-			"+0000"
+			(char*)"",
+			(char*)"",
+			(char*)"+0000"
 		};
+
+		//START
+		void start(char** keys, char** values, int len);
 
 		//API WRAPPED
 		void _freeArray(char** _array);
@@ -286,28 +267,36 @@ class ArancinoClass {
 
 		ArancinoPacket __set(char* key, char* value, bool isPersistent);
 		ArancinoPacket __publish(char* channel, char* msg);
+		ArancinoPacket __store(char* key, char* value);
+
+		template<class T = char*> T getReserved(char* key);
+		ArancinoPacket setReserved( char* key, char* value);
 
 		//INTERNAL UTILS
 		//void _sendArancinoCommand(String command);
 		void _sendArancinoCommand(char* command);
-		void _sendArancinoCommand(char command);
+		//void _sendArancinoCommand(char command);
 
 		char* _receiveArancinoResponse(char terminator);
-
-		//bool _isReservedKey(String key);
-		bool _isReservedKey(char* key);
 		void _doubleToString(double value, unsigned int _nDecimal, char* str); //truncation!
 		void _floatToString(float value, unsigned int _nDecimal, char* str);
 		int _getDigit(long value);
 
 		// ArancinoPacket _sendViaCOMM_MODE(char* key, char* value);
-		ArancinoPacket _sendViaCOMM_MODE(char* key, char* value, bool isPersistent = false);
+		void _sendViaCOMM_MODE(char* key, char* value, bool isPersistent = false);
 
 		int _getResponseCode(char* data);
 
 		char* _parse(char* message);
 		char** _parseArray(char* message);
 
+		void taskSuspend();
+		void taskResume();
+
+		//execute command
+		ArancinoPacket executeCommand(char* command_id, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int response_type);
+		ArancinoPacket executeCommand(char* command_id, char* param1, char* param2, char*param3, bool id_prefix, int response_type);
+		ArancinoPacket createArancinoPacket(char* response_raw, int response_type);
 		//TEMPLATE WRAPPED
 		// ArancinoPacket _getPacket(char* key);
 		// char* _get(char* key);

@@ -18,37 +18,73 @@ License for the specific language governing permissions and limitations
 under the License
 */
 
-
 #include <ArancinoDefinitions.h>
 
-#define ARANCINOMQTT
 #if defined(ARANCINOMQTT) && !defined(PUBSUBCLIENT_H_)
 #define PUBSUBCLIENT_H_
 #include <PubSubClient.h>
 #endif
 
-
 class MqttConfig{
 	public:
-	MqttConfig(Client& client, IPAddress broker, int port, char* name)
-		: client(client), broker(broker), port(port), uniqueName(name)
+	MqttConfig(Client& client, IPAddress broker, int port)
+		: client(client), broker(broker), port(port)
 	{}
 
 	Client& client;
 	IPAddress broker;
 	int port;
-	char* uniqueName;
 };
+
 
 class ArancinoConfig{
 	public:
-		bool _USEID = false;
-		int _TIMEOUT = TIMEOUT;
+
+		/*
+			It is intended as the precision number of decimal digits for float and
+				double data types.
+		*/
+		int DECIMAL_DIGITS = 4;
+
+
+
+		/*
+			Attach the Port ID (the ID of the microcontroller) as a prefix of a key name.
+				This is useful when you have multiple Ports connectected using the same
+				key name.
+		*/
 		bool USE_PORT_ID_PREFIX_KEY = false;
-		int SERIAL_TIMEOUT = 100;		//timeout 100 ms
-		int DECIMAL_DIGITS = 4;			//4 decimal digits (float and double type)
+
+
+		/*
+			Is a time period which a sent command can waits for the response.
+				It's expressed in milliseconds.
+		*/
+		int SERIAL_TIMEOUT = TIMEOUT;
+
+
+		/*
+			Enables by default the Arduino Loop function as a FreeRTOS Task.
+		*/
+		bool FREERTOS_LOOP_TASK_ENABLE = false;
+
+
+		/*
+			Sets the default stack size available for the Arduino Loop function when it's managed
+				as a FreeRTOS Task. 256 Bytes by default.
+		*/
+		int FREERTOS_LOOP_TASK_STACK_SIZE = 256;
+
+
+		/*
+			Assignes a priority of the Arduino Loop function when it's managed as a FreeRTOS Task.
+				0 -> Lowest Priority.
+				9 -> Highest Priority.
+		*/
+		int FREERTOS_LOOP_TASK_PRIORITY = 0;
 
 		#if defined(ARANCINOMQTT)
 		MqttConfig* mqttConfig;
 		#endif
+
 };
