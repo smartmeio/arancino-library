@@ -46,9 +46,8 @@ void ArancinoClass::begin(ArancinoMetadata _amdata) {
 }
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
+	MicroID.getUniqueIDString(Arancino.id, 16);
 	#if defined(ARANCINOMQTT)
-	Arancino.id = (char*)Arancino.calloc(strlen("AB19587650593054392E3120FF090A34"), sizeof(char));
-	strcpy(Arancino.id, "AB19587650593054392E3120FF090A34");
 	Arancino.MQTT.setDefault(_acfg);
 	Arancino.MQTT.requestDiscovery();
 	#else
@@ -1138,29 +1137,14 @@ void ArancinoClass::Mqtt::setDefault(ArancinoConfig aconfig){
 	Arancino.MQTT.setClient(aconfig.mqttConfig->client);
 	Arancino.MQTT.setServer(aconfig.mqttConfig->broker, aconfig.mqttConfig->port);
 	Arancino.MQTT.setCallback(ArancinoClass::Mqtt::_arancinoCallback);
+	Arancino.MQTT.setBufferSize(512);
 }
 
 void ArancinoClass::Mqtt::requestDiscovery(){
 
 	while (!Arancino.MQTT.connected()){
 		if (Arancino.MQTT.connect(Arancino.id)){
-			Arancino.MQTT.subscribe("arancino/discovery_in");
 			Arancino.MQTT.publish("arancino/discovery", Arancino.id);
-
-			int counter = 0;
-			while(!Arancino.MQTT.newIncomingMessage){
-				if (counter < MQTT_RX_RETRIES){
-					Arancino.MQTT.loop();
-					counter++;
-					delay(10);
-				} else {
-					Arancino.MQTT.publish("arancino/discovery", Arancino.id);
-					counter=0;
-				}
-			}
-		} else {
-			// Wait 5 seconds before retrying
-			delay(5000);
 		}
 		
 	}
@@ -1172,17 +1156,25 @@ void ArancinoClass::Mqtt::requestDiscovery(){
 }
 
 
-void ArancinoClass::Mqtt::_arancinoCallback(char* topic, byte* payload, unsigned int lenght){
+void ArancinoClass::Mqtt::_arancinoCallback(char* topic, byte* payload, unsigned int length){
 	// This function will be called for every recieved message
 	//Discovery
-	if (strcmp(topic, "arancino/discovery_in") == 0) {
-		for (int i=0; i<lenght; i++){
-			Arancino.MQTT.inputBuffer[i] = (char)payload[i];
-		}
+	Arancino.MQTT.inputBuffer = (char*)Arancino.calloc(length + 1, sizeof(char));
+	for (int i=0; i<length; i++){
+		Arancino.MQTT.inputBuffer[i] = (char)payload[i];
+	}	
+	Arancino.MQTT.inputBuffer[length] = '\0';
+	char* _topic = Arancino.MQTT.getTopic(true);
+
+	if (strcmp(topic, "arancino/service") == 0){					//Reset
 		if (strcmp(Arancino.MQTT.inputBuffer, Arancino.id) == 0){
-			Arancino.MQTT.newIncomingMessage = true;
+			Arancino._systemReset();
 		}
+	} else if (strcmp(topic, _topic) == 0){							//DataIn
+		Arancino.MQTT.inputBuffer[length] = END_TX_CHAR;
+		Arancino.MQTT.newIncomingMessage = true;
 	}
+
 }
 
 char* ArancinoClass::Mqtt::getTopic(bool isIn){
@@ -1204,7 +1196,7 @@ char* ArancinoClass::Mqtt::getTopic(bool isIn){
 }
 
 void ArancinoClass::_sendArancinoCommand(char* command) {
-	char* _topic = Arancino.MQTT.getTopic(true);
+	char* _topic = Arancino.MQTT.getTopic(false);
 	Arancino.MQTT.publish(_topic, command);
 	Arancino.free(_topic);
 }
@@ -1218,8 +1210,7 @@ char* ArancinoClass::_receiveArancinoResponse(char terminator){
 			counter++;
 			delay(10);
 		} else {
-			//Arancino.MQTT.inputBuffer = NULL;
-			break;
+			return NULL;
 		}
 	}
 	Arancino.MQTT.newIncomingMessage = false;
@@ -1509,6 +1500,16 @@ char** ArancinoClass::_parseArray(char* data) {
 	}
 
 	return (data != NULL && arrayParsed != NULL) ? &arrayParsed[1] : NULL;
+}
+
+void ArancinoClass::_systemReset(){
+	#if defined(ARDUINO_ARCH_RP2040)
+	watchdog_reboot(0,0,0);
+	#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_STM32) || defined(ARDUINO_ARCH_NRF52)
+	NVIC_SystemReset();
+	#endif
+
+	//Currently only this devices are supported for reset.
 }
 
 void ArancinoClass::taskSuspend(){

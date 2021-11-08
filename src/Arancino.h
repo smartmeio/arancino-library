@@ -94,7 +94,7 @@ class ArancinoClass {
 		/***** API ADVANCED *****/
 
 		//Serial port id
-		char* id;
+		char id[33];
 
 		//START SCHEDULER
 		void startScheduler();
@@ -216,12 +216,13 @@ class ArancinoClass {
 			public:
 			void setDefault(ArancinoConfig aconfig);
 			void requestDiscovery();
-			char inputBuffer[255];
+			char* inputBuffer;
 			bool newIncomingMessage = false;
 			char* getTopic(bool isIn);
 
 			private:
 			static void _arancinoCallback(char* topic, byte* payload, unsigned int lenght);
+			
 		};
 
 		Mqtt MQTT;
@@ -289,6 +290,7 @@ class ArancinoClass {
 		void taskSuspend();
 		void taskResume();
 
+		void _systemReset();
 		//execute command
 		ArancinoPacket executeCommand(char* command_id, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int response_type);
 		ArancinoPacket executeCommand(char* command_id, char* param1, char* param2, char*param3, bool id_prefix, int response_type);

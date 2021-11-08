@@ -22,7 +22,6 @@ under the License
 
 #define ARANCINOMQTT
 
-
 #if defined(ARANCINOMQTT) && !defined(PUBSUBCLIENT_H_)
 #define PUBSUBCLIENT_H_
 #include <PubSubClient.h>
