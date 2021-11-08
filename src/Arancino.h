@@ -35,6 +35,11 @@ under the License
 #include <MicrocontrollerID.h>
 #endif
 
+//Need this to reset Pico
+#if defined (ARDUINO_ARCH_RP2040)
+#include <hardware/watchdog.h>
+#endif
+
 //#define USEFREERTOS
 #if defined(USEFREERTOS)
 #if defined(__SAMD21G18A__)
@@ -56,7 +61,6 @@ extern "C" {
 //need to serial
 #include <Adafruit_TinyUSB.h>
 #endif
-
 
 #endif//end USEFREERTOS
 //Power Mode
