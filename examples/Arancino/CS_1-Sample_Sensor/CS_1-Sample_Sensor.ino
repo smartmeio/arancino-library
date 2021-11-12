@@ -78,13 +78,14 @@ void sampleData(){
 void generateResults(){
   float tempValues[SAMPLES];
   float mean = 0, sqDevSum = 0;
+  char* value;;
 
   //Convert stored values (analog read) to temperature degrees
   for (int i=0; i<SAMPLES; i++){
     char buff[5];
     itoa(i, buff, 10);
 
-    char* value = Arancino.hget("samples", buff);
+    value = Arancino.hget("samples", buff);
     
     tempValues[i] = atof(value)/1024;  // percentage of input reading
     tempValues[i] = tempValues[i] * 5;  // get voltage
