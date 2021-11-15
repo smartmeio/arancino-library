@@ -98,7 +98,7 @@ class ArancinoClass {
 		/***** API ADVANCED *****/
 
 		//Serial port id
-		char id[33];
+		char* id;
 
 		//START SCHEDULER
 		void startScheduler();
@@ -226,6 +226,8 @@ class ArancinoClass {
 
 			private:
 			static void _arancinoCallback(char* topic, byte* payload, unsigned int lenght);
+			char* _user;
+			char* _pass;
 			
 		};
 
@@ -248,7 +250,6 @@ class ArancinoClass {
 		unsigned long millis_previous;
 
 		char LOG_LEVEL[10]="INFO";
-		const char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
 		const char arraySplitStr[2] = {ARRAY_SPLIT_CHAR, '\0'};
 		const char endTXStr[2] = {END_TX_CHAR, '\0'};
 		const char nullStr[2] = {NULL_CHAR, '\0'};
@@ -294,7 +295,7 @@ class ArancinoClass {
 		void taskSuspend();
 		void taskResume();
 
-		void _systemReset();
+		void systemReset();
 		//execute command
 		ArancinoPacket executeCommand(char* command_id, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int response_type);
 		ArancinoPacket executeCommand(char* command_id, char* param1, char* param2, char*param3, bool id_prefix, int response_type);

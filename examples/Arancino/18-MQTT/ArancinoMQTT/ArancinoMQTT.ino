@@ -34,7 +34,7 @@ under the License
 // Update these with values suitable for your network.
 byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };    //MAC address of ethernet shield
 IPAddress ip(192, 168, 158, 187);   // Static IP Address. You can also use your DHCP server to automatically assign one
-IPAddress server(192, 168, 158, 221);   // Broker IP Address
+char server[] = "192.168.158.221";   // Broker IP Address
 
 EthernetClient ethClient;
 
@@ -52,8 +52,7 @@ void setup()
   delay(1500);
 
   // Declare configurator
-  char* uniqueIdentifier = "arancinoClient";    //This must be unique for every device inside your network
-  MqttConfig mqtt(ethClient, server, 1883, uniqueIdentifier);
+  MqttConfig mqtt(ethClient, server);
   ArancinoConfig aconfig;
   aconfig.mqttConfig = &mqtt;
   Arancino.begin(amdata, aconfig);
@@ -62,6 +61,6 @@ void setup()
 void loop()
 {
   Arancino.set("Test_key", "my_value");
-  Arancino.MQTT.loop();   //Please make sure you are calling this loop function, otherwise some functions may not work as intended
-  delay(300);
+  Arancino.MQTT.loop();   //Please make sure you are calling this inside loop, otherwise some functions may not work as intended
+  delay(500);
 }

@@ -23,6 +23,8 @@ under the License
 
 #define DEBUG 0
 
+#define MCU_FAMILY "SAMD21"
+
 ArancinoPacket reservedKeyErrorPacket = {true, RESERVED_KEY_ERROR, RESERVED_KEY_ERROR, {.string = NULL}}; //default reserved key error packet
 ArancinoPacket communicationErrorPacket = {true, COMMUNICATION_ERROR, COMMUNICATION_ERROR, {.string = NULL}}; //default reserved key error packet
 ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_VALUE_ERROR, {.string = NULL}}; //default reserved key error packet
@@ -46,7 +48,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata) {
 }
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
-	MicroID.getUniqueIDString(Arancino.id, 16);
+	//MicroID.getUniqueIDString(Arancino.id, 16);
 	#if defined(ARANCINOMQTT)
 	Arancino.MQTT.setDefault(_acfg);
 	Arancino.MQTT.requestDiscovery();
@@ -73,21 +75,14 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	strcat(str_build_time, " ");
 	strcat(str_build_time, _metadata.tzoffset);
 
-	char lib_ver[]="LIB_VER";
+	char lib_ver[]="FW_LIB_VER";
 	char fw_name[]="FW_NAME";
 	char fw_ver[]="FW_VER";
 	char fw_build_time[]="FW_BUILD_TIME";
 	char fw_core_ver[]="FW_CORE_VER";
 	char mcu_family[]="MCU_FAMILY";
 	char* keys[] = {lib_ver,fw_name,fw_ver,fw_build_time,fw_core_ver, mcu_family};
-	char* values[] = {LIB_VERSION, _metadata.fwname,_metadata.fwversion,str_build_time,(char*)ARANCINO_CORE_VERSION,(char*)MCU_FAMILY};
-
-	//DEBUG
-	#if defined(__SAMD21G18A__)
-	pinMode(DBG_PIN,INPUT);
-	if(!digitalRead(DBG_PIN))
-		Serial.begin(115200);
-	#endif
+	char* values[] = {LIB_VERSION, _metadata.fwname,_metadata.fwversion,str_build_time,(char*)ARANCINO_CORE_VERSION,MCU_FAMILY};
 
 	start(keys,values,6);
 
@@ -111,11 +106,11 @@ void ArancinoClass::start(char** keys, char** values, int len) {
 		packet = executeCommand(START_COMMAND, NULL, keys, values,NULL, len, false, STRING_ARRAY);
 		if(packet.responseCode == RSP_OK){
 			//store arancino serial port id
-			#if !defined(ARANCINOMQTT)
+			
 			idSize = strlen(packet.response.stringArray[0]);
 			id = (char *)calloc(idSize+1, sizeof(char));
 			memcpy(id,packet.response.stringArray[0],idSize);
-			#endif
+			
 			//timestamp from arancino module
 			memcpy(timestamp, packet.response.stringArray[1],13);
 			char tmst_part[5];
@@ -125,7 +120,7 @@ void ArancinoClass::start(char** keys, char** values, int len) {
 			millis_previous=millis();
 		}
 	}while (packet.isError == true || packet.responseCode != RSP_OK);
-	free(packet);
+	Arancino.free(packet);
 }
 
 #if  defined(USEFREERTOS)
@@ -901,6 +896,7 @@ char* ArancinoClass::getTimestamp() {
 
 ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int type_return){
 	int commandLength = strlen(command);
+	char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
 	int strLength = commandLength + 1;
 	int param1_length = 0;
 	int param4_length = 0;
@@ -1005,13 +1001,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 		strcat(str, param4);
 	}
 	strcat(str, endTXStr);
-
-	#if defined(__SAMD21G18A__)
-		if(!digitalRead(DBG_PIN)){
-			Serial.print(SENT_STRING);
-		}
-	#endif
-
+	
 	taskSuspend();
 
 
@@ -1037,6 +1027,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 
 ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return){
 	int commandLength = strlen(command);
+	char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
 	int param1_length = 0;
 	if(param1 != NULL){
 		param1_length = strlen(param1);
@@ -1053,14 +1044,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	int strLength = commandLength + 1 + param1_length + 1 + param2_length + 1 + param3_length + 1 + 1;
 
 	char* str = (char *)calloc(strLength, sizeof(char));
-
-
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
-
+	
 	strcpy(str, command);
 	if(param1 != NULL){
 		strcat(str, dataSplitStr);
@@ -1093,7 +1077,6 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	ArancinoPacket packet = createArancinoPacket(message, type_return);
 
 	free(message);
-
 	return packet;
 
 }
@@ -1137,16 +1120,18 @@ void ArancinoClass::Mqtt::setDefault(ArancinoConfig aconfig){
 	Arancino.MQTT.setClient(aconfig.mqttConfig->client);
 	Arancino.MQTT.setServer(aconfig.mqttConfig->broker, aconfig.mqttConfig->port);
 	Arancino.MQTT.setCallback(ArancinoClass::Mqtt::_arancinoCallback);
-	Arancino.MQTT.setBufferSize(512);
+	Arancino.MQTT._user = aconfig.mqttConfig->user;
+	Arancino.MQTT._pass = aconfig.mqttConfig->pass;
+	//Arancino.MQTT.setBufferSize(512);
 }
 
 void ArancinoClass::Mqtt::requestDiscovery(){
 
 	while (!Arancino.MQTT.connected()){
-		if (Arancino.MQTT.connect(Arancino.id)){
-			Arancino.MQTT.publish("arancino/discovery", Arancino.id);
+		if (Arancino.MQTT.connect("port_id_1", Arancino.MQTT._user, Arancino.MQTT._pass)){
+			Arancino.MQTT.publish("arancino/discovery", "port_id_1");
+			//Arancino.MQTT.publish("arancino/discovery", Arancino.id);
 		}
-		
 	}
 
 	char* _topic = Arancino.MQTT.getTopic(true);
@@ -1167,38 +1152,41 @@ void ArancinoClass::Mqtt::_arancinoCallback(char* topic, byte* payload, unsigned
 	char* _topic = Arancino.MQTT.getTopic(true);
 
 	if (strcmp(topic, "arancino/service") == 0){					//Reset
-		if (strcmp(Arancino.MQTT.inputBuffer, Arancino.id) == 0){
-			Arancino._systemReset();
+		if ((strcmp(Arancino.MQTT.inputBuffer, Arancino.id) == 0 ) || strcmp(Arancino.MQTT.inputBuffer, "reset") == 0){
+			Arancino.systemReset();
 		}
 	} else if (strcmp(topic, _topic) == 0){							//DataIn
 		Arancino.MQTT.inputBuffer[length] = END_TX_CHAR;
 		Arancino.MQTT.newIncomingMessage = true;
 	}
 
+	Arancino.free(_topic);
 }
 
 char* ArancinoClass::Mqtt::getTopic(bool isIn){
 	// Simple topic string generator
+	//TODO change port id
 	char* topic = NULL;
 	if (isIn){
-		topic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(Arancino.id) + strlen("/rsp_to_mcu"), sizeof(char));
+		topic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen("port_id_1") + strlen("/rsp_to_mcu"), sizeof(char));
 		strcat(topic, "arancino/cortex/");
-		strcat(topic, Arancino.id);
+		strcat(topic, "port_id_1");
 		strcat(topic, "/rsp_to_mcu");
 	} else {
-		topic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(Arancino.id) + strlen("/rsp_from_mcu"), sizeof(char));
+		topic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen("port_id_1") + strlen("/rsp_from_mcu"), sizeof(char));
 		strcat(topic, "arancino/cortex/");
-		strcat(topic, Arancino.id);
-		strcat(topic, "/rsp_from_mcu");
+		strcat(topic, "port_id_1");
+		strcat(topic, "/cmd_from_mcu");
 	}
 
 	return topic;
 }
 
 void ArancinoClass::_sendArancinoCommand(char* command) {
-	char* _topic = Arancino.MQTT.getTopic(false);
-	Arancino.MQTT.publish(_topic, command);
-	Arancino.free(_topic);
+		char* _topic = Arancino.MQTT.getTopic(false);
+		Arancino.MQTT.publish(_topic, command);
+		
+		Arancino.free(_topic);	
 }
 
 char* ArancinoClass::_receiveArancinoResponse(char terminator){
@@ -1208,8 +1196,9 @@ char* ArancinoClass::_receiveArancinoResponse(char terminator){
 		if (counter < MQTT_RX_RETRIES){
 			Arancino.MQTT.loop();
 			counter++;
-			delay(10);
+			delay(15);
 		} else {
+			Arancino.free(Arancino.MQTT.inputBuffer);
 			return NULL;
 		}
 	}
@@ -1407,17 +1396,7 @@ char* ArancinoClass::_parse(char* message) {
 		strncpy(value, &message[DSCIndex + 1], messageLength - (DSCIndex + 2));
 		value[messageLength - (DSCIndex + 2)] = '\0'; //replace END_TX_CHAR with '\0'
 	}
-
-	//DEBUG
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(RCV_STRING);
-		Serial.print(status);
-		Serial.print(" ");
-		Serial.println(value);
-	}
-	#endif
-
+	
 	free(status);
 
 	if (strcmp(value, nullStr) == 0){
@@ -1502,7 +1481,7 @@ char** ArancinoClass::_parseArray(char* data) {
 	return (data != NULL && arrayParsed != NULL) ? &arrayParsed[1] : NULL;
 }
 
-void ArancinoClass::_systemReset(){
+void ArancinoClass::systemReset(){
 	#if defined(ARDUINO_ARCH_RP2040)
 	watchdog_reboot(0,0,0);
 	#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_STM32) || defined(ARDUINO_ARCH_NRF52)

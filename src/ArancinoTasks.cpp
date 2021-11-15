@@ -18,6 +18,8 @@ License for the specific language governing permissions and limitations
 under the License
 */
 
+#define ARANCINOMQTT
+
 #include <ArancinoTasks.h>
 #if defined(__SAMD21G18A__)
 #include <TemperatureZero.h>
@@ -99,7 +101,6 @@ void ArancinoTasks::interoception(void *pvPramaters){
     Arancino.free(acpkt);
     vTaskDelay(60000); //wait 60 seconds (non-blocking delay)
   }
-
 }
 
 #if defined(__SAMD21G18A__)

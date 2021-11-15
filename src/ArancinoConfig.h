@@ -29,13 +29,16 @@ under the License
 
 class MqttConfig{
 	public:
-	MqttConfig(Client& client, IPAddress broker, int port)
-		: client(client), broker(broker), port(port)
-	{}
+	MqttConfig(Client& client, char* broker, char* user = NULL, char* pass = NULL, int port = 1883)
+		: client(client), broker(broker), port(port), user(user), pass(pass)
+	{
+	}
 
 	Client& client;
-	IPAddress broker;
+	char* broker;
 	int port;
+	char* user;
+	char* pass;
 };
 
 
