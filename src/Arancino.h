@@ -223,12 +223,13 @@ class ArancinoClass {
 			char* inputBuffer;
 			bool newIncomingMessage = false;
 			char* getTopic(bool isIn);
+			char* inputTopic;
+			char* outputTopic;
 
 			private:
 			static void _arancinoCallback(char* topic, byte* payload, unsigned int lenght);
 			char* _user;
 			char* _pass;
-			
 		};
 
 		Mqtt MQTT;

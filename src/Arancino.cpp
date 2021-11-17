@@ -1122,71 +1122,55 @@ void ArancinoClass::Mqtt::setDefault(ArancinoConfig aconfig){
 	Arancino.MQTT.setCallback(ArancinoClass::Mqtt::_arancinoCallback);
 	Arancino.MQTT._user = aconfig.mqttConfig->user;
 	Arancino.MQTT._pass = aconfig.mqttConfig->pass;
-	//Arancino.MQTT.setBufferSize(512);
+
+	//TODO remove hard coded approach
+	uint8_t topicSize = strlen("arancino/cortex/port_id_1/cmd_from_mcu");
+	Arancino.MQTT.outputTopic = (char*)Arancino.calloc(topicSize+1, sizeof(char));
+	strcpy(Arancino.MQTT.outputTopic,"arancino/cortex/port_id_1/cmd_from_mcu");
+
+	topicSize = strlen("arancino/cortex/port_id_1/rsp_to_mcu");
+	Arancino.MQTT.inputTopic = (char*)Arancino.calloc(topicSize+1, sizeof(char));
+	strcpy(Arancino.MQTT.inputTopic,"arancino/cortex/port_id_1/rsp_to_mcu");
 }
 
 void ArancinoClass::Mqtt::requestDiscovery(){
 
 	while (!Arancino.MQTT.connected()){
 		if (Arancino.MQTT.connect("port_id_1", Arancino.MQTT._user, Arancino.MQTT._pass)){
+			//TODO: solve ID issue
 			Arancino.MQTT.publish("arancino/discovery", "port_id_1");
 			//Arancino.MQTT.publish("arancino/discovery", Arancino.id);
 		}
 	}
 
-	char* _topic = Arancino.MQTT.getTopic(true);
-	Arancino.MQTT.subscribe(_topic);
-	Arancino.free(_topic);
+	Arancino.MQTT.subscribe(inputTopic);
 	Arancino.MQTT.subscribe("arancino/service");
 }
 
 
 void ArancinoClass::Mqtt::_arancinoCallback(char* topic, byte* payload, unsigned int length){
 	// This function will be called for every recieved message
-	//Discovery
+
+	//Storing input buffer. It will be either freed by cortex protocol or system reboot
 	Arancino.MQTT.inputBuffer = (char*)Arancino.calloc(length + 1, sizeof(char));
 	for (int i=0; i<length; i++){
 		Arancino.MQTT.inputBuffer[i] = (char)payload[i];
 	}	
-	Arancino.MQTT.inputBuffer[length] = '\0';
-	char* _topic = Arancino.MQTT.getTopic(true);
 
-	if (strcmp(topic, "arancino/service") == 0){					//Reset
-		if ((strcmp(Arancino.MQTT.inputBuffer, Arancino.id) == 0 ) || strcmp(Arancino.MQTT.inputBuffer, "reset") == 0){
+	if (strcmp(topic, "arancino/service") == 0){	
+		//Reset
+		if (strcmp(Arancino.MQTT.inputBuffer, "reset") == 0){
 			Arancino.systemReset();
 		}
-	} else if (strcmp(topic, _topic) == 0){							//DataIn
+	} else if (strcmp(topic, Arancino.MQTT.inputTopic) == 0){	
+		//DataIn						
 		Arancino.MQTT.inputBuffer[length] = END_TX_CHAR;
 		Arancino.MQTT.newIncomingMessage = true;
 	}
-
-	Arancino.free(_topic);
-}
-
-char* ArancinoClass::Mqtt::getTopic(bool isIn){
-	// Simple topic string generator
-	//TODO change port id
-	char* topic = NULL;
-	if (isIn){
-		topic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen("port_id_1") + strlen("/rsp_to_mcu"), sizeof(char));
-		strcat(topic, "arancino/cortex/");
-		strcat(topic, "port_id_1");
-		strcat(topic, "/rsp_to_mcu");
-	} else {
-		topic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen("port_id_1") + strlen("/rsp_from_mcu"), sizeof(char));
-		strcat(topic, "arancino/cortex/");
-		strcat(topic, "port_id_1");
-		strcat(topic, "/cmd_from_mcu");
-	}
-
-	return topic;
 }
 
 void ArancinoClass::_sendArancinoCommand(char* command) {
-		char* _topic = Arancino.MQTT.getTopic(false);
-		Arancino.MQTT.publish(_topic, command);
-		
-		Arancino.free(_topic);	
+		Arancino.MQTT.publish(Arancino.MQTT.outputTopic, command);
 }
 
 char* ArancinoClass::_receiveArancinoResponse(char terminator){
