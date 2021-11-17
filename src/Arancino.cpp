@@ -896,7 +896,7 @@ char* ArancinoClass::getTimestamp() {
 
 ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int type_return){
 	int commandLength = strlen(command);
-	char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
+	//char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
 	int strLength = commandLength + 1;
 	int param1_length = 0;
 	int param4_length = 0;
@@ -1027,7 +1027,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 
 ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return){
 	int commandLength = strlen(command);
-	char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
+	//char dataSplitStr[2] = {DATA_SPLIT_CHAR, '\0'};
 	int param1_length = 0;
 	if(param1 != NULL){
 		param1_length = strlen(param1);
