@@ -33,6 +33,7 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 #if defined(USEFREERTOS)
 TaskHandle_t arancinoHandle1;
 TaskHandle_t arancinoHandle2;
+TaskHandle_t arancinoHandle3;
 #endif
 /********************************************************
 					API FUNCTIONS
@@ -92,6 +93,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	ArancinoTasks _atask;
 	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
 	xTaskCreate(_atask.interoception, "interoception", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle2);
+	xTaskCreate(_atask.sendHeartbeat, "heartbeat", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle3);
 	#endif
 }
 
@@ -1182,7 +1184,6 @@ char* ArancinoClass::_receiveArancinoResponse(char terminator){
 			counter++;
 			delay(15);
 		} else {
-			Arancino.free(Arancino.MQTT.inputBuffer);
 			return NULL;
 		}
 	}

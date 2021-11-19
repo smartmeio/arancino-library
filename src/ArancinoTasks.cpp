@@ -99,9 +99,20 @@ void ArancinoTasks::interoception(void *pvPramaters){
     ArancinoPacket acpkt = Arancino.mstore<ArancinoPacket>(keys,values,4);
     #endif
     Arancino.free(acpkt);
+
     vTaskDelay(60000); //wait 60 seconds (non-blocking delay)
   }
 }
+
+void ArancinoTasks::sendHeartbeat(void *pvPramaters){
+  char* ts = NULL;
+  while(1){
+    Arancino.set("port_id_1_HB0", Arancino.getTimestamp());
+    Arancino.set("port_id_1_HB1", Arancino.getTimestamp());
+    vTaskDelay(60000);
+  }
+}
+
 
 #if defined(__SAMD21G18A__)
 float ArancinoTasks::mcuTemp(){
