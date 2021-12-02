@@ -73,7 +73,7 @@ void setup() {
   }
 
   Arancino.free(apckt);
-  Arancino.startScheduler();
+
 }
 
 void loop() {

@@ -36,7 +36,7 @@ The number of keys that were removed.
 ArancinoMetadata amdata = {
   .fwname = "03.1 - Del Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
@@ -51,7 +51,6 @@ void setup() {
   num = Arancino.del("EX_03_1_foo");
   SERIAL_DEBUG.println(num ? "Key deleted" : "Key not found");
   //1
-  Arancino.startScheduler();
 }
 
 void loop() {

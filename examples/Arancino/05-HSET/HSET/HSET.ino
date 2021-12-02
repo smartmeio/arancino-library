@@ -29,7 +29,7 @@ Parameters:
   - key: the name of the key used to create the hash.
   - field: the name of the field to store in the hash.
   - value: the value to store in the hash with the specified field.
-  
+
 Return value:
 ArancinoPacket reply: ArancinoPacket containing:
   - isError: API call outcome (true or false);
@@ -44,15 +44,14 @@ ArancinoPacket reply: ArancinoPacket containing:
 ArancinoMetadata amdata = {
   .fwname = "05.1 - HSet Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
-  
+
   Arancino.begin(amdata);
   Arancino.hset("ex05_foo","bar","yeah");
   Arancino.hset("ex05_foo","bar","whoo");
-  Arancino.startScheduler();
 
 }
 

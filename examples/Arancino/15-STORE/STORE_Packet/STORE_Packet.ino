@@ -53,19 +53,12 @@ void loopTask(void *pvParameters);
 void setup() {
 
   SERIAL_DEBUG.begin(115200);
-
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
-  Arancino.startScheduler();
 
 }
 
 void loop(){
-  //empty
-}
 
-void loopTask(void *pvParameters) {
-  while(1){
     char* key1 = "EX_sample_1";
     int sample1 = random(0,10);
     ArancinoPacket apckt = Arancino.store<ArancinoPacket>(key1, sample1);
@@ -85,6 +78,6 @@ void loopTask(void *pvParameters) {
       SERIAL_DEBUG.println("STORE ERROR");
     }
 
-    vTaskDelay(2000);
-  }
+    delay(2000);
+
 }

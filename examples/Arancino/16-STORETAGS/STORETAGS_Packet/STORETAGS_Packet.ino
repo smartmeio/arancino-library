@@ -46,10 +46,6 @@ ArancinoMetadata amdata = {
   .tzoffset = "+1000"
 };
 
-//FreeRtos
-TaskHandle_t loopTaskHandle;
-void loopTask(void *pvParameters);
-
 char* key = "EX_sample_1";
 char* tags[] = {"EX_tags_1", "EX_tags_2", "EX_tags_3"};
 
@@ -58,16 +54,11 @@ void setup() {
   SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
-  Arancino.startScheduler();
+
 }
 
 void loop(){
-  //empty
-}
 
-void loopTask(void *pvParameters) {
-  while(1){
     int val1 = random(1,10);
     float val2 = random(150.00,350.00)/13.00;
     int val3 = random(20,35);
@@ -96,6 +87,6 @@ void loopTask(void *pvParameters) {
 
     Arancino.free(apckt); //delete the string from memory
 
-    vTaskDelay(5000);
-  }
+    delay(5000);
+
 }

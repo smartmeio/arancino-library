@@ -39,29 +39,18 @@ ArancinoMetadata amdata = {
   .tzoffset = "+1000"
 };
 
-//FreeRtos
-TaskHandle_t loopTaskHandle;
-void loopTask(void *pvParameters);
-
 void setup() {
 
   SERIAL_DEBUG.begin(115200);
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.hset("EX_08_1_foo","bar","yeah");
   Arancino.hset("EX_08_1_foo","baz","whoo");
 
-  Arancino.startScheduler();
-
 }
 
 void loop(){
-  //empty
-}
 
-void loopTask(void *pvParameters) {
-  while(1){
     char** fields = Arancino.hkeys("EX_08_1_foo");
     for (int i = 0; i < Arancino.getArraySize(fields); i++) {
       SERIAL_DEBUG.print("EX_08_1_foo -> ");
@@ -71,6 +60,6 @@ void loopTask(void *pvParameters) {
     }
     Arancino.free(fields);
 
-    vTaskDelay(5000); //wait 5 seconds
-  }
+    delay(5000); //wait 5 seconds
+
 }

@@ -73,8 +73,6 @@ void setup() {
 
   Arancino.free(apckt); //delete packet from memory
 
-  Arancino.startScheduler();
-
 }
 
 void loop() {

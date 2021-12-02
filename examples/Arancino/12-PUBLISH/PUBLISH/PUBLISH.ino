@@ -44,16 +44,11 @@ ArancinoMetadata amdata = {
   .tzoffset = "+1000"
 };
 
-//FreeRtos
-TaskHandle_t loopTaskHandle;
-void loopTask(void *pvParameters);
-
 void setup() {
 
   SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   //int
   char* channel2 = "EX_12_1_channel2";
@@ -66,16 +61,11 @@ void setup() {
   double message3 = 123.456;
   //publish the value 123.456 into the 'EX_12_1_channel3' channel
   Arancino.publish(channel3, message3);
-  Arancino.startScheduler();
 
 }
 
 void loop(){
-  //empty
-}
 
-void loopTask(void *pvParameters) {
-  while(1){
     char* channel1 = "EX_12_1_channel1";
     char* message1 = "hooray";
     //publish the value 'hooray' into the 'EX_12_1_channel1' channel
@@ -84,6 +74,6 @@ void loopTask(void *pvParameters) {
     SERIAL_DEBUG.print("message received by ");
     SERIAL_DEBUG.print(num_client);
     SERIAL_DEBUG.println(" clients");
-    vTaskDelay(10000);
-  }
+    delay(10000);
+
 }

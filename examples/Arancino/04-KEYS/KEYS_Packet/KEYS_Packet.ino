@@ -49,10 +49,6 @@ ArancinoMetadata amdata = {
   .tzoffset = "+1000"
 };
 
-//FreeRtos
-TaskHandle_t loopTaskHandle;
-void loopTask(void *pvParameters);
-
 void setup() {
 
   SERIAL_DEBUG.begin(115200);
@@ -62,16 +58,9 @@ void setup() {
   Arancino.set("EX_04_2_humidity", 67.5);
   Arancino.set("EX_04_2_temperature", 24.4);
 
-  Arancino.startScheduler();
-
 }
 
 void loop(){
-  //empty
-}
-
-void loopTask(void *pvParameters){
-  while(1){
 
     ArancinoPacket apckt = Arancino.keys<ArancinoPacket>();
     char** keys = apckt.response.stringArray;
@@ -96,7 +85,7 @@ void loopTask(void *pvParameters){
 
     Arancino.free(apckt);
 
-    vTaskDelay(1000); //wait 1 seconds
+    delay(1000); //wait 1 seconds
 
     apckt = Arancino.keys<ArancinoPacket>("EX_04_2_temp*");
     keys = apckt.response.stringArray;
@@ -111,14 +100,12 @@ void loopTask(void *pvParameters){
       for (int i = 0; i < Arancino.getArraySize(keys); i++) {
         SERIAL_DEBUG.println(keys[i]);
       }
-      // temperature
-
     }
     else{
       SERIAL_DEBUG.println("KEYS ERROR");
     }
 
     Arancino.free(apckt);
-    vTaskDelay(1000); //wait 1 seconds
-  }
+    delay(1000); //wait 1 seconds
+
 }

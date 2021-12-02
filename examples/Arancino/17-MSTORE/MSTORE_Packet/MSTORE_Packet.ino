@@ -63,11 +63,7 @@ void setup(){
 }
 
 void loop() {
-  //empty
-}
 
-void loopTask(void *pvParameters){
-  while(1){
     int val1 = random(1,10);
     float val2 = random(150,350)/13.00;
     int val3 = random(20,35);
@@ -103,6 +99,6 @@ void loopTask(void *pvParameters){
     }
 
     Arancino.free(apckt);
-    vTaskDelay(5000);
-  }
+    delay(5000);
+
 }

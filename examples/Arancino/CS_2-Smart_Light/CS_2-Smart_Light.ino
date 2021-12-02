@@ -31,9 +31,6 @@ under the License
  #define greenPin 9
  #define bluePin 24
 
-//FreeRtos
-TaskHandle_t loopTaskHandle;
-
 ArancinoMetadata amdata = {
   .fwname = "CS.2 - Smart_Light",
   .fwversion = "1.0.1",
@@ -46,23 +43,16 @@ void setup() {
   Arancino.begin(amdata);
   char* startingValues[] = {"255", "255", "255"}; //White
   Arancino.mset(keys, startingValues, 3);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
-  Arancino.startScheduler();
+
 }
 
 void loop() {
-  //empty
-}
-
-void loopTask(void *pvParameters){
-  while (1){
     //Update RGB values
     char** result = Arancino.mget(keys,3);
     //Set newly fetched values
     setRGBValues(atoi(result[0]), atoi(result[1]), atoi(result[2]));
     Arancino.free(result);
-    vTaskDelay(500);
-  }
+    delay(500);
 }
 
 void setRGBValues(int red, int green, int blue){

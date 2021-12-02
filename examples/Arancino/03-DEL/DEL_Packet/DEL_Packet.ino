@@ -1,16 +1,16 @@
 /*
   SPDX-license-identifier: Apache-2.0
-  
+
   Copyright (C) 2019 SmartMe.IO
-  
+
   Authors:  Dario Gogliandolo
-  
+
   Licensed under the Apache License, Version 2.0 (the "License"); you may
   not use this file except in compliance with the License. You may obtain
   a copy of the License at
-  
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -38,7 +38,7 @@ ArancinoPacket reply: ArancinoPacket containing:
 ArancinoMetadata amdata = {
   .fwname = "03.2 - Del w/ Packet Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
@@ -49,7 +49,7 @@ void setup() {
   Arancino.set("EX_03_2_foo","bar");
 
   ArancinoPacket apckt = Arancino.del<ArancinoPacket>("EX_03_2_baz");
-  
+
   if (apckt.isError == 0){
 
     SERIAL_DEBUG.println("DEL OK");
@@ -61,15 +61,15 @@ void setup() {
     //0
   }
   else{
-    SERIAL_DEBUG.println("DEL ERROR");    
+    SERIAL_DEBUG.println("DEL ERROR");
   }
-  
+
   Arancino.free(apckt); //delete packet from memory
 
   apckt = Arancino.del<ArancinoPacket>("EX_03_2_foo");
-  
+
   if (apckt.isError == 0){
-    
+
     SERIAL_DEBUG.println("DEL OK");
     SERIAL_DEBUG.print("Response code: ");
     SERIAL_DEBUG.println(apckt.responseCode);
@@ -79,12 +79,10 @@ void setup() {
     //1
   }
   else{
-    SERIAL_DEBUG.println("DEL ERROR");    
+    SERIAL_DEBUG.println("DEL ERROR");
   }
-  
+
   Arancino.free(apckt); //delete packet from memory
-  
-  Arancino.startScheduler();
 
 }
 

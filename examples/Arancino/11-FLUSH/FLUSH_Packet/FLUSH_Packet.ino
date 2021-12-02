@@ -38,10 +38,6 @@ ArancinoMetadata amdata = {
   .tzoffset = "+1000"
 };
 
-//FreeRtos
-//TaskHandle_t loopTaskHandle;
-//void loopTask(void *pvParameters);
-
 void setup() {
 
   SERIAL_DEBUG.begin(115200);
@@ -66,7 +62,6 @@ void setup() {
   }
 
   Arancino.free(apckt);
-  Arancino.startScheduler();
 
 }
 

@@ -65,17 +65,10 @@ void setup() {
   Arancino.set("EX_14_1_foo1", "a");
   Arancino.set("EX_14_1_foo3", "c");
 
-  Arancino.startScheduler();
-
-
 }
 
 void loop(){
-  //empty
-}
 
-void loopTask(void *pvParameters) {
-  while(1){
     char** result = Arancino.mget(keys, 3);
 
     for(int i = 0; i < Arancino.getArraySize(result); i++) {
@@ -85,6 +78,6 @@ void loopTask(void *pvParameters) {
     }
 
     Arancino.free(result);
-    vTaskDelay(5000);
-  }
+    delay(5000);
+
 }

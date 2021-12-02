@@ -62,22 +62,14 @@ void setup() {
   SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.set("EX_14_2_foo1", "a");
   Arancino.set("EX_14_2_foo2", "b");
   Arancino.set("EX_14_2_foo3", "c");
 
-  Arancino.startScheduler();
-
 }
 
 void loop(){
-  //empty
-}
-
-void loopTask(void *pvParameters) {
-  while(1){
 
     ArancinoPacket apckt = Arancino.mget<ArancinoPacket>(keys, 3);
 
@@ -100,7 +92,5 @@ void loopTask(void *pvParameters) {
     {
       SERIAL_DEBUG.println("MGET ERROR");
     }
-
-    vTaskDelay(5000);
-  }
+    delay(5000);
 }

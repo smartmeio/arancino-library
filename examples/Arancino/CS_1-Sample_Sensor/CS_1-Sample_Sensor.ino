@@ -20,7 +20,7 @@ under the License
 
 /*
  * CS_1 Sample Sensor
- * This case scenario shows how to sample data from a temperature sensor (eg. TMP36) 
+ * This case scenario shows how to sample data from a temperature sensor (eg. TMP36)
  * and how to take full advantage of Arancino Library for storing and manipulating data
  */
 
@@ -29,31 +29,22 @@ under the License
  #define sensePin A0
  #define SAMPLES 10
 
-//FreeRtos
-TaskHandle_t loopTaskHandle;
-
 ArancinoMetadata amdata = {
   .fwname = "CS.1 - Sample_Sensor",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
-  Arancino.startScheduler();
 }
 
 void loop() {
-  //empty
-}
 
-void loopTask(void *pvParameters){
-  while(1){
     sampleData();
     generateResults();
-    vTaskDelay(10000);
-  }
+    delay(10000);
+
 }
 
 void sampleData(){
@@ -70,7 +61,7 @@ void sampleData(){
     //Field must be char* so it must be converted first
     char buff[5];
     itoa(i, buff, 10);
-    
+
     Arancino.hset("samples", buff, data[i]);
   }
 }
@@ -86,7 +77,7 @@ void generateResults(){
     itoa(i, buff, 10);
 
     value = Arancino.hget("samples", buff);
-    
+
     tempValues[i] = atof(value)/1024;  // percentage of input reading
     tempValues[i] = tempValues[i] * 5;  // get voltage
     tempValues[i] = tempValues[i] - 0.5;  // subtract the offset

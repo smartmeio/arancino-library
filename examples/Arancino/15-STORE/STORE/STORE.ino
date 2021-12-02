@@ -44,10 +44,6 @@ ArancinoMetadata amdata = {
   .tzoffset = "+1000"
 };
 
-//FreeRtos
-TaskHandle_t loopTaskHandle;
-void loopTask(void *pvParameters);
-
 void setup() {
   SERIAL_DEBUG.begin(115200);
 
@@ -57,11 +53,6 @@ void setup() {
 }
 
 void loop(){
-  //empty
-}
-
-void loopTask(void *pvParameters) {
-  while(1){
     //do something
     char* key1 = "EX_sample_1";
     long sample1 = random(100,400)/36;
@@ -71,6 +62,6 @@ void loopTask(void *pvParameters) {
 
     Arancino.free(timestamp);
 
-    vTaskDelay(2000);
-  }
+    delay(2000);
+
 }

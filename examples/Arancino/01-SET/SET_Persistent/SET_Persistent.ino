@@ -58,8 +58,6 @@ void setup() {
   Arancino.set("EX_01_3_key_4", "bar", NULL);      //volatile key
   Arancino.set("EX_01_3_key_5", "bar");            //volatile key
 
-  Arancino.startScheduler();
-
 }
 
 void loop() {
