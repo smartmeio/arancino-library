@@ -67,14 +67,20 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	strcat(str_build_time, " ");
 	strcat(str_build_time, _metadata.tzoffset);
 
-	char lib_ver[]="LIB_VER";
+	char fw_lib_ver[]="FW_LIB_VER";
 	char fw_name[]="FW_NAME";
 	char fw_ver[]="FW_VER";
 	char fw_build_time[]="FW_BUILD_TIME";
 	char fw_core_ver[]="FW_CORE_VER";
 	char mcu_family[]="MCU_FAMILY";
-	char* keys[] = {lib_ver,fw_name,fw_ver,fw_build_time,fw_core_ver, mcu_family};
-	char* values[] = {LIB_VERSION, _metadata.fwname,_metadata.fwversion,str_build_time,(char*)ARANCINO_CORE_VERSION,(char*)MCU_FAMILY};
+	char fw_use_freertos[]="FW_USE_FREERTOS";
+	#if defined(USEFREERTOS)
+	char* useFreeRtos = "1";
+	#else
+	char* useFreeRtos = "0";
+	#endif
+	char* keys[] = {fw_lib_ver,fw_name,fw_ver,fw_build_time,fw_core_ver, mcu_family, fw_use_freertos};
+	char* values[] = {LIB_VERSION, _metadata.fwname,_metadata.fwversion,str_build_time,(char*)ARANCINO_CORE_VERSION,(char*)MCU_FAMILY,(char*)useFreeRtos};
 
 	//DEBUG
 	#if defined(__SAMD21G18A__)
@@ -83,7 +89,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 		Serial.begin(115200);
 	#endif
 
-	start(keys,values,6);
+	start(keys,values,7);
 
 	strcpy(LOG_LEVEL,getModuleLogLevel());
 	#if defined(USEFREERTOS)
