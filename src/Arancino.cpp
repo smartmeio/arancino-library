@@ -144,9 +144,9 @@ ArancinoPacket ArancinoClass::mset(char** keys, char** values, int len, bool isP
 	if ((keys == NULL) || (values == NULL) || (len <= 0))
 		return invalidCommandErrorPacket;
 	if(isPersistent)
-		return executeCommand(MSET_PERS_COMMAND, NULL, keys, values,NULL, len, true, VOID);
+		return executeCommand(MSET_PERS_COMMAND, NULL, keys, values,NULL, len, arancino_id_prefix, VOID);
 	else
-		return executeCommand(MSET_COMMAND, NULL, keys, values,NULL, len, true, VOID);
+		return executeCommand(MSET_COMMAND, NULL, keys, values,NULL, len, arancino_id_prefix, VOID);
 }
 
 /******** API BASIC :: MGET *********/
@@ -154,7 +154,7 @@ ArancinoPacket ArancinoClass::mset(char** keys, char** values, int len, bool isP
 template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, int len){
 	if ((keys == NULL) || (len <= 0))
 		return invalidCommandErrorPacket;
-	return executeCommand(MGET_COMMAND, NULL, keys, NULL, NULL, len, true, STRING_ARRAY);
+	return executeCommand(MGET_COMMAND, NULL, keys, NULL, NULL, len, arancino_id_prefix, STRING_ARRAY);
 }
 
 template<> char** ArancinoClass::mget(char** keys, int len) {
@@ -204,9 +204,9 @@ ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent) 
 	if(key == NULL && value == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
 	if(isPersistent)
-		return executeCommand(SET_PERS_COMMAND, key, value, NULL, true, VOID);
+		return executeCommand(SET_PERS_COMMAND, key, value, NULL, arancino_id_prefix, VOID);
 	else
-		return executeCommand(SET_COMMAND, key, value, NULL , true, VOID);
+		return executeCommand(SET_COMMAND, key, value, NULL , arancino_id_prefix, VOID);
 }
 
 /******** API BASIC :: GET *********/
@@ -215,7 +215,7 @@ template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
 	if(key == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
 	char* param = NULL;
-	return executeCommand(GET_COMMAND,key,param,param,true,STRING);
+	return executeCommand(GET_COMMAND,key,param,param,arancino_id_prefix,STRING);
 }
 
 template<> char* ArancinoClass::get(char* key){
@@ -228,22 +228,22 @@ template<> char* ArancinoClass::get(char* key){
 
 /******** API BASIC :: SETRESERVED *********/
 
-ArancinoPacket ArancinoClass::setReserved( char* key, char* value) {
+ArancinoPacket ArancinoClass::setReserved( char* key, char* value, bool id_prefix) {
 	if(key == NULL && value == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
-	return executeCommand(SETRESERVED_COMMAND,key,value,NULL,true,VOID);
+	return executeCommand(SETRESERVED_COMMAND,key,value,NULL,id_prefix,VOID);
 }
 
 /******** API BASIC :: GETRESERVED *********/
 
-template<> ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char* key){
+template<> ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char* key, bool id_prefix){
 	if(key == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
-	return executeCommand(GETRESERVED_COMMAND,key,NULL,NULL,true,STRING);
+	return executeCommand(GETRESERVED_COMMAND,key,NULL,NULL,id_prefix,STRING);
 }
 
-template<> char* ArancinoClass::getReserved(char* key){
-	ArancinoPacket packet = getReserved<ArancinoPacket>(key);
+template<> char* ArancinoClass::getReserved(char* key, bool id_prefix){
+	ArancinoPacket packet = getReserved<ArancinoPacket>(key, id_prefix);
 	if (!packet.isError)
 		return packet.response.string;
 	else
@@ -253,21 +253,21 @@ template<> char* ArancinoClass::getReserved(char* key){
 char* ArancinoClass::getModuleVersion(){
 	char key[strlen(MODVERS_KEY)+1];
 	strcpy(key,MODVERS_KEY);
-	char* retString = getReserved(key);
+	char* retString = getReserved(key, false);
 	return retString;
 }
 
 char* ArancinoClass::getModuleLogLevel(){
 	char key[strlen(MODLOGLVL_KEY)+1];
 	strcpy(key,MODLOGLVL_KEY);
-	char* retString = getReserved(key);
+	char* retString = getReserved(key, false);
 	return retString;
 }
 
 char* ArancinoClass::getBlinkId(){
 	char key[strlen(BLINK_ID_KEY)+1];
 	strcpy(key,BLINK_ID_KEY);
-	char* retString = getReserved(key);
+	char* retString = getReserved(key, true);
 	return retString;
 }
 
@@ -276,7 +276,7 @@ char* ArancinoClass::getBlinkId(){
 ArancinoPacket ArancinoClass::setBlinkId(int value){
 	char str[20] = "";
 	itoa(value, str, 10);
-	return setReserved(BLINK_ID_KEY,str);
+	return setReserved(BLINK_ID_KEY,str, true);
 }
 
 /******** API BASIC :: DEL *********/
@@ -284,7 +284,7 @@ ArancinoPacket ArancinoClass::setBlinkId(int value){
 template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
 	if(key == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
-	return executeCommand(DEL_COMMAND,key,NULL,NULL,true,INT);
+	return executeCommand(DEL_COMMAND,key,NULL,NULL,arancino_id_prefix,INT);
 }
 
 template<> int ArancinoClass::del(char* key){
@@ -331,9 +331,9 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value, bool i
 	if(key == NULL && field == NULL && value == NULL && strcmp(key, "") == 0 && strcmp(field, "") == 0)
 		return invalidCommandErrorPacket;
 	if(isPersistent)
-		return executeCommand(HSET_PERS_COMMAND,key,field,value,true,VOID);
+		return executeCommand(HSET_PERS_COMMAND,key,field,value,arancino_id_prefix,VOID);
 	else
-		return executeCommand(HSET_COMMAND,key,field,value,true,VOID);
+		return executeCommand(HSET_COMMAND,key,field,value,arancino_id_prefix,VOID);
 }
 
 /******** API BASIC :: HGET *********/
@@ -341,7 +341,7 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value, bool i
 template<> ArancinoPacket ArancinoClass::hget<ArancinoPacket> (char* key, char* field){
 	if(key == NULL && field == NULL && strcmp(key, "") == 0 && strcmp(field, "") == 0 )
 		return invalidCommandErrorPacket;
-	return executeCommand(HGET_COMMAND,key,field,NULL,true,STRING);
+	return executeCommand(HGET_COMMAND,key,field,NULL,arancino_id_prefix,STRING);
 }
 
 template<> char* ArancinoClass::hget(char* key, char* field){
@@ -358,7 +358,7 @@ template<> ArancinoPacket ArancinoClass::hgetall<ArancinoPacket> (char* key){
 	if(key == NULL && strcmp(key, "") == 0 )
 		return invalidCommandErrorPacket;
 	char* param = NULL;
-	return executeCommand(HGETALL_COMMAND,key,param,param,true,STRING_ARRAY);
+	return executeCommand(HGETALL_COMMAND,key,param,param,arancino_id_prefix,STRING_ARRAY);
 }
 
 template<> char** ArancinoClass::hgetall(char* key){
@@ -375,7 +375,7 @@ template<> ArancinoPacket ArancinoClass::hkeys<ArancinoPacket> (char* key){
 	if(key == NULL && strcmp(key, "") == 0 )
 		return invalidCommandErrorPacket;
 	char* param = NULL;
-	return executeCommand(HKEYS_COMMAND,key,param,param,true,STRING_ARRAY);
+	return executeCommand(HKEYS_COMMAND,key,param,param,arancino_id_prefix,STRING_ARRAY);
 }
 
 template<> char** ArancinoClass::hkeys(char* key){
@@ -394,7 +394,7 @@ template<> ArancinoPacket ArancinoClass::hvals<ArancinoPacket> (char* key){
 	if(key == NULL && strcmp(key, "") == 0 )
 		return invalidCommandErrorPacket;
 	char* param = NULL;
-	return executeCommand(HVALS_COMMAND,key,param,param,true,STRING_ARRAY);
+	return executeCommand(HVALS_COMMAND,key,param,param,arancino_id_prefix,STRING_ARRAY);
 }
 
 template<> char** ArancinoClass::hvals(char* key){
@@ -412,7 +412,7 @@ template<> char** ArancinoClass::hvals(char* key){
 template<> ArancinoPacket ArancinoClass::hdel<ArancinoPacket> (char* key, char* field){
 	if(key == NULL && field == NULL && strcmp(key,"") == 0 && strcmp(field, "") == 0 )
 		return invalidCommandErrorPacket;
-	return executeCommand(HDEL_COMMAND,key,field,NULL,true,INT);
+	return executeCommand(HDEL_COMMAND,key,field,NULL,arancino_id_prefix,INT);
 }
 
 template<> int ArancinoClass::hdel(char* key, char* field){
@@ -445,7 +445,7 @@ template<> char** ArancinoClass::keys(char* pattern){
 ArancinoPacket ArancinoClass::__publish (char* channel, char* msg) {
 	if(channel == NULL && msg == NULL && strcmp(channel,"") == 0 )
 		return invalidCommandErrorPacket;
-	return executeCommand(PUBLISH_COMMAND,channel,msg,NULL,true,INT);
+	return executeCommand(PUBLISH_COMMAND,channel,msg,NULL,arancino_id_prefix,INT);
 }
 
 template<> ArancinoPacket ArancinoClass::publish<ArancinoPacket> (char* channel, char* msg){
@@ -899,7 +899,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 
 	if(param1 != NULL){
 		param1_length = strlen(param1);
-		if(id_prefix && arancino_id_prefix){
+		if(id_prefix){
 			param1_length += idSize + 1;
 		}
 		strLength += param1_length + 1;
@@ -913,7 +913,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 			param3 = params3[i];
 
 		int param2_length = strlen(param2);
-		if(id_prefix && arancino_id_prefix && param1 == NULL){
+		if(id_prefix && param1 == NULL){
 			param2_length += idSize + 1;
 		}
 		int param3_length = 0;
@@ -937,7 +937,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	strcpy(str, command);
 	if(param1 != NULL){
 		strcat(str, dataSplitStr);
-		if(id_prefix && arancino_id_prefix){
+		if(id_prefix){
 			strcat(str, id);
 			strcat(str, ID_SEPARATOR);
 		}
@@ -965,7 +965,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 		if(params3 != NULL)
 			param3 = params3[len - (i + 1)];
 
-		if(id_prefix && arancino_id_prefix && param1 == NULL){
+		if(id_prefix && param1 == NULL){
 			strcat(params2Pointer, id);
 			strcat(params2Pointer, ID_SEPARATOR);
 		}
@@ -1032,7 +1032,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	int param1_length = 0;
 	if(param1 != NULL){
 		param1_length = strlen(param1);
-		if(id_prefix && arancino_id_prefix){
+		if(id_prefix){
 			param1_length += idSize + 1;
 		}
 	}
@@ -1056,7 +1056,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	strcpy(str, command);
 	if(param1 != NULL){
 		strcat(str, dataSplitStr);
-		if(id_prefix && arancino_id_prefix){
+		if(id_prefix){
 			strcat(str, id);
 			strcat(str, ID_SEPARATOR);
 		}
