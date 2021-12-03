@@ -29,46 +29,21 @@ build_examples () {
   
   echo -e "\n"
   echo -e "${RED}######################################"
-  echo -e "${RED}# Building unit tests #"
-  echo -e "${RED}######################################\n"
-  sleep 1
-
-  for sketch_test in `find ${PREFIX}/test/Arancino_tests -name '*.ino'`
-  do
-	echo -e "${BLUE}"
-    echo -e '\n\n' `basename $sketch_test`
-    sleep 1
-	echo -e "${ORANGE}"
-    arduino-cli compile -vvv --fqbn smartme.IO:samd:$1 $sketch_test
-
-    local rctest=$?
-    error_check $rctest `basename $sketch_test`
-  done
-  
-  echo -e "\n"
-  echo -e "${RED}######################################"
   echo -e "${RED}# Building FreeRTOS Library examples #"
   echo -e "${RED}######################################\n"
   sleep 1
 
-  RTOS_INO=(
-    ${PREFIX}/examples/FreeRTOS/Arancino_FreeRTOS_1/Arancino_FreeRTOS_1.ino
-    ${PREFIX}/test/Accel_CO_FreeRTOS/Accel_CO_FreeRTOS.ino
-    ${PREFIX}/test/Arancino_heavy_test/Arancino_heavy_test.ino
-    )
-
-  for sketch_rtos in "${RTOS_INO[@]}"
+  for sketch_rtos in `find ${PREFIX}/examples/Arancino_FreeRTOS -name '*.ino'`
   do
-	echo -e "${BLUE}"
-	echo -e '\n\n' `basename $sketch_rtos`
-	sleep 1
-	echo -e "${ORANGE}"
-	arduino-cli compile --fqbn smartme.IO:samd:$1 \
-		-vvv $sketch_rtos \
-		--build-properties build.arancino_extra_flags=-DUSEFREERTOS
-      
-	local rcrtos=$?
-	error_check $rcrtos `basename $sketch_rtos`
+    echo -e "${BLUE}"
+    echo -e '\n\n' `basename $sketch_rtos`
+    sleep 1
+    echo -e "${ORANGE}"
+    arduino-cli compile -vvv --fqbn smartme.IO:samd:$1 $sketch_rtos \
+      --build-property build.arancino_extra_flags=-DUSEFREERTOS
+
+    local rcrtos=$?
+    error_check $rcrtos `basename $sketch_rtos`
   done
 
   echo -e "${NC}"
