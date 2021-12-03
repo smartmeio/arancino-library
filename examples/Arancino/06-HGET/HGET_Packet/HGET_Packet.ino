@@ -48,8 +48,6 @@ void setup() {
   SERIAL_DEBUG.begin(115200);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
-
   Arancino.hset("EX_06_2_foo","bar","yeah");
   Arancino.hset("EX_06_2_foo","baz","whoo");
 
