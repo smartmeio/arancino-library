@@ -53,7 +53,6 @@ void setup() {
 
   SERIAL_DEBUG.begin(115200);
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.set("EX_04_2_pressure", 1023);
   Arancino.set("EX_04_2_humidity", 67.5);
   Arancino.set("EX_04_2_temperature", 24.4);
