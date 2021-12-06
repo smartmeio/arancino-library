@@ -32,6 +32,7 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 TaskHandle_t arancinoHandle1;
 TaskHandle_t arancinoHandle2;
 #endif
+
 /********************************************************
 					API FUNCTIONS
 ********************************************************/
@@ -1424,5 +1425,48 @@ void ArancinoClass::taskResume(){
 	}
 	#endif
 }
+
+#if defined (ARDUINO_ARCH_RP2040)
+void __interoceptionSetupADC(){
+	adc_init();
+	adc_set_temp_sensor_enabled(true);
+}
+
+
+void __interoception(){
+	//mcu temperature
+	float temperature = __mcuTemp();
+	char temp[20];
+	dtostrf(temperature,4,2,temp);
+
+    char mem_tot_key[]="MEM_TOT";
+    char temp_key[]="TEMP";
+
+	char* keys[] = {mem_tot_key, temp_key};
+	char* values[] = {"264000", temp};
+	ArancinoPacket acpkt = Arancino.mstore<ArancinoPacket>(keys, values, 2);
+	Arancino.free(acpkt);
+}
+
+float __mcuTemp(){
+	uint8_t input = adc_get_selected_input();
+	adc_select_input(4);
+	uint16_t raw = adc_read();
+	float result = raw * (3.3f / (1<<12));
+	float temp = 27 - (result -0.706)/0.001721;
+	adc_select_input(input);
+	return temp;
+}
+
+void setup1(){
+	__interoceptionSetupADC();
+}
+
+void loop1(){
+	__interoception();
+	delay(60000);
+}
+
+#endif /* ARDUINO_ARCH_RP2040 */
 
 ArancinoClass Arancino;
