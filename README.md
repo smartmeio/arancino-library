@@ -914,6 +914,13 @@ The following section concern the use of FreeRTOS, already implemented in the Ar
 ### FreeRTOS library
 The Arancino library use a [FreeRTOS porting](https://github.com/BriscoeTech/Arduino-FreeRTOS-SAMD21) for SAMD architecture that can be installed directly from the official Arduino library repository through the library manager. __User must install the correct FreeRTOS library__; the correct function it's not guaranteed with other FreeRTOS libraries. User doesn't have to include the FreeRTOS library because it is already included in Arancino library.
 
+### Notes about using FreeRTOS on other Arancino architectures
+The Arancino library currently supports 3 other architectures. 
+| Board       | Architecture     | FreeRTOS support|
+|--------------|-----------|------------|
+| Arancino Volante | NRF52     | yes     |
+| Arancino Pico      | RP20| no     |
+| Arancino V   | STM32| yes    |
 ___
 ### startScheduler
 ##### *void startScheduler*
