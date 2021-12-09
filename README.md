@@ -720,13 +720,14 @@ void loop() {
       Arancino.set("key2", temp);
       Arancino.free(temp);
       ```
+
       It is not recommended to do as follows:
       ```c++
       Arancino.set("key2", Arancino.get("test"));
       ```
 
 5. When using `set`-type functions, make sure that the value is correctly formatted with *utf-8* standard. Is recommended to use the internal function `isValidUTF8` before the `set` to avoid decoding errors on Arancino Module. Example:
-```c++
+      ```c++
       char* value="test";
       if(isValidUTF8(value))
         Arancino.set("key3", value);
