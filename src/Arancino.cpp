@@ -1449,14 +1449,19 @@ void __interoception(){
 }
 
 float __mcuTemp(){
-	uint8_t input = adc_get_selected_input();
+	uint8_t input = adc_get_selected_input(); //Get currently ADC used pin and save it in order to restore it later
 	adc_select_input(4);
 	uint16_t raw = adc_read();
 	float result = raw * (3.3f / (1<<12));
-	float temp = 27 - (result -0.706)/0.001721;
+	float temp = 27 - (result -0.706)/0.001721; //Temp is computed on a 3V3 internal reference. Still AREF may not be precise so temp value is estimated
 	adc_select_input(input);
 	return temp;
 }
+
+/*
+	Disable setup1 and loop1 functions and rewrite them in the sketch if you want to use core1 in your code.
+	Please be aware that interoception task is expected to run once every 60 seconds (but even a slightly shorter period of time is acceptable)
+*/
 
 void setup1(){
 	__interoceptionSetupADC();
