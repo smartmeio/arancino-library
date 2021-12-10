@@ -59,6 +59,7 @@ start:
 push:
   stage: start
   only: ['tags']
+  when: manual
   except: ['master', 'branches']
 
   allow_failure: true
@@ -91,8 +92,8 @@ push:
 #######       TEST        #######
 #################################
 
-#######    CLI Sketch Test Job    #######
-cli-test:
+#######    CLI Sketch Test Job for SAMD platform #######
+cli-test-samd:
   stage: test
   only: ['tags']
   except: ['master', 'branches']
@@ -116,6 +117,81 @@ cli-test:
   script:
     - ./test/arduino-cli-test.sh arancino
     - ./test/arduino-cli-test.sh arancino_mignon
+
+#######    CLI Sketch Test Job for NRF52 platform #######
+cli-test-nrf52:
+  stage: test
+  only: ['tags']
+  except: ['master', 'branches']
+
+  # copying the Library source to the Arduino libraries folder
+  before_script:
+    - sed -i "s/version=.*/version=${CI_COMMIT_TAG}/g" library.properties
+    - mkdir -p ${HOME}/Arduino/libraries
+    - cp -r ${CI_PROJECT_DIR} ${HOME}/Arduino/libraries/Arancino
+    - chmod +x ./test/arduino-cli-test-nrf52.sh
+    - arduino-cli update
+    - >
+      if [ -z ${CORE_NRF52_VERSION} ]; then
+        arduino-cli core install smartme.IO:nrf52
+      else
+        arduino-cli core install smartme.IO:nrf52@${CORE_NRF52_VERSION}
+      fi
+    - arduino-cli lib install "SparkFun ADXL345 Arduino Library"
+
+  # we feed the test scripts the simple board to complete the FQBN entry
+  script:
+    - ./test/arduino-cli-test-nrf52.sh arancinoVolante
+
+#######    CLI Sketch Test Job for STM32 platform #######
+cli-test-stm32:
+  stage: test
+  only: ['tags']
+  except: ['master', 'branches']
+
+  # copying the Library source to the Arduino libraries folder
+  before_script:
+    - sed -i "s/version=.*/version=${CI_COMMIT_TAG}/g" library.properties
+    - mkdir -p ${HOME}/Arduino/libraries
+    - cp -r ${CI_PROJECT_DIR} ${HOME}/Arduino/libraries/Arancino
+    - chmod +x ./test/arduino-cli-test-stm32.sh
+    - arduino-cli update
+    - >
+      if [ -z ${CORE_STM32_VERSION} ]; then
+        arduino-cli core install smartme.IO:stm32
+      else
+        arduino-cli core install smartme.IO:stm32@${CORE_STM32_VERSION}
+      fi
+    - arduino-cli lib install "SparkFun ADXL345 Arduino Library"
+
+  # we feed the test scripts the simple board to complete the FQBN entry
+  script:
+    - ./test/arduino-cli-test-stm32.sh ArancinoV
+
+#######    CLI Sketch Test Job for RP2040 platform #######
+cli-test-rp2040:
+  stage: test
+  only: ['tags']
+  except: ['master', 'branches']
+
+  # copying the Library source to the Arduino libraries folder
+  before_script:
+    - sed -i "s/version=.*/version=${CI_COMMIT_TAG}/g" library.properties
+    - mkdir -p ${HOME}/Arduino/libraries
+    - cp -r ${CI_PROJECT_DIR} ${HOME}/Arduino/libraries/Arancino
+    - chmod +x ./test/arduino-cli-test-rp2040.sh
+    - arduino-cli update
+    - >
+      if [ -z ${CORE_RP2040_VERSION} ]; then
+        arduino-cli core install smartme.IO:rp2040
+      else
+        arduino-cli core install smartme.IO:rp2040@${CORE_RP2040_VERSION}
+      fi
+    - arduino-cli lib install "SparkFun ADXL345 Arduino Library"
+
+  # we feed the test scripts the simple board to complete the FQBN entry
+  script:
+    - ./test/arduino-cli-test-rp2040.sh arancinopico
 
 #######    Package Release    #######
 #esegue la compressione del pacchetto quando viene creato un tag (ovvero ad ogni release)

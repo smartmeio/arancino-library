@@ -17,11 +17,14 @@ build_examples () {
 
   for sketch in `find ${PREFIX}/examples/Arancino -name '*.ino'`
   do
-    echo -e "${BLUE}"
+	  echo -e "${BLUE}"
     echo -e '\n\n' `basename $sketch`
     sleep 1
-    echo -e "${ORANGE}"
-    arduino-cli compile -v --fqbn smartme.IO:samd:$1 $sketch
+	  echo -e "${ORANGE}"
+    arduino-cli compile --build-property build.enable_usb="-DUSBD_USE_CDC" \
+      --build-property build.usb_flags="-DUSBCON -DHAL_PCD_MODULE_ENABLED" \
+      --build-property build.arancino_extra_flags=-DUSEFREERTOS \
+      -v --fqbn smartme.IO:stm32:$1 $sketch
     
     local rc=$?
     error_check $rc `basename $sketch`
@@ -39,8 +42,10 @@ build_examples () {
     echo -e '\n\n' `basename $sketch_rtos`
     sleep 1
     echo -e "${ORANGE}"
-    arduino-cli compile -v --fqbn smartme.IO:samd:$1 $sketch_rtos \
-      --build-property build.arancino_extra_flags=-DUSEFREERTOS
+    arduino-cli compile --build-property build.enable_usb="-DUSBD_USE_CDC" \
+      --build-property build.usb_flags="-DUSBCON -DHAL_PCD_MODULE_ENABLED" \
+      --build-property build.arancino_extra_flags=-DUSEFREERTOS \
+      -v --fqbn smartme.IO:stm32:$1 $sketch
 
     local rcrtos=$?
     error_check $rcrtos `basename $sketch_rtos`
