@@ -619,3 +619,77 @@ void loop() {
 
       ```
 
+___
+### getTimestamp
+##### * char* getTimestamp() *
+
+
+Return timestamp in UNIX millis format.
+
+##### Return value
+char&ast; timestamp: current timestamp.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+}
+
+void loop() {
+  char* ts = Arancino.getTimestamp();
+  Arancino.set("ts", ts);
+  delay(2000);
+}
+```
+___
+### getModuleVersion
+##### * char* getModuleVersion() *
+
+
+Return Arancino Module version.
+
+##### Return value
+char&ast; modVersion: current Module version.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+}
+
+void loop() {
+  char* modVers = Arancino.getModuleVersion();
+  Arancino.set("mod_version", modVers);
+  Arancino.free(modVers);
+  delay(2000);
+}
+```
+___
+### getModuleLogLevel
+##### * char* getModuleLogLevel() *
+
+
+Return current Arancino Module log level.
+
+##### Return value
+char&ast; modVersion: current Module log level.
+
+##### Example
+```c++
+#include <Arancino.h>
+
+void setup() {
+  Arancino.begin();
+}
+
+void loop() {
+  char* logLvl = Arancino.getModuleLogLevel();
+  Arancino.set("Log_level", logLvl);
+  Arancino.free(logLvl);
+  delay(2000);
+}
+```
