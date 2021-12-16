@@ -25,6 +25,8 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 | [`publish`](#publish)    | PUB     |
 | [`mset`](#mset)    | MSET     |
 | [`mget`](#mget)    | MGET     |
+| [`store`](#store)  | STORE    |
+| [`storetags`](#storetags)| STORETAGS|
 
 ### Commands separator chars
 **Important**: Do not use these character codes to compose string values to pass to the API
@@ -38,26 +40,30 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 
 
 ### Response Codes
+| Response Code  | Type      | Description | Note |
+|-------|-----------|-------------|------|
+| `100`   | Success   | Generic operation successfully completed ||
+| `101`   | Success   | Setted value into a new field ||
+| `103`   | Success   | Setted value into an existing field ||
+| `200`   | Error     | Generic Error | |
+| `201`   | Error     | Retrivied Null Value | Deprecated|
+| `202`   | Error     | Error during SET command ||
+| `203`   | Error     | Command not found ||
+| `204`   | Error     | Error during SET command ||
+| `205`   | Error     | Invalid parameter number ||
+| `206`   | Error     | Generic Redis Error ||
+| `207`   | Error     | Key exists in the Standard Data Store ||
+| `208`   | Error     | Key exists in the Persistent Data Store ||
+| `209`   | Error     | Non compatibility between Arancino Daemon and Library ||
+| `210`   | Error     | Generic Invalid Arguments ||
+| `211`   | Error     | Invalid Value ||
+| `212`   | Error     | Not yet implemented functionality ||
 
-| Response Code     | Description           |
-| ----------------- |:---------------------:|
-| `100`             | **OK** - Generic operation successfully completed. |
-| `101`             | **OK** - Setted value into a new field.            |
-| `102`             | **OK** - Setted value into an existing field       |
-| `200`             | **KO** - Generic Error                             |
-| `201`             | **KO** - Retrieved NULL value (deprecated)         |
-| `202`             | **KO** - Error during *SET* command                |
-| `203`             | **KO** - Command not found                         |
-| `204`             | **KO** - Command not received                      |
-| `205`             | **KO** - Invalid parameter number                  |
-| `206`             | **KO** - Generic Redis Error                       |
-| `207`             | **KO** - Key exists in the Standard Data Store     |
-| `208`             | **KO** - Key exists in the Persistent Data Store   |
-| `209`             | **KO** - Non compatibility between Arancino Module and Library |
 
 ### Commands and Protocol
 As exaplained above, when an API function is called, a command is sent over the `SerialUSB` and a response is received.
 In the next paragraphs, for simplicity we are considering each command returns an *OK* response and using the following representation for *Separator Codes*:
+
 - Command Sepatator → `4`  → `#`
 - Array separator → `16` → `%`
 - End of transmission → `30`  →` @`
@@ -117,3 +123,17 @@ In the next paragraphs, for simplicity we are considering each command returns a
 #### flush
 - Command Sent: `FLUSH@`
 - Response Received: `100@`
+
+#### storetag
+- Command Sent: `STORE#<key>#<tag1>%<tag2>%<tag3>#<value1>%<value2>%<value3>#<timestamp>@`
+- Response Received: `100@`
+
+- Command Sent: `STORE#<key>#<tag1>%<tag2>%<tag3>#<value1>%<value2>%<value3>@`
+- Response Received: `100@`
+
+#### store
+- Command Sent: `STORE#<key>#<values>@`
+- Response Received: `100#<timestamp>@`
+
+- Command Sent: `STORE#<key>#<values>#<timestamp>@`
+- Response Received: `100#<timestamp>@`

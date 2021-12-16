@@ -8,9 +8,28 @@ Following the list of reserved keys:
 
 | Reserved Key/Channel    | Version | Description    |
 | ----------------------- | ------- | -------------- |
-| `___POWER___`           | N/A     | The value can be `battery` or `power`, based on the power supply type. Very useful e.g. when switching from power to battery and automatically softly shoutdown the system. It works only with the specific hardware module for the Arancino Board. (Not yet implemented)|
-| `___MONITOR___`         | >=v0.1.0| used by `print` and `println` API |
-| `__LIBVERS___`          | >=v0.1.0| Arancino Library version (No more used) |
+| `___MONITOR___`             | >=v0.1.0| Used by `print` and `println` API |
+| `___MODVERS___`           | * | Used to get the running version number of the Arancino Daemon | 
+| `___MODLOGLVL___`           | >=v2.0.0| Actual Log level of the Arancino Deamon|
+| `___MODENV___`            | >=2.0.0.| Used to get the running environment of Arancino Daemon|
+| `___BLINK_ID___`          | >=v2.0.0| Used by DeviceIdentification of ArancinoTasks for identify the microcontroller|
+
+
+It is not possible to access directly data stored at Reserved Keys. There are generic private encapsulators (`getReserved`, `setReserved`) only used by the library itself to get and set values. But there are specific method for some Reserved Keys that can be used to retrieve Reserved Keys values in the user space:
+
+- `getModuleVersion()`
+- `getModuleLogLevel()`
+- `getModuleEnvironment()`
+
+see [API](API.MD) chapter for more details
+
+
+
+
+
+
+
+
 
 
 To access data stored at reserved keys you have to use the Redis `get` command for _Sync_ mode and Redis `Subscribe` for Asynch mode (in _Async_ mode the _key_ name represents the _channel_ name).
