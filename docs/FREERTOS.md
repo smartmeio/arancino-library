@@ -12,6 +12,17 @@ The Arancino library currently supports 4 architectures.
 | Arancino Volante | NRF52     | yes     |
 | Arancino Pico      | RP2040| no     |
 | Arancino V   | STM32| yes    |
+
+
+Where FreeRTOS is support it's also enabled by default. You can enable or disable:
+
+#### Arduino IDE:
+Go into the directory of the desidered core (depends by your system) and open the `boards.txt` file. In the `build.extra_flags` property append this flag `-DUSEFREERTOS` to enable or remove it to disable
+
+#### Platform.IO:
+Go into the directory of the desidered platform (depends by your system) and open the json file of the desider board. In the `extra_flags` attribute append this flag `-DUSEFREERTOS` to enable or remove it to disable. 
+
+
 ___
 ### startScheduler
 ##### *void startScheduler*
