@@ -121,6 +121,7 @@ class ArancinoClass {
 		//GETRESERVED
 		char* getModuleVersion();
 		char* getModuleLogLevel();
+		char* getModuleEnvironment();
 		char* getBlinkId();
 
 		//SETRESERVED

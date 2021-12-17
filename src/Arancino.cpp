@@ -271,6 +271,13 @@ char* ArancinoClass::getModuleLogLevel(){
 	return retString;
 }
 
+char* ArancinoClass::getModuleEnvironment(){
+	char key[strlen(MODENV_KEY)+1];
+	strcpy(key,MODENV_KEY);
+	char* retString = getReserved(key, false);
+	return retString;
+}
+
 char* ArancinoClass::getBlinkId(){
 	char key[strlen(BLINK_ID_KEY)+1];
 	strcpy(key,BLINK_ID_KEY);

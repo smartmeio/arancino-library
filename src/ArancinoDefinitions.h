@@ -91,6 +91,7 @@ under the License
 #define POWER_KEY				(char*)"___POWER___"
 #define MODVERS_KEY				(char*)"___MODVERS___"
 #define MODLOGLVL_KEY			(char*)"___MODLOGLVL___"
+#define MODENV_KEY              (char*)"___MODENV___"
 #define BLINK_ID_KEY			(char*)"___BLINK_ID___"
 #define LIB_VERSION				(char*)"2.0.0"	//library version
 
