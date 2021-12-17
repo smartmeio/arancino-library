@@ -1465,6 +1465,28 @@ float __mcuTemp(){
 	return temp;
 }
 
+void __deviceIdentification(){
+
+    char* value = Arancino.getBlinkId();
+    if(!strcmp(value,"1")){
+        for(int i=0;i < 20; i++){
+            #if defined (ARDUINO_ARANCINO_VOLANTE)
+            digitalWrite(LED_BUILTIN,LOW);
+            #else
+            digitalWrite(LED_BUILTIN,HIGH);
+            #endif
+            delay(100);
+            #if defined (ARDUINO_ARANCINO_VOLANTE)
+            digitalWrite(LED_BUILTIN,HIGH);
+            #else
+            digitalWrite(LED_BUILTIN,LOW);
+            #endif
+            delay(200);
+        }
+        Arancino.setBlinkId(0);
+    }
+}
+
 /*
 	Disable setup1 and loop1 functions and rewrite them in the sketch if you want to use core1 in your code.
 	Please be aware that interoception task is expected to run once every 60 seconds (but even a slightly shorter period of time is acceptable)
@@ -1476,6 +1498,7 @@ void setup1(){
 
 void loop1(){
 	__interoception();
+	__deviceIdentification();
 	delay(60000);
 }
 

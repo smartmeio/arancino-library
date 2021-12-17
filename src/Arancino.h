@@ -321,6 +321,7 @@ extern ArancinoClass Arancino;
 void __interoceptionSetupADC();
 void __interoception();
 float __mcuTemp();
+void __deviceIdentification();
 
 #endif /* ARDUINO_ARCH_RP2040 */
 
