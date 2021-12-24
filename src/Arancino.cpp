@@ -47,9 +47,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata) {
 }
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
-	SERIAL_PORT.begin(BAUDRATE);
+	_iface = &_acfg.iface; //link interface to actual implementation
+	_iface->ifaceBegin();
 	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
-	SERIAL_PORT.setTimeout(_acfg.SERIAL_TIMEOUT);
 	decimal_digits=_acfg.DECIMAL_DIGITS;
 
 	_metadata = _amdata;
@@ -1021,9 +1021,9 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	taskSuspend();
 
 
-	_sendArancinoCommand(str);
+	_iface->sendArancinoCommand(str);
 
-	char* message = _receiveArancinoResponse(END_TX_CHAR);
+	char* message = _iface->receiveArancinoResponse(END_TX_CHAR);
 
 
 	taskResume();
@@ -1088,8 +1088,8 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 
 	taskSuspend();
 
-	_sendArancinoCommand(str);
-	char* message = _receiveArancinoResponse(END_TX_CHAR);
+	_iface->sendArancinoCommand(str);
+	char* message = _iface->receiveArancinoResponse(END_TX_CHAR);
 
 	taskResume();
 
@@ -1132,58 +1132,6 @@ ArancinoPacket ArancinoClass::createArancinoPacket(char* message, int type_retur
 		packet = temp;
 	}
 	return packet;
-}
-
-void ArancinoClass::_sendArancinoCommand(char* command) {
-	//check communication timeout with arancino module
-	if (comm_timeout){
-		/*
-			Flush data on serial communication to avoid of lost
-			synchronization between arancino library and arancino module.
-			By this way I prevent to receive reposonse of a previous sent command.
-		*/
-		while(SERIAL_PORT.available() > 0){
-				SERIAL_PORT.read();
-		}
-		comm_timeout=false;
-	}
-	//command must terminate with '\0'!
-	SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
-	#if defined(__SAMD21G18A__)
-		if(!digitalRead(DBG_PIN)){
-			if(command[strlen(command) - 1] == END_TX_CHAR)
-			{
-				Serial.println(command);
-			}
-			else
-				Serial.print(command);
-		}
-	#endif
-}
-
-/*
- * 'terminator' char is used only for non-freeRTOS implementations.
- * For freeRTOS implementations is always used END_TX_CHAR as terminator char (see commTask()).
- */
-char* ArancinoClass::_receiveArancinoResponse(char terminator) {
-	char* response = NULL; //must be freed
-	String str = "";
-	str = SERIAL_PORT.readStringUntil(terminator);
-	if( str == ""){
-		//enable timeout check
-		comm_timeout = true;
-	}
-	else {
-		int responseLength = strlen(str.begin());
-		if (responseLength > 0)
-		{
-			response = (char *)calloc(responseLength + 1 + 1, sizeof(char));
-			strcpy(response, str.begin());
-			response[responseLength] = END_TX_CHAR;
-			response[responseLength + 1] = '\0';
-		}
-	}
-	return response;
 }
 
 void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char* str) {

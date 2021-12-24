@@ -212,9 +212,7 @@ class ArancinoClass {
 
 	private:
 		//void dropAll();
-
 		bool started;
-		bool comm_timeout = false;
 		bool arancino_id_prefix;
 		int decimal_digits;
 		int idSize;
@@ -251,11 +249,6 @@ class ArancinoClass {
 		ArancinoPacket setReserved( char* key, char* value, bool id_prefix);
 
 		//INTERNAL UTILS
-		//void _sendArancinoCommand(String command);
-		void _sendArancinoCommand(char* command);
-		//void _sendArancinoCommand(char command);
-
-		char* _receiveArancinoResponse(char terminator);
 		void _doubleToString(double value, unsigned int _nDecimal, char* str); //truncation!
 		void _floatToString(float value, unsigned int _nDecimal, char* str);
 		int _getDigit(long value);
@@ -275,6 +268,10 @@ class ArancinoClass {
 		ArancinoPacket executeCommand(char* command_id, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int response_type);
 		ArancinoPacket executeCommand(char* command_id, char* param1, char* param2, char*param3, bool id_prefix, int response_type);
 		ArancinoPacket createArancinoPacket(char* response_raw, int response_type);
+
+		//Protocol interface
+		ArancinoIface* _iface;
+
 		//TEMPLATE WRAPPED
 		// ArancinoPacket _getPacket(char* key);
 		// char* _get(char* key);

@@ -20,9 +20,56 @@ under the License
 
 #include <ArancinoDefinitions.h>
 
-class ArancinoConfig{
+class ArancinoIface{
+	public:
+	virtual void ifaceBegin() = 0;
+	virtual void sendArancinoCommand(char* command) = 0;
+	virtual char* receiveArancinoResponse(char terminator) = 0;
+};
+
+/******** INTERFACES *********/
+
+class SerialIface : public ArancinoIface {
+	public:
+	/*
+		Is a time period which a sent command can waits for the response.
+		It's expressed in milliseconds.
+	*/
+	int SERIAL_TIMEOUT = TIMEOUT;
+
+	private:
+	void ifaceBegin();
+	void sendArancinoCommand(char* command);
+	char* receiveArancinoResponse(char terminator);
+
+	bool comm_timeout = false;
+};
+
+class MqttIface : public ArancinoIface {
+	public:
+	
+
+	private:
+	void ifaceBegin();
+	void sendArancinoCommand(char* command);
+	char* receiveArancinoResponse(char terminator);
+	
+};
+
+class BluetoothIface : public ArancinoIface {
 	public:
 
+	private:
+	void ifaceBegin();
+	void sendArancinoCommand(char* command);
+	char* receiveArancinoResponse(char terminator);
+	
+};
+
+#define ARANCINO_SERIAL_IFACE
+
+class ArancinoConfig{
+	public:
 		/*
 			It is intended as the precision number of decimal digits for float and
 				double data types.
@@ -37,13 +84,6 @@ class ArancinoConfig{
 				key name.
 		*/
 		bool USE_PORT_ID_PREFIX_KEY = false;
-
-
-		/*
-			Is a time period which a sent command can waits for the response.
-				It's expressed in milliseconds.
-		*/
-		int SERIAL_TIMEOUT = TIMEOUT;
 
 
 		/*
@@ -66,4 +106,18 @@ class ArancinoConfig{
 		*/
 		int FREERTOS_LOOP_TASK_PRIORITY = 0;
 
+
+		/*
+			By providing one of this defines a different interface for library protocol can be selected
+			Keep in mind that the interface object may require further configuration inside your sketch 
+		*/
+		#if defined(ARANCINO_SERIAL_IFACE)
+			SerialIface iface;
+		#elif defined(ARANCINO_MQTT_IFACE)
+			MqttIface iface;
+		#elif defined(ARANCINO_BLUETOOTH_IFACE)
+			BluetoothIface iface;
+		#else
+			#error Interface not selected, please provide one or consult documentation for further details
+		#endif 
 };
