@@ -28,6 +28,7 @@ under the License
 #include <stdlib.h>
 #include <cstdlib>
 #include <type_traits>
+#include <MicrocontrollerID.h>
 
 //#define USEFREERTOS
 #if defined(USEFREERTOS)
@@ -94,7 +95,7 @@ class ArancinoClass {
 		/***** API ADVANCED *****/
 
 		//Serial port id
-		char *id;
+		char id[33];
 
 		//START SCHEDULER
 		void startScheduler();

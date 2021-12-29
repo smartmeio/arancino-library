@@ -18,7 +18,17 @@ License for the specific language governing permissions and limitations
 under the License
 */
 
+#ifndef ARANCINOCONFIG_H_
+#define ARANCINOCONFIG_H_
+
 #include <ArancinoDefinitions.h>
+#include <Arduino.h>
+
+#define ARANCINO_MQTT_IFACE		//debug
+
+#if defined ARANCINO_MQTT_IFACE
+#include <PubSubClient.h>
+#endif
 
 class ArancinoIface{
 	public:
@@ -28,6 +38,8 @@ class ArancinoIface{
 };
 
 /******** INTERFACES *********/
+
+#if defined(ARANCINO_SERIAL_IFACE)
 
 class SerialIface : public ArancinoIface {
 	public:
@@ -45,16 +57,34 @@ class SerialIface : public ArancinoIface {
 	bool comm_timeout = false;
 };
 
-class MqttIface : public ArancinoIface {
+#elif defined(ARANCINO_MQTT_IFACE)
+
+class MqttIface : public ArancinoIface, public PubSubClient {
 	public:
-	
+	Client* client;	//Network client
+	char* username=NULL;
+	char* password=NULL;
+	char* daemonID;
+	char* broker;	//IP addresses can be passed as well hostnames as strings
+	int port=1883;
 
 	private:
 	void ifaceBegin();
 	void sendArancinoCommand(char* command);
 	char* receiveArancinoResponse(char terminator);
-	
+
+	//Since callback function needs to be declared as static, every related variable needs to be static as well
+	//not that it matters anyway, no more than one interface will exist at a time so this should be fine
+	static char* _inputTopic;
+	static char* _outputTopic;
+	static char* _serviceTopic;
+	static bool _newIncomingMessage;
+	static char* _inputBuffer;
+	static void _arancinoCallback(char* topic, byte* payload, unsigned int lenght);
+
 };
+
+#elif defined(ARANCINO_BLUETOOTH_IFACE)
 
 class BluetoothIface : public ArancinoIface {
 	public:
@@ -66,7 +96,10 @@ class BluetoothIface : public ArancinoIface {
 	
 };
 
-#define ARANCINO_SERIAL_IFACE
+#endif
+
+
+/******** CONFIGURATIONS *********/
 
 class ArancinoConfig{
 	public:
@@ -118,6 +151,8 @@ class ArancinoConfig{
 		#elif defined(ARANCINO_BLUETOOTH_IFACE)
 			BluetoothIface iface;
 		#else
-			#error Interface not selected, please provide one or consult documentation for further details
+			#error Arancino Interface not selected, please provide one or check the documentation for further details
 		#endif 
 };
+
+#endif /* ARANCINOCONFIG_H_ */

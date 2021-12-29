@@ -115,3 +115,5 @@ under the License
 #define MAX_UNSIGNED_LONG_VALUE     4294967295
 
 #define ARANCINO_TASK_PRIORITY      2
+
+#define MQTT_MAX_RETRIES            100

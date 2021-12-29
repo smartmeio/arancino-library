@@ -47,6 +47,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata) {
 }
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
+	MicroID.getUniqueIDString(id, 16);
 	_iface = &_acfg.iface; //link interface to actual implementation
 	_iface->ifaceBegin();
 	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
@@ -111,10 +112,6 @@ void ArancinoClass::start(char** keys, char** values, int len) {
 
 		packet = executeCommand(START_COMMAND, NULL, keys, values,NULL, len, false, STRING_ARRAY);
 		if(packet.responseCode == RSP_OK){
-			//store arancino serial port id
-			idSize = strlen(packet.response.stringArray[0]);
-			id = (char *)calloc(idSize+1, sizeof(char));
-			memcpy(id,packet.response.stringArray[0],idSize);
 			//timestamp from arancino module
 			memcpy(timestamp, packet.response.stringArray[1],13);
 			char tmst_part[5];

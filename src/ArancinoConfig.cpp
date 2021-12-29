@@ -19,14 +19,15 @@ under the License
 */
 
 #include "ArancinoConfig.h"
-#include "ArancinoDefinitions.h"
-#include <Arduino.h>
+#include <Arancino.h>
 
 /*
     All the interface specific methods should be placed here
 */
 
 /******** Serial interface *********/
+
+#if defined(ARANCINO_SERIAL_IFACE)
 
 void SerialIface::ifaceBegin(){
     SERIAL_PORT.begin(BAUDRATE);
@@ -80,3 +81,87 @@ char* SerialIface::receiveArancinoResponse(char terminator){
 	}
 	return response;
 }
+
+
+/******** MQTT interface *********/
+
+#elif defined(ARANCINO_MQTT_IFACE)
+
+//Static variables definition
+char* MqttIface::_inputBuffer;
+bool MqttIface::_newIncomingMessage = false;
+char* MqttIface::_inputTopic;
+char* MqttIface::_outputTopic;
+char* MqttIface::_serviceTopic;
+
+void MqttIface::ifaceBegin(){
+	setClient(*client);
+	setServer(broker, port);
+	setCallback(MqttIface::_arancinoCallback);
+
+	//+2 cause 1 '/' is missing in the calculation other than \n
+	MqttIface::_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
+	MqttIface::_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(daemonID) + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 2, sizeof(char));
+	strcpy(MqttIface::_inputTopic, "arancino/cortex/");
+	strcat(MqttIface::_inputTopic, daemonID);
+	strcat(MqttIface::_inputTopic, "/");
+	strcat(MqttIface::_inputTopic, Arancino.id);
+
+	strcpy(MqttIface::_outputTopic, MqttIface::_inputTopic);	//just a quick shortcut
+	strcat(MqttIface::_inputTopic, "/rsp_to_mcu");
+	strcat(MqttIface::_outputTopic, "/cmd_from_mcu");
+
+
+	while (!this->connected()){
+		if (this->connect(Arancino.id, username, password)){
+			char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(daemonID)+1, sizeof(char));
+			strcpy(discoverytopic, "arancino/discovery/");
+			strcat(discoverytopic, daemonID);
+			this->publish(discoverytopic, Arancino.id);
+			Arancino.free(discoverytopic);
+		}
+	}
+
+	MqttIface::_serviceTopic = (char*)Arancino.calloc(strlen("arancino/service/")+ strlen(Arancino.id) + 1, sizeof(char));
+	strcpy(MqttIface::_serviceTopic, "arancino/service/");
+	strcat(MqttIface::_serviceTopic, Arancino.id);
+
+	this->subscribe(MqttIface::_serviceTopic);
+	this->subscribe(MqttIface::_inputTopic);
+}
+
+void MqttIface::sendArancinoCommand(char* command){
+	this->publish(MqttIface::_outputTopic, command);
+}
+
+char* MqttIface::receiveArancinoResponse(char terminator){
+	int counter = 0;
+	while(!MqttIface::_newIncomingMessage){
+		if (counter < MQTT_MAX_RETRIES){
+			this->loop();
+			counter++;
+			delay(10);
+		} else {
+			//No need for cleanup: no message was received nor memory allocated for it
+			return NULL;
+		}
+	}
+
+	//Clean this before going out. _inputBuffer will be freed by caller function
+	MqttIface::_newIncomingMessage = false;
+	return MqttIface::_inputBuffer;
+}
+
+void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int length){
+	MqttIface::_inputBuffer = (char*)Arancino.calloc(length+1, sizeof(char));
+	MqttIface::_inputBuffer = (char*)payload; //I can just cast it to char*
+
+	if (strcmp(topic, "arancino/service") == 0){
+		//Arancino.systemReset();
+	} else if (strcmp(topic, _inputTopic) == 0){
+		MqttIface::_inputBuffer[length] = END_TX_CHAR;
+		MqttIface::_newIncomingMessage = true;
+	} 
+}
+
+#endif
