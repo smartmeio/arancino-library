@@ -102,15 +102,6 @@ void ArancinoTasks::interoception(void *pvPramaters){
 
 }
 
-void ArancinoTasks::sendHeartbeat(void *pvPramaters){
-  char* ts = NULL;
-  while(1){
-    Arancino.publish("port_id_1_HB0", Arancino.getTimestamp());
-    Arancino.publish("port_id_1_HB1", Arancino.getTimestamp());
-    vTaskDelay(60000);
-  }
-}
-
 #if defined(__SAMD21G18A__)
 float ArancinoTasks::mcuTemp(){
   TemperatureZero tempZero = TemperatureZero();
