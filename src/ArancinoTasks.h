@@ -25,6 +25,7 @@ class ArancinoTasks{
 	public:
 		static void deviceIdentification(void *pvPramaters);
         static void interoception(void *pvPramaters);
+		static void sendHeartbeat(void *pvPrameters);
 	private:
 		float mcuTemp();
 		bool temp_initialized = false;  //temp inizialized

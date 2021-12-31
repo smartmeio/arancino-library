@@ -31,6 +31,7 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 #if defined(USEFREERTOS)
 TaskHandle_t arancinoHandle1;
 TaskHandle_t arancinoHandle2;
+TaskHandle_t arancinoHandle3;
 #endif
 
 /********************************************************
@@ -85,11 +86,13 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	char* values[] = {LIB_VERSION, _metadata.fwname,_metadata.fwversion,str_build_time,(char*)ARANCINO_CORE_VERSION,(char*)MCU_FAMILY,(char*)useFreeRtos};
 
 	//DEBUG
+	/*
 	#if defined(__SAMD21G18A__)
 	pinMode(DBG_PIN,INPUT);
 	if(!digitalRead(DBG_PIN))
 		Serial.begin(115200);
 	#endif
+	*/
 
 	start(keys,values,7);
 
@@ -99,6 +102,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	ArancinoTasks _atask;
 	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
 	xTaskCreate(_atask.interoception, "interoception", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle2);
+	xTaskCreate(_atask.sendHeartbeat, "heartbeat", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle3);
 	#endif
 }
 
@@ -1267,6 +1271,7 @@ char* ArancinoClass::_parse(char* message) {
 	}
 
 	//DEBUG
+	/*
 	#if defined(__SAMD21G18A__)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(RCV_STRING);
@@ -1275,6 +1280,7 @@ char* ArancinoClass::_parse(char* message) {
 		Serial.println(value);
 	}
 	#endif
+	*/
 
 	free(status);
 
@@ -1358,6 +1364,16 @@ char** ArancinoClass::_parseArray(char* data) {
 	}
 
 	return (data != NULL && arrayParsed != NULL) ? &arrayParsed[1] : NULL;
+}
+
+void ArancinoClass::systemReset(){
+	#if defined(ARDUINO_ARCH_RP2040)
+	watchdog_reboot(0,0,0);
+	#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_STM32) || defined(ARDUINO_ARCH_NRF52)
+	NVIC_SystemReset();
+	#endif
+
+	//Currently only this devices are supported for reset.
 }
 
 void ArancinoClass::taskSuspend(){
