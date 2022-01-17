@@ -1,4 +1,5 @@
 #include <Arancino.h>
+#include <avr/dtostrf.h>
 
 ArancinoMetadata amdata = {
   .fwname = "Unit test",
@@ -16,7 +17,6 @@ bool search(char** array, char* str, uint cnt) {
 
 void unit_set() {
     ArancinoPacket response;
-    delay(1000);
     SERIAL_DEBUG.println("------ ARANCINO SET TEST ------");
     response = Arancino.set("unit_set_int", 5);
 
@@ -873,10 +873,119 @@ void unit_mget() {
     } else SERIAL_DEBUG.println("MGET PKT: OK");
 }
 
+void unit_store() {
+  SERIAL_DEBUG.println("------ ARANCINO STORE TEST ------");
+  char* key = "unit_store_a";
+  int sample = 10;
+
+  ArancinoPacket response;
+
+  response = Arancino.store<ArancinoPacket>(key, sample);
+
+  if (response.isError) {
+      SERIAL_DEBUG.print("STORE: FAIL (response.isError should be false).");
+      SERIAL_DEBUG.print("Value: ");
+      SERIAL_DEBUG.println(response.isError);
+  } else if (response.responseCode != 100) {
+      SERIAL_DEBUG.print("STORE: FAIL (response.responseCode should be 100).");
+      SERIAL_DEBUG.print("Value: ");
+      SERIAL_DEBUG.println(response.responseCode);
+  } else if (response.responseType != STRING) {
+      SERIAL_DEBUG.print("STORE: FAIL (response.responseType should be STRING).");
+      SERIAL_DEBUG.print("Value: ");
+      SERIAL_DEBUG.println(response.responseType);
+  } else if (((response.response.string) == "") && (response.response.string) == NULL) {
+      SERIAL_DEBUG.print("STORE PKT: FAIL (response.response.string should be not NULL).");
+      SERIAL_DEBUG.print("Value: ");
+      SERIAL_DEBUG.println(response.response.string);
+  } else SERIAL_DEBUG.println("STORE: OK");
+}
+
+void unit_storetags() {
+  SERIAL_DEBUG.println("------ ARANCINO STORETAGS TEST ------");
+  char* key = "unit_storetags_a";
+  char* tags[] = {"unit_tags_1", "unit_tags_2", "unit_tags_3"};
+  int val1 = 8;
+  float val2 = 16.758;
+  int val3 = 63;
+  char value1[2];
+  char value2[10];
+  char value3[10];
+  itoa(val1,value1,10);
+  dtostrf(val2,2,3,value2);
+  itoa(val3,value3,10);
+
+  char* samples[]={value1,value2,value3};
+
+  ArancinoPacket response;
+
+  response = Arancino.storetags(key, tags, samples, 3);
+
+  if (response.isError) {
+      SERIAL_DEBUG.print("STORETAGS: FAIL (response.isError should be false).");
+      SERIAL_DEBUG.print("Value: ");
+      SERIAL_DEBUG.println(response.isError);
+  } else if (response.responseCode != 100) {
+      SERIAL_DEBUG.print("STORETAGS: FAIL (response.responseCode should be 100).");
+      SERIAL_DEBUG.print("Value: ");
+      SERIAL_DEBUG.println(response.responseCode);
+  } else if (response.responseType != VOID) {
+      SERIAL_DEBUG.print("STORETAGS: FAIL (response.responseType should be VOID).");
+      SERIAL_DEBUG.print("Value: ");
+      SERIAL_DEBUG.println(response.responseType);
+  } else if (response.response.string != NULL) {
+      SERIAL_DEBUG.print("STORETAGS: FAIL (response.response.string should be NULL).");
+      SERIAL_DEBUG.print("Value: ");
+      SERIAL_DEBUG.println(response.response.string);
+  } else SERIAL_DEBUG.println("STORETAGS: OK");
+}
+
+void unit_mstore() {
+  SERIAL_DEBUG.println("------ ARANCINO MSTORE TEST ------");
+  char* keys[] = {"unit_mstore_a", "unit_mstore_b", "unit_mstore_c"};
+  int val1 = 6;
+  float val2 = 26.341;
+  int val3 = 31;
+  char value1[2];
+  char value2[10];
+  char value3[10];
+  itoa(val1,value1,10);
+  dtostrf(val2,2,3,value2);
+  itoa(val3,value3,10);
+
+  char* samples[]={value1,value2,value3};
+
+  ArancinoPacket response;
+
+  response = Arancino.mstore<ArancinoPacket>(keys, samples, 3);
+
+
+  if (response.isError) {
+      SERIAL_DEBUG.print("MSTORE: FAIL (response.isError should be false).");
+      SERIAL_DEBUG.print("Value: ");
+      SERIAL_DEBUG.println(response.isError);
+  } else if (response.responseCode != 100) {
+      SERIAL_DEBUG.print("MSTORE: FAIL (response.responseCode should be 100).");
+      SERIAL_DEBUG.print("Value: ");
+      SERIAL_DEBUG.println(response.responseCode);
+  } else if (response.responseType != STRING_ARRAY) {
+      SERIAL_DEBUG.print("MSTORE: FAIL (response.responseType should be STRING_ARRAY).");
+      SERIAL_DEBUG.print("Value: ");
+      SERIAL_DEBUG.println(response.responseType);
+  } else if (((int)*(response.response.stringArray - 1)) != 3) {
+      SERIAL_DEBUG.print("MSTORE PKT: FAIL (response.response.stringArray len should be 3).");
+      SERIAL_DEBUG.print("Value: ");
+      SERIAL_DEBUG.println(((int)*(response.response.stringArray - 1)));
+  }else if (search(response.response.stringArray, NULL, 3)) {
+      SERIAL_DEBUG.print("MGET PKT: FAIL (can't find timestamp value in string array).");
+  } else SERIAL_DEBUG.println("MSTORE PKT: OK");
+}
+
 void setup() {
     SERIAL_DEBUG.begin(115200);
     Arancino.begin(amdata);
-
+    delay(1000);
+    SERIAL_DEBUG.println("***** UNIT TEST START *****");
     unit_set();
     unit_get();
     unit_del();
@@ -890,6 +999,11 @@ void setup() {
     unit_publish();
     unit_mset();
     unit_mget();
+    unit_store();
+    unit_storetags();
+    unit_mstore();
+    SERIAL_DEBUG.println("***** UNIT TEST END *****");
+    SERIAL_DEBUG.println();
 
 }
 
