@@ -33,8 +33,10 @@ lib_deps =
 ## Testing the Library
 It is possible to run unit tests for the Arancino Library. In order to do so you need to:
 
-1. Flash `test/unit.ino` sketch on the microcontroller.
-2. Run `test/unit.sh` on the host where Arancino Daemon is installed. *
-3. Output is written to the [Debug](DEBUG.md) Serial.
+1. Output is written to the [Debug](DEBUG.md) Serial (`uc UART 1`) and it is possible to read it by serial monitor using 115200 baudrate.
+2. Flash `test/unit.ino` sketch on the microcontroller.
+3. Run `test/unit.sh` on the host where Arancino Daemon is installed. *
+
+NB: if no output on the serial monitor press `uc reset` button and the output should be refreshed 
 
 *: It is possible to modify connection variables relative to redis databases inside `unit.sh` file.
