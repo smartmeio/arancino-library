@@ -1,16 +1,16 @@
 /*
   SPDX-license-identifier: Apache-2.0
-  
+
   Copyright (C) 2019 SmartMe.IO
-  
+
   Authors:  Dario Gogliandolo
-  
+
   Licensed under the Apache License, Version 2.0 (the "License"); you may
   not use this file except in compliance with the License. You may obtain
   a copy of the License at
-  
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -26,7 +26,7 @@ ArancinoPacket hgetPacket(char* key, char* field )
 Parameters:
   - key: the name of the key which hold the hash.
   - field: the name of the field from which the value is retrieved
-  
+
 Return value:
 ArancinoPacket reply: ArancinoPacket containing:
   - isError: API call outcome (true or false);
@@ -40,45 +40,39 @@ ArancinoPacket reply: ArancinoPacket containing:
 ArancinoMetadata amdata = {
   .fwname = "06.2 - HGet w/ Packet Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
 
+  SERIAL_DEBUG.begin(115200);
+
   Arancino.begin(amdata);
-  Serial.begin(115200);
-  
   Arancino.hset("EX_06_2_foo","bar","yeah");
   Arancino.hset("EX_06_2_foo","baz","whoo");
 
 }
 
-void loop() {
+void loop(){
 
-  char* value = Arancino.hget("EX_06_2_foo","bar");
-  Serial.print("foo bar -> ");
-  Serial.println(value);
-  //foo bar -> yeah
-  Arancino.free(value);
+    ArancinoPacket apckt = Arancino.hget<ArancinoPacket>("EX_06_2_foo", "baz");
 
-  ArancinoPacket apckt = Arancino.hget<ArancinoPacket>("EX_06_2_foo", "baz");
+    if (apckt.isError == 0)
+    {
+      SERIAL_DEBUG.println("HGET OK");
+      SERIAL_DEBUG.print("Response code: ");
+      SERIAL_DEBUG.println(apckt.responseCode);
+      SERIAL_DEBUG.print("Response type: ");
+      SERIAL_DEBUG.println(apckt.responseType);
+      SERIAL_DEBUG.print("foo baz -> ");
+      SERIAL_DEBUG.println(apckt.response.string);
+    }
+    else
+    {
+      SERIAL_DEBUG.println("HGET ERROR");
+    }
 
-  if (apckt.isError == 0)
-  {
-    Serial.println("HGET OK");
-    Serial.print("Response code: ");
-    Serial.println(apckt.responseCode);
-    Serial.print("Response type: ");
-    Serial.println(apckt.responseType);
-    Serial.print("foo baz -> ");
-    Serial.println(apckt.response.string);
-  }
-  else
-  {
-    Serial.println("HGET ERROR");
-  }
+    Arancino.free(apckt);
 
-  Arancino.free(apckt);
-
-  delay(5000); //wait 5 seconds
+    delay(5000); //wait 5 seconds
 }

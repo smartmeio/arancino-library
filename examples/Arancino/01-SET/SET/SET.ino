@@ -30,7 +30,7 @@ Set 'key' to hold the string 'value'. If 'key' already holds a 'value', it is ov
 Parameters:
 - key: the key name
 - value: the value for the specified key. can be char*, int, long or float
-- isPersistent: optional boolean value to specify if value must be stored 
+- isPersistent: optional boolean value to specify if value must be stored
     persistently or not. Default is `false`.
 
 Return value - ArancinoPacket reply: ArancinoPacket containing:
@@ -47,13 +47,14 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 ArancinoMetadata amdata = {
   .fwname = "01.1 - Set Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
+
 void setup() {
-  
+
   Arancino.begin(amdata);
-  
+
   //char*
   char* key1 = "EX_01_1_foo";
   char* value1 = "hooray";

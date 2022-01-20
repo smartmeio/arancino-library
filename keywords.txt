@@ -43,6 +43,9 @@ free	KEYWORD2
 doubleToString  KEYWORD2
 print	KEYWORD2
 println	KEYWORD2
+store	KEYWORD2
+mstore	KEYWORD2
+storetags	KEYWORD2
 setReservedCommunicationMode	KEYWORD2
 isValidUTF8	KEYWORD2
 

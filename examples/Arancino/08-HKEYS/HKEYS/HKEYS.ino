@@ -36,30 +36,30 @@ Return value - char** reply:
 ArancinoMetadata amdata = {
   .fwname = "08.1 - HKeys Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
 
+  SERIAL_DEBUG.begin(115200);
   Arancino.begin(amdata);
-  Serial.begin(115200);
-  
+
   Arancino.hset("EX_08_1_foo","bar","yeah");
   Arancino.hset("EX_08_1_foo","baz","whoo");
 
 }
 
-void loop() {
+void loop(){
 
-  char** fields = Arancino.hkeys("EX_08_1_foo");
-  for (int i = 0; i < Arancino.getArraySize(fields); i++) {
-    Serial.print("EX_08_1_foo -> ");
-    Serial.println(fields[i]);
-    // foo -> bar
-    // foo -> baz
-  }
+    char** fields = Arancino.hkeys("EX_08_1_foo");
+    for (int i = 0; i < Arancino.getArraySize(fields); i++) {
+      SERIAL_DEBUG.print("EX_08_1_foo -> ");
+      SERIAL_DEBUG.println(fields[i]);
+      // foo -> bar
+      // foo -> baz
+    }
+    Arancino.free(fields);
 
-  Arancino.free(fields);
+    delay(5000); //wait 5 seconds
 
-  delay(5000); //wait 5 seconds
 }

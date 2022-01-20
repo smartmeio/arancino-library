@@ -27,7 +27,7 @@ Sets the given `keys` to their respective `values` MSET replaces existing values
 Parameters:
 - key: the key name
 - value: the value for the specified key. can be char*, int, long or float
-- isPersistent: optional boolean value to specify if value must be stored 
+- isPersistent: optional boolean value to specify if value must be stored
     persistently or not. Default is `false`.
 
 - keys: keys to set;
@@ -47,7 +47,7 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 ArancinoMetadata amdata = {
   .fwname = "13.1 - MSet Example",
   .fwversion = "1.0.0",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 char* keys[] = {"EX_13_1_foo1", "EX_13_1_foo2", "EX_13_1_foo3"};
@@ -55,28 +55,29 @@ char* values[] = {"value1", "value2", "value3"};
 
 void setup(){
 
+  SERIAL_DEBUG.begin(115200);
+
   Arancino.begin(amdata);
-  Serial.begin(115200);
 
   ArancinoPacket apckt = Arancino.mset(keys, values, 3);
 
   if (apckt.isError == 0)
   {
-    Serial.println("MSET OK");
-    Serial.print("Response code: ");
-    Serial.println(apckt.responseCode);
-    Serial.print("Response type: ");
-    Serial.println(apckt.responseType);
-    Serial.print("Response value: ");
-    Serial.println(apckt.response.integer);
+    SERIAL_DEBUG.println("MSET OK");
+    SERIAL_DEBUG.print("Response code: ");
+    SERIAL_DEBUG.println(apckt.responseCode);
+    SERIAL_DEBUG.print("Response type: ");
+    SERIAL_DEBUG.println(apckt.responseType);
+    SERIAL_DEBUG.print("Response value: ");
+    SERIAL_DEBUG.println(apckt.response.integer);
   }
   else
   {
-    Serial.println("MSET ERROR");
+    SERIAL_DEBUG.println("MSET ERROR");
   }
 
   Arancino.free(apckt);
-  
+
 }
 
 void loop() {

@@ -35,16 +35,15 @@ ArancinoPacket reply: ArancinoPacket containing:
 ArancinoMetadata amdata = {
   .fwname = "11.1 - Flush Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
 
   Arancino.begin(amdata);
-
   Arancino.set("EX_11_1_foo","bar");
   Arancino.set("EX_11_1_foo","baz");
-  
+
   //delete all the keys
   Arancino.flush();
 

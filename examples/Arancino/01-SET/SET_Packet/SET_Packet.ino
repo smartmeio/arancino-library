@@ -1,16 +1,16 @@
 /*
   SPDX-license-identifier: Apache-2.0
-  
+
   Copyright (C) 2019 SmartMe.IO
-  
+
   Authors:  Dario Gogliandolo
-  
+
   Licensed under the Apache License, Version 2.0 (the "License"); you may
   not use this file except in compliance with the License. You may obtain
   a copy of the License at
-  
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -29,7 +29,7 @@ Set 'key' to hold the string 'value'. If 'key' already holds a 'value', it is ov
 Parameters:
 - key: the key name
 - value: the value for the specified key. can be char*, int, long or float
-- isPersistent: optional boolean value to specify if value must be stored 
+- isPersistent: optional boolean value to specify if value must be stored
     persistently or not. Default is `false`.
 
 Return value - ArancinoPacket reply: ArancinoPacket containing:
@@ -45,29 +45,30 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 ArancinoMetadata amdata = {
   .fwname = "01.2 - Set w/ Packet Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
 
+  SERIAL_DEBUG.begin(115200);
+
   Arancino.begin(amdata);
-  Serial.begin(115200);
 
   ArancinoPacket apckt = Arancino.set("EX_01_2_foo", "bar");
-  
+
   if (apckt.isError == 0){
-    
-    Serial.println("SET OK");
-    Serial.print("Response code: ");
-    Serial.println(apckt.responseCode);
-    Serial.print("Response type: ");
-    Serial.println(apckt.responseType);
-    Serial.print("Response value: ");
-    Serial.println(apckt.response.integer);
+
+    SERIAL_DEBUG.println("SET OK");
+    SERIAL_DEBUG.print("Response code: ");
+    SERIAL_DEBUG.println(apckt.responseCode);
+    SERIAL_DEBUG.print("Response type: ");
+    SERIAL_DEBUG.println(apckt.responseType);
+    SERIAL_DEBUG.print("Response value: ");
+    SERIAL_DEBUG.println(apckt.response.integer);
 
   }
   else{
-    Serial.println("SET ERROR");
+    SERIAL_DEBUG.println("SET ERROR");
   }
 
   Arancino.free(apckt); //delete packet from memory

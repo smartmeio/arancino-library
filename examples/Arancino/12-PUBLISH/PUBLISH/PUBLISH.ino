@@ -28,8 +28,8 @@ Parameters:
 - channel: channel where message will be send
 - message: message to send
 
-Return value - int reply: 
-- the number of clients that received the message.
+Return value - int reply:
+- the number of clients that have received the message.
 
 - void flush()
 
@@ -41,18 +41,14 @@ Return value - void reply
 ArancinoMetadata amdata = {
   .fwname = "12.1 - Publish Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
 
+  SERIAL_DEBUG.begin(115200);
+
   Arancino.begin(amdata);
-  
-  //char*
-  char* channel1 = "EX_12_1_channel1";
-  char* message1 = "hooray";
-  //publish the value 'hooray' into the 'EX_12_1_channel1' channel
-  Arancino.publish(channel1, message1);
 
   //int
   char* channel2 = "EX_12_1_channel2";
@@ -68,7 +64,16 @@ void setup() {
 
 }
 
-void loop() {
-  // do something
-}
+void loop(){
 
+    char* channel1 = "EX_12_1_channel1";
+    char* message1 = "hooray";
+    //publish the value 'hooray' into the 'EX_12_1_channel1' channel
+    int num_client = Arancino.publish(channel1, message1);
+
+    SERIAL_DEBUG.print("message received by ");
+    SERIAL_DEBUG.print(num_client);
+    SERIAL_DEBUG.println(" clients");
+    delay(10000);
+
+}

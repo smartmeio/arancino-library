@@ -39,33 +39,34 @@ Return value - char* reply:
 ArancinoMetadata amdata = {
   .fwname = "06.1 - HGet Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
 
+  SERIAL_DEBUG.begin(115200);
+
   Arancino.begin(amdata);
-  Serial.begin(115200);
 
   Arancino.hset("EX_06_1_foo","bar","yeah");
   Arancino.hset("EX_06_1_foo","baz","whoo");
 
 }
 
-void loop() {
-  
-  char* value = Arancino.hget("EX_06_1_foo","bar");
-  Serial.print("foo bar -> ");
-  Serial.println(value);
-  //foo bar -> yeah
-  Arancino.free(value);
-  
-  value = Arancino.hget("EX_06_1_foo","baz");
-  Serial.print("foo baz -> ");
-  Serial.println(value);
-  //foo bar -> whoo
-  Arancino.free(value);
+void loop(){
 
-  delay(5000); //wait 5 seconds
+    char* value = Arancino.hget("EX_06_1_foo","bar");
+    SERIAL_DEBUG.print("foo bar -> ");
+    SERIAL_DEBUG.println(value);
+    //foo bar -> yeah
+    Arancino.free(value);
+
+    value = Arancino.hget("EX_06_1_foo","baz");
+    SERIAL_DEBUG.print("foo baz -> ");
+    SERIAL_DEBUG.println(value);
+    //foo bar -> whoo
+    Arancino.free(value);
+
+    delay(5000); //wait 5 seconds
 
 }

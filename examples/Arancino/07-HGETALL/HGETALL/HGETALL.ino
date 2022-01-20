@@ -35,30 +35,31 @@
 ArancinoMetadata amdata = {
   .fwname = "07.1 - HGetAll Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
 
+  SERIAL_DEBUG.begin(115200);
   Arancino.begin(amdata);
-  Serial.begin(115200);
-
   Arancino.hset("EX_07_1_foo", "bar", "yeah");
   Arancino.hset("EX_07_1_foo", "baz", "whoo");
 
 }
 
-void loop() {
-  char** values = Arancino.hgetall("EX_07_1_foo");
-  int arraySize = Arancino.getArraySize(values);
-  for (int i = 0; i < arraySize; i += 2)
-  {
-    Serial.print("foo ");
-    Serial.print(values[i]);
-    Serial.print(" = ");
-    Serial.println(values[i + 1]);
-  }
-  Arancino.free(values); //delete the array from memory
+void loop(){
 
-  delay(5000); //wait 5 seconds
+    char** values = Arancino.hgetall("EX_07_1_foo");
+    int arraySize = Arancino.getArraySize(values);
+    for (int i = 0; i < arraySize; i += 2)
+    {
+      SERIAL_DEBUG.print("foo ");
+      SERIAL_DEBUG.print(values[i]);
+      SERIAL_DEBUG.print(" = ");
+      SERIAL_DEBUG.println(values[i + 1]);
+    }
+    Arancino.free(values); //delete the array from memory
+
+    delay(5000); //wait 5 seconds
+
 }

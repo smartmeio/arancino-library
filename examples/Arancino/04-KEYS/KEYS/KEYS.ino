@@ -45,39 +45,41 @@
 ArancinoMetadata amdata = {
   .fwname = "04.1 - Keys Example",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
-  
+
+  SERIAL_DEBUG.begin(115200);
+
   Arancino.begin(amdata);
-  Serial.begin(115200);
 
   Arancino.set("EX_04_1_pressure", 1023);
   Arancino.set("EX_04_1_humidity", 67.5);
   Arancino.set("EX_04_1_temperature", 24.4);
+
 }
 
-void loop() {
+void loop(){
 
-  char** keys = Arancino.keys();
-  for (int i = 0; i < Arancino.getArraySize(keys); i++) {
-    Serial.println(keys[i]);
-  }
-  //pressure
-  //humidity
-  //temperature
-  Arancino.free(keys); //delete the array from memory
+    char** keys = Arancino.keys();
+    for (int i = 0; i < Arancino.getArraySize(keys); i++) {
+      SERIAL_DEBUG.println(keys[i]);
+    }
+    //pressure
+    //humidity
+    //temperature
+    Arancino.free(keys); //delete the array from memory
 
-  delay(1000); //wait 1 seconds
+    delay(1000); //wait 1 seconds
 
-  keys = Arancino.keys("EX_04_1_temp*");  //return all the keys that contains "temp" pattern
-  for (int i = 0; i < Arancino.getArraySize(keys) ; i++) {
-    Serial.println(keys[i]);      //temperature
-  }
-  
-  Arancino.free(keys); //delete the array from memory
+    keys = Arancino.keys("EX_04_1_temp*");  //return all the keys that contains "temp" pattern
+    for (int i = 0; i < Arancino.getArraySize(keys) ; i++) {
+      SERIAL_DEBUG.println(keys[i]);      //temperature
+    }
 
-  delay(1000); //wait 1 seconds
+    Arancino.free(keys); //delete the array from memory
+
+    delay(1000); //wait 1 seconds
 
 }

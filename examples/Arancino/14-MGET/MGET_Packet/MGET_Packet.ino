@@ -48,46 +48,45 @@ ArancinoPacket reply: ArancinoPacket containing:
 ArancinoMetadata amdata = {
   .fwname = "14.2 - MGet w/ Packet Example",
   .fwversion = "1.0.0",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 char* keys[] = {"EX_14_2_foo1", "EX_14_2_foo2", "EX_14_2_foo3"};
 
 void setup() {
-  
+
+  SERIAL_DEBUG.begin(115200);
+
   Arancino.begin(amdata);
-  Serial.begin(115200);
 
-  Arancino.set("EX_14_1_foo1", "a");
-  Arancino.set("EX_14_1_foo3", "c");
-
+  Arancino.set("EX_14_2_foo1", "a");
+  Arancino.set("EX_14_2_foo2", "b");
+  Arancino.set("EX_14_2_foo3", "c");
 
 }
 
-void loop() {
+void loop(){
 
-ArancinoPacket apckt = Arancino.mget<ArancinoPacket>(keys, 3);
+    ArancinoPacket apckt = Arancino.mget<ArancinoPacket>(keys, 3);
 
-  if (!apckt.isError)
-  {
-    Serial.println("MGET OK");
-    Serial.print("Response code: ");
-    Serial.println(apckt.responseCode);
-    Serial.print("Response type: ");
-    Serial.println(apckt.responseType);
+    if (!apckt.isError)
+    {
+      SERIAL_DEBUG.println("MGET OK");
+      SERIAL_DEBUG.print("Response code: ");
+      SERIAL_DEBUG.println(apckt.responseCode);
+      SERIAL_DEBUG.print("Response type: ");
+      SERIAL_DEBUG.println(apckt.responseType);
 
-    for(int i = 0; i < Arancino.getArraySize(apckt.response.stringArray); i++) {
-      Serial.print(keys[i]);
-      Serial.print(" -> ");
-      Serial.println(apckt.response.stringArray[i]);
+      for(int i = 0; i < Arancino.getArraySize(apckt.response.stringArray); i++) {
+        SERIAL_DEBUG.print(keys[i]);
+        SERIAL_DEBUG.print(" -> ");
+        SERIAL_DEBUG.println(apckt.response.stringArray[i]);
+      }
+      Arancino.free(apckt); //delete the string from memory
     }
-    Arancino.free(apckt); //delete the string from memory
-  }
-  else
-  {
-    Serial.println("MGET ERROR");
-  }
-
-  delay(5000);
-  
+    else
+    {
+      SERIAL_DEBUG.println("MGET ERROR");
+    }
+    delay(5000);
 }

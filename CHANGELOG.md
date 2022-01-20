@@ -1,5 +1,27 @@
 # Changelog
 
+#### v 2.0.0 - 2022.01.20
+* Upd: updated unit test examples. [#1uqbjbp] (https://app.clickup.com/t/1uqbjbp)
+* Add: added useFreeRtos parameter in `start` command. [#1vht0nc] (https://app.clickup.com/t/1vht0nc)
+* Fix: bug into `deviceIdentification` task. [#1w8qx9m] (https://app.clickup.com/t/1w8qx9m)
+* Add: added examples wthout freeRtos. [#1vhrhj2] (https://app.clickup.com/t/1vhrhj2)
+* Fix: read internal temperature for STM32. [#pbbnm1] (https://app.clickup.com/t/pbbnm1)
+* Udp: code revision. [#j58vz6] (https://app.clickup.com/t/j58vz6)
+* Udp: examples revision. [#jd3yjq] (https://app.clickup.com/t/jd3yjq)
+* Add: read internal temperature for STM32. [#pbbnm1] (https://app.clickup.com/t/pbbnm1)
+* Add: Arduino `loop` as FreeRtos task. [#p59vhb](https://app.clickup.com/t/p59vhb)
+* Fix: fixed bug with float and double using FreeRtos. [#n990qu](https://app.clickup.com/t/n990qu)
+* Add: added interocep function. [#d2x5yt](https://app.clickup.com/t/d2x5yt)
+* Add: added `setReserved` function. [#n1amcu](https://app.clickup.com/t/n1amcu)
+* Upd: removed deprecated arguments on the `begin` function. [fb6jve] (https://app.clickup.com/t/fb6jve)
+* Upd: removed `metadata` function. [fb6hyw] (https://app.clickup.com/t/fb6hyw)
+* Upd: removed check on reserved command. [fv2dmy] (https://app.clickup.com/t/fv2dmy)
+* Upd: updated sync/async mode. [fd59jj] (https://app.clickup.com/t/fd59jj)
+* Add: added persistent mode to `mset` and `hset` function. [aex4by] (https://app.clickup.com/t/aex4by)
+* Add: added `getReserved` function. [g31n4z](https://app.clickup.com/t/g31n4z)
+* Add: added `store` function. [#gk4cn8](https://app.clickup.com/t/gk4cn8)
+* Add: added `storetags` function. [#hf2fg6](https://app.clickup.com/t/hf2fg6)
+
 #### v 1.4.2 - 2021.06.15
 * Fix: Fixed bug with `free` function for avr board. [#mhcbn0](https://app.clickup.com/t/mhcbn0)
 * Fix: Fixed bug with uint type for avr board. [#mhcbn0](https://app.clickup.com/t/mhcbn0)

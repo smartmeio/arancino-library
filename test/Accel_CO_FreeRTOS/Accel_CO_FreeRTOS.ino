@@ -10,20 +10,20 @@
  */
 
 #include <Arancino.h>
-#define LED_PIN 13
+#define LED_BUILTIN 13
 
 ArancinoMetadata amdata = {
   .fwname = "Accel CO w/ FreeRTOS",
   .fwversion = "1.0.1",
-  .tzoffset = "+1000" 
+  .tzoffset = "+1000"
 };
 
 void setup() {
-  
+
   Arancino.begin(amdata);
-  pinMode(LED_PIN, OUTPUT);
-  Serial.begin(115200);
-  
+  pinMode(LED_BUILTIN, OUTPUT);
+  SERIAL_DEBUG.begin(115200);
+
   Arancino.flush();
   Arancino.set("CO", 0);
 
@@ -40,10 +40,9 @@ void setup() {
 
 
 void loop() {
-  String mem = "free memory: " + (String)xPortGetFreeHeapSize();
-  Serial.println(mem);
-  digitalWrite(LED_PIN, (millis() / 1000) % 2);
-  
+
+  digitalWrite(LED_BUILTIN, (millis() / 1000) % 2);
+
   delay(200);
 
 }
