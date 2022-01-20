@@ -95,3 +95,17 @@ under the License
 //RESERVED KEYS ARRAY DEF
 #define RESERVED_KEY_ARRAY_SIZE		4   // Array dimension of Reserved Keys
 #define RESERVED_KEY_MAX_LENGTH		11  // Max length of a Reserved Key name
+
+//SECURE MODE
+#define SIGN_COMMAND            "SIGN"
+
+//CRYPTOCHIP
+#define SLOT_PRIVATEKEY             0
+
+//BASE 64 ENCODE
+#define CHALLENGE_DECODED_LENGTH    32
+#define SIGNATURE_DECODED_LENGTH    64
+#define SIGNATURE_ENCODED_LENGTH    89   //88 + 1 for '\0'
+
+//SHA
+#define SHA_OUTPUT_LENGTH   32

@@ -33,6 +33,8 @@ The number of keys that were removed.
 
 #include <Arancino.h>
 
+#define scr_mode 0
+
 ArancinoMetadata amdata = {
   .fwname = "03.1 - Del Example",
   .fwversion = "1.0.1",
@@ -40,8 +42,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata, acfg, scr_mode);
   Serial.begin(115200);
   
   Arancino.set("EX_03_1_foo","bar");

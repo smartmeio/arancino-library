@@ -36,6 +36,7 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "12.2 - Publish Example",
@@ -44,8 +45,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata,acfg, scr_mode);
   Serial.begin(115200);
 
 }
@@ -61,7 +62,10 @@ void loop() {
      Serial.println(apckt.responseCode);
      Serial.print("Response type: ");
      Serial.println(apckt.responseType);  
-     int resp = apckt.response.integer;
+     int resp;
+     if(scr_mode == 0)
+      resp = apckt.response.integer;
+     else resp = atoi(apckt.response.stringArray[0]);
      Serial.print("Message sent to ");
      Serial.print(resp);
      Serial.println(" clients");

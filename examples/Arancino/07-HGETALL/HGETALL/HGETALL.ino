@@ -31,6 +31,7 @@
 */
 
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "07.1 - HGetAll Example",
@@ -39,8 +40,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata, acfg, scr_mode);
   Serial.begin(115200);
 
   Arancino.hset("EX_07_1_foo", "bar", "yeah");
@@ -50,7 +51,12 @@ void setup() {
 
 void loop() {
   char** values = Arancino.hgetall("EX_07_1_foo");
-  int arraySize = Arancino.getArraySize(values);
+  int arraySize;
+
+  if (scr_mode == 0)
+    arraySize = Arancino.getArraySize(values);
+  else arraySize = Arancino.getArraySize(values) - 1;
+
   for (int i = 0; i < arraySize; i += 2)
   {
     Serial.print("foo ");

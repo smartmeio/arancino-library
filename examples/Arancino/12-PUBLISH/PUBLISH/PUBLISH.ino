@@ -37,6 +37,7 @@ Return value - void reply
 */
 
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "12.1 - Publish Example",
@@ -45,8 +46,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata,acfg, scr_mode);
   
   //char*
   char* channel1 = "EX_12_1_channel1";

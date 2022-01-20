@@ -33,6 +33,7 @@ ArancinoPacket reply: ArancinoPacket containing:
   - response.stringArray: char** pointer to the string array of fields matching key.
 */
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "08.2 - HKeys w/ Packet Example",
@@ -41,8 +42,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata, acfg, scr_mode);
   Serial.begin(115200);
 
   Arancino.hset("EX_08_2_foo","bar","yeah");
@@ -51,7 +52,6 @@ void setup() {
 }
 
 void loop() {
-
   ArancinoPacket apckt = Arancino.hkeys<ArancinoPacket>("EX_08_2_foo");
   char** fields = apckt.response.stringArray;
   if (!apckt.isError)
@@ -61,7 +61,14 @@ void loop() {
     Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
-    for (int i = 0; i < Arancino.getArraySize(fields); i++) {
+
+    int arraySize;
+
+    if (scr_mode == 0)
+      arraySize = Arancino.getArraySize(fields);
+    else arraySize = Arancino.getArraySize(fields) - 1;
+
+    for (int i = 0; i < arraySize; i++) {
       Serial.print("EX_08_2_foo -> ");
       Serial.println(fields[i]);
       // foo -> bar

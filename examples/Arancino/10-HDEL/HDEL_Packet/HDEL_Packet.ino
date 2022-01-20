@@ -34,6 +34,7 @@ ArancinoPacket reply: ArancinoPacket containing:
   - response.integer: 1 if the field is removed from hash or 0 if the field or the key does not exist in the hash.
 */
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "10.2 - HDel w/ Packet Example",
@@ -42,8 +43,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata,acfg, scr_mode);
   Serial.begin(115200);
 
   Arancino.hset("EX_10_2_foo","bar","yeah");
@@ -58,7 +59,10 @@ void setup() {
     Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);  
-    int value = apckt.response.integer;
+    int value; 
+    if(scr_mode == 0)
+      value = apckt.response.integer;
+    else value = atoi(apckt.response.stringArray[0]);
     Serial.println(value ? "Field removed" : "Field/key not found");
   }
   else

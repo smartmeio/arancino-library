@@ -42,6 +42,7 @@ If a key doesn't exist the corresponding element in the returned array is `NULL`
 */
 
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "14.1 - MGet Example",
@@ -52,8 +53,8 @@ ArancinoMetadata amdata = {
 char* keys[] = {"EX_14_1_foo1", "EX_14_1_foo2", "EX_14_1_foo3"};
 
 void setup() {
-  
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata, acfg, scr_mode);
   Serial.begin(115200);
 
   Arancino.set("EX_14_1_foo1", "a");
@@ -66,10 +67,19 @@ void loop() {
 
   char** result = Arancino.mget(keys, 3);
 
-  for(int i = 0; i < Arancino.getArraySize(result); i++) {
-    Serial.print(keys[i]);
-    Serial.print(" -> ");
-    Serial.println(result[i]);
+  if(scr_mode == 0){
+    for(int i = 0; i < Arancino.getArraySize(result); i++) {
+      Serial.print(keys[i]);
+      Serial.print(" -> ");
+      Serial.println(result[i]);
+    }
+  }
+  else{
+    for(int i = 0; i < (Arancino.getArraySize(result) - 1); i++) {
+      Serial.print(keys[i]);
+      Serial.print(" -> ");
+      Serial.println(result[i]);
+    }
   }
 
   Arancino.free(result);

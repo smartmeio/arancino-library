@@ -31,6 +31,7 @@
 */
 
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "09.1 - HVals Example",
@@ -39,8 +40,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata,acfg,scr_mode);
   Serial.begin(115200);
 
   Arancino.hset("EX_09_1_foo", "bar", "yeah");
@@ -51,7 +52,13 @@ void setup() {
 void loop() {
 
   char** values = Arancino.hvals("EX_09_1_foo");
-  for (int i = 0; i < Arancino.getArraySize(values); i++) {
+  int arraySize;
+
+  if (scr_mode == 0)
+    arraySize = Arancino.getArraySize(values);
+  else arraySize = Arancino.getArraySize(values) - 1;
+
+  for (int i = 0; i < arraySize; i++) {
     Serial.print("EX_09_1_foo -> ");
     Serial.println(values[i]);
     // foo -> yeah

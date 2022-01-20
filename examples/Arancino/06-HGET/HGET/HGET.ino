@@ -35,6 +35,7 @@ Return value - char* reply:
 */
 
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "06.1 - HGet Example",
@@ -43,8 +44,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata,acfg, scr_mode);
   Serial.begin(115200);
 
   Arancino.hset("EX_06_1_foo","bar","yeah");

@@ -42,6 +42,8 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+#define scr_mode 0
+
 ArancinoMetadata amdata = {
   .fwname = "01.2 - Set w/ Packet Example",
   .fwversion = "1.0.1",
@@ -50,7 +52,8 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata, acfg, scr_mode);
   Serial.begin(115200);
 
   ArancinoPacket apckt = Arancino.set("EX_01_2_foo", "bar");
@@ -62,8 +65,8 @@ void setup() {
     Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
-    Serial.print("Response value: ");
-    Serial.println(apckt.response.integer);
+    //Serial.print("Response value: ");
+    //Serial.println(apckt.response.integer);
 
   }
   else{

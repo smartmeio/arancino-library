@@ -44,6 +44,7 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "14.2 - MGet w/ Packet Example",
@@ -54,8 +55,8 @@ ArancinoMetadata amdata = {
 char* keys[] = {"EX_14_2_foo1", "EX_14_2_foo2", "EX_14_2_foo3"};
 
 void setup() {
-  
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata, acfg, scr_mode);
   Serial.begin(115200);
 
   Arancino.set("EX_14_1_foo1", "a");
@@ -76,10 +77,19 @@ ArancinoPacket apckt = Arancino.mget<ArancinoPacket>(keys, 3);
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
 
-    for(int i = 0; i < Arancino.getArraySize(apckt.response.stringArray); i++) {
-      Serial.print(keys[i]);
-      Serial.print(" -> ");
-      Serial.println(apckt.response.stringArray[i]);
+    if(scr_mode == 0){
+      for(int i = 0; i < Arancino.getArraySize(apckt.response.stringArray); i++) {
+        Serial.print(keys[i]);
+        Serial.print(" -> ");
+        Serial.println(apckt.response.stringArray[i]);
+      }
+    }
+    else{
+      for(int i = 0; i < (Arancino.getArraySize(apckt.response.stringArray) -1); i++) {
+        Serial.print(keys[i]);
+        Serial.print(" -> ");
+        Serial.println(apckt.response.stringArray[i]);
+      }
     }
     Arancino.free(apckt); //delete the string from memory
   }

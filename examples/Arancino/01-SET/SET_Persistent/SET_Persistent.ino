@@ -42,6 +42,9 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+#define scr_mode 0
+
+
 ArancinoMetadata amdata = {
   .fwname = "01 - Set Persistent and Volatile Example",
   .fwversion = "1.0.0",
@@ -49,8 +52,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata,acfg, scr_mode);
 
   Arancino.set("EX_01_3_key_1", "bar", true);      //persistent key
   Arancino.set("EX_01_3_key_2", "bar", 1);         //persistent key

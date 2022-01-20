@@ -41,6 +41,7 @@
 */
 
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "04.1 - Keys Example",
@@ -49,8 +50,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-  
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata,acfg, scr_mode);
   Serial.begin(115200);
 
   Arancino.set("EX_04_1_pressure", 1023);
@@ -61,7 +62,13 @@ void setup() {
 void loop() {
 
   char** keys = Arancino.keys();
-  for (int i = 0; i < Arancino.getArraySize(keys); i++) {
+  int arraySize;
+
+  if (scr_mode == 0)
+    arraySize = Arancino.getArraySize(keys);
+  else arraySize = Arancino.getArraySize(keys) - 1;
+
+  for (int i = 0; i < arraySize; i++) {
     Serial.println(keys[i]);
   }
   //pressure
@@ -72,7 +79,11 @@ void loop() {
   delay(1000); //wait 1 seconds
 
   keys = Arancino.keys("EX_04_1_temp*");  //return all the keys that contains "temp" pattern
-  for (int i = 0; i < Arancino.getArraySize(keys) ; i++) {
+  if (scr_mode == 0)
+    arraySize = Arancino.getArraySize(keys);
+  else arraySize = Arancino.getArraySize(keys) - 1;
+
+  for (int i = 0; i < arraySize ; i++) {
     Serial.println(keys[i]);      //temperature
   }
   

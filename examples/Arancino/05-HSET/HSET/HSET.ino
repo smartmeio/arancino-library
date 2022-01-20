@@ -40,7 +40,7 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 
 #include <Arancino.h>
-
+#define scr_mode 0
 ArancinoMetadata amdata = {
   .fwname = "05.1 - HSet Example",
   .fwversion = "1.0.1",
@@ -48,8 +48,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-  
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata,acfg, scr_mode);
 
   Arancino.hset("ex05_foo","bar","yeah");
   Arancino.hset("ex05_foo","bar","whoo");

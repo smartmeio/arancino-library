@@ -1,5 +1,13 @@
 #include <Arancino.h>
 
+#define scr_mode 0
+
+ArancinoMetadata amdata = {
+  .fwname = "00.1 - TEST",
+  .fwversion = "1.0.0",
+  .tzoffset = "+1000"
+};
+
 bool search(char** array, char* str, uint cnt) {
   for (uint i = 0; i < cnt; i ++) {
     if (strcmp(array[i], str) == 0) return true;
@@ -26,7 +34,7 @@ void unit_set() {
         Serial1.print("SET INT: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL && scr_mode == 0) {
         Serial1.print("SET INT: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -47,7 +55,7 @@ void unit_set() {
         Serial1.print("SET INT PERS: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL && scr_mode == 0) {
         Serial1.print("SET INT PERS: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -68,7 +76,7 @@ void unit_set() {
         Serial1.print("SET DOUBLE: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL && scr_mode == 0) {
         Serial1.print("SET DOUBLE: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -89,7 +97,7 @@ void unit_set() {
         Serial1.print("SET DOUBLE PERS: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL && scr_mode == 0) {
         Serial1.print("SET DOUBLE PERS: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -110,7 +118,7 @@ void unit_set() {
         Serial1.print("SET LONG: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL && scr_mode == 0) {
         Serial1.print("SET LONG: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -131,7 +139,7 @@ void unit_set() {
         Serial1.print("SET LONG PERS: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL && scr_mode == 0) {
         Serial1.print("SET LONG PERS: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -152,7 +160,7 @@ void unit_set() {
         Serial1.print("SET STR: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL && scr_mode == 0) {
         Serial1.print("SET STR: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -173,7 +181,7 @@ void unit_set() {
         Serial1.print("SET STR PERS: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL && scr_mode == 0) {
         Serial1.print("SET STR PERS: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -194,7 +202,7 @@ void unit_set() {
         Serial1.print("SET UINT32T: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL && scr_mode == 0) {
         Serial1.print("SET UINT32T: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -215,7 +223,7 @@ void unit_set() {
         Serial1.print("SET UINT32T PERS: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL && scr_mode == 0) {
         Serial1.print("SET UINT32T PERS: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -228,43 +236,87 @@ void unit_get() {
 
     response = Arancino.get<ArancinoPacket>("unit_get_ok");
 
-    if (response.isError) {
-        Serial1.print("GET PKT: FAIL (response.isError should be false).");
-        Serial1.print("Value: ");
-        Serial1.println(response.isError);
-    } else if (response.responseCode != 100) {
-        Serial1.print("GET PKT: FAIL (response.responseCode should be 100).");
-        Serial1.print("Value: ");
-        Serial1.println(response.responseCode);
-    } else if (response.responseType != STRING) {
-        Serial1.print("GET PKT: FAIL (response.responseType should be STRING).");
-        Serial1.print("Value: ");
-        Serial1.println(response.responseType);
-    } else if (strcmp(response.response.string, "ok") != 0) {
-        Serial1.print("GET PKT: FAIL (response.response.string should be 'ok').");
-        Serial1.print("Value: ");
-        Serial1.println(response.response.string);
-    } else Serial1.println("GET PKT: OK");
+    if(scr_mode == 0){
+        if (response.isError) {
+            Serial1.print("GET PKT: FAIL (response.isError should be false).");
+            Serial1.print("Value: ");
+            Serial1.println(response.isError);
+        } else if (response.responseCode != 100) {
+            Serial1.print("GET PKT: FAIL (response.responseCode should be 100).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseCode);
+        } else if (response.responseType != STRING) {
+            Serial1.print("GET PKT: FAIL (response.responseType should be STRING).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseType);
+        } else if (strcmp(response.response.string, "ok") != 0) {
+            Serial1.print("GET PKT: FAIL (response.response.string should be 'ok').");
+            Serial1.print("Value: ");
+            Serial1.println(response.response.string);
+        } else Serial1.println("GET PKT: OK");
+    }
+    else{
+        if (response.isError) {
+            Serial1.print("GET PKT: FAIL (response.isError should be false).");
+            Serial1.print("Value: ");
+            Serial1.println(response.isError);
+        } else if (response.responseCode != 100) {
+            Serial1.print("GET PKT: FAIL (response.responseCode should be 100).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseCode);
+        } else if (response.responseType != STRING_ARRAY) {
+            Serial1.print("GET PKT: FAIL (response.responseType should be STRING_ARRAY).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseType);
+        } else if (strcmp(response.response.stringArray[0], "ok") != 0) {
+            Serial1.print("GET PKT: FAIL (response.response.stringArray[0] should be 'ok').");
+            Serial1.print("Value: ");
+            Serial1.println(response.response.stringArray[0]);
+        } else Serial1.println("GET PKT: OK");
+    }
+
 
     response = Arancino.get<ArancinoPacket>("unit_get_ne");
 
-    if (response.isError) {
-        Serial1.print("GET NE PKT: FAIL (response.isError should be false).");
-        Serial1.print("Value: ");
-        Serial1.println(response.isError);
-    } else if (response.responseCode != 100) {
-        Serial1.print("GET NE PKT: FAIL (response.responseCode should be 100).");
-        Serial1.print("Value: ");
-        Serial1.println(response.responseCode);
-    } else if (response.responseType != STRING) {
-        Serial1.print("GET NE PKT: FAIL (response.responseType should be STRING).");
-        Serial1.print("Value: ");
-        Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
-        Serial1.print("GET NE PKT: FAIL (response.response.string should be NULL).");
-        Serial1.print("Value: ");
-        Serial1.println(response.response.string);
-    } else Serial1.println("GET NE PKT: OK");
+    if(scr_mode == 0){
+        if (response.isError) {
+            Serial1.print("GET NE PKT: FAIL (response.isError should be false).");
+            Serial1.print("Value: ");
+            Serial1.println(response.isError);
+        } else if (response.responseCode != 100) {
+            Serial1.print("GET NE PKT: FAIL (response.responseCode should be 100).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseCode);
+        } else if (response.responseType != STRING) {
+            Serial1.print("GET NE PKT: FAIL (response.responseType should be STRING).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseType);
+        } else if (response.response.string != NULL) {
+            Serial1.print("GET NE PKT: FAIL (response.response.string should be NULL).");
+            Serial1.print("Value: ");
+            Serial1.println(response.response.string);
+        } else Serial1.println("GET NE PKT: OK");
+    }
+    else{
+        if (response.isError) {
+            Serial1.print("GET NE PKT: FAIL (response.isError should be false).");
+            Serial1.print("Value: ");
+            Serial1.println(response.isError);
+        } else if (response.responseCode != 100) {
+            Serial1.print("GET NE PKT: FAIL (response.responseCode should be 100).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseCode);
+        } else if (response.responseType != STRING_ARRAY) {
+            Serial1.print("GET NE PKT: FAIL (response.responseType should be STRING_ARRAY).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseType);
+        } else if (response.response.stringArray[0] != NULL) {
+            Serial1.print("GET NE PKT: FAIL (response.response.stringArray[0] should be NULL).");
+            Serial1.print("Value: ");
+            Serial1.println(response.response.stringArray[0]);
+        } else Serial1.println("GET NE PKT: OK");
+    }
+
 }   
 
 void unit_del() {
@@ -273,43 +325,84 @@ void unit_del() {
 
     response = Arancino.del<ArancinoPacket>("unit_del_ok");
 
-    if (response.isError) {
-        Serial1.print("DEL PKT: FAIL (response.isError should be false).");
-        Serial1.print("Value: ");
-        Serial1.println(response.isError);
-    } else if (response.responseCode != 100) {
-        Serial1.print("DEL PKT: FAIL (response.responseCode should be 100).");
-        Serial1.print("Value: ");
-        Serial1.println(response.responseCode);
-    } else if (response.responseType != INT) {
-        Serial1.print("DEL PKT: FAIL (response.responseType should be INT).");
-        Serial1.print("Value: ");
-        Serial1.println(response.responseType);
-    } else if (response.response.integer != 1) {
-        Serial1.print("DEL PKT: FAIL (response.response.integer should be 1).");
-        Serial1.print("Value: ");
-        Serial1.println(response.response.integer);
-    } else Serial1.println("DEL PKT: OK");
-
+    if(scr_mode == 0){
+        if (response.isError) {
+            Serial1.print("DEL PKT: FAIL (response.isError should be false).");
+            Serial1.print("Value: ");
+            Serial1.println(response.isError);
+        } else if (response.responseCode != 100) {
+            Serial1.print("DEL PKT: FAIL (response.responseCode should be 100).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseCode);
+        } else if (response.responseType != INT) {
+            Serial1.print("DEL PKT: FAIL (response.responseType should be INT).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseType);
+        } else if (response.response.integer != 1) {
+            Serial1.print("DEL PKT: FAIL (response.response.integer should be 1).");
+            Serial1.print("Value: ");
+            Serial1.println(response.response.integer);
+        } else Serial1.println("DEL PKT: OK");
+    }
+    else{
+        if (response.isError) {
+            Serial1.print("DEL PKT: FAIL (response.isError should be false).");
+            Serial1.print("Value: ");
+            Serial1.println(response.isError);
+        } else if (response.responseCode != 100) {
+            Serial1.print("DEL PKT: FAIL (response.responseCode should be 100).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseCode);
+        } else if (response.responseType != STRING_ARRAY) {
+            Serial1.print("DEL PKT: FAIL (response.responseType should be INT).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseType);
+        } else if (atoi(packet.response.stringArray[0]) != 1) {
+            Serial1.print("DEL PKT: FAIL (response.response.integer should be 1).");
+            Serial1.print("Value: ");
+            Serial1.println(atoi(packet.response.stringArray[0]));
+        } else Serial1.println("DEL PKT: OK");        
+    }
     response = Arancino.del<ArancinoPacket>("unit_del_ne");
 
-    if (response.isError) {
-        Serial1.print("DEL NE PKT: FAIL (response.isError should be false).");
-        Serial1.print("Value: ");
-        Serial1.println(response.isError);
-    } else if (response.responseCode != 100) {
-        Serial1.print("DEL NE PKT: FAIL (response.responseCode should be 100).");
-        Serial1.print("Value: ");
-        Serial1.println(response.responseCode);
-    } else if (response.responseType != INT) {
-        Serial1.print("DEL NE PKT: FAIL (response.responseType should be INT).");
-        Serial1.print("Value: ");
-        Serial1.println(response.responseType);
-    } else if (response.response.integer != 0) {
-        Serial1.print("DEL NE PKT: FAIL (response.response.integer should be 0).");
-        Serial1.print("Value: ");
-        Serial1.println(response.response.integer);
-    } else Serial1.println("DEL NE PKT: OK");
+    if(scr_mode == 0){
+        if (response.isError) {
+            Serial1.print("DEL NE PKT: FAIL (response.isError should be false).");
+            Serial1.print("Value: ");
+            Serial1.println(response.isError);
+        } else if (response.responseCode != 100) {
+            Serial1.print("DEL NE PKT: FAIL (response.responseCode should be 100).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseCode);
+        } else if (response.responseType != INT) {
+            Serial1.print("DEL NE PKT: FAIL (response.responseType should be INT).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseType);
+        } else if (response.response.integer != 0) {
+            Serial1.print("DEL NE PKT: FAIL (response.response.integer should be 0).");
+            Serial1.print("Value: ");
+            Serial1.println(response.response.integer);
+        } else Serial1.println("DEL NE PKT: OK");
+    }
+    else{
+        if (response.isError) {
+            Serial1.print("DEL NE PKT: FAIL (response.isError should be false).");
+            Serial1.print("Value: ");
+            Serial1.println(response.isError);
+        } else if (response.responseCode != 100) {
+            Serial1.print("DEL NE PKT: FAIL (response.responseCode should be 100).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseCode);
+        } else if (response.responseType != STRING_ARRAY) {
+            Serial1.print("DEL NE PKT: FAIL (response.responseType should be INT).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseType);
+        } else if (atoi(packet.response.stringArray[0]) != 0) {
+            Serial1.print("DEL NE PKT: FAIL (response.response.integer should be 0).");
+            Serial1.print("Value: ");
+            Serial1.println(atoi(packet.response.stringArray[0]));
+        } else Serial1.println("DEL NE PKT: OK");        
+    }
 }
 
 void unit_hset() {
@@ -330,7 +423,7 @@ void unit_hset() {
         Serial1.print("HSET INT: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL  && scr_mode == 0) {
         Serial1.print("HSET INT: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -351,7 +444,7 @@ void unit_hset() {
         Serial1.print("HSET DOUBLE: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL && scr_mode == 0) {
         Serial1.print("HSET DOUBLE: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -371,7 +464,7 @@ void unit_hset() {
         Serial1.print("HSET LONG: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL  && scr_mode == 0) {
         Serial1.print("HSET LONG: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -391,7 +484,7 @@ void unit_hset() {
         Serial1.print("HSET STR: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NULL  && scr_mode == 0) {
         Serial1.print("HSET STR: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -411,7 +504,7 @@ void unit_hset() {
         Serial1.print("HSET UINT32T: FAIL (response.responseType should be VOID).");
         Serial1.print("Value: ");
         Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
+    } else if (response.response.string != NUL  && scr_mode == 0) {
         Serial1.print("HSET UINT32T: FAIL (response.response.string should be NULL).");
         Serial1.print("Value: ");
         Serial1.println(response.response.string);
@@ -424,43 +517,85 @@ void unit_hget() {
 
     response = Arancino.hget<ArancinoPacket>("unit_hget_ok", "test");
 
-    if (response.isError) {
-        Serial1.print("HGET PKT: FAIL (response.isError should be false).");
-        Serial1.print("Value: ");
-        Serial1.println(response.isError);
-    } else if (response.responseCode != 100) {
-        Serial1.print("HGET PKT: FAIL (response.responseCode should be 100).");
-        Serial1.print("Value: ");
-        Serial1.println(response.responseCode);
-    } else if (response.responseType != STRING) {
-        Serial1.print("HGET PKT: FAIL (response.responseType should be STRING).");
-        Serial1.print("Value: ");
-        Serial1.println(response.responseType);
-    } else if (strcmp(response.response.string, "ok") != 0) {
-        Serial1.print("HGET PKT: FAIL (response.response.string should be 'ok').");
-        Serial1.print("Value: ");
-        Serial1.println(response.response.string);
-    } else Serial1.println("HGET PKT: OK");
+    if(scr_mode == 0){
+        if (response.isError) {
+            Serial1.print("HGET PKT: FAIL (response.isError should be false).");
+            Serial1.print("Value: ");
+            Serial1.println(response.isError);
+        } else if (response.responseCode != 100) {
+            Serial1.print("HGET PKT: FAIL (response.responseCode should be 100).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseCode);
+        } else if (response.responseType != STRING) {
+            Serial1.print("HGET PKT: FAIL (response.responseType should be STRING).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseType);
+        } else if (strcmp(response.response.string, "ok") != 0) {
+            Serial1.print("HGET PKT: FAIL (response.response.string should be 'ok').");
+            Serial1.print("Value: ");
+            Serial1.println(response.response.string);
+        } else Serial1.println("HGET PKT: OK");
+    }
+    else{
+        if (response.isError) {
+            Serial1.print("HGET PKT: FAIL (response.isError should be false).");
+            Serial1.print("Value: ");
+            Serial1.println(response.isError);
+        } else if (response.responseCode != 100) {
+            Serial1.print("HGET PKT: FAIL (response.responseCode should be 100).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseCode);
+        } else if (response.responseType != STRING_ARRAY) {
+            Serial1.print("HGET PKT: FAIL (response.responseType should be STRING).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseType);
+        } else if (strcmp(response.response.stringArray[0], "ok") != 0) {
+            Serial1.print("HGET PKT: FAIL (response.response.string should be 'ok').");
+            Serial1.print("Value: ");
+            Serial1.println(response.response.stringArray[0]);
+        } else Serial1.println("HGET PKT: OK");        
+    }
 
     response = Arancino.hget<ArancinoPacket>("unit_hget_ne", "test");
 
-    if (response.isError) {
-        Serial1.print("HGET NE PKT: FAIL (response.isError should be false).");
-        Serial1.print("Value: ");
-        Serial1.println(response.isError);
-    } else if (response.responseCode != 100) {
-        Serial1.print("HGET NE PKT: FAIL (response.responseCode should be 100).");
-        Serial1.print("Value: ");
-        Serial1.println(response.responseCode);
-    } else if (response.responseType != STRING) {
-        Serial1.print("HGET NE PKT: FAIL (response.responseType should be STRING).");
-        Serial1.print("Value: ");
-        Serial1.println(response.responseType);
-    } else if (response.response.string != NULL) {
-        Serial1.print("HGET NE PKT: FAIL (response.response.string should be NULL).");
-        Serial1.print("Value: ");
-        Serial1.println(response.response.string);
-    } else Serial1.println("HGET NE PKT: OK");
+    if(scr_mode == 0){
+        if (response.isError) {
+            Serial1.print("HGET NE PKT: FAIL (response.isError should be false).");
+            Serial1.print("Value: ");
+            Serial1.println(response.isError);
+        } else if (response.responseCode != 100) {
+            Serial1.print("HGET NE PKT: FAIL (response.responseCode should be 100).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseCode);
+        } else if (response.responseType != STRING) {
+            Serial1.print("HGET NE PKT: FAIL (response.responseType should be STRING).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseType);
+        } else if (response.response.string != NULL) {
+            Serial1.print("HGET NE PKT: FAIL (response.response.string should be NULL).");
+            Serial1.print("Value: ");
+            Serial1.println(response.response.string);
+        } else Serial1.println("HGET NE PKT: OK");
+    }
+    else{
+        if (response.isError) {
+            Serial1.print("HGET NE PKT: FAIL (response.isError should be false).");
+            Serial1.print("Value: ");
+            Serial1.println(response.isError);
+        } else if (response.responseCode != 100) {
+            Serial1.print("HGET NE PKT: FAIL (response.responseCode should be 100).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseCode);
+        } else if (response.responseType != STRING_ARRAY) {
+            Serial1.print("HGET NE PKT: FAIL (response.responseType should be STRING).");
+            Serial1.print("Value: ");
+            Serial1.println(response.responseType);
+        } else if (response.response.stringArray[0] != NULL) {
+            Serial1.print("HGET NE PKT: FAIL (response.response.string should be NULL).");
+            Serial1.print("Value: ");
+            Serial1.println(response.response.stringArray[0]);
+        } else Serial1.println("HGET NE PKT: OK");        
+    }
 }
 
 void unit_hgetall() {
@@ -869,7 +1004,9 @@ void unit_mget() {
 
 void setup() {
     Serial1.begin(115200);
-    Arancino.begin();
+
+    ArancinoConfig acfg;
+    Arancino.begin(amdata, acfg, scr_mode);
 
     unit_set(); 
     unit_get();

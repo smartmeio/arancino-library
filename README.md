@@ -3,6 +3,12 @@ The following Library works on Arancino boards, it is written in Arduino lang an
 
 Arancino Library allows to export/import data to/from the Linux environment using Redis as database cache. The API are modelled on Redis standard Commands.
 
+## **Secure Authentication and Communication**
+Secure authentication between *peripheral units* and a *Main* allows to start a connection with the *Main* only to *peripheral units* previously choice , to achieve this is used the ECDSA (Elliptic Curve Digital Signature Algorithm). The *Main* receive device and signer certificates with the `START` command, verify the certificates validity and the presence of device public key in a whitelist, finally send back the response of the `START` command with a *challenge* (a random number codified with base64 encryption) in the configuration. When the *peripheral unit* receive the response with the *challenge* sign it with its private key and send it back in the `SIGN` command configuration (the *signature*), codified with base64 encryption. The *Main* receive the `SIGN` command and verify the correctness of the *signature*, then if it's verified the *peripheral unit* is authenticated and a *challenge* is send back in the response configuration.
+
+Secure communication is implemented with the help of the *challenge* present in the previous response configuration, every time that a command is sent from the *peripheral unit* it has to contain the *signature* of the *challenge* received with the previous *response*, starting with the *challenge* received in the `SIGN` *response*.
+
+The secure authentication and communication is used only when the flag `SCR_MOD` in the `START` response is 1
 
 ## Getting Started
 To get started with Arancino Library you can download the latest version from the repository `arancino-library` within the [smartme.IO Repository Management Site](https://download.smartme.io/artifactory/list/arancino-library/) or directly from Arduino Library Manager.
@@ -733,13 +739,15 @@ Each command sent using Cortex Protocol is composed by a *command identifier* an
 ### Commands and Protocol
 As exaplained above, when an API function is called, a command is sent over the `SerialUSB` and a response is received.
 In the next paragraphs, for simplicity we are considering each command returns an *OK* response and using the following representation for *Separator Codes*:
-- Command Sepatator → `4`  → `#`
+- Command Sepatator → `30`  → `#`
 - Array separator → `16` → `%`
-- End of transmission → `30`  →` @`
+- End of transmission → `4`  →` @`
+
+WITHOUT SECURE MODE
 
 #### begin
 - Command Sent: `START#<lib vers>#<fwname>#<fwversion>#<compiletime>#<coreversion>@`
-- Response Received: `100@`
+- Response Received: `100#<arancino-id>#<timestamp>@`
 
 #### set
 - Command Sent: `SET#<key>#<value>@`
@@ -793,7 +801,71 @@ In the next paragraphs, for simplicity we are considering each command returns a
 - Command Sent: `FLUSH@`
 - Response Received: `100@`
 
+WITH SECURE MODE
 
+#### begin
+- Command Sent: `START#<lib vers>#<fwname>#<fwversion>#<compiletime>#<coreversion>#<devicecertificate>#<signercertificate>@`
+- Response Received: `100#<arancino-id>#<timestamp>#<challenge>@`
+
+#### sign
+- Command Sent: `SIGN#<signature>@`
+- Response Received: `100#<challenge>@`
+
+#### set
+- Command Sent: `SET#<key>#<value>#<signature>@`
+- Response Received: `100#<challenge>@`
+
+#### get
+- Command Sent: `GET#<key>#<signature>@`
+- Response Received: `100#<value>#<challenge>@`
+
+#### mset
+- Command Sent: `MSET#<key-1>%<key-2>...%<key-n>#<val-1>%<val-2>...%<val-n>#<signature>@`
+- Response Received: `100#<challenge>@`
+
+#### mget
+- Command Sent: `MGET#<key-1>%<key-2>...%<key-n>#<signature>@`
+- Response Received: `100#<val-1>#<val-2>...#<val-n>]#<challenge>@`
+
+#### del
+- Command Sent: `DEL#<key>#<signature>@`
+- Response Received: `100#1#<challenge>@`
+
+#### keys
+- Command Sent: `KEYS#<pattern>#<signature>@`
+- Response Received: `100[#<key-1>#<key-2>#<key-n>]#<challenge>@`
+
+#### hset
+- Command Sent: `HSET#<key>#<field>#<value>#<signature>@`
+- Response Received: 101#<challenge>@
+
+#### hget
+- Command Sent: `HGET#<key>#<field>#<signature>@`
+- Response Received: `100#<value>#<challenge>@`
+
+#### hgetall
+- Command Sent: `HGETALL#<key>#<signature>@`
+- Response Received: `100#<field-1>#<value-1>#<field-2>#<value-2>#<challenge>@`
+
+#### hkeys
+- Command Sent: `HKEYS#<key>#<signature>@`
+- Response Received: `100HKEYS#<key>#<challenge>@`
+
+#### hvals
+- Command Sent: `HVALS#<key>#<signature>@`
+- Response Received: `100#<value-1>#<value-2>#<challenge>@`
+
+#### hdel
+- Command Sent: `HDEL#<key>#<field>#<signature>@`
+- Response Received: `100#1#<challenge>@`
+
+#### flush
+- Command Sent: `FLUSH#<signature>@`
+- Response Received: `100#<challenge>@`
+
+#### publish
+- Command Sent: 'PUBLISH#<channel>#<message>#<signature>@'
+-Response Received: '100#1#<challenge>@'
 
 ## Reserved Keys
 

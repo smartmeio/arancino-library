@@ -35,6 +35,8 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+#define scr_mode 0
+
 ArancinoMetadata amdata = {
   .fwname = "03.2 - Del w/ Packet Example",
   .fwversion = "1.0.1",
@@ -42,8 +44,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata, acfg, scr_mode);
   Serial.begin(115200);
 
   Arancino.set("EX_03_2_foo","bar");
@@ -57,8 +59,10 @@ void setup() {
     Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
-    Serial.println(apckt.response.integer ? "Key deleted" : "Key not found");
+    if(scr_mode == 0)
+      Serial.println(apckt.response.integer ? "Key deleted" : "Key not found");
     //0
+    else Serial.println(atoi(apckt.response.stringArray[0]) ? "Key deleted" : "Key not found");
   }
   else{
     Serial.println("DEL ERROR");    
@@ -75,8 +79,10 @@ void setup() {
     Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
-    Serial.println(apckt.response.integer ? "Key deleted" : "Key not found");
+    if(scr_mode == 0)
+      Serial.println(apckt.response.integer ? "Key deleted" : "Key not found");
     //1
+    else Serial.println(atoi(apckt.response.stringArray[0]) ? "Key deleted" : "Key not found");
   }
   else{
     Serial.println("DEL ERROR");    

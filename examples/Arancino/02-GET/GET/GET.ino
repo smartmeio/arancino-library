@@ -33,6 +33,9 @@ Return value - String reply:
 
 #include <Arancino.h>
 
+#define scr_mode 0
+
+
 ArancinoMetadata amdata = {
   .fwname = "2.1 - Get Example",
   .fwversion = "1.0.1",
@@ -41,7 +44,9 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+
+  Arancino.begin(amdata, acfg, scr_mode);
   Serial.begin(115200);
 
 }
@@ -49,7 +54,7 @@ void setup() {
 void loop() {
 
   //sets the value 'bar' into the 'foo' key
-  Arancino.set("EX_02_1_foo","bar");
+  Arancino.set("EX_02_1","bar");
 
   //gets the value from the 'foo' key
   char* value = Arancino.get("EX_02_1");

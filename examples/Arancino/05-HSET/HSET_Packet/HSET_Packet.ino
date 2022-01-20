@@ -37,7 +37,7 @@ ArancinoPacket reply: ArancinoPacket containing:
   - response: NULL;
 */
 #include <Arancino.h>
-
+#define scr_mode 0
 ArancinoMetadata amdata = {
   .fwname = "05.2 - HSet w/ Packet Example",
   .fwversion = "1.0.1",
@@ -45,7 +45,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata,acfg, scr_mode);
 
   ArancinoPacket apckt = Arancino.hset("EX_05_2_foo", "bar", "yeah");
 

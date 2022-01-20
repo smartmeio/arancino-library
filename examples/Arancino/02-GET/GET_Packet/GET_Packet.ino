@@ -35,6 +35,7 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "2.2 - Get w/ Packet Example",
@@ -43,8 +44,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-  
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata,acfg,scr_mode);
   Serial.begin(115200);
 
 }
@@ -55,7 +56,7 @@ void loop() {
   Arancino.set("EX_02_2_foo","bar");
 
   ArancinoPacket apckt = Arancino.get<ArancinoPacket>("EX_02_2_foo");
-  if (!apckt.isError)
+  if (!apckt.isError && scr_mode == 0)
   {
     Serial.println("GET OK");
     Serial.print("Response code: ");
@@ -65,6 +66,18 @@ void loop() {
 
     Serial.print("EX_02_2_foo -> ");
     Serial.println(apckt.response.string);
+    //foo -> bar
+    
+  }
+  else if(!apckt.isError && scr_mode == 1){
+    Serial.println("GET OK");
+    Serial.print("Response code: ");
+    Serial.println(apckt.responseCode);
+    Serial.print("Response type: ");
+    Serial.println(apckt.responseType);
+
+    Serial.print("EX_02_2_foo -> ");
+    Serial.println(apckt.response.stringArray[0]);
     //foo -> bar
     
   }

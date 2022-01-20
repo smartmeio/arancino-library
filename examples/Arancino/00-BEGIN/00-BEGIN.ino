@@ -51,6 +51,8 @@ the use of the following is deprecated and will be remove in the next major rele
 
 #include <Arancino.h>
 
+#define scr_mode 0
+
 ArancinoMetadata amdata = {
   .fwname = "00.1 - Begin Example",
   .fwversion = "1.0.0",
@@ -62,10 +64,10 @@ void setup() {
   // Arancino Configuration
   ArancinoConfig acfg;
   acfg.SERIAL_TIMEOUT = 200;
-  acfg.DECIMAL_DIGITS=4;
+  acfg.DECIMAL_DIGITS = 4;
 
   //calls begin w/o paramenter: it is assumed 100ms timeout by default
-  Arancino.begin(amdata, acfg);
+  Arancino.begin(amdata, acfg, scr_mode);
 
   //calls begin w/ 200ms timeout trough Arancino Config
   //Arancino.begin(amdata, acfg);

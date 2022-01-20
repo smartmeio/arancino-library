@@ -44,6 +44,8 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+#define scr_mode 0
+
 ArancinoMetadata amdata = {
   .fwname = "01.1 - Set Example",
   .fwversion = "1.0.1",
@@ -52,7 +54,8 @@ ArancinoMetadata amdata = {
 
 void setup() {
   
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata, acfg, scr_mode);
   
   //char*
   char* key1 = "EX_01_1_foo";

@@ -1,4 +1,5 @@
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "Heavy Test w/ FreeRTOS",
@@ -8,8 +9,8 @@ ArancinoMetadata amdata = {
 
 
 void setup() {
-
-    Arancino.begin(amdata);
+    ArancinoConfig acfg;
+    Arancino.begin(amdata,acfg, scr_mode);
 
     Arancino.set("test", 5);
     Arancino.set("test", 5, true);

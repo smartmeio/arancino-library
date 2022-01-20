@@ -31,6 +31,7 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "11.1 - Flush Example",
@@ -39,8 +40,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata, acfg, scr_mode);
 
   Arancino.set("EX_11_1_foo","bar");
   Arancino.set("EX_11_1_foo","baz");

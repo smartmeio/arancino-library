@@ -43,6 +43,7 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 */
 
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "13.1 - MSet Example",
@@ -54,8 +55,8 @@ char* keys[] = {"EX_13_1_foo1", "EX_13_1_foo2", "EX_13_1_foo3"};
 char* values[] = {"value1", "value2", "value3"};
 
 void setup(){
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata, acfg, scr_mode);
   Serial.begin(115200);
 
   ArancinoPacket apckt = Arancino.mset(keys, values, 3);
@@ -67,8 +68,8 @@ void setup(){
     Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
-    Serial.print("Response value: ");
-    Serial.println(apckt.response.integer);
+    //Serial.print("Response value: ");
+    //Serial.println(apckt.response.integer);
   }
   else
   {

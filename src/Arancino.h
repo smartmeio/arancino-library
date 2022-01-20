@@ -24,6 +24,7 @@ under the License
 #include <Arduino.h>
 #include <ArancinoDefinitions.h>
 #include <ArancinoConfig.h>
+#include "ArduinoECCX08.h"
 
 #include <Stream.h>
 #include <stdlib.h>
@@ -119,8 +120,8 @@ class ArancinoClass {
 
 		//BEGIN
 		[[deprecated]]
-		void begin(ArancinoMetadata amdata, bool useid = false, int timeout = TIMEOUT );
-		void begin(ArancinoMetadata amdata, ArancinoConfig aconfig);
+		void begin(ArancinoMetadata amdata, bool useid = false, int timeout = TIMEOUT, bool scr_mod = false );
+		void begin(ArancinoMetadata amdata, ArancinoConfig aconfig, bool scr_mod = false );
 		//void begin(ArancinoMetadata amdata);
 
 		//MSET
@@ -240,6 +241,12 @@ class ArancinoClass {
 	private:
 		//void dropAll();
 
+		bool scr_mode = false;
+		byte challenge[CHALLENGE_DECODED_LENGTH];
+		byte signature64[SIGNATURE_ENCODED_LENGTH];
+		const char* const device_cert = ""; //Insert pem device certificate here. For example: "-----BEGIN CERTIFICATE-----\nMIIBzjCCAXWgAwIBAgIQUaOzTTdL+inJrcdgInPXiDAKBggqhkjOPQQDAjA+MRAw\nDgYDVQQKDAdTbWFydE1FMSowKAYDVQQDDCFDcnlwdG8gQXV0aGVudGljYXRpb24g\nU2lnbmVyIEZGRkYwIBcNMjExMDE2MTMwMDAwWhgPMjA0OTEwMTYxMzAwMDBaMDEx\nEDAOBgNVBAoMB1NtYXJ0TUUxHTAbBgNVBAMMFHNuMDEyM0ZCQjE2QTJCNUFEMDAx\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7Q1i5A1i3vqlfcI3tMp+jAnjp8Ia\nCS10er5S4So/IbBcDMCvqQpXnhw9atQYINjpzGbEr7IUMply4uA3GygglKNgMF4w\nDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCA4gwHQYDVR0OBBYEFNN8Jtgj/Ecu\naCcj7IUUoA3Nb8IEMB8GA1UdIwQYMBaAFHo822tbgJy77VRkkNyCfjdYLxmhMAoG\nCCqGSM49BAMCA0cAMEQCIBjLZJjYaDYFvwSGgIimhlw1+1ROICNDwhlUAzthoCVR\nAiAZEOBZHexpRoz4Ajrqw5HnS46hQ5yDH7tXLCIrw69FXg==\n-----END CERTIFICATE-----\n"
+		const char* const signer_cert = ""; //Insert pem signer certificate here. For example: "-----BEGIN CERTIFICATE-----\nMIIB4TCCAYigAwIBAgIQX7KMJlC6Cmjj/w8YL37H7zAKBggqhkjOPQQDAjA+MRAw\nDgYDVQQKDAdTbWFydE1FMSowKAYDVQQDDCFDcnlwdG8gQXV0aGVudGljYXRpb24g\nUm9vdCBDQSAwMDIwIBcNMjExMDE2MTMwMDAwWhgPMjA1MjEwMTYxMzAwMDBaMD4x\nEDAOBgNVBAoMB1NtYXJ0TUUxKjAoBgNVBAMMIUNyeXB0byBBdXRoZW50aWNhdGlv\nbiBTaWduZXIgRkZGRjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJbHhJzoLbaU\n7b4cfKA2FZg26Vhv4VuQN7loA71EDDVUjeOd+yiwSyZPhJlr9Zje3f6mlaAvZ5r4\nF+3rd38dRk6jZjBkMA4GA1UdDwEB/wQEAwIBhjASBgNVHRMBAf8ECDAGAQH/AgEA\nMB0GA1UdDgQWBBR6PNtrW4Ccu+1UZJDcgn43WC8ZoTAfBgNVHSMEGDAWgBQrqYZF\nopP0B01Ulgx/m4//sz+ukTAKBggqhkjOPQQDAgNHADBEAiAT+CosA57+U8Y98CmO\nIon011w7NlI1lmZHQ+rcdjuKHwIgM2FmnsVVRKKj4xouPQiiHdAaIiIlC1fsBddh\n5UGESvk=\n-----END CERTIFICATE-----\n";
+
 		bool started;
 		bool comm_timeout = false;
 		bool arancino_id_prefix;
@@ -287,6 +294,10 @@ class ArancinoClass {
 
 		char* _parse(char* message);
 		char** _parseArray(char* message);
+
+		//SECURE MODE
+		void sign();
+		char* _sign();
 
 		//TEMPLATE WRAPPED
 		// ArancinoPacket _getPacket(char* key);

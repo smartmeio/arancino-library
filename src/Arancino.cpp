@@ -19,7 +19,7 @@ under the License
 */
 
 #include "Arancino.h"
-
+#include "base64.hpp"
 
 #define DEBUG 0
 
@@ -69,14 +69,14 @@ void ArancinoClass::metadata(ArancinoMetadata _amdata) {
 // }
 
 
-void ArancinoClass::begin(ArancinoMetadata _amdata, bool useid, int timeout) {
+void ArancinoClass::begin(ArancinoMetadata _amdata, bool useid, int timeout, bool scr_mod) {
 	ArancinoConfig _acfg;
 	_acfg._USEID = useid;
 	_acfg._TIMEOUT = timeout;
-	begin(_amdata, _acfg);
+	begin(_amdata, _acfg, scr_mod);
 }
 
-void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
+void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, bool scr_mod) {
 	SERIAL_PORT.begin(BAUDRATE);
 	// SERIAL_PORT.setTimeout(TIMEOUT);
 	// arancino_id_prefix = false;
@@ -85,6 +85,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	decimal_digits=_acfg.DECIMAL_DIGITS;
 
 	_metadata = _amdata;
+	scr_mode = scr_mod;
 
 	int fwnameLength = strlen(_metadata.fwname);
 	int fwversionLength = strlen(_metadata.fwversion);
@@ -100,46 +101,97 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 
 	int commandLength = strlen(START_COMMAND);
 	int argLength = strlen(LIB_VERSION);
-	int strLength = commandLength + 1 + argLength + 1 + fwnameLength + 1 + fwversionLength + 1 + dateLength + 1 + timeLength + 1 + localtoffsetLength + arancinocoreversionLength + 1 + 1;
+	char* str = NULL;
+	if(!scr_mode){
+		int strLength = commandLength + 1 + argLength + 1 + fwnameLength + 1 + fwversionLength + 1 + dateLength + 1 + timeLength + 1 + localtoffsetLength + 1 + arancinocoreversionLength + 1 + 1;
 
-	char* str = (char *)calloc(strLength, sizeof(char));
+		str = (char *)calloc(strLength, sizeof(char));
 
-	//reserved Key
-	strcpy(reservedKey[0], MONITOR_KEY);
-	strcpy(reservedKey[1], LIBVERS_KEY);
-	strcpy(reservedKey[2], MODVERS_KEY);
-	strcpy(reservedKey[3], POWER_KEY);
-	//DEBUG
-	#if defined(__SAMD21G18A__)
-	pinMode(DBG_PIN,INPUT);
-	if(!digitalRead(DBG_PIN)){
-		Serial.begin(115200);
+		//reserved Key
+		strcpy(reservedKey[0], MONITOR_KEY);
+		strcpy(reservedKey[1], LIBVERS_KEY);
+		strcpy(reservedKey[2], MODVERS_KEY);
+		strcpy(reservedKey[3], POWER_KEY);
+		//DEBUG
+		#if defined(__SAMD21G18A__)
+		pinMode(DBG_PIN,INPUT);
+		if(!digitalRead(DBG_PIN)){
+			Serial.begin(115200);
+		}
+		#endif
+
+		strcpy(str, START_COMMAND);
+		strcat(str, dataSplitStr);
+
+		strcat(str, LIB_VERSION);
+		strcat(str, dataSplitStr);
+
+		strcat(str, _metadata.fwname);
+		strcat(str, dataSplitStr);
+		strcat(str, _metadata.fwversion);
+		strcat(str, dataSplitStr);
+
+		strcat(str, __DATE__);
+		strcat(str, " ");
+		strcat(str, __TIME__);
+		strcat(str, " ");
+		strcat(str, _metadata.tzoffset);
+		strcat(str, dataSplitStr);
+
+		#ifdef ARANCINO_CORE_VERSION
+		strcat(str, ARANCINO_CORE_VERSION);
+		#endif
+
+		strcat(str, endTXStr);
 	}
-	#endif
+	else{
+		ECCX08.begin();
 
-	strcpy(str, START_COMMAND);
-	strcat(str, dataSplitStr);
+		int strLength = commandLength + 1 + argLength + 1 + fwnameLength + 1 + fwversionLength + 1 + dateLength + 1 + timeLength + 1 + localtoffsetLength + 1 + arancinocoreversionLength + 1 + strlen(device_cert) + 1 + strlen(signer_cert) + 1 + 1;
+		str = (char *)calloc(strLength, sizeof(char));
 
-	strcat(str, LIB_VERSION);
-	strcat(str, dataSplitStr);
+		//reserved Key
+		strcpy(reservedKey[0], MONITOR_KEY);
+		strcpy(reservedKey[1], LIBVERS_KEY);
+		strcpy(reservedKey[2], MODVERS_KEY);
+		strcpy(reservedKey[3], POWER_KEY);
+		//DEBUG
+		#if defined(__SAMD21G18A__)
+		pinMode(DBG_PIN,INPUT);
+		if(!digitalRead(DBG_PIN)){
+			Serial.begin(115200);
+		}
+		#endif
 
-	strcat(str, _metadata.fwname);
-	strcat(str, dataSplitStr);
-	strcat(str, _metadata.fwversion);
-	strcat(str, dataSplitStr);
+		strcpy(str, START_COMMAND);
+		strcat(str, dataSplitStr);
 
-	strcat(str, __DATE__);
-	strcat(str, " ");
-	strcat(str, __TIME__);
-	strcat(str, " ");
-	strcat(str, _metadata.tzoffset);
-	strcat(str, dataSplitStr);
+		strcat(str, LIB_VERSION);
+		strcat(str, dataSplitStr);
 
-	#ifdef ARANCINO_CORE_VERSION
-	strcat(str, ARANCINO_CORE_VERSION);
-	#endif
+		strcat(str, _metadata.fwname);
+		strcat(str, dataSplitStr);
+		strcat(str, _metadata.fwversion);
+		strcat(str, dataSplitStr);
 
-	strcat(str, endTXStr);
+		strcat(str, __DATE__);
+		strcat(str, " ");
+		strcat(str, __TIME__);
+		strcat(str, " ");
+		strcat(str, _metadata.tzoffset);
+		strcat(str, dataSplitStr);
+
+		#ifdef ARANCINO_CORE_VERSION
+		strcat(str, ARANCINO_CORE_VERSION);
+		#endif
+		strcat(str, dataSplitStr);
+
+		strcat(str, device_cert);
+		strcat(str, dataSplitStr);
+		strcat(str, signer_cert);
+
+		strcat(str, endTXStr);
+	}
 
 	ArancinoPacket packet;
 	// Start communication with serial module on CPU
@@ -165,14 +217,30 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 			packet = temp;
 
 			if(packet.responseCode == RSP_OK){
-				//store arancino serial port id
-				idSize = strlen(packet.response.stringArray[0]);
-				id = (char *)calloc(idSize+1, sizeof(char));
-				memcpy(id,packet.response.stringArray[0],idSize);
-				//timestamp from arancino module
-				int timeStampSize = strlen(packet.response.stringArray[1]);
-				timestamp = (char *)calloc(timeStampSize+1, sizeof(char));
-				memcpy(timestamp,packet.response.stringArray[1],timeStampSize);
+				char* challenge64 = NULL;
+				if(scr_mode){
+					decode_base64((unsigned char*)packet.response.stringArray[2], challenge);
+					challenge64 = _sign();
+					if(challenge64 == NULL){
+						packet = communicationErrorPacket;
+					}
+					else{
+						decode_base64((unsigned char*)challenge64, challenge);
+					}
+				}
+				if(scr_mode == false || (scr_mode == true && challenge64 != NULL)){
+					if(challenge64 != NULL){
+						free(challenge64);
+					}
+					//store arancino serial port id
+					idSize = strlen(packet.response.stringArray[0]);
+					id = (char *)calloc(idSize+1, sizeof(char));
+					memcpy(id,packet.response.stringArray[0],idSize);
+					//timestamp from arancino module
+					int timeStampSize = strlen(packet.response.stringArray[1]);
+					timestamp = (char *)calloc(timeStampSize+1, sizeof(char));
+					memcpy(timestamp,packet.response.stringArray[1],timeStampSize);	
+				}
 			}
 
 			free(message);
@@ -246,6 +314,11 @@ ArancinoPacket ArancinoClass::mset(char** keys, char** values, int len) {
 		strLength += keyLength + 1 + valueLength + 1;
 	}
 
+	if(scr_mode){
+		strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+		sign();
+	}
+
 	char* str = (char*) calloc(strLength + 1, sizeof(char));
 	strcat(str, MSET_COMMAND);
 	strcat(str, dataSplitStr);
@@ -278,12 +351,22 @@ ArancinoPacket ArancinoClass::mset(char** keys, char** values, int len) {
 
 		// We use memcpy rather than strcat here because it would append \0,
 		// thus terminating the string prematurely
-		valuesPointer -= strlen(value) + 1;
+		if(scr_mode && i == 0){
+			valuesPointer -= strlen(value) + 1 + (SIGNATURE_ENCODED_LENGTH - 1) + 1;
+		}
+		else
+			valuesPointer -= strlen(value) + 1;
 
 		memcpy(valuesPointer, value, strlen(value));
 
 		if (i == 0) {
-			memcpy(valuesPointer + strlen(value), endTXStr, 1);
+			if(scr_mode){
+				memcpy(valuesPointer + strlen(value), dataSplitStr, 1);
+				memcpy(valuesPointer + strlen(value) + 1, (char*)signature64, SIGNATURE_ENCODED_LENGTH - 1);
+				memcpy(valuesPointer + strlen(value) + 1 + (SIGNATURE_ENCODED_LENGTH - 1), endTXStr, 1);
+			}
+			else 
+				memcpy(valuesPointer + strlen(value), endTXStr, 1);
 		} else {
 			memcpy(valuesPointer + strlen(value), arraySplitStr, 1);
 		}
@@ -316,7 +399,18 @@ ArancinoPacket ArancinoClass::mset(char** keys, char** values, int len) {
 
 	if (message == NULL) return communicationErrorPacket;
 
-	ArancinoPacket packet = {false, _getResponseCode(message), VOID, {.string = NULL}};
+	ArancinoPacket packet;
+
+	if(scr_mode){
+		ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = _parse(message)}};
+		decode_base64((unsigned char*)temp.response.string, challenge);
+		packet = temp;
+	}
+	else{
+		ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
+		packet = temp;
+	}
+
 	free(message);
 
 	return packet;
@@ -346,6 +440,11 @@ template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, int l
 		strLength += keyLength + 1;
 	}
 
+	if(scr_mode){
+		strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+		sign();
+	}
+
 	char* str = (char*) calloc(strLength, sizeof(char));
 	strcat(str, MGET_COMMAND);
 	strcat(str, dataSplitStr);
@@ -364,6 +463,10 @@ template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, int l
 		if (i != len - 1) strcat(str, arraySplitStr);
 	}
 
+	if(scr_mode){
+		strcat(str, dataSplitStr);
+		strcat(str, (char*)signature64);
+	}
 	strcat(str, endTXStr);
 
 	#if defined(__SAMD21G18A__)
@@ -393,7 +496,19 @@ template<> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char** keys, int l
 
 	if (message == NULL) return communicationErrorPacket;
 
-	ArancinoPacket packet = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+	ArancinoPacket packet;
+
+	if(scr_mode){
+		ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+		decode_base64((unsigned char*)temp.response.stringArray[len], challenge);
+		packet = temp;
+	}
+	else{
+		ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+		packet = temp;
+	}
+
+
 	free(message);
 
 	return packet;
@@ -472,6 +587,11 @@ ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent) 
 		int valueLength = strlen(value);
 		int strLength = commandLength + 1 + keyLength + 1 + valueLength + 1 + 1;
 
+		if(scr_mode){
+			strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+			sign();
+		}
+
 		char* str = (char *)calloc(strLength, sizeof(char));
 		#if defined(__SAMD21G18A__)
 		if(!digitalRead(DBG_PIN)){
@@ -494,6 +614,11 @@ ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent) 
 		strcat(str, key);
 		strcat(str, dataSplitStr);
 		strcat(str, value);
+
+		if(scr_mode){
+			strcat(str, dataSplitStr);
+			strcat(str, (char*)signature64);
+		}
 		strcat(str, endTXStr);
 
 		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -515,8 +640,16 @@ ArancinoPacket ArancinoClass::__set( char* key, char* value, bool isPersistent) 
 
 		if (message != NULL)
 		{
-			ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
-			packet = temp;
+			if(scr_mode){
+				ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = _parse(message)}};
+				decode_base64((unsigned char*)temp.response.string, challenge);
+				packet = temp;
+			}
+			else{
+				ArancinoPacket temp = {false, _getResponseCode(message), VOID , {.string = NULL}};
+				packet = temp;
+			}
+
 			free(message);
 		}
 		else
@@ -552,6 +685,11 @@ template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
 		}
 		int strLength = commandLength + 1 + keyLength + 1 + 1;
 
+		if(scr_mode){
+			strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+			sign();
+		}
+
 		char* str = (char *)calloc(strLength, sizeof(char));
 		#if defined(__SAMD21G18A__)
 		if(!digitalRead(DBG_PIN)){
@@ -566,6 +704,10 @@ template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
 			strcat(str, ID_SEPARATOR);
 		}
 		strcat(str, key);
+		if(scr_mode){
+			strcat(str, dataSplitStr);
+			strcat(str, (char*)signature64);
+		}
 		strcat(str, endTXStr);
 
 		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -586,8 +728,17 @@ template<> ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key){
 
 		if (message != NULL)
 		{
-			ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}};
-			packet = temp;
+
+			if(scr_mode){
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+				decode_base64((unsigned char*)temp.response.stringArray[1], challenge);
+				packet = temp;
+			}
+			else{
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING , {.string = _parse(message)}};
+				packet = temp;
+			}
+
 			free(message);
 		}
 		else
@@ -608,7 +759,10 @@ template<> char* ArancinoClass::get(char* key){
 	char* retString;
 	if (!packet.isError)
 	{
-		retString = packet.response.string;
+		if(!scr_mode)
+			retString = packet.response.string;
+		else
+			retString = packet.response.stringArray[0];
 	}
 	else
 	{
@@ -637,6 +791,10 @@ template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
 		}
 		int strLength = commandLength + 1 + keyLength + 1 + 1;
 
+		if(scr_mode){
+			strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+			sign();
+		}
 		char* str = (char *)calloc(strLength, sizeof(char));
 
 		#if defined(__SAMD21G18A__)
@@ -652,6 +810,10 @@ template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
 			strcat(str, ID_SEPARATOR);
 		}
 		strcat(str, key);
+		if(scr_mode){
+			strcat(str, dataSplitStr);
+			strcat(str, (char*)signature64);
+		}
 		strcat(str, endTXStr);
 
 		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -674,8 +836,16 @@ template<> ArancinoPacket ArancinoClass::del<ArancinoPacket> (char* key){
 		if (message != NULL)
 		{
 			char* messageParsed = _parse(message);
-			ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
-			packet = temp;
+
+			if(scr_mode){
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+				decode_base64((unsigned char*)temp.response.stringArray[1], challenge);
+				packet = temp;
+			}
+			else{
+				ArancinoPacket temp = {false, _getResponseCode(message), INT , {.integer = atoi(messageParsed)}};
+				packet = temp;
+			}
 			free(messageParsed);
 			free(message);
 		}
@@ -696,7 +866,10 @@ template<> int ArancinoClass::del(char* key){
 	int retValue = 0;
 	if (!packet.isError)
 	{
-		retValue = packet.response.integer;
+		if(!scr_mode)
+			retValue = packet.response.integer;
+		else
+			retValue = atoi(packet.response.stringArray[0]);
 	}
 	return retValue;
 }
@@ -754,6 +927,11 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 		int valueLength = strlen(value);
 		int strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + valueLength + 1 + 1;
 
+		if(scr_mode){
+			strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+			sign();
+		}
+
 		char* str = (char *)calloc(strLength, sizeof(char));
 		#if defined(__SAMD21G18A__)
 		if(!digitalRead(DBG_PIN)){
@@ -771,6 +949,10 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 		strcat(str, field);
 		strcat(str, dataSplitStr);
 		strcat(str, value);
+		if(scr_mode){
+			strcat(str, dataSplitStr);
+			strcat(str, (char*)signature64);
+		}
 		strcat(str, endTXStr);
 
 		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -792,10 +974,15 @@ ArancinoPacket ArancinoClass::hset( char* key, char* field , char* value) {
 
 		if (message != NULL)
 		{
-			packet.isError = 0;
-			packet.responseCode = _getResponseCode(message);
-			packet.responseType = VOID;
-			packet.response.string = NULL;
+			if(scr_mode){
+				ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = _parse(message)}};
+				decode_base64((unsigned char*)temp.response.string, challenge);
+				packet = temp;
+			}
+			else{
+				ArancinoPacket temp = {false, _getResponseCode(message), VOID , {.string = NULL}};
+				packet = temp;
+			}
 			free(message);
 		}
 		else
@@ -831,6 +1018,12 @@ template<> ArancinoPacket ArancinoClass::hget<ArancinoPacket> (char* key, char* 
 		int fieldLength = strlen(field);
 		int strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + 1;
 
+		if(scr_mode){
+			strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+			sign();
+		}
+
+
 		char* str = (char *)calloc(strLength, sizeof(char));
 
 		#if defined(__SAMD21G18A__)
@@ -847,6 +1040,10 @@ template<> ArancinoPacket ArancinoClass::hget<ArancinoPacket> (char* key, char* 
 		strcat(str, key);
 		strcat(str, dataSplitStr);
 		strcat(str, field);
+		if(scr_mode){
+			strcat(str, dataSplitStr);
+			strcat(str, (char*)signature64);
+		}
 		strcat(str, endTXStr);
 
 		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -868,8 +1065,15 @@ template<> ArancinoPacket ArancinoClass::hget<ArancinoPacket> (char* key, char* 
 
 		if (message != NULL)
 		{
-			ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}}; //TODO getStatus to _getResponseCode
-			packet = temp;
+			if(scr_mode){
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+				decode_base64((unsigned char*)temp.response.stringArray[1], challenge);
+				packet = temp;
+			}
+			else{
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING , {.string = _parse(message)}};
+				packet = temp;
+			}
 			free(message);
 		}
 		else
@@ -890,7 +1094,10 @@ template<> char* ArancinoClass::hget(char* key, char* field){
 	char* retString;
 	if (!packet.isError)
 	{
-		retString = packet.response.string;
+		if(!scr_mode)
+			retString = packet.response.string;
+		else
+			retString = packet.response.stringArray[0];
 	}
 	else
 	{
@@ -920,6 +1127,11 @@ template<> ArancinoPacket ArancinoClass::hgetall<ArancinoPacket> (char* key){
 		}
 		int strLength = commandLength + 1 + keyLength + 1 + 1;
 
+		if(scr_mode){
+			strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+			sign();
+		}
+
 		char* str = (char *)calloc(strLength, sizeof(char));
 
 		#if defined(__SAMD21G18A__)
@@ -935,6 +1147,10 @@ template<> ArancinoPacket ArancinoClass::hgetall<ArancinoPacket> (char* key){
 			strcat(str, ID_SEPARATOR);
 		}
 		strcat(str, key);
+		if(scr_mode){
+			strcat(str, dataSplitStr);
+			strcat(str, (char*)signature64);
+		}
 		strcat(str, endTXStr);
 
 		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -956,8 +1172,15 @@ template<> ArancinoPacket ArancinoClass::hgetall<ArancinoPacket> (char* key){
 
 		if (message != NULL)
 		{
-			ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
-			packet = temp;
+			if(scr_mode){
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+				decode_base64((unsigned char*)temp.response.stringArray[getArraySize(packet.response.stringArray) - 1], challenge);
+				packet = temp;
+			}
+			else{
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY , {.stringArray = _parseArray(_parse(message))}};
+				packet = temp;
+			}
 			free(message);
 		}
 		else
@@ -1007,6 +1230,11 @@ template<> ArancinoPacket ArancinoClass::hkeys<ArancinoPacket> (char* key){
 		}
 		int strLength = commandLength + 1 + keyLength + 1 + 1;
 
+		if(scr_mode){
+			strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+			sign();
+		}
+
 		char* str = (char *)calloc(strLength, sizeof(char));
 
 		#if defined(__SAMD21G18A__)
@@ -1022,6 +1250,10 @@ template<> ArancinoPacket ArancinoClass::hkeys<ArancinoPacket> (char* key){
 			strcat(str, ID_SEPARATOR);
 		}
 		strcat(str, key);
+		if(scr_mode){
+			strcat(str, dataSplitStr);
+			strcat(str, (char*)signature64);
+		}
 		strcat(str, endTXStr);
 
 		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -1043,8 +1275,15 @@ template<> ArancinoPacket ArancinoClass::hkeys<ArancinoPacket> (char* key){
 
 		if (message != NULL)
 		{
-			ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
-			packet = temp;
+			if(scr_mode){
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+				decode_base64((unsigned char*)temp.response.stringArray[getArraySize(packet.response.stringArray) - 1], challenge);
+				packet = temp;
+			}
+			else{
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY , {.stringArray = _parseArray(_parse(message))}};
+				packet = temp;
+			}
 			free(message);
 		}
 		else
@@ -1094,6 +1333,10 @@ template<> ArancinoPacket ArancinoClass::hvals<ArancinoPacket> (char* key){
 		}
 		int strLength = commandLength + 1 + keyLength + 1 + 1;
 
+		if(scr_mode){
+			strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+			sign();
+		}
 		char* str = (char *)calloc(strLength, sizeof(char));
 
 		#if defined(__SAMD21G18A__)
@@ -1109,6 +1352,10 @@ template<> ArancinoPacket ArancinoClass::hvals<ArancinoPacket> (char* key){
 			strcat(str, ID_SEPARATOR);
 		}
 		strcat(str, key);
+		if(scr_mode){
+			strcat(str, dataSplitStr);
+			strcat(str, (char*)signature64);
+		}
 		strcat(str, endTXStr);
 
 		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -1130,8 +1377,15 @@ template<> ArancinoPacket ArancinoClass::hvals<ArancinoPacket> (char* key){
 
 		if (message != NULL)
 		{
-			ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
-			packet = temp;
+			if(scr_mode){
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+				decode_base64((unsigned char*)temp.response.stringArray[getArraySize(packet.response.stringArray) - 1], challenge);
+				packet = temp;
+			}
+			else{
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+				packet = temp;
+			}
 			free(message);
 		}
 		else
@@ -1182,6 +1436,11 @@ template<> ArancinoPacket ArancinoClass::hdel<ArancinoPacket> (char* key, char* 
 		int fieldLength = strlen(field);
 		int strLength = commandLength + 1 + keyLength + 1 + fieldLength + 1 + 1;
 
+		if(scr_mode){
+			strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+			sign();
+		}
+
 		char* str = (char *)calloc(strLength, sizeof(char));
 
 		#if defined(__SAMD21G18A__)
@@ -1199,6 +1458,10 @@ template<> ArancinoPacket ArancinoClass::hdel<ArancinoPacket> (char* key, char* 
 		strcat(str, key);
 		strcat(str, dataSplitStr);
 		strcat(str, field);
+		if(scr_mode){
+			strcat(str, dataSplitStr);
+			strcat(str, (char*)signature64);
+		}
 		strcat(str, endTXStr);
 
 		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -1221,8 +1484,16 @@ template<> ArancinoPacket ArancinoClass::hdel<ArancinoPacket> (char* key, char* 
 		if (message != NULL)
 		{
 			char* messageParsed = _parse(message);
-			ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
-			packet = temp;
+
+			if(scr_mode){
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+				decode_base64((unsigned char*)temp.response.stringArray[1], challenge);
+				packet = temp;
+			}
+			else{
+				ArancinoPacket temp = {false, _getResponseCode(message), INT , {.integer = atoi(messageParsed)}};
+				packet = temp;
+			}
 			free(messageParsed);
 			free(message);
 		}
@@ -1244,7 +1515,10 @@ template<> int ArancinoClass::hdel(char* key, char* field){
 	int retValue = 0;
 	if (!packet.isError)
 	{
-		retValue = packet.response.integer;
+		if(!scr_mode)
+			retValue = packet.response.integer;
+		else
+			retValue = atoi(packet.response.stringArray[0]);
 	}
 	return retValue;
 }
@@ -1258,6 +1532,11 @@ template<> ArancinoPacket ArancinoClass::keys<ArancinoPacket> (char* pattern){
 		int patternLength = strlen(pattern);
 		int strLength = commandLength + 1 + patternLength + 1 + 1;
 
+		if(scr_mode){
+			strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+			sign();
+		}
+
 		char* str = (char *)calloc(strLength, sizeof(char));
 
 		#if defined(__SAMD21G18A__)
@@ -1269,6 +1548,10 @@ template<> ArancinoPacket ArancinoClass::keys<ArancinoPacket> (char* pattern){
 		strcpy(str, KEYS_COMMAND);
 		strcat(str, dataSplitStr);
 		strcat(str, pattern);
+		if(scr_mode){
+			strcat(str, dataSplitStr);
+			strcat(str, (char*)signature64);
+		}
 		strcat(str, endTXStr);
 
 		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -1290,8 +1573,15 @@ template<> ArancinoPacket ArancinoClass::keys<ArancinoPacket> (char* pattern){
 
 		if (message != NULL)
 		{
-			ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
-			packet = temp;
+			if(scr_mode){
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+				decode_base64((unsigned char*)temp.response.stringArray[getArraySize(packet.response.stringArray) - 1], challenge);
+				packet = temp;
+			}
+			else{
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
+				packet = temp;
+			}
 			free(message);
 		}
 		else
@@ -1342,6 +1632,11 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		int msgLength = strlen(msg);
 		int strLength = commandLength + 1 + channelLength + 1 + msgLength + 1 + 1;
 
+		if(scr_mode){
+			strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+			sign();
+		}
+
 		char* str = (char *)calloc(strLength, sizeof(char));
 
 		#if defined(__SAMD21G18A__)
@@ -1359,6 +1654,10 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		strcat(str, channel);
 		strcat(str, dataSplitStr);
 		strcat(str, msg);
+		if(scr_mode){
+			strcat(str, dataSplitStr);
+			strcat(str, (char*)signature64);
+		}
 		strcat(str, endTXStr);
 
 		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -1381,8 +1680,15 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		if (message != NULL)
 		{
 			char* messageParsed = _parse(message);
-			ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
-			packet = temp;
+			if(scr_mode){
+				ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};;
+				decode_base64((unsigned char*)temp.response.stringArray[1], challenge);
+				packet = temp;
+			}
+			else{
+				ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
+				packet = temp;
+			}
 			free(messageParsed);
 			free(message);
 		}
@@ -1436,6 +1742,11 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		int commandLength = strlen(FLUSH_COMMAND);
 		int strLength = commandLength + 1 + 1;
 
+		if(scr_mode){
+			strLength += 1 + (SIGNATURE_ENCODED_LENGTH - 1);
+			sign();
+		}
+
 		char* str = (char *)calloc(strLength, sizeof(char));
 		#if defined(__SAMD21G18A__)
 		if(!digitalRead(DBG_PIN)){
@@ -1444,6 +1755,10 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		#endif
 
 		strcpy(str, FLUSH_COMMAND);
+		if(scr_mode){
+			strcat(str, dataSplitStr);
+			strcat(str, (char*)signature64);
+		}
 		strcat(str, endTXStr);
 
 		#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
@@ -1468,8 +1783,15 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		if (message != NULL)
 		{
 			char* messageParsed = _parse(message);
-			ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
-			packet = temp;
+			if(scr_mode){
+				ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = _parse(message)}};
+				decode_base64((unsigned char*)temp.response.string, challenge);
+				packet = temp;
+			}
+			else{
+				ArancinoPacket temp = {false, _getResponseCode(message), VOID , {.string = NULL}};
+				packet = temp;
+			}
 			free(messageParsed);
 			free(message);
 		}
@@ -1481,6 +1803,79 @@ ArancinoPacket ArancinoClass::__publish(char* channel, char* msg) {
 		return packet;
 
 	}
+
+void ArancinoClass::sign(){
+	byte signature[SIGNATURE_DECODED_LENGTH];
+	byte challengesha[SHA_OUTPUT_LENGTH];
+	ECCX08.beginSHA256();
+  	ECCX08.endSHA256(challenge, CHALLENGE_DECODED_LENGTH , challengesha);
+	ECCX08.ecSign(SLOT_PRIVATEKEY, challengesha, signature);
+	encode_base64(signature, SIGNATURE_DECODED_LENGTH, signature64);
+//firma challenge con chiave privata per ottenere la signature64
+}
+
+char* ArancinoClass::_sign(){
+	sign();
+	char* sign64 = (char*)signature64;
+
+	ArancinoPacket packet;
+
+	int commandLength = strlen(SIGN_COMMAND);
+	int signLength;
+	if(arancino_id_prefix){
+		signLength = strlen(sign64)+idSize+1;
+	}
+	else{
+		signLength = strlen(sign64);
+	}
+	int strLength = commandLength + 1 + signLength + 1 + 1;
+
+	char* str = (char *)calloc(strLength, sizeof(char));
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+
+	strcpy(str, SIGN_COMMAND);
+	strcat(str, dataSplitStr);
+	if(arancino_id_prefix){
+		strcat(str, id);
+		strcat(str, ID_SEPARATOR);
+	}
+	strcat(str, sign64);
+	strcat(str, endTXStr);
+
+	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		vTaskSuspendAll();
+	}
+	#endif
+	_sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
+	#if defined(__SAMD21G18A__) && defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED)
+	{
+		xTaskResumeAll();
+	}
+	#endif
+	free(str);
+
+	if (message != NULL)
+	{
+		ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}};
+		packet = temp;
+		free(message);
+	}
+	else
+	{
+		packet = communicationErrorPacket;
+	}
+
+	return packet.response.string;
+ //firma challenge con chiave privata per ottenere la signature, mandarla all'arancino grande e ritornare la response, cioè altra challenge.
+}
 
 /******** API UTILITY :: FREE *********/
 

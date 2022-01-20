@@ -32,6 +32,7 @@ Return value - char** reply:
 */
 
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "08.1 - HKeys Example",
@@ -40,8 +41,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata, acfg, scr_mode);
   Serial.begin(115200);
   
   Arancino.hset("EX_08_1_foo","bar","yeah");
@@ -52,7 +53,14 @@ void setup() {
 void loop() {
 
   char** fields = Arancino.hkeys("EX_08_1_foo");
-  for (int i = 0; i < Arancino.getArraySize(fields); i++) {
+
+  int arraySize;
+
+  if (scr_mode == 0)
+    arraySize = Arancino.getArraySize(fields);
+  else arraySize = Arancino.getArraySize(fields) - 1;
+
+  for (int i = 0; i < arraySize; i++) {
     Serial.print("EX_08_1_foo -> ");
     Serial.println(fields[i]);
     // foo -> bar

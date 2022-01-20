@@ -42,6 +42,7 @@ ArancinoPacket reply: ArancinoPacket containing:
   - response.stringArray: char** pointer to the string array of keys matching pattern.
 */
 #include <Arancino.h>
+#define scr_mode 0
 
 ArancinoMetadata amdata = {
   .fwname = "04.2 - Keys w/ Packet Example",
@@ -50,8 +51,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-  
-  Arancino.begin(amdata);
+  ArancinoConfig acfg;
+  Arancino.begin(amdata,acfg,scr_mode);
   Serial.begin(115200);
   
   Arancino.set("EX_04_2_pressure", 1023);
@@ -64,7 +65,8 @@ void loop() {
 
   ArancinoPacket apckt = Arancino.keys<ArancinoPacket>();
   char** keys = apckt.response.stringArray;
-  
+  int arraySize;
+
   if (apckt.isError == 0){
 
     Serial.println("KEYS OK");
@@ -72,7 +74,11 @@ void loop() {
     Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
-    for (int i = 0; i < Arancino.getArraySize(keys); i++) {
+    if (scr_mode == 0)
+      arraySize = Arancino.getArraySize(keys);
+    else arraySize = Arancino.getArraySize(keys) - 1;
+
+    for (int i = 0; i < arraySize; i++) {
       Serial.println(keys[i]);
     }
     //pressure
@@ -98,7 +104,11 @@ void loop() {
     Serial.println(apckt.responseCode);
     Serial.print("Response type: ");
     Serial.println(apckt.responseType);
-    for (int i = 0; i < Arancino.getArraySize(keys); i++) {
+    if (scr_mode == 0)
+      arraySize = Arancino.getArraySize(keys);
+    else arraySize = Arancino.getArraySize(keys) - 1;
+    
+    for (int i = 0; i < arraySize; i++) {
       Serial.println(keys[i]);
     }
     // temperature
