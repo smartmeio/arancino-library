@@ -54,12 +54,12 @@ void setup()
   Ethernet.begin(mac, ip);
   
   // Allow the hardware to sort itself out
-  delay(1500);
+  vTaskDelay(1500);
 
   //When setting up the configurator, please make sure that iface parameters correctly match the selected interface
   //Please check out the documentation for further details
   ArancinoConfig aconfig;
-  aconfig.iface.client = &ethClient;
+  aconfig.iface.setNetworkClient(&ethClient);
   aconfig.iface.daemonID = "D43mon";
   aconfig.iface.broker = "192.168.1.191";
   //The folowing parameters are already set up with default values, but you can change them if your broker requires so

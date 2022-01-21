@@ -21,10 +21,10 @@ under the License
 #ifndef ARANCINOCONFIG_H_
 #define ARANCINOCONFIG_H_
 
-#include <ArancinoDefinitions.h>
 #include <Arduino.h>
+#include <ArancinoDefinitions.h>
 
-#define ARANCINO_MQTT_IFACE		//debug
+#define ARANCINO_BLUETOOTH_IFACE		//debug
 
 #if defined ARANCINO_MQTT_IFACE
 #include <PubSubClient.h>
@@ -61,18 +61,19 @@ class SerialIface : public ArancinoIface {
 
 class MqttIface : public ArancinoIface, public PubSubClient {
 	public:
-	Client* client;	//Network client
 	char* username=NULL;
 	char* password=NULL;
 	char* daemonID;
 	char* broker;	//IP addresses can be passed as well hostnames as strings
 	int port=1883;
+	void setNetworkClient(Client* networkClient);
 
 	private:
 	void ifaceBegin();
 	void sendArancinoCommand(char* command);
 	char* receiveArancinoResponse(char terminator);
 
+	Client* _client; //Network client
 	//Since callback function needs to be declared as static, every related variable needs to be static as well
 	//not that it matters anyway, no more than one interface will exist at a time so this should be fine
 	static char* _inputTopic;
@@ -88,12 +89,15 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 
 class BluetoothIface : public ArancinoIface {
 	public:
+	void setBLESerial(Stream* bleUart);
 
 	private:
 	void ifaceBegin();
 	void sendArancinoCommand(char* command);
 	char* receiveArancinoResponse(char terminator);
 	
+	bool comm_timeout = false;
+	Stream* _bleSerial;
 };
 
 #endif
