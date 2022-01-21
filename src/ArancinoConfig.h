@@ -24,8 +24,6 @@ under the License
 #include <Arduino.h>
 #include <ArancinoDefinitions.h>
 
-#define ARANCINO_BLUETOOTH_IFACE		//debug
-
 #if defined ARANCINO_MQTT_IFACE
 #include <PubSubClient.h>
 #endif
