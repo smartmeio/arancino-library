@@ -73,7 +73,7 @@ char* SerialIface::receiveArancinoResponse(char terminator){
 		int responseLength = strlen(str.begin());
 		if (responseLength > 0)
 		{
-			response = (char *)calloc(responseLength + 1 + 1, sizeof(char));
+			response = (char *)Arancino.calloc(responseLength + 1 + 1, sizeof(char));
 			strcpy(response, str.begin());
 			response[responseLength] = END_TX_CHAR;
 			response[responseLength + 1] = '\0';
@@ -94,8 +94,12 @@ char* MqttIface::_inputTopic;
 char* MqttIface::_outputTopic;
 char* MqttIface::_serviceTopic;
 
+void MqttIface::setNetworkClient(Client* networkClient){
+	this->_client = networkClient;
+}
+
 void MqttIface::ifaceBegin(){
-	setClient(*client);
+	setClient(*_client);
 	setServer(broker, port);
 	setCallback(_arancinoCallback);
 
@@ -153,15 +157,58 @@ char* MqttIface::receiveArancinoResponse(char terminator){
 }
 
 void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int length){
-	_inputBuffer = (char*)Arancino.calloc(length+1, sizeof(char));
+	_inputBuffer = (char*)Arancino.calloc(length+1+1, sizeof(char));
 	_inputBuffer = (char*)payload; //I can just cast it to char*
 
-	if (strcmp(topic, _serviceTopic) == 0){
-		Arancino.systemReset();
+	if (strcmp(topic, "arancino/service") == 0){
+		//Arancino.systemReset();
 	} else if (strcmp(topic, _inputTopic) == 0){
 		_inputBuffer[length] = END_TX_CHAR;
+		_inputBuffer[length+1] = '\0';
 		_newIncomingMessage = true;
 	} 
+}
+
+#elif defined(ARANCINO_BLUETOOTH_IFACE)
+
+void BluetoothIface::setBLESerial(Stream* bleUart){
+	this->_bleSerial = bleUart;
+}
+
+void BluetoothIface::ifaceBegin(){
+	//Nothing to initialize here. BLEuart should be already initialized when passed to Arancino library
+}
+
+void BluetoothIface::sendArancinoCommand(char* command){
+	if (comm_timeout){
+		while (_bleSerial->available() > 0){
+			_bleSerial->read();
+		}
+		comm_timeout = false;
+	}
+
+	_bleSerial->write(command, strlen(command));
+}
+
+char* BluetoothIface::receiveArancinoResponse(char terminator){
+	char* response = NULL;
+	String str = "";
+	str = _bleSerial->readStringUntil(terminator);
+
+	//Check timeout
+	if (str == ""){
+		comm_timeout = true;
+	} else {
+		int responseLenght = strlen(str.begin());
+		if (responseLenght > 0){
+			response = (char*) Arancino.calloc(responseLenght+1+1, sizeof(char));
+			strcpy(response, str.begin());
+			response[responseLenght] = END_TX_CHAR;
+			response[responseLenght+1] = '\0';
+		}
+	}
+
+	return response; 
 }
 
 #endif

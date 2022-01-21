@@ -34,7 +34,10 @@ under the License
 #define SERIAL_DEBUG Serial1
 #endif
 
-#define SERIAL_TRANSPORT typeof(SERIAL_PORT)
+//Interfaces -> Uncomment only one of this at a time. Please consult the documentation for more details
+//#define ARANCINO_SERIAL_IFACE
+//#define ARANCINO_MQTT_IFACE
+//#define ARANCINO_BLUETOOTH_IFACE
 
 #define START_COMMAND			(char*)"START"
 #define MSET_COMMAND			(char*)"MSET"
