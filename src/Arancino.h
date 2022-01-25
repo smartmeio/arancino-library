@@ -24,6 +24,7 @@ under the License
 #include <Arduino.h>
 #include <ArancinoDefinitions.h>
 #include <ArancinoConfig.h>
+#include <ArancinoInterface.h>
 #include <Stream.h>
 #include <stdlib.h>
 #include <cstdlib>
@@ -101,6 +102,9 @@ class ArancinoClass {
 		void startScheduler();
 
 		/***** API BASIC *****/
+
+		//ATTACH_INTERFACE
+		void attachInterface(ArancinoIface* iface);
 
 		//BEGIN
 		void begin(ArancinoMetadata amdata, ArancinoConfig aconfig);

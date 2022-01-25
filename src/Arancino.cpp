@@ -37,6 +37,12 @@ TaskHandle_t arancinoHandle2;
 					API FUNCTIONS
 ********************************************************/
 
+/******** API BASIC :: ATTACH_IFACE *********/
+
+void ArancinoClass::attachInterface(ArancinoIface* iface){
+	this->_iface = iface;
+}
+
 
 /******** API BASIC :: BEGIN *********/
 
@@ -48,7 +54,6 @@ void ArancinoClass::begin(ArancinoMetadata _amdata) {
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	MicroID.getUniqueIDString(id, 16);
-	_iface = &_acfg.iface; //link interface to actual implementation
 	_iface->ifaceBegin();
 	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
 	decimal_digits=_acfg.DECIMAL_DIGITS;
