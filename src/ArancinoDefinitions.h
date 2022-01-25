@@ -34,14 +34,6 @@ under the License
 #define SERIAL_DEBUG Serial1
 #endif
 
-<<<<<<< HEAD
-=======
-//Interfaces -> Uncomment only one of this at a time. Please consult the documentation for more details
-//#define ARANCINO_SERIAL_IFACE
-//#define ARANCINO_MQTT_IFACE
-//#define ARANCINO_BLUETOOTH_IFACE
-
->>>>>>> ea60fa9236c9108b48fba5dde67486693a789ec0
 #define START_COMMAND			(char*)"START"
 #define MSET_COMMAND			(char*)"MSET"
 #define MSET_PERS_COMMAND		(char*)"MSETPERS"
