@@ -55,7 +55,7 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 	char* username=NULL;
 	char* password=NULL;
 	char* daemonID;
-	char* broker;	//IP addresses can be passed as well hostnames as strings
+	char* broker;	//IP addresses can be passed as well hostnames (as strings)
 	int port=1883;
 	void setNetworkClient(Client* networkClient);
 
@@ -89,4 +89,4 @@ class BluetoothIface : public ArancinoIface {
 	Stream* _bleSerial;
 };
 
-#endif /* ARANCINOCONFIG_H_ */
+#endif /* ARANCINOINTERFACE_H_ */

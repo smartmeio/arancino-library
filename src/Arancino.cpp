@@ -1136,6 +1136,16 @@ ArancinoPacket ArancinoClass::createArancinoPacket(char* message, int type_retur
 	return packet;
 }
 
+void ArancinoClass::systemReset(){
+	#if defined(ARDUINO_ARCH_RP2040)
+	watchdog_reboot(0,0,0);
+	#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_STM32) || defined(ARDUINO_ARCH_NRF52)
+	NVIC_SystemReset();
+	#else 
+	#warning "Unsupported board selected. Please make sure to provide a reset implementation inside Arancino.cpp otherwise non-serial communication may not work as intended"
+	#endif
+}
+
 void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char* str) {
 	noInterrupts();
 	char val[20]="";
@@ -1383,7 +1393,9 @@ void ArancinoClass::taskResume(){
 	#endif
 }
 
-#if defined (ARDUINO_ARCH_RP2040)
+
+
+#if defined (ARDUINO_ARANCINO_PICO)
 void __interoceptionSetupADC(){
 	adc_init();
 	adc_set_temp_sensor_enabled(true);
@@ -1452,6 +1464,6 @@ void loop1(){
 	delay(60000);
 }
 
-#endif /* ARDUINO_ARCH_RP2040 */
+#endif /* ARDUINO_ARANCINO_PICO */
 
 ArancinoClass Arancino;

@@ -57,8 +57,9 @@ extern "C" {
 #endif//end USEFREERTOS
 
 //RP2040
-#if defined(ARDUINO_ARCH_RP2040)
+#if defined(ARDUINO_ARANCINO_PICO)
 #include <hardware/adc.h>
+#include <hardware/watchdog.h>
 #endif
 
 //Power Mode
@@ -215,6 +216,9 @@ class ArancinoClass {
 		//CHECK UTF-8
 		bool isValidUTF8(const char * string);
 
+		//HW CONTROL
+		void systemReset();
+
 	private:
 		//void dropAll();
 		bool started;
@@ -311,7 +315,7 @@ class ArancinoClass {
 
 extern ArancinoClass Arancino;
 
-#if defined(ARDUINO_ARCH_RP2040)
+#if defined(ARDUINO_ARANCINO_PICO)
 /*
 	Right now FreeRTOS is not currently supported for RP2040. Still Arancino Protocol works flawlessly on it so we can take advantage of multicore arch
 	in order to implement support tasks on a separate core. Keep in mind that core1 will not be available for usage unless you disable this and rewrite 
@@ -325,6 +329,6 @@ void __interoception();
 float __mcuTemp();
 void __deviceIdentification();
 
-#endif /* ARDUINO_ARCH_RP2040 */
+#endif /* ARDUINO_ARANCINO_PICO */
 
 #endif /* ARANCINO_H_ */

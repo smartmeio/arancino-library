@@ -3,7 +3,7 @@
 
   Copyright (C) 2022 SmartMe.IO
 
-  Authors:  Marco Calapristi <marco.calapristi@smartme.io>
+  Authors:  Marco Manfrè <marco@smartme.io>
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may
   not use this file except in compliance with the License. You may obtain
@@ -46,6 +46,9 @@ ArancinoMetadata amdata = {
   .tzoffset = "+1000"
 };
 
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
+
 void setup()
 {
   Bluefruit.autoConnLed(true);
@@ -71,6 +74,8 @@ void setup()
   Arancino.attachInterface(&iface);
 
   Arancino.begin(amdata);  
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
+  Arancino.startScheduler();
 }
 
 void startAdv(void)
@@ -85,9 +90,15 @@ void startAdv(void)
   Bluefruit.Advertising.start(0);                // 0 = Don't stop advertising after n seconds  
 }
 
+void loopTask(void *pvParameters)
+{
+  while (1) {
+    Arancino.set("Test_key", "my_value");
+    vTaskDelay(1000); //wait 1 second
+  }
+}
+
 void loop(){ 
-  Arancino.set("Test_key", "my_value");
-  delay(1000); //wait 1 second
 }
 
 void connect_callback(uint16_t conn_handle)

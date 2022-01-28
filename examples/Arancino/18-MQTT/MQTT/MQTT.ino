@@ -24,8 +24,7 @@
   This sketch shows how to use Arancino Protocol via MQTT.
   In this example an Ethernet shield was used, but any network client should work just fine.
 
-  Inside the sketch the ArancinoConfig should be set as shown below. Every other operation can be performed as usual
-  since communication is handled with an Hardware Abstaction Layer (which can be selected from the Interface menu)
+  In order to do that you should set up a MqttIface to attach to Arancino Library as shown below
 */
 
 #include <SPI.h>
@@ -52,18 +51,18 @@ void setup()
   // Allow the hardware to sort itself out
   delay(1500);
 
-  //When setting up the configurator, please make sure that iface parameters correctly match the selected interface
-  //Please check out the documentation for further details
-  ArancinoConfig aconfig;
-  aconfig.iface.client = &ethClient;
-  aconfig.iface.daemonID = "D43mon";
-  aconfig.iface.broker = "192.168.1.191";
+  //Set up the MQTT client
+  MqttIface iface;
+  iface.daemonID = "D43mon";
+  iface.broker = "192.168.1.191"; //You can use domain names as well"
   //The folowing parameters are already set up with default values, but you can change them if your broker requires so
-  aconfig.iface.username = NULL;
-  aconfig.iface.password = NULL;
-  aconfig.iface.port = 1883;
+  iface.username = NULL;
+  iface.password = NULL;
+  iface.port = 1883;
 
-  Arancino.begin(amdata, aconfig);
+  iface.setNetworkClient(&ethClient);
+  Arancino.attachInterface(&iface);
+  Arancino.begin(amdata);
 }
 
 void loop() {

@@ -157,7 +157,7 @@ void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int lengt
 	_inputBuffer = (char*)payload; //I can just cast it to char*
 
 	if (strcmp(topic, "arancino/service") == 0){
-		//Arancino.systemReset();
+		Arancino.systemReset();
 	} else if (strcmp(topic, _inputTopic) == 0){
 		_inputBuffer[length] = END_TX_CHAR;
 		_inputBuffer[length+1] = '\0';
