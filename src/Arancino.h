@@ -210,6 +210,8 @@ class ArancinoClass {
 		//CHECK UTF-8
 		bool isValidUTF8(const char * string);
 
+		void delay(long millis);
+
 	private:
 		//void dropAll();
 
