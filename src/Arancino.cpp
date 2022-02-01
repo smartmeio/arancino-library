@@ -793,15 +793,6 @@ bool ArancinoClass::isValidUTF8(const char * string) //From: https://stackoverfl
     return true;
 }
 
-/******** API UTILITY :: DELAY *********/
-void ArancinoClass::delay(long millis){
-	#if defined (USEFREERTOS)
-	vTaskDelay(millis);
-	#else
-	::delay(millis);
-	#endif
-}
-
 /******** API ADVANCED :: PRINT *********/
 
 void ArancinoClass::print(char* value){
