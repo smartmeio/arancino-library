@@ -53,7 +53,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata) {
 }
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
-	MicroID.getUniqueIDString(id, 16);
+	MicroID.getUniqueIDString(id, ID_SIZE/2);
 	_iface->ifaceBegin();
 	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
 	decimal_digits=_acfg.DECIMAL_DIGITS;
@@ -916,7 +916,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	if(param1 != NULL){
 		param1_length = strlen(param1);
 		if(id_prefix){
-			param1_length += idSize + 1;
+			param1_length += ID_SIZE + 1;
 		}
 		strLength += param1_length + 1;
 	}
@@ -930,7 +930,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 
 		int param2_length = strlen(param2);
 		if(id_prefix && param1 == NULL){
-			param2_length += idSize + 1;
+			param2_length += ID_SIZE + 1;
 		}
 		int param3_length = 0;
 		if(params3 != NULL)
@@ -1049,7 +1049,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	if(param1 != NULL){
 		param1_length = strlen(param1);
 		if(id_prefix){
-			param1_length += idSize + 1;
+			param1_length += ID_SIZE + 1;
 		}
 	}
 	int param2_length = 0;

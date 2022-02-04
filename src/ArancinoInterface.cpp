@@ -29,7 +29,7 @@ under the License
 
 void SerialIface::ifaceBegin(){
     SERIAL_PORT.begin(BAUDRATE);
-    SERIAL_PORT.setTimeout(SERIAL_TIMEOUT); 
+    SERIAL_PORT.setTimeout(_serialTimeout); 
 }
 
 void SerialIface::sendArancinoCommand(char* command){
@@ -80,6 +80,10 @@ char* SerialIface::receiveArancinoResponse(char terminator){
 	return response;
 }
 
+void SerialIface::setSerialTimeout(int timeout){
+	this->_serialTimeout = timeout;
+}
+
 
 /******** MQTT interface *********/
 
@@ -90,20 +94,17 @@ char* MqttIface::_inputTopic;
 char* MqttIface::_outputTopic;
 char* MqttIface::_serviceTopic;
 
-void MqttIface::setNetworkClient(Client* networkClient){
-	this->_client = networkClient;
-}
 
 void MqttIface::ifaceBegin(){
 	setClient(*_client);
-	setServer(broker, port);
+	setServer(_broker, _port);
 	setCallback(_arancinoCallback);
 
 	//+2 cause 1 '/' is missing in the calculation other than \n
-	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
-	_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(daemonID) + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 2, sizeof(char));
+	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
+	_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 2, sizeof(char));
 	strcpy(_inputTopic, "arancino/cortex/");
-	strcat(_inputTopic, daemonID);
+	strcat(_inputTopic, _daemonID);
 	strcat(_inputTopic, "/");
 	strcat(_inputTopic, Arancino.id);
 
@@ -113,10 +114,10 @@ void MqttIface::ifaceBegin(){
 
 
 	while (!this->connected()){
-		if (this->connect(Arancino.id, username, password)){
-			char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(daemonID)+1, sizeof(char));
+		if (this->connect(Arancino.id, _username, _password)){
+			char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
 			strcpy(discoverytopic, "arancino/discovery/");
-			strcat(discoverytopic, daemonID);
+			strcat(discoverytopic, _daemonID);
 			this->publish(discoverytopic, Arancino.id);
 			Arancino.free(discoverytopic);
 		}
@@ -163,6 +164,31 @@ void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int lengt
 		_inputBuffer[length+1] = '\0';
 		_newIncomingMessage = true;
 	} 
+}
+
+
+void MqttIface::setNetworkClient(Client* networkClient){
+	this->_client = networkClient;
+}
+
+void MqttIface::setUsername(char* username){
+	this->_username = username;
+}
+
+void MqttIface::setPassword(char* password){
+	this->_password = password;
+}
+
+void MqttIface::setDaemonID(char* daemonID){
+	this->_daemonID = daemonID;
+}
+
+void MqttIface::setBrokerAddress(char* broker){
+	this->_broker = broker;
+}
+
+void MqttIface::setPort(int port){
+	this->_port = port;
 }
 
 

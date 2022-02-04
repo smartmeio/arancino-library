@@ -40,29 +40,36 @@ class SerialIface : public ArancinoIface {
 		Is a time period which a sent command can waits for the response.
 		It's expressed in milliseconds.
 	*/
-	int SERIAL_TIMEOUT = TIMEOUT;
+	void setSerialTimeout(int timeout);
 
 	private:
 	void ifaceBegin();
 	void sendArancinoCommand(char* command);
 	char* receiveArancinoResponse(char terminator);
 
+	int _serialTimeout = TIMEOUT;
 	bool comm_timeout = false;
 };
 
 class MqttIface : public ArancinoIface, public PubSubClient {
 	public:
-	char* username=NULL;
-	char* password=NULL;
-	char* daemonID;
-	char* broker;	//IP addresses can be passed as well hostnames (as strings)
-	int port=1883;
 	void setNetworkClient(Client* networkClient);
+	void setUsername(char* username);
+	void setPassword(char* password);
+	void setDaemonID(char* daemonID);
+	void setBrokerAddress(char* broker);
+	void setPort(int port);
 
 	private:
 	void ifaceBegin();
 	void sendArancinoCommand(char* command);
 	char* receiveArancinoResponse(char terminator);
+
+	char* _username=NULL;
+	char* _password=NULL;
+	char* _daemonID;
+	char* _broker;	//IP addresses can be passed as well hostnames (as strings)
+	int _port=1883;
 
 	Client* _client; //Network client
 	//Since callback function needs to be declared as static, every related variable needs to be static as well

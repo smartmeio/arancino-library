@@ -97,7 +97,7 @@ class ArancinoClass {
 		/***** API ADVANCED *****/
 
 		//Serial port id
-		char id[33];
+		char id[ID_SIZE+1];
 
 		//START SCHEDULER
 		void startScheduler();
@@ -224,7 +224,6 @@ class ArancinoClass {
 		bool started;
 		bool arancino_id_prefix;
 		int decimal_digits;
-		int idSize;
 		char timestamp[13];
 		unsigned long timestampMillis;
 		unsigned long tmst_sup;

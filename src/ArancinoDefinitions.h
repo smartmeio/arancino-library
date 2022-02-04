@@ -115,3 +115,5 @@ under the License
 #define ARANCINO_TASK_PRIORITY      2
 
 #define MQTT_MAX_RETRIES            100
+
+#define ID_SIZE 32
