@@ -100,12 +100,12 @@ void MqttIface::ifaceBegin(){
 	setServer(_broker, _port);
 	setCallback(_arancinoCallback);
 
-	//+2 cause 1 '/' is missing in the calculation other than \n
-	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
-	_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 2, sizeof(char));
-	strcpy(_inputTopic, "arancino/cortex/");
+	//+1 because of \n
+	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/DAEMONID=") + strlen(_daemonID) + strlen("/ARANCINOID=") + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 1, sizeof(char));
+	_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/DAEMONID=") + strlen(_daemonID) + strlen("/ARANCINOID=") + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 1, sizeof(char));
+	strcpy(_inputTopic, "arancino/cortex/DAEMONID=");
 	strcat(_inputTopic, _daemonID);
-	strcat(_inputTopic, "/");
+	strcat(_inputTopic, "/ARANCINOID=");
 	strcat(_inputTopic, Arancino.id);
 
 	strcpy(_outputTopic, _inputTopic);	//just a quick shortcut
