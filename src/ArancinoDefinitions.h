@@ -24,11 +24,13 @@ under the License
 
 #if defined(__SAMD21G18A__)
 #define BAUDRATE 4000000
+#define BAUDRATE_DEBUG 115200
 #define TIMEOUT 100
 #define SERIAL_PORT SerialUSB
 #define SERIAL_DEBUG Serial
 #else
 #define BAUDRATE 256000
+#define BAUDRATE_DEBUG 115200
 #define TIMEOUT 10000
 #define SERIAL_PORT Serial
 #define SERIAL_DEBUG Serial1

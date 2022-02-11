@@ -147,6 +147,35 @@ void ArancinoClass::startScheduler() {
 }
 #endif
 
+/******** API ADVANCED :: DEBUG OPTIONS *********/
+
+void ArancinoClass::enableDebugMessages(){
+	//Default config for Arancino Boards
+	SERIAL_DEBUG.begin(BAUDRATE_DEBUG);
+	_isDebug = true;
+	_dbgSerial = &SERIAL_DEBUG;
+}
+
+void ArancinoClass::enableDebugMessages(Stream* dbgSerial){
+	//Custom debug serial should be provided here and already initialized
+	_isDebug = true;
+	this->_dbgSerial = dbgSerial;
+}
+
+void ArancinoClass::disableDebugMessages(){
+	//This only stops debug messages from being processed. If you want to reuse the dedicated
+	//serial port at a different baud rate you should manually end the serial yourself
+	_isDebug = false;
+	_dbgSerial = NULL;
+}
+
+//Consider implementing a DECENT multi-param version like a template
+//This will do for now
+void ArancinoClass::printDebugMessage(char* msg){
+	if (_isDebug)
+	_dbgSerial->println(msg);
+}
+
 /******** API BASIC :: MSET *********/
 
 ArancinoPacket ArancinoClass::mset(char** keys, char** values, int len, bool isPersistent) {

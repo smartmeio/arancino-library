@@ -41,13 +41,16 @@ class SerialIface : public ArancinoIface {
 		It's expressed in milliseconds.
 	*/
 	void setSerialTimeout(int timeout);
+	void setSerialPort();
+	void setSerialPort(Stream* serialPort);
 
 	private:
 	void ifaceBegin();
 	void sendArancinoCommand(char* command);
 	char* receiveArancinoResponse(char terminator);
 
-	int _serialTimeout = TIMEOUT;
+	Stream* _serialPort;
+	int _serialTimeout = 10000;
 	bool comm_timeout = false;
 };
 
@@ -65,6 +68,8 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 	void sendArancinoCommand(char* command);
 	char* receiveArancinoResponse(char terminator);
 
+	void _reconnect();
+
 	char* _username=NULL;
 	char* _password=NULL;
 	char* _daemonID;
@@ -80,7 +85,6 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 	static bool _newIncomingMessage;
 	static char* _inputBuffer;
 	static void _arancinoCallback(char* topic, byte* payload, unsigned int lenght);
-
 };
 
 class BluetoothIface : public ArancinoIface {

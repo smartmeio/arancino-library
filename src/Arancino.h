@@ -188,6 +188,13 @@ class ArancinoClass {
 		//STORE TAGS
 		ArancinoPacket storetags(char* key, char** tags, char** values, int len);
 
+		/***** DEBUG OPTIONS *****/
+
+		void enableDebugMessages();
+		void enableDebugMessages(Stream* dbgSerial);
+		void disableDebugMessages();
+		void printDebugMessage(char* msg);
+
 		/***** API UTILS *****/
 		//FREE
 		void free(char* str);
@@ -279,6 +286,10 @@ class ArancinoClass {
 
 		//Protocol interface
 		ArancinoIface* _iface;
+
+		//Debug options
+		Stream* _dbgSerial;
+		bool _isDebug = false;
 
 		//TEMPLATE WRAPPED
 		// ArancinoPacket _getPacket(char* key);

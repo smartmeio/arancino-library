@@ -28,8 +28,7 @@ under the License
 /******** Serial interface *********/
 
 void SerialIface::ifaceBegin(){
-    SERIAL_PORT.begin(BAUDRATE);
-    SERIAL_PORT.setTimeout(_serialTimeout); 
+    
 }
 
 void SerialIface::sendArancinoCommand(char* command){
@@ -40,29 +39,19 @@ void SerialIface::sendArancinoCommand(char* command){
 			synchronization between arancino library and arancino module.
 			By this way I prevent to receive reposonse of a previous sent command.
 		*/
-		while(SERIAL_PORT.available() > 0){
-				SERIAL_PORT.read();
+		while(_serialPort->available() > 0){
+				_serialPort->read();
 		}
 		comm_timeout=false;
 	}
 	//command must terminate with '\0'!
-	SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
-	#if defined(__SAMD21G18A__)
-		if(!digitalRead(DBG_PIN)){
-			if(command[strlen(command) - 1] == END_TX_CHAR)
-			{
-				Serial.println(command);
-			}
-			else
-				Serial.print(command);
-		}
-	#endif
+	_serialPort->write(command, strlen(command)); //excluded '\0'
 }
 
 char* SerialIface::receiveArancinoResponse(char terminator){
     char* response = NULL; //must be freed
 	String str = "";
-	str = SERIAL_PORT.readStringUntil(terminator);
+	str = _serialPort->readStringUntil(terminator);
 	if( str == ""){
 		//enable timeout check
 		comm_timeout = true;
@@ -84,6 +73,17 @@ void SerialIface::setSerialTimeout(int timeout){
 	this->_serialTimeout = timeout;
 }
 
+void SerialIface::setSerialPort(){
+	SERIAL_PORT.begin(BAUDRATE);
+	SERIAL_PORT.setTimeout(_serialTimeout); 
+
+	_serialTimeout = TIMEOUT;
+	_serialPort = &SERIAL_PORT;
+}
+
+void SerialIface::setSerialPort(Stream* serialPort){
+	_serialPort = serialPort;
+}
 
 /******** MQTT interface *********/
 
@@ -93,7 +93,6 @@ bool MqttIface::_newIncomingMessage = false;
 char* MqttIface::_inputTopic;
 char* MqttIface::_outputTopic;
 char* MqttIface::_serviceTopic;
-
 
 void MqttIface::ifaceBegin(){
 	setClient(*_client);
@@ -112,27 +111,26 @@ void MqttIface::ifaceBegin(){
 	strcat(_inputTopic, "/rsp_to_mcu");
 	strcat(_outputTopic, "/cmd_from_mcu");
 
-
-	while (!this->connected()){
-		if (this->connect(Arancino.id, _username, _password)){
-			char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
-			strcpy(discoverytopic, "arancino/discovery/");
-			strcat(discoverytopic, _daemonID);
-			this->publish(discoverytopic, Arancino.id);
-			Arancino.free(discoverytopic);
-		}
-	}
-
 	_serviceTopic = (char*)Arancino.calloc(strlen("arancino/service/")+ strlen(Arancino.id) + 1, sizeof(char));
 	strcpy(_serviceTopic, "arancino/service/");
 	strcat(_serviceTopic, Arancino.id);
 
-	this->subscribe(_serviceTopic);
-	this->subscribe(_inputTopic);
+	this->_reconnect();
 }
 
 void MqttIface::sendArancinoCommand(char* command){
-	this->publish(_outputTopic, command);
+	int counter = 0;
+	do{
+		if (this->publish(_outputTopic, command)){
+			return;
+		}
+		Arancino.printDebugMessage("Failed to send message, retrying.");
+		counter++;
+	} while (counter < MQTT_MAX_RETRIES);
+	Arancino.printDebugMessage("Failed to send message.");
+
+	//This should not happen. Check if still connected
+	this->_reconnect();
 }
 
 char* MqttIface::receiveArancinoResponse(char terminator){
@@ -188,9 +186,34 @@ void MqttIface::setBrokerAddress(char* broker){
 }
 
 void MqttIface::setPort(int port){
-	this->_port = port;
+	//basic check for valid port
+	if (port>0 && port<65353)
+		this->_port = port;
 }
 
+void MqttIface::_reconnect(){
+	while (!this->connected()){
+		if (this->connect(Arancino.id, _username, _password)){
+			char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
+			strcpy(discoverytopic, "arancino/discovery/");
+			strcat(discoverytopic, _daemonID);
+			this->publish(discoverytopic, Arancino.id);
+			Arancino.free(discoverytopic);
+		} else {
+			//If debug is enabled, tell the user that connection failed
+			Arancino.printDebugMessage("Connection failed, retrying in 5 seconds. RC=");
+			char rc[2];
+			itoa(this->state(), rc, 10);
+			Arancino.printDebugMessage(rc);
+
+			//Wait 5 seconds before retrying. 
+			delay(5000);
+		}
+	}
+
+	this->subscribe(_serviceTopic);
+	this->subscribe(_inputTopic);
+}
 
 /******** Bluetooth interface *********/
 
