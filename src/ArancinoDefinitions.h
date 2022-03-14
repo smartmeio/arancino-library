@@ -22,6 +22,7 @@ under the License
 #define MCU_FAMILY (char*)"undefined"
 #endif
 
+//TODO: This should be removed
 #if defined(__SAMD21G18A__)
 #define BAUDRATE 4000000
 #define BAUDRATE_DEBUG 115200

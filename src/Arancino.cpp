@@ -151,9 +151,11 @@ void ArancinoClass::startScheduler() {
 
 void ArancinoClass::enableDebugMessages(){
 	//Default config for Arancino Boards
+	#if defined(SERIAL_DEBUG) && defined(BAUDRATE_DEBUG)
 	SERIAL_DEBUG.begin(BAUDRATE_DEBUG);
 	_isDebug = true;
 	_dbgSerial = &SERIAL_DEBUG;
+	#endif
 }
 
 void ArancinoClass::enableDebugMessages(Stream* dbgSerial){
@@ -169,8 +171,6 @@ void ArancinoClass::disableDebugMessages(){
 	_dbgSerial = NULL;
 }
 
-//Consider implementing a DECENT multi-param version like a template
-//This will do for now
 void ArancinoClass::printDebugMessage(char* msg){
 	if (_isDebug)
 	_dbgSerial->println(msg);

@@ -28,7 +28,7 @@ under the License
 /******** Serial interface *********/
 
 void SerialIface::ifaceBegin(){
-    
+    //Nothing to initialize here.
 }
 
 void SerialIface::sendArancinoCommand(char* command){
@@ -39,19 +39,19 @@ void SerialIface::sendArancinoCommand(char* command){
 			synchronization between arancino library and arancino module.
 			By this way I prevent to receive reposonse of a previous sent command.
 		*/
-		while(_serialPort->available() > 0){
-				_serialPort->read();
+		while(this->_serialPort->available() > 0){
+				this->_serialPort->read();
 		}
 		comm_timeout=false;
 	}
 	//command must terminate with '\0'!
-	_serialPort->write(command, strlen(command)); //excluded '\0'
+	this->_serialPort->write(command, strlen(command)); //excluded '\0'
 }
 
 char* SerialIface::receiveArancinoResponse(char terminator){
     char* response = NULL; //must be freed
 	String str = "";
-	str = _serialPort->readStringUntil(terminator);
+	str = this->_serialPort->readStringUntil(terminator);
 	if( str == ""){
 		//enable timeout check
 		comm_timeout = true;
@@ -73,16 +73,18 @@ void SerialIface::setSerialTimeout(int timeout){
 	this->_serialTimeout = timeout;
 }
 
-void SerialIface::setSerialPort(){
-	SERIAL_PORT.begin(BAUDRATE);
-	SERIAL_PORT.setTimeout(_serialTimeout); 
-
-	_serialTimeout = TIMEOUT;
-	_serialPort = &SERIAL_PORT;
+void SerialIface::setSerialPort(Stream* serialPort){
+	this->_serialPort = serialPort;
 }
 
-void SerialIface::setSerialPort(Stream* serialPort){
-	_serialPort = serialPort;
+void SerialIface::setSerialPort(){
+	//default implementation for Arancino boards
+	#if defined (SERIAL_PORT) && defined(BAUDRATE) && defined (TIMEOUT)
+	SERIAL_PORT.begin(BAUDRATE);
+	SERIAL_PORT.setTimeout(_serialTimeout);
+	this->_serialTimeout = TIMEOUT;
+	this->_serialPort = &SERIAL_PORT;
+	#endif
 }
 
 /******** MQTT interface *********/
