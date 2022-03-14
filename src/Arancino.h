@@ -210,10 +210,13 @@ class ArancinoClass {
 		//CHECK UTF-8
 		bool isValidUTF8(const char * string);
 
+		//DELAY
+		void delay(long milli);
+
 	private:
 		//void dropAll();
 
-		bool started;
+		bool started = false;
 		bool comm_timeout = false;
 		bool arancino_id_prefix;
 		int decimal_digits;

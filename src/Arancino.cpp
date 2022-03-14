@@ -131,6 +131,7 @@ void ArancinoClass::start(char** keys, char** values, int len) {
 /******** API ADVANCED :: START SCHEDULER *********/
 
 void ArancinoClass::startScheduler() {
+started = true;
 #if defined(__SAMD21G18A__)
 	vSetErrorLed(LED_BUILTIN, HIGH);
 #endif
@@ -791,6 +792,18 @@ bool ArancinoClass::isValidUTF8(const char * string) //From: https://stackoverfl
     }
 
     return true;
+}
+
+/******** API UTILITY :: DELAY *********/
+
+void ArancinoClass::delay(long milli){
+	//Check if scheduler was started or not
+	//TODO: add Full duplex support
+	if(started){
+		vTaskDelay(milli);
+	} else {
+		::delay(milli);
+	}
 }
 
 /******** API ADVANCED :: PRINT *********/
