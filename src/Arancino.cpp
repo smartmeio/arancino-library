@@ -633,7 +633,7 @@ ArancinoPacket ArancinoClass::__store( char* key, char* value) {
 	if(key == NULL && value == NULL && strcmp(key, "") == 0){
 		return invalidCommandErrorPacket;
 	}
-	return executeCommand(STORE_COMMAND,key,value,ts,true,STRING);
+	return executeCommand(STORE_COMMAND,key,value,ts,false,STRING);
 }
 
 /******** API BASIC :: MSTORE *********/
@@ -643,7 +643,7 @@ template<> ArancinoPacket ArancinoClass::mstore<ArancinoPacket> (char** keys, ch
 	if ((keys == NULL) || (values == NULL) || (len <= 0)) {
 		return invalidCommandErrorPacket;
 	}
-	return executeCommand(MSTORE_COMMAND, NULL, keys, values, ts, len, true, STRING_ARRAY);
+	return executeCommand(MSTORE_COMMAND, NULL, keys, values, ts, len, false, STRING_ARRAY);
 }
 
 template<> char** ArancinoClass::mstore(char** key, char** value, int len){
@@ -660,7 +660,7 @@ ArancinoPacket ArancinoClass::storetags(char* key, char** tags, char** values, i
 	char* ts = getTimestamp();
 	if ((key == NULL) || (tags == NULL) || (values == NULL) || (len <= 0))
 		return invalidCommandErrorPacket;
-	return executeCommand(STORETAGS_COMMAND,key,tags,values,ts,len,true,VOID);
+	return executeCommand(STORETAGS_COMMAND,key,tags,values,ts,len,false,VOID);
 }
 
 /******** API UTILITY :: FREE *********/
