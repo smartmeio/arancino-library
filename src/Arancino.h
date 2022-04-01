@@ -24,10 +24,12 @@ under the License
 #include <Arduino.h>
 #include <ArancinoDefinitions.h>
 #include <ArancinoConfig.h>
+#include <ArancinoInterface.h>
 #include <Stream.h>
 #include <stdlib.h>
 #include <cstdlib>
 #include <type_traits>
+#include <MicrocontrollerID.h>
 
 //#define USEFREERTOS
 #if defined(USEFREERTOS)
@@ -55,8 +57,9 @@ extern "C" {
 #endif//end USEFREERTOS
 
 //RP2040
-#if defined(ARDUINO_ARCH_RP2040)
+#if defined(ARDUINO_ARANCINO_PICO)
 #include <hardware/adc.h>
+#include <hardware/watchdog.h>
 #endif
 
 //Power Mode
@@ -94,12 +97,15 @@ class ArancinoClass {
 		/***** API ADVANCED *****/
 
 		//Serial port id
-		char *id;
+		char id[ID_SIZE+1];
 
 		//START SCHEDULER
 		void startScheduler();
 
 		/***** API BASIC *****/
+
+		//ATTACH_INTERFACE
+		void attachInterface(ArancinoIface* iface);
 
 		//BEGIN
 		void begin(ArancinoMetadata amdata, ArancinoConfig aconfig);
@@ -182,6 +188,13 @@ class ArancinoClass {
 		//STORE TAGS
 		ArancinoPacket storetags(char* key, char** tags, char** values, int len);
 
+		/***** DEBUG OPTIONS *****/
+
+		void enableDebugMessages();
+		void enableDebugMessages(Stream* dbgSerial);
+		void disableDebugMessages();
+		void printDebugMessage(char* msg);
+
 		/***** API UTILS *****/
 		//FREE
 		void free(char* str);
@@ -213,14 +226,14 @@ class ArancinoClass {
 		//DELAY
 		void delay(long milli);
 
+		//HW CONTROL
+		void systemReset();
+
 	private:
 		//void dropAll();
-
-		bool started = false;
-		bool comm_timeout = false;
+		bool started;
 		bool arancino_id_prefix;
 		int decimal_digits;
-		int idSize;
 		char timestamp[13];
 		unsigned long timestampMillis;
 		unsigned long tmst_sup;
@@ -254,11 +267,6 @@ class ArancinoClass {
 		ArancinoPacket setReserved( char* key, char* value, bool id_prefix);
 
 		//INTERNAL UTILS
-		//void _sendArancinoCommand(String command);
-		void _sendArancinoCommand(char* command);
-		//void _sendArancinoCommand(char command);
-
-		char* _receiveArancinoResponse(char terminator);
 		void _doubleToString(double value, unsigned int _nDecimal, char* str); //truncation!
 		void _floatToString(float value, unsigned int _nDecimal, char* str);
 		int _getDigit(long value);
@@ -278,6 +286,14 @@ class ArancinoClass {
 		ArancinoPacket executeCommand(char* command_id, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int response_type);
 		ArancinoPacket executeCommand(char* command_id, char* param1, char* param2, char*param3, bool id_prefix, int response_type);
 		ArancinoPacket createArancinoPacket(char* response_raw, int response_type);
+
+		//Protocol interface
+		ArancinoIface* _iface;
+
+		//Debug options
+		Stream* _dbgSerial;
+		bool _isDebug = false;
+
 		//TEMPLATE WRAPPED
 		// ArancinoPacket _getPacket(char* key);
 		// char* _get(char* key);
@@ -312,7 +328,7 @@ class ArancinoClass {
 
 extern ArancinoClass Arancino;
 
-#if defined(ARDUINO_ARCH_RP2040)
+#if defined(ARDUINO_ARANCINO_PICO)
 /*
 	Right now FreeRTOS is not currently supported for RP2040. Still Arancino Protocol works flawlessly on it so we can take advantage of multicore arch
 	in order to implement support tasks on a separate core. Keep in mind that core1 will not be available for usage unless you disable this and rewrite 
@@ -326,6 +342,6 @@ void __interoception();
 float __mcuTemp();
 void __deviceIdentification();
 
-#endif /* ARDUINO_ARCH_RP2040 */
+#endif /* ARDUINO_ARANCINO_PICO */
 
 #endif /* ARANCINO_H_ */

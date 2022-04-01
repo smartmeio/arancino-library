@@ -20,9 +20,11 @@ under the License
 
 #include <ArancinoDefinitions.h>
 
+
+/******** CONFIGURATIONS *********/
+
 class ArancinoConfig{
 	public:
-
 		/*
 			It is intended as the precision number of decimal digits for float and
 				double data types.
@@ -37,13 +39,6 @@ class ArancinoConfig{
 				key name.
 		*/
 		bool USE_PORT_ID_PREFIX_KEY = false;
-
-
-		/*
-			Is a time period which a sent command can waits for the response.
-				It's expressed in milliseconds.
-		*/
-		int SERIAL_TIMEOUT = TIMEOUT;
 
 
 		/*
@@ -65,5 +60,4 @@ class ArancinoConfig{
 				9 -> Highest Priority.
 		*/
 		int FREERTOS_LOOP_TASK_PRIORITY = 0;
-
 };
