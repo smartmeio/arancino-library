@@ -29,7 +29,7 @@ under the License
 #include <cstdlib>
 #include <type_traits>
 
-//#define USEFREERTOS
+#define USEFREERTOS
 #if defined(USEFREERTOS)
 #if defined(__SAMD21G18A__)
 
@@ -48,6 +48,9 @@ extern "C" {
 }
 #elif defined (ARDUINO_ARANCINO_VOLANTE)
 //need to serial
+#include <Adafruit_TinyUSB.h>
+#elif defined (ARDUINO_ARCH_RP2040)
+#include <RP2040_FreeRTOS.h>
 #include <Adafruit_TinyUSB.h>
 #endif
 
@@ -270,7 +273,9 @@ class ArancinoClass {
 
 		char* _parse(char* message);
 		char** _parseArray(char* message);
-
+		
+		BaseType_t takeCommMutex(TickType_t timeout);
+		void giveCommMutex();
 		void taskSuspend();
 		void taskResume();
 

@@ -22,20 +22,23 @@ under the License
 #define MCU_FAMILY (char*)"undefined"
 #endif
 
-/*
-HW Defines moved to cores (Arduino.h) #23n7ujc
 #if defined(__SAMD21G18A__)
 #define BAUDRATE 4000000
 #define TIMEOUT 100
 #define SERIAL_PORT SerialUSB
 #define SERIAL_DEBUG Serial
+#elif defined(ARDUINO_ARCH_RP2040) && defined(USEFREERTOS)
+#define BAUDRATE 256000
+#define TIMEOUT 10000
+#define SERIAL_PORT SerialTinyUSB
+#define SERIAL_DEBUG Serial1
 #else
 #define BAUDRATE 256000
 #define TIMEOUT 10000
 #define SERIAL_PORT Serial
 #define SERIAL_DEBUG Serial1
 #endif
-*/
+
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
 
 #define START_COMMAND			(char*)"START"

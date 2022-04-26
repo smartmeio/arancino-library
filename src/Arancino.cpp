@@ -31,6 +31,7 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 #if defined(USEFREERTOS)
 TaskHandle_t arancinoHandle1;
 TaskHandle_t arancinoHandle2;
+SemaphoreHandle_t CommMutex;
 #endif
 
 /********************************************************
@@ -76,6 +77,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	char mcu_family[]="MCU_FAMILY";
 	char fw_use_freertos[]="FW_USE_FREERTOS";
 	#if defined(USEFREERTOS)
+	CommMutex = xSemaphoreCreateMutex();
 	char* useFreeRtos = "1";
 	#else
 	char* useFreeRtos = "0";
@@ -1031,7 +1033,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 		}
 	#endif
 
-	taskSuspend();
+	takeCommMutex(( TickType_t ) portMAX_DELAY);
 
 
 	_sendArancinoCommand(str);
@@ -1039,7 +1041,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
 
 
-	taskResume();
+	giveCommMutex();
 
 
 	free(str);
@@ -1099,12 +1101,12 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	}
 	strcat(str, endTXStr);
 
-	taskSuspend();
+	takeCommMutex(( TickType_t ) portMAX_DELAY);
 
 	_sendArancinoCommand(str);
 	char* message = _receiveArancinoResponse(END_TX_CHAR);
 
-	taskResume();
+	giveCommMutex();
 
 	free(str);
 
@@ -1426,6 +1428,33 @@ char** ArancinoClass::_parseArray(char* data) {
 	}
 
 	return (data != NULL && arrayParsed != NULL) ? &arrayParsed[1] : NULL;
+}
+
+BaseType_t ArancinoClass::takeCommMutex(TickType_t timeout){
+	#if  defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		return xSemaphoreTake( CommMutex, timeout );
+	}
+	else
+	{
+		/*
+		Since the scheduler is not yet started, there are no multiple tasks
+		running simultaneously, so takeCommMutex acts as the mutex is correctly
+		taken.
+		*/
+		return pdTRUE;
+	}
+	#endif
+}
+
+void ArancinoClass::giveCommMutex(){
+	#if defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		xSemaphoreGive( CommMutex );
+	}
+	#endif
 }
 
 void ArancinoClass::taskSuspend(){

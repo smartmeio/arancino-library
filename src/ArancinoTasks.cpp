@@ -66,7 +66,7 @@ void ArancinoTasks::deviceIdentification(void *pvPramaters){
 void ArancinoTasks::interoception(void *pvPramaters){
   while (1)
   {
-    #if !defined(ARDUINO_ARANCINO_VOLANTE)
+    #if !defined(ARDUINO_ARANCINO_VOLANTE) && !defined(ARDUINO_ARCH_RP2040)
     //free memory
     int memory_free = xPortGetFreeHeapSize();
     char mem_free[20];
@@ -87,7 +87,7 @@ void ArancinoTasks::interoception(void *pvPramaters){
     char mem_used_key[]="MEM_USED";
     char mem_tot_key[]="MEM_TOT";
     char temp_key[]="TEMP";
-    #if defined(ARDUINO_ARANCINO_VOLANTE)
+    #if defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040)
     char* keys[] = {mem_tot_key,temp_key};
     char* values[] = {mem_tot,temp};
     ArancinoPacket acpkt = Arancino.mstore<ArancinoPacket>(keys,values,2);
