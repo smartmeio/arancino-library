@@ -94,7 +94,6 @@ char* MqttIface::_inputBuffer;
 bool MqttIface::_newIncomingMessage = false;
 char* MqttIface::_inputTopic;
 char* MqttIface::_outputTopic;
-char* MqttIface::_serviceTopic;
 
 void MqttIface::ifaceBegin(){
 	setClient(*_client);
@@ -102,33 +101,45 @@ void MqttIface::ifaceBegin(){
 	setCallback(_arancinoCallback);
 
 	//+1 because of \n
-	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/DAEMONID=") + strlen(_daemonID) + strlen("/ARANCINOID=") + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 1, sizeof(char));
-	_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/DAEMONID=") + strlen(_daemonID) + strlen("/ARANCINOID=") + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 1, sizeof(char));
-	strcpy(_inputTopic, "arancino/cortex/DAEMONID=");
-	strcat(_inputTopic, _daemonID);
-	strcat(_inputTopic, "/ARANCINOID=");
+	//_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/DAEMONID=") + strlen(_daemonID) + strlen("/ARANCINOID=") + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 1, sizeof(char));
+	//_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/DAEMONID=") + strlen(_daemonID) + strlen("/ARANCINOID=") + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 1, sizeof(char));
+	
+	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 1, sizeof(char));
+	_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 1, sizeof(char));
+	
+	//strcpy(_inputTopic, "arancino/cortex/DAEMONID=");
+	strcpy(_inputTopic, "arancino/cortex/");
+	//strcat(_inputTopic, _daemonID);
+	//strcat(_inputTopic, "/ARANCINOID=");
 	strcat(_inputTopic, Arancino.id);
 
 	strcpy(_outputTopic, _inputTopic);	//just a quick shortcut
+
 	strcat(_inputTopic, "/rsp_to_mcu");
 	strcat(_outputTopic, "/cmd_from_mcu");
 
-	_serviceTopic = (char*)Arancino.calloc(strlen("arancino/service/")+ strlen(Arancino.id) + 1, sizeof(char));
-	strcpy(_serviceTopic, "arancino/service/");
-	strcat(_serviceTopic, Arancino.id);
-
 	this->_reconnect();
+
+	this->subscribe("arancino/service"); //service topic
+	this->subscribe(_inputTopic);
+
+	//char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
+	char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery") + 1, sizeof(char));
+	strcpy(discoverytopic, "arancino/discovery");
+	//strcat(discoverytopic, _daemonID);
+	this->publish(discoverytopic, Arancino.id);
+	Arancino.free(discoverytopic);
 }
 
 void MqttIface::sendArancinoCommand(char* command){
 	int counter = 0;
-	do{
+	while (counter < MQTT_MAX_RETRIES){
 		if (this->publish(_outputTopic, command)){
 			return;
 		}
 		Arancino.printDebugMessage("Failed to send message, retrying.");
 		counter++;
-	} while (counter < MQTT_MAX_RETRIES);
+	}
 	Arancino.printDebugMessage("Failed to send message.");
 
 	//This should not happen. Check if still connected
@@ -195,26 +206,15 @@ void MqttIface::setPort(int port){
 
 void MqttIface::_reconnect(){
 	while (!this->connected()){
-		if (this->connect(Arancino.id, _username, _password)){
-			char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
-			strcpy(discoverytopic, "arancino/discovery/");
-			strcat(discoverytopic, _daemonID);
-			this->publish(discoverytopic, Arancino.id);
-			Arancino.free(discoverytopic);
-		} else {
+		if (!this->connect(Arancino.id, _username, _password)){
 			//If debug is enabled, tell the user that connection failed
-			Arancino.printDebugMessage("Connection failed, retrying in 5 seconds. RC=");
+			Arancino.printDebugMessage("Connection failed, retrying in 3 seconds. RC=");
 			char rc[2];
 			itoa(this->state(), rc, 10);
 			Arancino.printDebugMessage(rc);
-
-			//Wait 5 seconds before retrying. 
-			delay(5000);
+			delay(3000);
 		}
 	}
-
-	this->subscribe(_serviceTopic);
-	this->subscribe(_inputTopic);
 }
 
 /******** Bluetooth interface *********/

@@ -36,6 +36,7 @@ byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };    //MAC address of ethern
 IPAddress ip(192, 168, 1, 100);   // Static IP Address. You can also use your DHCP server to automatically assign one
 
 EthernetClient ethClient;
+MqttIface iface;
 
 ArancinoMetadata amdata = {
   .fwname = "Mqtt Example",
@@ -45,6 +46,8 @@ ArancinoMetadata amdata = {
 
 void setup()
 {
+  SerialUSB.begin(115200);
+  while(!SerialUSB);
   Ethernet.init(9);   // 9 is CS pin for ethernet shield. Change this accordingly to your setup
   Ethernet.begin(mac, ip);
   
@@ -52,16 +55,15 @@ void setup()
   delay(1500);
 
   //Set up the MQTT client
-  MqttIface iface;
-  iface.daemonID = "D43mon";
-  iface.broker = "192.168.1.191"; //You can use domain names as well"
-  //The folowing parameters are already set up with default values, but you can change them if your broker requires so
-  iface.username = NULL;
-  iface.password = NULL;
-  iface.port = 1883;
+  Arancino.enableDebugMessages(&SerialUSB);
+  Arancino.printDebugMessage("Started");
+  
+  //iface.daemonID = "D43mon";
+  iface.setBrokerAddress("192.168.1.191"); //You can use domain names as well"
 
   iface.setNetworkClient(&ethClient);
   Arancino.attachInterface(&iface);
+  
   Arancino.begin(amdata);
 }
 
