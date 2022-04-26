@@ -26,13 +26,11 @@ under the License
 HW Defines moved to cores (Arduino.h) #23n7ujc
 #if defined(__SAMD21G18A__)
 #define BAUDRATE 4000000
-#define BAUDRATE_DEBUG 115200
 #define TIMEOUT 100
 #define SERIAL_PORT SerialUSB
 #define SERIAL_DEBUG Serial
 #else
 #define BAUDRATE 256000
-#define BAUDRATE_DEBUG 115200
 #define TIMEOUT 10000
 #define SERIAL_PORT Serial
 #define SERIAL_DEBUG Serial1
@@ -76,7 +74,7 @@ HW Defines moved to cores (Arduino.h) #23n7ujc
 #define RSP_OK							100
 #define RSP_HSET_NEW					101
 #define RSP_HSET_UPD					102
-#define ERR_GENERIC						200		//Generic Error
+#define ERR								200		//Generic Error
 #define ERR_NULL						201		//Null value
 #define ERR_SET							202		//Error during SET
 #define ERR_CMD_NOT_FND					203		//Command Not Found
@@ -119,7 +117,3 @@ HW Defines moved to cores (Arduino.h) #23n7ujc
 #define MAX_UNSIGNED_LONG_VALUE     4294967295
 
 #define ARANCINO_TASK_PRIORITY      2
-
-#define MQTT_MAX_RETRIES            100
-
-#define ID_SIZE 32

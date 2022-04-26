@@ -37,12 +37,6 @@ TaskHandle_t arancinoHandle2;
 					API FUNCTIONS
 ********************************************************/
 
-/******** API BASIC :: ATTACH_IFACE *********/
-
-void ArancinoClass::attachInterface(ArancinoIface* iface){
-	this->_iface = iface;
-}
-
 
 /******** API BASIC :: BEGIN *********/
 
@@ -53,9 +47,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata) {
 }
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
-	MicroID.getUniqueIDString(id, ID_SIZE/2);
-	_iface->ifaceBegin();
+	SERIAL_PORT.begin(BAUDRATE);
 	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
+	SERIAL_PORT.setTimeout(_acfg.SERIAL_TIMEOUT);
 	decimal_digits=_acfg.DECIMAL_DIGITS;
 
 	_metadata = _amdata;
@@ -117,6 +111,10 @@ void ArancinoClass::start(char** keys, char** values, int len) {
 
 		packet = executeCommand(START_COMMAND, NULL, keys, values,NULL, len, false, STRING_ARRAY);
 		if(packet.responseCode == RSP_OK){
+			//store arancino serial port id
+			idSize = strlen(packet.response.stringArray[0]);
+			id = (char *)calloc(idSize+1, sizeof(char));
+			memcpy(id,packet.response.stringArray[0],idSize);
 			//timestamp from arancino module
 			memcpy(timestamp, packet.response.stringArray[1],13);
 			char tmst_part[5];
@@ -147,35 +145,6 @@ started = true;
 	#endif
 }
 #endif
-
-/******** API ADVANCED :: DEBUG OPTIONS *********/
-
-void ArancinoClass::enableDebugMessages(){
-	//Default config for Arancino Boards
-	#if defined(SERIAL_DEBUG) && defined(BAUDRATE_DEBUG)
-	SERIAL_DEBUG.begin(BAUDRATE_DEBUG);
-	_isDebug = true;
-	_dbgSerial = &SERIAL_DEBUG;
-	#endif
-}
-
-void ArancinoClass::enableDebugMessages(Stream* dbgSerial){
-	//Custom debug serial should be provided here and already initialized
-	_isDebug = true;
-	this->_dbgSerial = dbgSerial;
-}
-
-void ArancinoClass::disableDebugMessages(){
-	//This only stops debug messages from being processed. If you want to reuse the dedicated
-	//serial port at a different baud rate you should manually end the serial yourself
-	_isDebug = false;
-	_dbgSerial = NULL;
-}
-
-void ArancinoClass::printDebugMessage(char* msg){
-	if (_isDebug)
-	_dbgSerial->println(msg);
-}
 
 /******** API BASIC :: MSET *********/
 
@@ -958,7 +927,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	if(param1 != NULL){
 		param1_length = strlen(param1);
 		if(id_prefix){
-			param1_length += ID_SIZE + 1;
+			param1_length += idSize + 1;
 		}
 		strLength += param1_length + 1;
 	}
@@ -972,7 +941,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 
 		int param2_length = strlen(param2);
 		if(id_prefix && param1 == NULL){
-			param2_length += ID_SIZE + 1;
+			param2_length += idSize + 1;
 		}
 		int param3_length = 0;
 		if(params3 != NULL)
@@ -1065,9 +1034,9 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	taskSuspend();
 
 
-	_iface->sendArancinoCommand(str);
+	_sendArancinoCommand(str);
 
-	char* message = _iface->receiveArancinoResponse(END_TX_CHAR);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
 
 
 	taskResume();
@@ -1091,7 +1060,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	if(param1 != NULL){
 		param1_length = strlen(param1);
 		if(id_prefix){
-			param1_length += ID_SIZE + 1;
+			param1_length += idSize + 1;
 		}
 	}
 	int param2_length = 0;
@@ -1132,8 +1101,8 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 
 	taskSuspend();
 
-	_iface->sendArancinoCommand(str);
-	char* message = _iface->receiveArancinoResponse(END_TX_CHAR);
+	_sendArancinoCommand(str);
+	char* message = _receiveArancinoResponse(END_TX_CHAR);
 
 	taskResume();
 
@@ -1178,14 +1147,56 @@ ArancinoPacket ArancinoClass::createArancinoPacket(char* message, int type_retur
 	return packet;
 }
 
-void ArancinoClass::systemReset(){
-	#if defined(ARDUINO_ARCH_RP2040)
-	watchdog_reboot(0,0,0);
-	#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_STM32) || defined(ARDUINO_ARCH_NRF52)
-	NVIC_SystemReset();
-	#else 
-	#warning "Unsupported board selected. Please make sure to provide a reset implementation inside Arancino.cpp otherwise non-serial communication may not work as intended"
+void ArancinoClass::_sendArancinoCommand(char* command) {
+	//check communication timeout with arancino module
+	if (comm_timeout){
+		/*
+			Flush data on serial communication to avoid of lost
+			synchronization between arancino library and arancino module.
+			By this way I prevent to receive reposonse of a previous sent command.
+		*/
+		while(SERIAL_PORT.available() > 0){
+				SERIAL_PORT.read();
+		}
+		comm_timeout=false;
+	}
+	//command must terminate with '\0'!
+	SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
+	#if defined(__SAMD21G18A__)
+		if(!digitalRead(DBG_PIN)){
+			if(command[strlen(command) - 1] == END_TX_CHAR)
+			{
+				Serial.println(command);
+			}
+			else
+				Serial.print(command);
+		}
 	#endif
+}
+
+/*
+ * 'terminator' char is used only for non-freeRTOS implementations.
+ * For freeRTOS implementations is always used END_TX_CHAR as terminator char (see commTask()).
+ */
+char* ArancinoClass::_receiveArancinoResponse(char terminator) {
+	char* response = NULL; //must be freed
+	String str = "";
+	str = SERIAL_PORT.readStringUntil(terminator);
+	if( str == ""){
+		//enable timeout check
+		comm_timeout = true;
+	}
+	else {
+		int responseLength = strlen(str.begin());
+		if (responseLength > 0)
+		{
+			response = (char *)calloc(responseLength + 1 + 1, sizeof(char));
+			strcpy(response, str.begin());
+			response[responseLength] = END_TX_CHAR;
+			response[responseLength + 1] = '\0';
+		}
+	}
+	return response;
 }
 
 void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char* str) {
@@ -1435,9 +1446,7 @@ void ArancinoClass::taskResume(){
 	#endif
 }
 
-
-
-#if defined (ARDUINO_ARANCINO_PICO)
+#if defined (ARDUINO_ARCH_RP2040)
 void __interoceptionSetupADC(){
 	adc_init();
 	adc_set_temp_sensor_enabled(true);
@@ -1506,6 +1515,6 @@ void loop1(){
 	delay(60000);
 }
 
-#endif /* ARDUINO_ARANCINO_PICO */
+#endif /* ARDUINO_ARCH_RP2040 */
 
 ArancinoClass Arancino;
