@@ -152,7 +152,7 @@ char* MqttIface::receiveArancinoResponse(char terminator){
 		if (counter < MQTT_MAX_RETRIES){
 			this->loop();
 			counter++;
-			delay(10);
+			Arancino.delay(10);
 		} else {
 			//No need for cleanup: no message was received nor memory allocated for it
 			return NULL;
@@ -212,7 +212,7 @@ void MqttIface::_reconnect(){
 			char rc[2];
 			itoa(this->state(), rc, 10);
 			Arancino.printDebugMessage(rc);
-			delay(3000);
+			Arancino.delay(3000);
 		}
 	}
 }

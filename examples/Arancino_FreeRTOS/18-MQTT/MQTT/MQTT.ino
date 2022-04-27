@@ -49,21 +49,22 @@ void loopTask(void *pvParameters);
 
 void setup()
 {
+  SerialUSB.begin(115200);
   Ethernet.init(9);   // 9 is CS pin for ethernet shield. Change this accordingly to your setup
   Ethernet.begin(mac, ip);
   
   // Allow the hardware to sort itself out
-  vTaskDelay(1500);
+  delay(1500);
 
+  Arancino.enableDebugMessages(&SerialUSB);
+  Arancino.printDebugMessage("Started");
+  
   //Set up the MQTT client
-  MqttIface iface;
-  iface.daemonID = "D43mon";
-  iface.broker = "192.168.1.191"; //You can use domain names as well"
-  //The folowing parameters are already set up with default values, but you can change them if your broker requires so
-  iface.username = NULL;
-  iface.password = NULL;
-  iface.port = 1883;
-
+  //iface.daemonID = "D43mon";
+  iface.setBrokerAddress("192.168.1.191"); //You can use domain names as well
+  iface.setUsername("Arancino");
+  iface.setPassword("pwd");
+  iface.setPort(1883);
   iface.setNetworkClient(&ethClient);
   Arancino.attachInterface(&iface);
   Arancino.begin(amdata);

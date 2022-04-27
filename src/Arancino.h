@@ -102,6 +102,9 @@ class ArancinoClass {
 		//START SCHEDULER
 		void startScheduler();
 
+		//SLEEP
+		void delay(long milli);
+
 		/***** API BASIC *****/
 
 		//ATTACH_INTERFACE

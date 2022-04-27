@@ -43,6 +43,16 @@ void ArancinoClass::attachInterface(ArancinoIface* iface){
 	this->_iface = iface;
 }
 
+/******** API BASIC :: DELAY *********/
+void ArancinoClass::delay(long milli){
+	#if defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED){
+		vTaskDelay(milli);
+		return;
+	}
+	#endif
+	::delay(milli);
+}
 
 /******** API BASIC :: BEGIN *********/
 

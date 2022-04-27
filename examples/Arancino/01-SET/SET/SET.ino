@@ -44,6 +44,9 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "01.1 - Set Example",
   .fwversion = "1.0.1",
@@ -53,6 +56,10 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
+  //Please remember to provide a serial port when not using an Arancino board
+  //iface.setSerialPort(&Serial);
+  iface.setSerialPort();
+  Arancino.attachInterface(&iface);
   Arancino.begin(amdata);
 
   //char*

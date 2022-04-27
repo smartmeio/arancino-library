@@ -47,20 +47,21 @@ ArancinoMetadata amdata = {
 void setup()
 {
   SerialUSB.begin(115200);
-  while(!SerialUSB);
   Ethernet.init(9);   // 9 is CS pin for ethernet shield. Change this accordingly to your setup
   Ethernet.begin(mac, ip);
   
   // Allow the hardware to sort itself out
   delay(1500);
 
-  //Set up the MQTT client
   Arancino.enableDebugMessages(&SerialUSB);
   Arancino.printDebugMessage("Started");
-  
-  //iface.daemonID = "D43mon";
-  iface.setBrokerAddress("192.168.1.191"); //You can use domain names as well"
 
+  //Set up the MQTT client
+  //iface.daemonID = "D43mon";
+  iface.setBrokerAddress("192.168.1.191"); //You can use domain names as well
+  iface.setUsername("Arancino");
+  iface.setPassword("pwd");
+  iface.setPort(1883);
   iface.setNetworkClient(&ethClient);
   Arancino.attachInterface(&iface);
   
