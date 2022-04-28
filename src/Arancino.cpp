@@ -77,7 +77,6 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	char mcu_family[]="MCU_FAMILY";
 	char fw_use_freertos[]="FW_USE_FREERTOS";
 	#if defined(USEFREERTOS)
-	CommMutex = xSemaphoreCreateMutex();
 	char* useFreeRtos = "1";
 	#else
 	char* useFreeRtos = "0";
@@ -100,6 +99,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	ArancinoTasks _atask;
 	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
 	xTaskCreate(_atask.interoception, "interoception", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle2);
+	CommMutex = xSemaphoreCreateMutex();
 	#endif
 }
 
@@ -801,11 +801,21 @@ bool ArancinoClass::isValidUTF8(const char * string) //From: https://stackoverfl
 void ArancinoClass::delay(long milli){
 	//Check if scheduler was started or not
 	//TODO: add Full duplex support
-	if(started){
-		vTaskDelay(milli);
+#if defined(USEFREERTOS)
+	if(xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED){
+		long startmillis = millis();
+		long currentmillis;
+		do {
+			currentmillis = millis();
+		}
+		while(currentmillis - startmillis < milli);
 	} else {
-		::delay(milli);
+		vTaskDelay(milli);		
 	}
+#else
+	long startmillis = millis();
+	while(millis() - startmillis < milli);
+#endif
 }
 
 /******** API ADVANCED :: PRINT *********/
@@ -1158,12 +1168,23 @@ void ArancinoClass::_sendArancinoCommand(char* command) {
 			By this way I prevent to receive reposonse of a previous sent command.
 		*/
 		while(SERIAL_PORT.available() > 0){
-				SERIAL_PORT.read();
+			SERIAL_PORT.read();
 		}
 		comm_timeout=false;
 	}
 	//command must terminate with '\0'!
+	SERIAL_DEBUG.write(command, strlen(command)); //excluded '\0'
 	SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
+
+	#if defined(USEFREERTOS) && defined (USE_TINYUSB)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING)
+	{
+		SERIAL_DEBUG.println("manual yield");
+		yield();
+	}
+	#endif
+
+	SERIAL_DEBUG.println("command sent");
 	#if defined(__SAMD21G18A__)
 		if(!digitalRead(DBG_PIN)){
 			if(command[strlen(command) - 1] == END_TX_CHAR)
@@ -1184,6 +1205,8 @@ char* ArancinoClass::_receiveArancinoResponse(char terminator) {
 	char* response = NULL; //must be freed
 	String str = "";
 	str = SERIAL_PORT.readStringUntil(terminator);
+	SERIAL_DEBUG.print("str: ");
+	SERIAL_DEBUG.println(str);
 	if( str == ""){
 		//enable timeout check
 		comm_timeout = true;
@@ -1445,6 +1468,8 @@ BaseType_t ArancinoClass::takeCommMutex(TickType_t timeout){
 		*/
 		return pdTRUE;
 	}
+	#else
+		return pdTRUE; 
 	#endif
 }
 
