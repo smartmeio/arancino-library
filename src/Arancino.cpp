@@ -96,6 +96,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	strcpy(LOG_LEVEL,getModuleLogLevel());
 	#if defined(USEFREERTOS)
 	//TASK
+	/*	All the FreeRTOS initialization should be put here, at the end of the
+		the ArancinoClass::begin method.
+	*/
 	ArancinoTasks _atask;
 	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
 	xTaskCreate(_atask.interoception, "interoception", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle2);
@@ -142,9 +145,19 @@ started = true;
 	 * If loop() doesn't run as dedicated task, should not contain blocking code.
 	 */
 	//task started in main.c (core)
-	#if !defined (ARDUINO_ARANCINO_VOLANTE)
+#if defined(ARDUINO_ARANCINO_VOLANTE)
+	initYieldTask(100);
+#elif defined(ARDUINO_ARCH_RP2040)
+	initYieldTask(100);
+	runLoopAsTask(128, tskIDLE_PRIORITY);
+    initFreeRTOS(); //128 = stack depth for loop, tskIDLE_PRIORITY = priority 
+#elif defined(__SAMD21G18A__)
+	runLoopAsTask(128, tskIDLE_PRIORITY);
 	vTaskStartScheduler();
-	#endif
+#else
+	#error "FreeRTOS not supported on the selected board!"
+#endif
+	
 }
 #endif
 
@@ -804,11 +817,7 @@ void ArancinoClass::delay(long milli){
 #if defined(USEFREERTOS)
 	if(xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED){
 		long startmillis = millis();
-		long currentmillis;
-		do {
-			currentmillis = millis();
-		}
-		while(currentmillis - startmillis < milli);
+		while(millis() - startmillis < milli);
 	} else {
 		vTaskDelay(milli);		
 	}
@@ -1173,18 +1182,15 @@ void ArancinoClass::_sendArancinoCommand(char* command) {
 		comm_timeout=false;
 	}
 	//command must terminate with '\0'!
-	SERIAL_DEBUG.write(command, strlen(command)); //excluded '\0'
 	SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
 
 	#if defined(USEFREERTOS) && defined (USE_TINYUSB)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING)
 	{
-		SERIAL_DEBUG.println("manual yield");
 		yield();
 	}
 	#endif
 
-	SERIAL_DEBUG.println("command sent");
 	#if defined(__SAMD21G18A__)
 		if(!digitalRead(DBG_PIN)){
 			if(command[strlen(command) - 1] == END_TX_CHAR)
@@ -1205,8 +1211,6 @@ char* ArancinoClass::_receiveArancinoResponse(char terminator) {
 	char* response = NULL; //must be freed
 	String str = "";
 	str = SERIAL_PORT.readStringUntil(terminator);
-	SERIAL_DEBUG.print("str: ");
-	SERIAL_DEBUG.println(str);
 	if( str == ""){
 		//enable timeout check
 		comm_timeout = true;
