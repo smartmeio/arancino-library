@@ -77,6 +77,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	char mcu_family[]="MCU_FAMILY";
 	char fw_use_freertos[]="FW_USE_FREERTOS";
 	#if defined(USEFREERTOS)
+	#if defined(ARDUINO_ARANCINO_VOLANTE)
+	CommMutex = xSemaphoreCreateMutex();
+	#endif
 	char* useFreeRtos = "1";
 	#else
 	char* useFreeRtos = "0";
@@ -102,7 +105,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	ArancinoTasks _atask;
 	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
 	xTaskCreate(_atask.interoception, "interoception", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle2);
+	#if !defined(ARDUINO_ARANCINO_VOLANTE)
 	CommMutex = xSemaphoreCreateMutex();
+	#endif
 	#endif
 }
 
@@ -146,13 +151,15 @@ started = true;
 	 */
 	//task started in main.c (core)
 #if defined(ARDUINO_ARANCINO_VOLANTE)
-	initYieldTask(100);
+	//initYieldTask(100);
 #elif defined(ARDUINO_ARCH_RP2040)
 	initYieldTask(100);
 	runLoopAsTask(128, tskIDLE_PRIORITY);
     initFreeRTOS(); //128 = stack depth for loop, tskIDLE_PRIORITY = priority 
 #elif defined(__SAMD21G18A__)
 	runLoopAsTask(128, tskIDLE_PRIORITY);
+	vTaskStartScheduler();
+#elif defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
 	vTaskStartScheduler();
 #else
 	#error "FreeRTOS not supported on the selected board!"
@@ -1458,7 +1465,7 @@ char** ArancinoClass::_parseArray(char* data) {
 }
 
 BaseType_t ArancinoClass::takeCommMutex(TickType_t timeout){
-	#if  defined(USEFREERTOS)
+	#if defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
 		return xSemaphoreTake( CommMutex, timeout );

@@ -6,7 +6,7 @@ Arancino Library allows to export/import data to/from the Linux environment usin
 - [Getting Started](docs/GETTING_STARTED.md)
 - [Variables and Data Structures](docs/VARS_DATA_STRUCT.md)
 - [API](docs/API.md)
-- [FreeRTOS](docs/FREETOS.md)
+- [FreeRTOS](docs/FREERTOS.md)
 - Insights
     - [Cortex Protocol](CORTEX_PROTOCOL.md)
     - [Debug](docs/DEBUG.md)
