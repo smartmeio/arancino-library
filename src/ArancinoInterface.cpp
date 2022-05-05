@@ -94,6 +94,7 @@ char* MqttIface::_inputBuffer;
 bool MqttIface::_newIncomingMessage = false;
 char* MqttIface::_inputTopic;
 char* MqttIface::_outputTopic;
+char* MqttIface::_serviceTopic;
 
 void MqttIface::ifaceBegin(){
 	setClient(*_client);
@@ -101,16 +102,13 @@ void MqttIface::ifaceBegin(){
 	setCallback(_arancinoCallback);
 
 	//+1 because of \n
-	//_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/DAEMONID=") + strlen(_daemonID) + strlen("/ARANCINOID=") + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 1, sizeof(char));
-	//_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/DAEMONID=") + strlen(_daemonID) + strlen("/ARANCINOID=") + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 1, sizeof(char));
-	
-	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 1, sizeof(char));
-	_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 1, sizeof(char));
-	
-	//strcpy(_inputTopic, "arancino/cortex/DAEMONID=");
+	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
+	_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 2, sizeof(char));
+	_serviceTopic = (char*)Arancino.calloc(strlen("arancino/service") + strlen(_daemonID) + strlen(Arancino.id) + 2);
+
 	strcpy(_inputTopic, "arancino/cortex/");
-	//strcat(_inputTopic, _daemonID);
-	//strcat(_inputTopic, "/ARANCINOID=");
+	strcat(_inputTopic, _daemonID);
+	strcat(_inputTopic, "/");
 	strcat(_inputTopic, Arancino.id);
 
 	strcpy(_outputTopic, _inputTopic);	//just a quick shortcut
@@ -118,15 +116,22 @@ void MqttIface::ifaceBegin(){
 	strcat(_inputTopic, "/rsp_to_mcu");
 	strcat(_outputTopic, "/cmd_from_mcu");
 
+	strcpy(_serviceTopic, "arancino/service");
+	strcat(_serviceTopic, _daemonID);
+
 	this->_reconnect();
 
-	this->subscribe("arancino/service"); //service topic
+	this->subscribe(_serviceTopic); //arancino/service/dID
 	this->subscribe(_inputTopic);
 
-	//char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
-	char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery") + 1, sizeof(char));
-	strcpy(discoverytopic, "arancino/discovery");
-	//strcat(discoverytopic, _daemonID);
+	strcat(_serviceTopic, "/");
+	strcat(_serviceTopic, Arancino.id);
+
+	this->subscribe(_serviceTopic); //arancino/service/dID/cID
+
+	char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
+	strcpy(discoverytopic, "arancino/discovery/");
+	strcat(discoverytopic, _daemonID);
 	this->publish(discoverytopic, Arancino.id);
 	Arancino.free(discoverytopic);
 }
@@ -168,7 +173,8 @@ void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int lengt
 	_inputBuffer = (char*)Arancino.calloc(length+1+1, sizeof(char));
 	_inputBuffer = (char*)payload; //I can just cast it to char*
 
-	if (strcmp(topic, "arancino/service") == 0){
+	if (strcmp(topic, _serviceTopic) == 0){
+		//should check whether the message is "reset" or no other messages will be sent here?
 		Arancino.systemReset();
 	} else if (strcmp(topic, _inputTopic) == 0){
 		_inputBuffer[length] = END_TX_CHAR;
