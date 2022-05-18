@@ -73,8 +73,8 @@ void SerialIface::setSerialTimeout(int timeout){
 	this->_serialTimeout = timeout;
 }
 
-void SerialIface::setSerialPort(Stream* serialPort){
-	this->_serialPort = serialPort;
+void SerialIface::setSerialPort(Stream& serialPort){
+	this->_serialPort = &serialPort;
 }
 
 void SerialIface::setSerialPort(){
@@ -104,7 +104,7 @@ void MqttIface::ifaceBegin(){
 	//+1 because of \n
 	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
 	_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 2, sizeof(char));
-	_serviceTopic = (char*)Arancino.calloc(strlen("arancino/service") + strlen(_daemonID) + strlen(Arancino.id) + 2);
+	_serviceTopic = (char*)Arancino.calloc(strlen("arancino/service") + strlen(_daemonID) + strlen(Arancino.id) + 2, sizeof(char));
 
 	strcpy(_inputTopic, "arancino/cortex/");
 	strcat(_inputTopic, _daemonID);
@@ -116,7 +116,7 @@ void MqttIface::ifaceBegin(){
 	strcat(_inputTopic, "/rsp_to_mcu");
 	strcat(_outputTopic, "/cmd_from_mcu");
 
-	strcpy(_serviceTopic, "arancino/service");
+	strcpy(_serviceTopic, "arancino/service/");
 	strcat(_serviceTopic, _daemonID);
 
 	this->_reconnect();
@@ -124,10 +124,10 @@ void MqttIface::ifaceBegin(){
 	this->subscribe(_serviceTopic); //arancino/service/dID
 	this->subscribe(_inputTopic);
 
-	strcat(_serviceTopic, "/");
-	strcat(_serviceTopic, Arancino.id);
+	//strcat(_serviceTopic, "/");
+	//strcat(_serviceTopic, Arancino.id);
 
-	this->subscribe(_serviceTopic); //arancino/service/dID/cID
+	//this->subscribe(_serviceTopic); //arancino/service/dID/cID
 
 	char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
 	strcpy(discoverytopic, "arancino/discovery/");
@@ -145,7 +145,7 @@ void MqttIface::sendArancinoCommand(char* command){
 		Arancino.printDebugMessage("Failed to send message, retrying.");
 		counter++;
 	}
-	Arancino.printDebugMessage("Failed to send message.");
+	Arancino.printDebugMessage("Failed to send message. Attempting to reconnect");
 
 	//This should not happen. Check if still connected
 	this->_reconnect();
@@ -157,7 +157,6 @@ char* MqttIface::receiveArancinoResponse(char terminator){
 		if (counter < MQTT_MAX_RETRIES){
 			this->loop();
 			counter++;
-			Arancino.delay(10);
 		} else {
 			//No need for cleanup: no message was received nor memory allocated for it
 			return NULL;
@@ -170,22 +169,23 @@ char* MqttIface::receiveArancinoResponse(char terminator){
 }
 
 void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int length){
-	_inputBuffer = (char*)Arancino.calloc(length+1+1, sizeof(char));
-	_inputBuffer = (char*)payload; //I can just cast it to char*
 
-	if (strcmp(topic, _serviceTopic) == 0){
+	if (!strcmp(topic, _serviceTopic)){
 		//should check whether the message is "reset" or no other messages will be sent here?
 		Arancino.systemReset();
-	} else if (strcmp(topic, _inputTopic) == 0){
+	} else if (!strcmp(topic, _inputTopic)){
+		_inputBuffer = (char*)Arancino.calloc(length+2, sizeof(char));
+		memcpy(_inputBuffer, payload, length);
 		_inputBuffer[length] = END_TX_CHAR;
 		_inputBuffer[length+1] = '\0';
+		Arancino.printDebugMessage(_inputBuffer);
 		_newIncomingMessage = true;
 	} 
 }
 
 
-void MqttIface::setNetworkClient(Client* networkClient){
-	this->_client = networkClient;
+void MqttIface::setNetworkClient(Client& networkClient){
+	this->_client = &networkClient;
 }
 
 void MqttIface::setUsername(char* username){
@@ -218,15 +218,15 @@ void MqttIface::_reconnect(){
 			char rc[2];
 			itoa(this->state(), rc, 10);
 			Arancino.printDebugMessage(rc);
-			Arancino.delay(3000);
+			Arancino.delay(1000);
 		}
 	}
 }
 
 /******** Bluetooth interface *********/
 
-void BluetoothIface::setBLESerial(Stream* bleUart){
-	this->_bleSerial = bleUart;
+void BluetoothIface::setBLESerial(Stream& bleUart){
+	this->_bleSerial = &bleUart;
 }
 
 void BluetoothIface::ifaceBegin(){

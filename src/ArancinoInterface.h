@@ -42,7 +42,7 @@ class SerialIface : public ArancinoIface {
 	*/
 	void setSerialTimeout(int timeout);
 	void setSerialPort();
-	void setSerialPort(Stream* serialPort);
+	void setSerialPort(Stream& serialPort);
 
 	private:
 	void ifaceBegin();
@@ -56,7 +56,7 @@ class SerialIface : public ArancinoIface {
 
 class MqttIface : public ArancinoIface, public PubSubClient {
 	public:
-	void setNetworkClient(Client* networkClient);
+	void setNetworkClient(Client& networkClient);
 	void setUsername(char* username);
 	void setPassword(char* password);
 	void setDaemonID(char* daemonID);
@@ -89,7 +89,7 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 
 class BluetoothIface : public ArancinoIface {
 	public:
-	void setBLESerial(Stream* bleUart);
+	void setBLESerial(Stream& bleUart);
 
 	private:
 	void ifaceBegin();

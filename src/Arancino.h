@@ -108,7 +108,7 @@ class ArancinoClass {
 		/***** API BASIC *****/
 
 		//ATTACH_INTERFACE
-		void attachInterface(ArancinoIface* iface);
+		void attachInterface(ArancinoIface& iface);
 
 		//BEGIN
 		void begin(ArancinoMetadata amdata, ArancinoConfig aconfig);

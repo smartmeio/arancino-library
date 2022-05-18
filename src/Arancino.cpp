@@ -39,19 +39,24 @@ TaskHandle_t arancinoHandle2;
 
 /******** API BASIC :: ATTACH_IFACE *********/
 
-void ArancinoClass::attachInterface(ArancinoIface* iface){
-	this->_iface = iface;
+void ArancinoClass::attachInterface(ArancinoIface& iface){
+	this->_iface = &iface;
 }
 
 /******** API BASIC :: DELAY *********/
 void ArancinoClass::delay(long milli){
-	#if defined(USEFREERTOS)
-	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED){
+	//Check if scheduler was started or not
+#if defined(USEFREERTOS)
+	if(xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED){
+		long startmillis = millis();
+		while(millis() - startmillis < milli);
+	} else {
 		vTaskDelay(milli);
-		return;
 	}
-	#endif
-	::delay(milli);
+#else
+	long startmillis = millis();
+	while(millis() - startmillis < milli);
+#endif
 }
 
 /******** API BASIC :: BEGIN *********/
@@ -292,6 +297,7 @@ template<> ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char* key, 
 
 template<> char* ArancinoClass::getReserved(char* key, bool id_prefix){
 	ArancinoPacket packet = getReserved<ArancinoPacket>(key, id_prefix);
+	printDebugMessage(packet.response.string);
 	if (!packet.isError)
 		return packet.response.string;
 	else
@@ -1065,7 +1071,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	_iface->sendArancinoCommand(str);
 
 	char* message = _iface->receiveArancinoResponse(END_TX_CHAR);
-
+	printDebugMessage(message);
 
 	taskResume();
 
