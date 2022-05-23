@@ -635,6 +635,96 @@ ArancinoPacket ArancinoClass::__store( char* key, char* value) {
 	return executeCommand(STORE_COMMAND,key,value,ts,true,STRING);
 }
 
+/******** API BASIC :: STORERAW *********/
+
+template<> ArancinoPacket ArancinoClass::storeRaw<ArancinoPacket>( char* key, int value,char* timestamp) {
+	char str[20] = "";
+	itoa(value, str, 10);
+	return __storeRaw(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::storeRaw(char* key, int value,char* timestamp){
+	char str[20] = "";
+	itoa(value, str, 10);
+	ArancinoPacket packet = __storeRaw(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template<> ArancinoPacket ArancinoClass::storeRaw<ArancinoPacket>( char* key, uint32_t value,char* timestamp) {
+	char str[20] = "";
+	itoa(value, str, 10);
+	return __storeRaw(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::storeRaw(char* key, uint32_t value,char* timestamp){
+	char str[20] = "";
+	itoa(value, str, 10);
+	ArancinoPacket packet = __storeRaw(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template<> ArancinoPacket ArancinoClass::storeRaw<ArancinoPacket>( char* key, long value,char* timestamp) {
+	char str[20] = "";
+	itoa(value, str, 10);
+	return __storeRaw(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::storeRaw(char* key, long value,char* timestamp){
+	char str[20] = "";
+	itoa(value, str, 10);
+	ArancinoPacket packet = __storeRaw(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template<> ArancinoPacket ArancinoClass::storeRaw<ArancinoPacket>( char* key, float value,char* timestamp) {
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	return __storeRaw(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::storeRaw(char* key, float value,char* timestamp){
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	ArancinoPacket packet = __storeRaw(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template<> ArancinoPacket ArancinoClass::storeRaw<ArancinoPacket>( char* key, double value,char* timestamp) {
+	char str[20] = "";
+	_doubleToString(value, decimal_digits, str);
+	return __storeRaw(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::storeRaw(char* key, double value,char* timestamp){
+	char str[20] = "";
+	_doubleToString(value, decimal_digits, str);
+	ArancinoPacket packet = __storeRaw(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+ArancinoPacket ArancinoClass::__storeRaw( char* key, char* value,char* timestamp) {
+	//char* ts = getTimestamp();
+	if(key == NULL && value == NULL && strcmp(key, "") == 0){
+		return invalidCommandErrorPacket;
+	}
+	return executeCommand(STORE_COMMAND,key,value,timestamp,true,STRING);
+}
+
 /******** API BASIC :: MSTORE *********/
 
 template<> ArancinoPacket ArancinoClass::mstore<ArancinoPacket> (char** keys, char** values, int len) {
