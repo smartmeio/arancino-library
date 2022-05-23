@@ -40,6 +40,9 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "15.1 - Store Packet Example",
   .fwversion = "1.0.1",
@@ -52,9 +55,12 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
+
   xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
@@ -72,17 +78,17 @@ void loopTask(void *pvParameters) {
 
     if (apckt.isError == 0)
     {
-      SERIAL_DEBUG.println("STORE OK");
-      SERIAL_DEBUG.print("Response code: ");
-      SERIAL_DEBUG.println(apckt.responseCode);
-      SERIAL_DEBUG.print("Response type: ");
-      SERIAL_DEBUG.println(apckt.responseType);
-      SERIAL_DEBUG.print("foo baz -> ");
-      SERIAL_DEBUG.println(apckt.response.string);
+      Arancino.println("STORE OK");
+      Arancino.print("Response code: ");
+      Arancino.println(apckt.responseCode);
+      Arancino.print("Response type: ");
+      Arancino.println(apckt.responseType);
+      Arancino.print("foo baz -> ");
+      Arancino.println(apckt.response.string);
     }
     else
     {
-      SERIAL_DEBUG.println("STORE ERROR");
+      Arancino.println("STORE ERROR");
     }
 
     vTaskDelay(2000);

@@ -37,6 +37,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "12.2 - Publish Example",
   .fwversion = "1.0.1",
@@ -45,8 +48,10 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
 }
@@ -55,19 +60,19 @@ void loop(){
 
     ArancinoPacket apckt = Arancino.publish<ArancinoPacket>("EX_12_2","Hello from Arancino");
     if (!apckt.isError){
-       SERIAL_DEBUG.println("PUBLISH OK");
-       SERIAL_DEBUG.print("Response code: ");
-       SERIAL_DEBUG.println(apckt.responseCode);
-       SERIAL_DEBUG.print("Response type: ");
-       SERIAL_DEBUG.println(apckt.responseType);
+       Arancino.println("PUBLISH OK");
+       Arancino.print("Response code: ");
+       Arancino.println(apckt.responseCode);
+       Arancino.print("Response type: ");
+       Arancino.println(apckt.responseType);
        int resp = apckt.response.integer;
-       SERIAL_DEBUG.print("Message sent to ");
-       SERIAL_DEBUG.print(resp);
-       SERIAL_DEBUG.println(" clients");
+       Arancino.print("Message sent to ");
+       Arancino.print(resp);
+       Arancino.println(" clients");
        //Message sent to 0 client
      }
      else{
-       SERIAL_DEBUG.println("PUBLISH ERROR");
+       Arancino.println("PUBLISH ERROR");
      }
 
     Arancino.free(apckt);

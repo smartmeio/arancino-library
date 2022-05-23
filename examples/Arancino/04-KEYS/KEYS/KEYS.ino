@@ -42,6 +42,9 @@
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "04.1 - Keys Example",
   .fwversion = "1.0.1",
@@ -50,8 +53,10 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   Arancino.set("EX_04_1_pressure", 1023);
@@ -64,7 +69,7 @@ void loop(){
 
     char** keys = Arancino.keys();
     for (int i = 0; i < Arancino.getArraySize(keys); i++) {
-      SERIAL_DEBUG.println(keys[i]);
+      Arancino.println(keys[i]);
     }
     //pressure
     //humidity
@@ -75,7 +80,7 @@ void loop(){
 
     keys = Arancino.keys("EX_04_1_temp*");  //return all the keys that contains "temp" pattern
     for (int i = 0; i < Arancino.getArraySize(keys) ; i++) {
-      SERIAL_DEBUG.println(keys[i]);      //temperature
+      Arancino.println(keys[i]);      //temperature
     }
 
     Arancino.free(keys); //delete the array from memory

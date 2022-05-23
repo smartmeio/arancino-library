@@ -60,9 +60,9 @@ void loopTask(void *pvParameters);
 void setup() {
   
   //Please remember to provide a serial port when not using an Arancino board
-  //iface.setSerialPort(&Serial);
+  //iface.setSerialPort(Serial);
   iface.setSerialPort();
-  Arancino.attachInterface(&iface);
+  Arancino.attachInterface(iface);
   Arancino.begin(amdata);
   
   //char*
@@ -83,11 +83,13 @@ void setup() {
   //sets the value 123.456 into the 'baz' key
   Arancino.set(key3, value3);
 
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
 
 void loop() {
+  //empty
 }
 
 void loopTask(void *pvParameters){

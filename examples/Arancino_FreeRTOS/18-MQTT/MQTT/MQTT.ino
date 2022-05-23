@@ -24,18 +24,19 @@
   This sketch shows how to use Arancino Protocol via MQTT.
   In this example an Ethernet shield was used, but any network client should work just fine.
 
-  In order to do that you should set up a MqttIface to attach to Arancino Library as shown below
+  In order to do that you should first set up a MqttIface and then attach it to Arancino Library as shown below
 */
 
 #include <SPI.h>
 #include <Ethernet.h>
 #include <Arancino.h>
 
-// Update these with values suitable for your network.
+// Change these values accordingly with your network.
 byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };    //MAC address of ethernet shield
 IPAddress ip(192, 168, 1, 100);   // Static IP Address. You can also use your DHCP server to automatically assign one
 
 EthernetClient ethClient;
+MqttIface iface;
 
 ArancinoMetadata amdata = {
   .fwname = "Mqtt Example",
@@ -50,36 +51,38 @@ void loopTask(void *pvParameters);
 void setup()
 {
   SerialUSB.begin(115200);
-  Ethernet.init(9);   // 9 is CS pin for ethernet shield. Change this accordingly to your setup
+  Ethernet.init(9);   //CS pin
   Ethernet.begin(mac, ip);
   
   // Allow the hardware to sort itself out
   delay(1500);
 
-  Arancino.enableDebugMessages(&SerialUSB);
-  Arancino.printDebugMessage("Started");
-  
+  Arancino.enableDebugMessages(SerialUSB);
+  Arancino.println("Started");
+
   //Set up the MQTT client
-  //iface.daemonID = "D43mon";
-  iface.setBrokerAddress("192.168.1.191"); //You can use domain names as well
+  iface.setDaemonID("12345");
+  iface.setBrokerAddress("192.168.1.10"); //You can use domain names as well
   iface.setUsername("Arancino");
   iface.setPassword("pwd");
   iface.setPort(1883);
-  iface.setNetworkClient(&ethClient);
-  Arancino.attachInterface(&iface);
+  iface.setNetworkClient(ethClient);
+  Arancino.attachInterface(iface);
+  
   Arancino.begin(amdata);
-
   xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
+
 }
 
-void loop()
-{
+void loop() {
+  //empty
 }
 
-void loopTask(void *pvParameters) {
-  while (1) {
-    Arancino.set("Test_key", "my_value");
-    vTaskDelay(1000); //wait 1 second
+void loopTask(void *pvParameters){
+  while(1){
+    Arancino.set("foo", "bar");
+    Arancino.println("foo -> bar");
+    delay(2000);
   }
 }

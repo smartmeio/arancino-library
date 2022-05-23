@@ -49,12 +49,16 @@ void loopTask(void *pvParameters);
 void setup() {
 
   //Please remember to provide a serial port when not using an Arancino board
-  //iface.setSerialPort(&Serial);
-  //Arancino.enableDebugMessages(&Serial);
+  //iface.setSerialPort(Serial);
   iface.setSerialPort();
-  Arancino.attachInterface(&iface);
+  Arancino.attachInterface(iface);
+
+  //Debug options
+  //Likewise to interface, a Serial port should be provided as argument when using non-Arancino boards
   Arancino.enableDebugMessages();
+
   Arancino.begin(amdata);
+  
 	xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
@@ -71,8 +75,8 @@ void loopTask(void *pvParameters){
 
     //gets the value from the 'foo' key
     char* value = Arancino.get("EX_02_1");
-    Arancino.printDebugMessage("EX_02_1 -> ");
-    Arancino.printDebugMessage(value);
+    Arancino.print("EX_02_1 -> ");
+    Arancino.println(value);
     //foo -> bar
     Arancino.free(value); //frees memory
 
@@ -82,8 +86,8 @@ void loopTask(void *pvParameters){
 
     //gets the value from the 'foo' key
     value = Arancino.get("EX_02_1");
-    Arancino.printDebugMessage("EX_02_1 -> ");
-    Arancino.printDebugMessage(value);
+    Arancino.print("EX_02_1 -> ");
+    Arancino.println(value);
     //foo -> baz
     Arancino.free(value); //frees memory
 

@@ -33,6 +33,9 @@ The number of keys that were removed.
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "03.1 - Del Example",
   .fwversion = "1.0.1",
@@ -41,16 +44,21 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
+
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
+
   Arancino.set("EX_03_1_foo","bar");
 
   int num = Arancino.del("EX_03_1_baz");
-  SERIAL_DEBUG.println(num ? "Key deleted" : "Key not found");
-  //0
+  //print via debug Serial
+  Arancino.println(num ? "Key deleted" : "Key not found"); //0
+
   num = Arancino.del("EX_03_1_foo");
-  SERIAL_DEBUG.println(num ? "Key deleted" : "Key not found");
-  //1
+  //print via debug Serial
+  Arancino.println(num ? "Key deleted" : "Key not found"); //1
 }
 
 void loop() {

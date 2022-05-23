@@ -41,21 +41,39 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "05.1 - HSet Example",
   .fwversion = "1.0.1",
   .tzoffset = "+1000" 
 };
 
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
+
 void setup() {
   
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
   Arancino.begin(amdata);
+
   Arancino.hset("ex05_foo","bar","yeah");
   Arancino.hset("ex05_foo","bar","whoo");
+
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
 
 void loop() {
-  //do something
+  //empty
+}
+
+void loopTask(void *pvParameters){
+  while(1){
+    //do something
+  }
 }

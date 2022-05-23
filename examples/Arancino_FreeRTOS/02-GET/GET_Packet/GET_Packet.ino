@@ -36,6 +36,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "2.2 - Get w/ Packet Example",
   .fwversion = "1.0.1",
@@ -48,7 +51,15 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  //Please remember to provide a serial port when not using an Arancino board
+  //iface.setSerialPort(Serial);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
+
+  //Debug options
+  //Likewise to interface, a Serial port should be provided as argument when using non-Arancino boards
+  Arancino.enableDebugMessages();
+  
   Arancino.begin(amdata);
   //create a task for loop
   xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
@@ -68,20 +79,20 @@ void loopTask(void *pvParameters){
     ArancinoPacket apckt = Arancino.get<ArancinoPacket>("EX_02_2_foo");
     if (!apckt.isError)
     {
-      SERIAL_DEBUG.println("GET OK");
-      SERIAL_DEBUG.print("Response code: ");
-      SERIAL_DEBUG.println(apckt.responseCode);
-      SERIAL_DEBUG.print("Response type: ");
-      SERIAL_DEBUG.println(apckt.responseType);
+      Arancino.println("GET OK");
+      Arancino.print("Response code: ");
+      Arancino.println(apckt.responseCode);
+      Arancino.print("Response type: ");
+      Arancino.println(apckt.responseType);
 
-      SERIAL_DEBUG.print("EX_02_2_foo -> ");
-      SERIAL_DEBUG.println(apckt.response.string);
+      Arancino.print("EX_02_2_foo -> ");
+      Arancino.println(apckt.response.string);
       //foo -> bar
 
     }
     else
     {
-      SERIAL_DEBUG.println("GET ERROR");
+      Arancino.println("GET ERROR");
     }
 
     Arancino.free(apckt); //delete packet from memory

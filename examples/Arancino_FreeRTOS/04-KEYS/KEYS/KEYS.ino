@@ -42,6 +42,9 @@
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "04.1 - Keys Example",
   .fwversion = "1.0.1",
@@ -54,15 +57,17 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
-	xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.set("EX_04_1_pressure", 1023);
   Arancino.set("EX_04_1_humidity", 67.5);
   Arancino.set("EX_04_1_temperature", 24.4);
 
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }
 
@@ -75,7 +80,7 @@ void loopTask(void *pvParameters){
 
     char** keys = Arancino.keys();
     for (int i = 0; i < Arancino.getArraySize(keys); i++) {
-      SERIAL_DEBUG.println(keys[i]);
+      Arancino.println(keys[i]);
     }
     //pressure
     //humidity
@@ -86,7 +91,7 @@ void loopTask(void *pvParameters){
 
     keys = Arancino.keys("EX_04_1_temp*");  //return all the keys that contains "temp" pattern
     for (int i = 0; i < Arancino.getArraySize(keys) ; i++) {
-      SERIAL_DEBUG.println(keys[i]);      //temperature
+      Arancino.println(keys[i]);      //temperature
     }
 
     Arancino.free(keys); //delete the array from memory

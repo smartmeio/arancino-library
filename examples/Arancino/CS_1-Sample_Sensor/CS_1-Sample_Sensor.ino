@@ -26,6 +26,9 @@ under the License
 
  #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
  #define sensePin A0
  #define SAMPLES 10
 
@@ -36,6 +39,8 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
   Arancino.begin(amdata);
 }
 

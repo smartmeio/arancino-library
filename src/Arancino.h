@@ -194,9 +194,8 @@ class ArancinoClass {
 		/***** DEBUG OPTIONS *****/
 
 		void enableDebugMessages();
-		void enableDebugMessages(Stream* dbgSerial);
+		void enableDebugMessages(Stream& dbgSerial);
 		void disableDebugMessages();
-		void printDebugMessage(char* msg);
 
 		/***** API UTILS *****/
 		//FREE
@@ -271,8 +270,7 @@ class ArancinoClass {
 		void _floatToString(float value, unsigned int _nDecimal, char* str);
 		int _getDigit(long value);
 
-		// ArancinoPacket _sendViaCOMM_MODE(char* key, char* value);
-		void _sendViaCOMM_MODE(char* key, char* value, bool isPersistent = false);
+		void _printDebugMessage(char* value);
 
 		int _getResponseCode(char* data);
 

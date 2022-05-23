@@ -41,6 +41,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "05.1 - HSet Example",
   .fwversion = "1.0.1",
@@ -48,8 +51,12 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
+
   Arancino.hset("ex05_foo","bar","yeah");
   Arancino.hset("ex05_foo","bar","whoo");
 

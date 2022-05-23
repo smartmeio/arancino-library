@@ -31,6 +31,9 @@ under the License
  #define greenPin 9
  #define bluePin 24
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "CS.2 - Smart_Light",
   .fwversion = "1.0.1",
@@ -40,6 +43,8 @@ ArancinoMetadata amdata = {
 char* keys[] = {"CS_2-Red", "CS_2-Green", "CS_2-Blue"};
 
 void setup() {
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
   Arancino.begin(amdata);
   char* startingValues[] = {"255", "255", "255"}; //White
   Arancino.mset(keys, startingValues, 3);

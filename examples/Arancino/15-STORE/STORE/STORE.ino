@@ -38,6 +38,9 @@ Return value - String reply:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "15.1 - Store Example",
   .fwversion = "1.0.1",
@@ -45,8 +48,10 @@ ArancinoMetadata amdata = {
 };
 
 void setup() {
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
 }
@@ -56,8 +61,8 @@ void loop(){
     char* key1 = "EX_sample_1";
     long sample1 = random(100,400)/36;
     char* timestamp = Arancino.store(key1, sample1);
-    SERIAL_DEBUG.print("timestamp -> ");
-    SERIAL_DEBUG.println(timestamp);
+    Arancino.print("timestamp -> ");
+    Arancino.println(timestamp);
 
     Arancino.free(timestamp);
 

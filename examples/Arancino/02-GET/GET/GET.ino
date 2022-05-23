@@ -45,11 +45,14 @@ ArancinoMetadata amdata = {
 void setup() {
 
   //Please remember to provide a serial port when not using an Arancino board
-  //iface.setSerialPort(&Serial);
-  //Arancino.enableDebugMessages(&Serial);
+  //iface.setSerialPort(Serial);
   iface.setSerialPort();
-  Arancino.attachInterface(&iface);
+  Arancino.attachInterface(iface);
+
+  //Debug options
+  //Likewise to interface, a Serial port should be provided as argument when using non-Arancino boards
   Arancino.enableDebugMessages();
+
   Arancino.begin(amdata);
   
 }
@@ -60,8 +63,9 @@ void loop(){
 
   //gets the value from the 'foo' key
   char* value = Arancino.get("EX_02_1");
-  Arancino.printDebugMessage("EX_02_1 -> ");
-  Arancino.printDebugMessage(value);
+  //print via debug Serial
+  Arancino.print("EX_02_1 -> ");
+  Arancino.println(value);
   //foo -> bar
   Arancino.free(value); //frees memory
 
@@ -71,8 +75,9 @@ void loop(){
 
   //gets the value from the 'foo' key
   value = Arancino.get("EX_02_1");
-  Arancino.printDebugMessage("EX_02_1 -> ");
-  Arancino.printDebugMessage(value);
+  //print via debug Serial
+  Arancino.print("EX_02_1 -> ");
+  Arancino.println(value);
   //foo -> baz
   Arancino.free(value); //frees memory
 

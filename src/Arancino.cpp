@@ -21,7 +21,7 @@ under the License
 #include "Arancino.h"
 #include "ArancinoTasks.h"
 
-#define DEBUG 0
+//#define SEND_VIA_COMM_MODE
 
 ArancinoPacket reservedKeyErrorPacket = {true, RESERVED_KEY_ERROR, RESERVED_KEY_ERROR, {.string = NULL}}; //default reserved key error packet
 ArancinoPacket communicationErrorPacket = {true, COMMUNICATION_ERROR, COMMUNICATION_ERROR, {.string = NULL}}; //default reserved key error packet
@@ -173,10 +173,10 @@ void ArancinoClass::enableDebugMessages(){
 	#endif
 }
 
-void ArancinoClass::enableDebugMessages(Stream* dbgSerial){
-	//Custom debug serial should be provided here and already initialized
+void ArancinoClass::enableDebugMessages(Stream& dbgSerial){
+	//Custom debug serial should be provided here and already should be already initialized
 	_isDebug = true;
-	this->_dbgSerial = dbgSerial;
+	this->_dbgSerial = &dbgSerial;
 }
 
 void ArancinoClass::disableDebugMessages(){
@@ -184,11 +184,6 @@ void ArancinoClass::disableDebugMessages(){
 	//serial port at a different baud rate you should manually end the serial yourself
 	_isDebug = false;
 	_dbgSerial = NULL;
-}
-
-void ArancinoClass::printDebugMessage(char* msg){
-	if (_isDebug)
-	_dbgSerial->println(msg);
 }
 
 /******** API BASIC :: MSET *********/
@@ -297,7 +292,6 @@ template<> ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char* key, 
 
 template<> char* ArancinoClass::getReserved(char* key, bool id_prefix){
 	ArancinoPacket packet = getReserved<ArancinoPacket>(key, id_prefix);
-	printDebugMessage(packet.response.string);
 	if (!packet.isError)
 		return packet.response.string;
 	else
@@ -843,11 +837,11 @@ bool ArancinoClass::isValidUTF8(const char * string) //From: https://stackoverfl
 /******** API ADVANCED :: PRINT *********/
 
 void ArancinoClass::print(char* value){
-	_sendViaCOMM_MODE(MONITOR_KEY, value);
+	_printDebugMessage(value);
 }
 
 void ArancinoClass::print(String value){
-	_sendViaCOMM_MODE(MONITOR_KEY, value.begin());
+	_printDebugMessage(value.begin());
 }
 
 void ArancinoClass::print(int value) {
@@ -1071,7 +1065,6 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	_iface->sendArancinoCommand(str);
 
 	char* message = _iface->receiveArancinoResponse(END_TX_CHAR);
-	printDebugMessage(message);
 
 	taskResume();
 
@@ -1253,14 +1246,15 @@ int ArancinoClass::_getDigit(long value) {
 	return digit;
 }
 
-void ArancinoClass::_sendViaCOMM_MODE(char* key, char* value, bool isPersistent) {
-	if(strcmp(LOG_LEVEL, "DEBUG") == 0){
-		__publish(key, value);
-		__set(key, value, isPersistent);
+void ArancinoClass::_printDebugMessage(char* value) {
+	#ifdef SEND_VIA_COMM_MODE
+	__publish(MONITOR_KEY, value);
+	__set(MONITOR_KEY, value);
+	#else
+	if(_isDebug && _dbgSerial != NULL){
+		_dbgSerial->print(value);
 	}
-	else{
-		__set(key, value, isPersistent);
-	}
+	#endif
 }
 
 int ArancinoClass::_getResponseCode(char* message) {

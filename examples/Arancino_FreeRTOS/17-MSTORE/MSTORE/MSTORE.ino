@@ -34,7 +34,9 @@ Return value - char** reply:
 */
 
 #include <Arancino.h>
-#include <avr/dtostrf.h>
+
+//Arancino interface
+SerialIface iface;
 
 ArancinoMetadata amdata = {
   .fwname = "17.1 - MStore Example",
@@ -50,9 +52,12 @@ char* keys[] = {"EX_sample_foo1", "EX_sample_foo2", "EX_sample_foo3"};
 
 void setup(){
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
+
   xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
@@ -81,10 +86,10 @@ void loopTask(void *pvParameters){
     int arraySize = Arancino.getArraySize(timestamps);
 
     for (int i = 0; i < arraySize; i++){
-      SERIAL_DEBUG.print("timestamp ");
-      SERIAL_DEBUG.print(keys[i]);
-      SERIAL_DEBUG.print(" -> ");
-      SERIAL_DEBUG.println(timestamps[i]);
+      Arancino.print("timestamp ");
+      Arancino.print(keys[i]);
+      Arancino.print(" -> ");
+      Arancino.println(timestamps[i]);
 
     }
     Arancino.free(timestamps);

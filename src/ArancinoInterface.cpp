@@ -142,10 +142,10 @@ void MqttIface::sendArancinoCommand(char* command){
 		if (this->publish(_outputTopic, command)){
 			return;
 		}
-		Arancino.printDebugMessage("Failed to send message, retrying.");
+		Arancino.println("Failed to send message, retrying.");
 		counter++;
 	}
-	Arancino.printDebugMessage("Failed to send message. Attempting to reconnect");
+	Arancino.println("Failed to send message. Attempting to reconnect");
 
 	//This should not happen. Check if still connected
 	this->_reconnect();
@@ -178,7 +178,6 @@ void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int lengt
 		memcpy(_inputBuffer, payload, length);
 		_inputBuffer[length] = END_TX_CHAR;
 		_inputBuffer[length+1] = '\0';
-		Arancino.printDebugMessage(_inputBuffer);
 		_newIncomingMessage = true;
 	} 
 }
@@ -214,11 +213,9 @@ void MqttIface::_reconnect(){
 	while (!this->connected()){
 		if (!this->connect(Arancino.id, _username, _password)){
 			//If debug is enabled, tell the user that connection failed
-			Arancino.printDebugMessage("Connection failed, retrying in 3 seconds. RC=");
-			char rc[2];
-			itoa(this->state(), rc, 10);
-			Arancino.printDebugMessage(rc);
-			Arancino.delay(1000);
+			Arancino.print("Connection failed, retrying in 2 seconds. RC=");
+			Arancino.println(this->state());
+			Arancino.delay(2000);
 		}
 	}
 }

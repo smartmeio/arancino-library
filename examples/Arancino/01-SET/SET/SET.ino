@@ -44,7 +44,7 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
-//Arancino interface
+//Interface for Arancino protocol
 SerialIface iface;
 
 ArancinoMetadata amdata = {
@@ -57,9 +57,9 @@ ArancinoMetadata amdata = {
 void setup() {
 
   //Please remember to provide a serial port when not using an Arancino board
-  //iface.setSerialPort(&Serial);
+  //iface.setSerialPort(Serial);
   iface.setSerialPort();
-  Arancino.attachInterface(&iface);
+  Arancino.attachInterface(iface);
   Arancino.begin(amdata);
 
   //char*
