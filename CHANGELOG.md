@@ -1,5 +1,8 @@
 # Changelog
 
+#### v 2.0.1 - 2022.05.27
+* Fix: bug debug for arancino mignon board. [#2g4fxvx] (https://app.clickup.com/t/2g4fxvx)
+
 #### v 2.0.0 - 2022.01.20
 * Upd: updated unit test examples. [#1uqbjbp] (https://app.clickup.com/t/1uqbjbp)
 * Add: added useFreeRtos parameter in `start` command. [#1vht0nc] (https://app.clickup.com/t/1vht0nc)
