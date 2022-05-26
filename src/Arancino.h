@@ -175,12 +175,19 @@ class ArancinoClass {
 		template<class T = char*> T store(char* key, double value);
 		template<class T = char*> T store(char* key, float value);
 		template<class T = char*> T store(char* key, long value);
+
+		template<class T = char*> T store(char* key, int value,char* timestamp);
+		template<class T = char*> T store(char* key, uint32_t value,char* timestamp);
+		template<class T = char*> T store(char* key, double value,char* timestamp);
+		template<class T = char*> T store(char* key, float value,char* timestamp);
+		template<class T = char*> T store(char* key, long value,char* timestamp);
+
 		//STORE RAW
-		template<class T = char*> T storeRaw(char* key, int value, char* timestamp);
-		template<class T = char*> T storeRaw(char* key, uint32_t value, char* timestamp);
-		template<class T = char*> T storeRaw(char* key, double value, char* timestamp);
-		template<class T = char*> T storeRaw(char* key, float value, char* timestamp);
-		template<class T = char*> T storeRaw(char* key, long value, char* timestamp);
+		template<class T = void> T storeRaw(char* key, int value, char* timestamp);
+		template<class T = void> T storeRaw(char* key, uint32_t value, char* timestamp);
+		template<class T = void> T storeRaw(char* key, double value, char* timestamp);
+		template<class T = void> T storeRaw(char* key, float value, char* timestamp);
+		template<class T = void> T storeRaw(char* key, long value, char* timestamp);
 
 		//MSTORE
 		template<class T = char**> T mstore(char** keys, char** values, int len);
@@ -251,8 +258,8 @@ class ArancinoClass {
 
 		ArancinoPacket __set(char* key, char* value, bool isPersistent);
 		ArancinoPacket __publish(char* channel, char* msg);
-		ArancinoPacket __store(char* key, char* value);
-		ArancinoPacket __storeRaw(char* key, char* value,char* timestamp);
+		ArancinoPacket __store(char* key, char* value,char* timestamp=NULL);
+		void __storeRaw(char* key, char* value,char* timestamp);
 
 
 		template<class T = char*> T getReserved(char* key, bool id_prefix);
@@ -282,6 +289,7 @@ class ArancinoClass {
 		//execute command
 		ArancinoPacket executeCommand(char* command_id, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int response_type);
 		ArancinoPacket executeCommand(char* command_id, char* param1, char* param2, char*param3, bool id_prefix, int response_type);
+		void executeCommandFast(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return);
 		ArancinoPacket createArancinoPacket(char* response_raw, int response_type);
 		//TEMPLATE WRAPPED
 		// ArancinoPacket _getPacket(char* key);

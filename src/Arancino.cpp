@@ -550,13 +550,13 @@ ArancinoPacket ArancinoClass::flush() {
 template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, int value) {
 	char str[20] = "";
 	itoa(value, str, 10);
-	return __store(key, str);
+	return  __store(key, str);
 }
 
 template<> char* ArancinoClass::store(char* key, int value){
 	char str[20] = "";
 	itoa(value, str, 10);
-	ArancinoPacket packet = __store(key, str);
+	ArancinoPacket packet =  __store(key, str);
 	if (!packet.isError)
 		return packet.response.string;
 	else
@@ -566,13 +566,13 @@ template<> char* ArancinoClass::store(char* key, int value){
 template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, uint32_t value) {
 	char str[20] = "";
 	itoa(value, str, 10);
-	return __store(key, str);
+	return  __store(key, str);
 }
 
 template<> char* ArancinoClass::store(char* key, uint32_t value){
 	char str[20] = "";
 	itoa(value, str, 10);
-	ArancinoPacket packet = __store(key, str);
+	ArancinoPacket packet =  __store(key, str);
 	if (!packet.isError)
 		return packet.response.string;
 	else
@@ -582,13 +582,13 @@ template<> char* ArancinoClass::store(char* key, uint32_t value){
 template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, long value) {
 	char str[20] = "";
 	itoa(value, str, 10);
-	return __store(key, str);
+	return  __store(key, str);
 }
 
 template<> char* ArancinoClass::store(char* key, long value){
 	char str[20] = "";
 	itoa(value, str, 10);
-	ArancinoPacket packet = __store(key, str);
+	ArancinoPacket packet =__store(key, str);
 	if (!packet.isError)
 		return packet.response.string;
 	else
@@ -598,13 +598,13 @@ template<> char* ArancinoClass::store(char* key, long value){
 template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, float value) {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
-	return __store(key, str);
+	return  __store(key, str);
 }
 
 template<> char* ArancinoClass::store(char* key, float value){
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
-	ArancinoPacket packet = __store(key, str);
+	ArancinoPacket packet =  __store(key, str);
 	if (!packet.isError)
 		return packet.response.string;
 	else
@@ -614,7 +614,7 @@ template<> char* ArancinoClass::store(char* key, float value){
 template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, double value) {
 	char str[20] = "";
 	_doubleToString(value, decimal_digits, str);
-	return __store(key, str);
+	return  __store(key, str);
 }
 
 template<> char* ArancinoClass::store(char* key, double value){
@@ -627,102 +627,144 @@ template<> char* ArancinoClass::store(char* key, double value){
 		return NULL;
 }
 
-ArancinoPacket ArancinoClass::__store( char* key, char* value) {
-	char* ts = getTimestamp();
+template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, int value,char* timestamp) {
+	char str[20] = "";
+	itoa(value, str, 10);
+	return  __store(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::store(char* key, int value,char* timestamp){
+	char str[20] = "";
+	itoa(value, str, 10);
+	ArancinoPacket packet = __store(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, uint32_t value,char* timestamp) {
+	char str[20] = "";
+	itoa(value, str, 10);
+	return  __store(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::store(char* key, uint32_t value,char* timestamp){
+	char str[20] = "";
+	itoa(value, str, 10);
+	ArancinoPacket packet = __store(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, long value,char* timestamp) {
+	char str[20] = "";
+	itoa(value, str, 10);
+	return  __store(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::store(char* key, long value,char* timestamp){
+	char str[20] = "";
+	itoa(value, str, 10);
+	ArancinoPacket packet =__store(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, float value,char* timestamp) {
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	return  __store(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::store(char* key, float value,char* timestamp){
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	ArancinoPacket packet =  __store(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, double value,char* timestamp) {
+	char str[20] = "";
+	_doubleToString(value, decimal_digits, str);
+	return  __store(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::store(char* key, double value,char* timestamp){
+	char str[20] = "";
+	_doubleToString(value, decimal_digits, str);
+	ArancinoPacket packet = __store(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+ArancinoPacket ArancinoClass::__store( char* key, char* value, char* timestamp) {
+
+	char* ts;
+
+	if(timestamp==NULL){
+		 ts=getTimestamp();
+	}
+	else{
+		ts = timestamp;
+	}
+
 	if(key == NULL && value == NULL && strcmp(key, "") == 0){
 		return invalidCommandErrorPacket;
 	}
-	return executeCommand(STORE_COMMAND,key,value,ts,true,STRING);
+	return executeCommand(STORE_COMMAND,key,value,ts,false,STRING);
 }
 
 /******** API BASIC :: STORERAW *********/
+//da togliere
 
-template<> ArancinoPacket ArancinoClass::storeRaw<ArancinoPacket>( char* key, int value,char* timestamp) {
+template<> void ArancinoClass::storeRaw<void>( char* key, int value,char* timestamp) {
 	char str[20] = "";
 	itoa(value, str, 10);
-	return __storeRaw(key, str,timestamp);
+	__storeRaw(key, str,timestamp);
 }
 
-template<> char* ArancinoClass::storeRaw(char* key, int value,char* timestamp){
+template<> void ArancinoClass::storeRaw<void>( char* key, uint32_t value,char* timestamp) {
 	char str[20] = "";
 	itoa(value, str, 10);
-	ArancinoPacket packet = __storeRaw(key, str,timestamp);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
+	__storeRaw(key, str,timestamp);
 }
 
-template<> ArancinoPacket ArancinoClass::storeRaw<ArancinoPacket>( char* key, uint32_t value,char* timestamp) {
+template<> void ArancinoClass::storeRaw<void>( char* key, long value,char* timestamp) {
 	char str[20] = "";
 	itoa(value, str, 10);
-	return __storeRaw(key, str,timestamp);
+	__storeRaw(key, str,timestamp);
 }
 
-template<> char* ArancinoClass::storeRaw(char* key, uint32_t value,char* timestamp){
-	char str[20] = "";
-	itoa(value, str, 10);
-	ArancinoPacket packet = __storeRaw(key, str,timestamp);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-template<> ArancinoPacket ArancinoClass::storeRaw<ArancinoPacket>( char* key, long value,char* timestamp) {
-	char str[20] = "";
-	itoa(value, str, 10);
-	return __storeRaw(key, str,timestamp);
-}
-
-template<> char* ArancinoClass::storeRaw(char* key, long value,char* timestamp){
-	char str[20] = "";
-	itoa(value, str, 10);
-	ArancinoPacket packet = __storeRaw(key, str,timestamp);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-template<> ArancinoPacket ArancinoClass::storeRaw<ArancinoPacket>( char* key, float value,char* timestamp) {
+template<> void ArancinoClass::storeRaw<void>( char* key, float value,char* timestamp) {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
-	return __storeRaw(key, str,timestamp);
+	__storeRaw(key, str,timestamp);
 }
 
-template<> char* ArancinoClass::storeRaw(char* key, float value,char* timestamp){
-	char str[20] = "";
-	_floatToString(value, decimal_digits, str);
-	ArancinoPacket packet = __storeRaw(key, str,timestamp);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-template<> ArancinoPacket ArancinoClass::storeRaw<ArancinoPacket>( char* key, double value,char* timestamp) {
+template<> void ArancinoClass::storeRaw<void>( char* key, double value,char* timestamp) {
 	char str[20] = "";
 	_doubleToString(value, decimal_digits, str);
-	return __storeRaw(key, str,timestamp);
+	__storeRaw(key, str,timestamp);
 }
 
-template<> char* ArancinoClass::storeRaw(char* key, double value,char* timestamp){
-	char str[20] = "";
-	_doubleToString(value, decimal_digits, str);
-	ArancinoPacket packet = __storeRaw(key, str,timestamp);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
 
-ArancinoPacket ArancinoClass::__storeRaw( char* key, char* value,char* timestamp) {
+void ArancinoClass::__storeRaw( char* key, char* value,char* timestamp) {
 	//char* ts = getTimestamp();
-	if(key == NULL && value == NULL && strcmp(key, "") == 0){
+	/*if(key == NULL && value == NULL && strcmp(key, "") == 0){
 		return invalidCommandErrorPacket;
 	}
-	return executeCommand(STORE_COMMAND,key,value,timestamp,true,STRING);
+	*/
+	executeCommandFast(STORE_COMMAND,key,value,timestamp,false,STRING);
 }
 
 /******** API BASIC :: MSTORE *********/
@@ -1191,6 +1233,56 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	free(message);
 
 	return packet;
+
+}
+
+void ArancinoClass::executeCommandFast(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return){
+	int commandLength = strlen(command);
+	int param1_length = 0;
+	if(param1 != NULL){
+		param1_length = strlen(param1);
+		if(id_prefix){
+			param1_length += idSize + 1;
+		}
+	}
+	int param2_length = 0;
+	if(param2 != NULL)
+		param2_length=strlen(param2);
+	int param3_length = 0;
+	if(param3 != NULL)
+		param3_length=strlen(param3);
+	int strLength = commandLength + 1 + param1_length + 1 + param2_length + 1 + param3_length + 1 + 1;
+
+	char* str = (char *)calloc(strLength, sizeof(char));
+
+
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+
+	strcpy(str, command);
+	if(param1 != NULL){
+		strcat(str, dataSplitStr);
+		if(id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
+		strcat(str, param1);
+	}
+	if(param2 != NULL){
+		strcat(str, dataSplitStr);
+		strcat(str, param2);
+	}
+	if(param3 != NULL){
+		strcat(str, dataSplitStr);
+		strcat(str, param3);
+	}
+	strcat(str, endTXStr);
+
+	_sendArancinoCommand(str);
+	free(str);
 
 }
 
