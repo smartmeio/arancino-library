@@ -84,7 +84,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	char* values[] = {LIB_VERSION, _metadata.fwname,_metadata.fwversion,str_build_time,(char*)ARANCINO_CORE_VERSION,(char*)MCU_FAMILY,(char*)useFreeRtos};
 
 	//DEBUG
-	#if defined(__SAMD21G18A__)
+	#if defined(ARDUINO_ARANCINO)
 	pinMode(DBG_PIN,INPUT);
 	if(!digitalRead(DBG_PIN))
 		Serial.begin(115200);
@@ -1012,7 +1012,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	}
 	strcat(str, endTXStr);
 
-	#if defined(__SAMD21G18A__)
+	#if defined(ARDUINO_ARANCINO)
 		if(!digitalRead(DBG_PIN)){
 			Serial.print(SENT_STRING);
 		}
@@ -1061,7 +1061,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	char* str = (char *)calloc(strLength, sizeof(char));
 
 
-	#if defined(__SAMD21G18A__)
+	#if defined(ARDUINO_ARANCINO)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
@@ -1149,7 +1149,7 @@ void ArancinoClass::_sendArancinoCommand(char* command) {
 	}
 	//command must terminate with '\0'!
 	SERIAL_PORT.write(command, strlen(command)); //excluded '\0'
-	#if defined(__SAMD21G18A__)
+	#if defined(ARDUINO_ARANCINO)
 		if(!digitalRead(DBG_PIN)){
 			if(command[strlen(command) - 1] == END_TX_CHAR)
 			{
@@ -1322,7 +1322,7 @@ char* ArancinoClass::_parse(char* message) {
 	}
 
 	//DEBUG
-	#if defined(__SAMD21G18A__)
+	#if defined(ARDUINO_ARANCINO)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(RCV_STRING);
 		Serial.print(status);
