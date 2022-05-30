@@ -231,13 +231,6 @@ void BluetoothIface::ifaceBegin(){
 }
 
 void BluetoothIface::sendArancinoCommand(char* command){
-	if (comm_timeout){
-		while (_bleSerial->available() > 0){
-			_bleSerial->read();
-		}
-		comm_timeout = false;
-	}
-
 	_bleSerial->write(command, strlen(command));
 }
 
@@ -246,18 +239,12 @@ char* BluetoothIface::receiveArancinoResponse(char terminator){
 	String str = "";
 	str = _bleSerial->readStringUntil(terminator);
 
-	//Check timeout
-	if (str == ""){
-		comm_timeout = true;
-	} else {
-		int responseLenght = strlen(str.begin());
-		if (responseLenght > 0){
-			response = (char*) Arancino.calloc(responseLenght+1+1, sizeof(char));
-			strcpy(response, str.begin());
-			response[responseLenght] = END_TX_CHAR;
-			response[responseLenght+1] = '\0';
-		}
+	int responseLenght = strlen(str.begin());
+	if (responseLenght > 0){
+		response = (char*) Arancino.calloc(responseLenght+1+1, sizeof(char));
+		strcpy(response, str.begin());
+		response[responseLenght] = END_TX_CHAR;
+		response[responseLenght+1] = '\0';
 	}
-
 	return response; 
 }
