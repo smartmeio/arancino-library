@@ -1396,7 +1396,7 @@ void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char* 
 
 void ArancinoClass::_floatToString(float value, unsigned int _nDecimal, char* str) {
 	noInterrupts();
-	char val[20]="";
+	/*char val[20]="";
 	sprintf(val, "%d", int(value));
 	int valueLength=strlen(val);
 	if(valueLength+_nDecimal>7){			//The float data type has 7 decimal digits of precision
@@ -1415,8 +1415,11 @@ void ArancinoClass::_floatToString(float value, unsigned int _nDecimal, char* st
 	strcat(param,dec);
   	strcat(param,"d");
 	sprintf (str,param, int(value), decimalPart);
+	*/
+	dtostrf(value,7,_nDecimal,str);
 	interrupts();
 	//return str;
+	
 }
 
 int ArancinoClass::_getDigit(long value) {

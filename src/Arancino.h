@@ -28,7 +28,7 @@ under the License
 #include <stdlib.h>
 #include <cstdlib>
 #include <type_traits>
-
+#include <avr/dtostrf.h>
 //#define USEFREERTOS
 #if defined(USEFREERTOS)
 #if defined(__SAMD21G18A__)
