@@ -119,4 +119,8 @@ under the License
 
 #define MQTT_MAX_RETRIES            100
 
+#if defined(ARDUINO_ARCH_NRF52)
+#define ID_SIZE 12
+#else
 #define ID_SIZE 32
+#endif

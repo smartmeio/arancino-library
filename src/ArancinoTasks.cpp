@@ -107,12 +107,10 @@ void ArancinoTasks::sendHeartbeat(void *pvPramaters){
   strcpy(topic, Arancino.id);
   strcat(topic, "_HB0");
   while (1) {
-    vTaskSuspendAll();
     topic[ID_SIZE+3] = '0'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
     Arancino.publish(topic, Arancino.getTimestamp());
     topic[ID_SIZE+3] = '1';
     Arancino.publish(topic, Arancino.getTimestamp());
-    xTaskResumeAll();
     vTaskDelay(10000);
   }
 }

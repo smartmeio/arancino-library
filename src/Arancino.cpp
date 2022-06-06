@@ -69,7 +69,11 @@ void ArancinoClass::begin(ArancinoMetadata _amdata) {
 }
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
+	#if defined(ARDUINO_ARCH_NRF52)
+	strcpy(id, getMacAddr());
+	#else
 	MicroID.getUniqueIDString(id, ID_SIZE/2);
+	#endif
 	_iface->ifaceBegin();
 	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
 	decimal_digits=_acfg.DECIMAL_DIGITS;
