@@ -191,6 +191,7 @@ class ArancinoClass {
 
 		//MSTORE
 		template<class T = char**> T mstore(char** keys, char** values, int len);
+		template<class T = void> T mstore(char** keys, char** values, int len,char* timestamp);
 
 		//STORE TAGS
 		ArancinoPacket storetags(char* key, char** tags, char** values, int len);
@@ -290,6 +291,7 @@ class ArancinoClass {
 		ArancinoPacket executeCommand(char* command_id, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int response_type);
 		ArancinoPacket executeCommand(char* command_id, char* param1, char* param2, char*param3, bool id_prefix, int response_type);
 		void executeCommandFast(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return);
+		void executeCommandFast(char* command, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int type_return);
 		ArancinoPacket createArancinoPacket(char* response_raw, int response_type);
 		//TEMPLATE WRAPPED
 		// ArancinoPacket _getPacket(char* key);

@@ -776,6 +776,22 @@ template<> ArancinoPacket ArancinoClass::mstore<ArancinoPacket> (char** keys, ch
 	}
 	return executeCommand(MSTORE_COMMAND, NULL, keys, values, ts, len, true, STRING_ARRAY);
 }
+// template<> ArancinoPacket ArancinoClass::mstore<ArancinoPacket> (char** keys, char** values, int len,char* timestamp) {
+// 	char* ts = timestamp;
+// 	if ((keys == NULL) || (values == NULL) || (len <= 0)) {
+// 		return invalidCommandErrorPacket;
+// 	}
+// 	return executeCommand(MSTORE_COMMAND, NULL, keys, values, ts, len, false, STRING_ARRAY);
+// }
+
+template<> void ArancinoClass::mstore(char** keys, char** values, int len,char* timestamp) {
+	char* ts = timestamp;
+	 if ((keys == NULL) || (values == NULL) || (len <= 0)) {
+		//return invalidCommandErrorPacket;
+		
+	}
+	return executeCommandFast(MSTORE_COMMAND, NULL, keys, values, ts, len, false, STRING_ARRAY);
+}
 
 template<> char** ArancinoClass::mstore(char** key, char** value, int len){
 	ArancinoPacket packet = mstore<ArancinoPacket>(key, value, len);
@@ -791,7 +807,7 @@ ArancinoPacket ArancinoClass::storetags(char* key, char** tags, char** values, i
 	char* ts = getTimestamp();
 	if ((key == NULL) || (tags == NULL) || (values == NULL) || (len <= 0))
 		return invalidCommandErrorPacket;
-	return executeCommand(STORETAGS_COMMAND,key,tags,values,ts,len,true,VOID);
+	return executeCommand(STORETAGS_COMMAND,key,tags,values,ts,len,false,VOID);
 }
 
 /******** API UTILITY :: FREE *********/
@@ -1172,6 +1188,144 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 
 	return packet;
 }
+
+
+void ArancinoClass::executeCommandFast(char* command, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int type_return){
+	int commandLength = strlen(command);
+	int strLength = commandLength + 1;
+	int param1_length = 0;
+	int param4_length = 0;
+
+	if(param1 != NULL){
+		param1_length = strlen(param1);
+		if(id_prefix){
+			param1_length += idSize + 1;
+		}
+		strLength += param1_length + 1;
+	}
+
+	// Calculating Cortex Protocol command length
+	for (int i = 0; i < len; i ++) {
+		char* param2 = params2[i];
+		char* param3 = NULL;
+		if(params3 != NULL)
+			param3 = params3[i];
+
+		int param2_length = strlen(param2);
+		if(id_prefix && param1 == NULL){
+			param2_length += idSize + 1;
+		}
+		int param3_length = 0;
+		if(params3 != NULL)
+			param3_length = strlen(param3);
+		// For every key-value pair the length of both tag and value is added
+		// two 1s are added in order to take into account the % chr and
+		// the # and @ chrs in the case of last tag or last value respectively
+		strLength += param2_length + 1;
+		if(params3 != NULL)
+			strLength +=param3_length + 1;
+	}
+
+	if(param4 != NULL){
+		param4_length = strlen(param4);
+		strLength += param4_length + 1;
+	}
+
+	char* str = (char*) calloc(strLength, sizeof(char));
+
+	strcpy(str, command);
+	if(param1 != NULL){
+		strcat(str, dataSplitStr);
+		if(id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
+		strcat(str, param1);
+	}
+	strcat(str, dataSplitStr);
+	// Points to the memory area where tags have to be written
+	char* params2Pointer = str + commandLength + strlen(dataSplitStr);
+	if(param1 != NULL)
+		params2Pointer += param1_length + strlen(dataSplitStr);
+
+	// Points at the end of the string less the space reserved to timestamp
+	char* params3Pointer = NULL;
+	if(params3 != NULL)
+		params3Pointer = str + strLength;
+	if(param4 != NULL)
+		params3Pointer = params3Pointer - param4_length - strlen(endTXStr);
+
+	// The string to send is built in 1 single loop.
+	// keys are copied from first to last (left to right in string)
+	// and values are copied from last to first (right to left in string)
+	for(int i = 0; i < len; i ++) {
+		char* param2 = params2[i];
+		char* param3 = NULL;
+		if(params3 != NULL)
+			param3 = params3[len - (i + 1)];
+
+		if(id_prefix && param1 == NULL){
+			strcat(params2Pointer, id);
+			strcat(params2Pointer, ID_SEPARATOR);
+		}
+		strcat(params2Pointer, param2);
+
+		if (i == len - 1) { // If it's the last key we have to use #(\4) instead of %(\16)
+			if(params3 != NULL)
+				strcat(params2Pointer, dataSplitStr);
+		} else {
+			strcat(params2Pointer, arraySplitStr);
+		}
+
+		// We use memcpy rather than strcat here because it would append \0,
+		// thus terminating the string prematurely
+		if(params3 != NULL){
+			params3Pointer -= strlen(param3) + 1;
+
+			memcpy(params3Pointer, param3, strlen(param3));
+
+			if (i != 0) {
+				memcpy(params3Pointer + strlen(param3), arraySplitStr, 1);
+			}
+		}
+
+	}
+	//timestamp
+	if(param4 != NULL){
+		strcat(str, dataSplitStr);
+		strcat(str, param4);
+	}
+	strcat(str, endTXStr);
+
+	#if defined(__SAMD21G18A__)
+		if(!digitalRead(DBG_PIN)){
+			Serial.print(SENT_STRING);
+		}
+	#endif
+
+	//taskSuspend();
+
+
+	_sendArancinoCommand(str);
+
+	//char* message = _receiveArancinoResponse(END_TX_CHAR);
+
+
+	//taskResume();
+
+
+	free(str);
+
+	// if (message == NULL)
+	// 	return communicationErrorPacket;
+
+	// ArancinoPacket packet = createArancinoPacket(message, type_return);
+
+	// free(message);
+
+	// return packet;
+}
+
 
 ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return){
 	int commandLength = strlen(command);
