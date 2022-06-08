@@ -1305,9 +1305,10 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char** param
 
 	//taskSuspend();
 
-
+	//while(SerialUSB.availableForWrite()>=strlen(str));
+	
 	_sendArancinoCommand(str);
-
+	delayMicroseconds(500);
 	//char* message = _receiveArancinoResponse(END_TX_CHAR);
 
 
