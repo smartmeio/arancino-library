@@ -724,49 +724,6 @@ ArancinoPacket ArancinoClass::__store( char* key, char* value, char* timestamp) 
 	return executeCommand(STORE_COMMAND,key,value,ts,false,STRING);
 }
 
-/******** API BASIC :: STORERAW *********/
-//da togliere
-
-template<> void ArancinoClass::storeRaw<void>( char* key, int value,char* timestamp) {
-	char str[20] = "";
-	itoa(value, str, 10);
-	__storeRaw(key, str,timestamp);
-}
-
-template<> void ArancinoClass::storeRaw<void>( char* key, uint32_t value,char* timestamp) {
-	char str[20] = "";
-	itoa(value, str, 10);
-	__storeRaw(key, str,timestamp);
-}
-
-template<> void ArancinoClass::storeRaw<void>( char* key, long value,char* timestamp) {
-	char str[20] = "";
-	itoa(value, str, 10);
-	__storeRaw(key, str,timestamp);
-}
-
-template<> void ArancinoClass::storeRaw<void>( char* key, float value,char* timestamp) {
-	char str[20] = "";
-	_floatToString(value, decimal_digits, str);
-	__storeRaw(key, str,timestamp);
-}
-
-template<> void ArancinoClass::storeRaw<void>( char* key, double value,char* timestamp) {
-	char str[20] = "";
-	_doubleToString(value, decimal_digits, str);
-	__storeRaw(key, str,timestamp);
-}
-
-
-void ArancinoClass::__storeRaw( char* key, char* value,char* timestamp) {
-	//char* ts = getTimestamp();
-	/*if(key == NULL && value == NULL && strcmp(key, "") == 0){
-		return invalidCommandErrorPacket;
-	}
-	*/
-	executeCommandFast(STORE_COMMAND,key,value,timestamp,false,STRING);
-}
-
 /******** API BASIC :: MSTORE *********/
 
 template<> ArancinoPacket ArancinoClass::mstore<ArancinoPacket> (char** keys, char** values, int len) {
