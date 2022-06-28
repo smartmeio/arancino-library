@@ -50,8 +50,12 @@ extern "C" {
 //need to serial
 #include <Adafruit_TinyUSB.h>
 #elif defined (ARDUINO_ARCH_RP2040)
-#include <RP2040_FreeRTOS.h>
+#include <FreeRTOS.h>
+#include <task.h>
+#include <semphr.h>
+#if defined(USE_TINYUSB)
 #include <Adafruit_TinyUSB.h>
+#endif
 #endif
 
 
