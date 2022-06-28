@@ -78,9 +78,12 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg)
 	char mcu_family[] = "MCU_FAMILY";
 	char fw_use_freertos[] = "FW_USE_FREERTOS";
 #if defined(USEFREERTOS)
-#if defined(ARDUINO_ARANCINO_VOLANTE)
-	CommMutex = xSemaphoreCreateMutex();
-#endif
+	//#if defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		CommMutex = xSemaphoreCreateMutex();
+	}
+	//#endif
 	char *useFreeRtos = "1";
 #else
 	char *useFreeRtos = "0";
@@ -103,12 +106,17 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg)
 	/*	All the FreeRTOS initialization should be put here, at the end of the
 		the ArancinoClass::begin method.
 	*/
+	if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)
+	{
+		CommMutex = xSemaphoreCreateMutex();
+	}
 	ArancinoTasks _atask;
 	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
 	xTaskCreate(_atask.interoception, "interoception", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle2);
-#if !defined(ARDUINO_ARANCINO_VOLANTE)
-	CommMutex = xSemaphoreCreateMutex();
-#endif
+
+// #if !defined(ARDUINO_ARANCINO_VOLANTE) || !defined(ARDUINO_ARCH_RP2040)
+// 	CommMutex = xSemaphoreCreateMutex();
+// #endif
 #endif
 }
 
@@ -158,9 +166,9 @@ void ArancinoClass::startScheduler()
 #if defined(ARDUINO_ARANCINO_VOLANTE)
 	// initYieldTask(100);
 #elif defined(ARDUINO_ARCH_RP2040)
-	initYieldTask(100);
-	runLoopAsTask(128, tskIDLE_PRIORITY);
-	initFreeRTOS(); // 128 = stack depth for loop, tskIDLE_PRIORITY = priority
+	// initYieldTask(100);
+	// runLoopAsTask(128, tskIDLE_PRIORITY);
+	// initFreeRTOS(); //128 = stack depth for loop, tskIDLE_PRIORITY = priority
 #elif defined(__SAMD21G18A__)
 	runLoopAsTask(128, tskIDLE_PRIORITY);
 	vTaskStartScheduler();
@@ -862,7 +870,7 @@ void *ArancinoClass::calloc(size_t nmemb, size_t _size)
 {
 /* Call the FreeRTOS version of malloc. */
 #if defined(USEFREERTOS)
-#if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2) || defined(ARDUINO_ARANCINO_VOLANTE)
+#if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2) || defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040)
 	uint8_t *ptr = (uint8_t *)malloc(nmemb * (_size));
 	memset(ptr, 0, nmemb); // clear the buffer #pte4c0
 	return ptr;
@@ -1214,13 +1222,13 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 	}
 #endif
 
-	takeCommMutex((TickType_t)portMAX_DELAY);
-
-	_sendArancinoCommand(str);
-
-	char *message = _receiveArancinoResponse(END_TX_CHAR);
-
-	giveCommMutex();
+	char *message = NULL;
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE)
+	{
+		_sendArancinoCommand(str);
+		message = _receiveArancinoResponse(END_TX_CHAR);
+		giveCommMutex();
+	}
 
 	free(str);
 
@@ -1286,15 +1294,17 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 	}
 	strcat(str, endTXStr);
 
-	takeCommMutex((TickType_t)portMAX_DELAY);
-
-	_sendArancinoCommand(str);
-	char *message = _receiveArancinoResponse(END_TX_CHAR);
-
-	giveCommMutex();
-
+	char *message = NULL;
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE)
+	{
+		_sendArancinoCommand(str);
+		char *message = _receiveArancinoResponse(END_TX_CHAR);
+		giveCommMutex();
+	}
 	free(str);
 
+	if (message == NULL)
+		return communicationErrorPacket;
 	// parse response
 	ArancinoPacket packet = createArancinoPacket(message, type_return);
 
@@ -1657,9 +1667,17 @@ char **ArancinoClass::_parseArray(char *data)
 BaseType_t ArancinoClass::takeCommMutex(TickType_t timeout)
 {
 #if defined(USEFREERTOS)
+
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
-		return xSemaphoreTake(CommMutex, timeout);
+		if (CommMutex != NULL)
+		{
+			return xSemaphoreTake(CommMutex, timeout);
+		}
+		else
+		{
+			return pdFALSE;
+		}
 	}
 	else
 	{
@@ -1678,7 +1696,11 @@ BaseType_t ArancinoClass::takeCommMutex(TickType_t timeout)
 void ArancinoClass::giveCommMutex()
 {
 #if defined(USEFREERTOS)
-	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	if (CommMutex == NULL)
+	{
+		return;
+	}
+	else if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
 		xSemaphoreGive(CommMutex);
 	}
