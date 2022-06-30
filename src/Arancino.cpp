@@ -1298,7 +1298,7 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE)
 	{
 		_sendArancinoCommand(str);
-		char *message = _receiveArancinoResponse(END_TX_CHAR);
+		message = _receiveArancinoResponse(END_TX_CHAR);
 		giveCommMutex();
 	}
 	free(str);
