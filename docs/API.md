@@ -412,10 +412,10 @@ ___
 ##### *ArancinoPacket store(char&ast; key, long value)*
 ##### *ArancinoPacket store(char&ast; key, uint32_t value)*
 
-##### *ArancinoPacket store(char&ast; key, int value, char&ast timestamp)*
-##### *ArancinoPacket store(char&ast; key, float value, char&ast timestamp)*
-##### *ArancinoPacket store(char&ast; key, long value, char&ast timestamp)*
-##### *ArancinoPacket store(char&ast; key, uint32_t value, char&ast timestamp)*
+##### *ArancinoPacket store(char&ast; key, int value, char&ast; timestamp)*
+##### *ArancinoPacket store(char&ast; key, float value, char&ast; timestamp)*
+##### *ArancinoPacket store(char&ast; key, long value, char&ast; timestamp)*
+##### *ArancinoPacket store(char&ast; key, uint32_t value, char&ast; timestamp)*
 
 Append (or create and append) a new sample to the series specified by key.
 
@@ -437,7 +437,7 @@ ArancinoPacket reply: [ArancinoPacket](#arancinopacket) containing:
 ___
 ### mstore
 ##### *ArancinoPacket mstore(char&ast;&ast; key, char&ast;&ast; value, int len)*
-##### *Void mstore(char&ast;&ast; key, char&ast;&ast; value, int len,char&ast timestamp)*
+##### *Void mstore(char&ast;&ast; key, char&ast;&ast; value, int len,char&ast; timestamp)*
 Append new samples to a list of series.
 
 ##### Parameters
@@ -447,8 +447,8 @@ Append new samples to a list of series.
 * **`timestamp`**: the expicit *timestamp* for the specified set of keys.
 
 ##### Return value
-char&ast;&ast; reply: list of insertion timestamps.
-Returns nothing (Void) if timestamp prototype is used. (it uses ExecuteCommandFast so it don't require a response from Arancino Daemon).
+* char&ast;&ast; reply: list of insertion timestamps.
+* Returns nothing (`Void`) if timestamp prototype is used. (it uses ExecuteCommandFast so it don't require a response from Arancino Daemon).
 
 or
 
