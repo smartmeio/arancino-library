@@ -241,10 +241,14 @@ char* BluetoothIface::receiveArancinoResponse(char terminator){
 
 	int responseLenght = strlen(str.begin());
 	if (responseLenght > 0){
+		_timeoutCounter = 0;
 		response = (char*) Arancino.calloc(responseLenght+1+1, sizeof(char));
 		strcpy(response, str.begin());
 		response[responseLenght] = END_TX_CHAR;
 		response[responseLenght+1] = '\0';
+	} else if (++_timeoutCounter == BLUETOOTH_MAX_RETRIES){
+		//For each serial timeout this will get incremented - board will reset after a certain number of timeouts
+		Arancino.systemReset();
 	}
 	return response; 
 }

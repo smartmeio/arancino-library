@@ -98,6 +98,7 @@ class BluetoothIface : public ArancinoIface {
 	
 	bool comm_timeout = false;
 	Stream* _bleSerial;
+	unsigned int _timeoutCounter = 0;
 };
 
 #endif /* ARANCINOINTERFACE_H_ */

@@ -230,7 +230,7 @@ class ArancinoClass {
 
 	private:
 		//void dropAll();
-		bool started;
+		bool started = false;
 		bool arancino_id_prefix;
 		int decimal_digits;
 		char timestamp[13];

@@ -117,7 +117,8 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	#endif
 
 	start(keys,values,7);
-
+	started = true;
+	
 	strcpy(LOG_LEVEL,getModuleLogLevel());
 	#if defined(USEFREERTOS)
 	//TASK
