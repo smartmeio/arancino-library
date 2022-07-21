@@ -32,6 +32,7 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 TaskHandle_t arancinoHandle1;
 TaskHandle_t arancinoHandle2;
 TaskHandle_t arancinoHandle3;
+SemaphoreHandle_t CommMutex;
 #endif
 
 /********************************************************
@@ -75,6 +76,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	MicroID.getUniqueIDString(id, ID_SIZE/2);
 	#endif
 	_iface->ifaceBegin();
+	Serial.println("After ifacebegin");
 	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
 	decimal_digits=_acfg.DECIMAL_DIGITS;
 
@@ -102,6 +104,11 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	char mcu_family[]="MCU_FAMILY";
 	char fw_use_freertos[]="FW_USE_FREERTOS";
 	#if defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		CommMutex = xSemaphoreCreateMutex();
+	}
+
 	char* useFreeRtos = "1";
 	#else
 	char* useFreeRtos = "0";
@@ -121,6 +128,10 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	
 	strcpy(LOG_LEVEL,getModuleLogLevel());
 	#if defined(USEFREERTOS)
+	if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)
+	{
+		CommMutex = xSemaphoreCreateMutex();
+	}
 	//TASK
 	ArancinoTasks _atask;
 	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
@@ -1066,15 +1077,13 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 		}
 	#endif
 
-	taskSuspend();
-
-
-	_iface->sendArancinoCommand(str);
-
-	char* message = _iface->receiveArancinoResponse(END_TX_CHAR);
-
-	taskResume();
-
+	char *message = NULL;
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE)
+	{
+		_iface->sendArancinoCommand(str);
+		message = _iface->receiveArancinoResponse(END_TX_CHAR);
+		giveCommMutex();
+	}
 
 	free(str);
 
@@ -1133,12 +1142,13 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	}
 	strcat(str, endTXStr);
 
-	taskSuspend();
-
-	_iface->sendArancinoCommand(str);
-	char* message = _iface->receiveArancinoResponse(END_TX_CHAR);
-
-	taskResume();
+	char *message = NULL;
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE)
+	{
+		_iface->sendArancinoCommand(str);
+		message = _iface->receiveArancinoResponse(END_TX_CHAR);
+		giveCommMutex();
+	}
 
 	free(str);
 
@@ -1420,6 +1430,50 @@ char** ArancinoClass::_parseArray(char* data) {
 
 	return (data != NULL && arrayParsed != NULL) ? &arrayParsed[1] : NULL;
 }
+
+BaseType_t ArancinoClass::takeCommMutex(TickType_t timeout)
+{
+#if defined(USEFREERTOS)
+
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		if (CommMutex != NULL)
+		{
+			return xSemaphoreTake(CommMutex, timeout);
+		}
+		else
+		{
+			return pdFALSE;
+		}
+	}
+	else
+	{
+		/*
+		Since the scheduler is not yet started, there are no multiple tasks
+		running simultaneously, so takeCommMutex acts as the mutex is correctly
+		taken.
+		*/
+		return pdTRUE;
+	}
+#else
+	return pdTRUE;
+#endif
+}
+
+void ArancinoClass::giveCommMutex()
+{
+#if defined(USEFREERTOS)
+	if (CommMutex == NULL)
+	{
+		return;
+	}
+	else if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		xSemaphoreGive(CommMutex);
+	}
+#endif
+}
+
 
 void ArancinoClass::taskSuspend(){
 	#if  defined(USEFREERTOS)

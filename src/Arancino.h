@@ -277,6 +277,8 @@ class ArancinoClass {
 		char* _parse(char* message);
 		char** _parseArray(char* message);
 
+		BaseType_t takeCommMutex(TickType_t timeout);
+		void giveCommMutex();
 		void taskSuspend();
 		void taskResume();
 
