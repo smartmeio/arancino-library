@@ -21,8 +21,6 @@ under the License
 #include "Arancino.h"
 #include "ArancinoTasks.h"
 
-//#define SEND_VIA_COMM_MODE
-
 ArancinoPacket reservedKeyErrorPacket = {true, RESERVED_KEY_ERROR, RESERVED_KEY_ERROR, {.string = NULL}}; //default reserved key error packet
 ArancinoPacket communicationErrorPacket = {true, COMMUNICATION_ERROR, COMMUNICATION_ERROR, {.string = NULL}}; //default reserved key error packet
 ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_VALUE_ERROR, {.string = NULL}}; //default reserved key error packet
@@ -71,12 +69,12 @@ void ArancinoClass::begin(ArancinoMetadata _amdata) {
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	#if defined(ARDUINO_ARCH_NRF52)
+	//Patch for NRF52 as the used id is the BLE MAC rather than the micro id
 	strcpy(id, getMacAddr());
 	#else
 	MicroID.getUniqueIDString(id, ID_SIZE/2);
 	#endif
 	_iface->ifaceBegin();
-	Serial.println("After ifacebegin");
 	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
 	decimal_digits=_acfg.DECIMAL_DIGITS;
 
@@ -116,18 +114,14 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	char* keys[] = {fw_lib_ver,fw_name,fw_ver,fw_build_time,fw_core_ver, mcu_family, fw_use_freertos};
 	char* values[] = {LIB_VERSION, _metadata.fwname,_metadata.fwversion,str_build_time,(char*)ARANCINO_CORE_VERSION,(char*)MCU_FAMILY,(char*)useFreeRtos};
 
-	//DEBUG
-	#if defined(__SAMD21G18A__)
-	pinMode(DBG_PIN,INPUT);
-	if(!digitalRead(DBG_PIN))
-		Serial.begin(115200);
-	#endif
-
 	start(keys,values,7);
 	started = true;
 	
 	strcpy(LOG_LEVEL,getModuleLogLevel());
 	#if defined(USEFREERTOS)
+	/*	All the FreeRTOS initialization should be put here, at the end of the
+		the ArancinoClass::begin method.
+	*/
 	if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)
 	{
 		CommMutex = xSemaphoreCreateMutex();
@@ -182,19 +176,26 @@ void ArancinoClass::startScheduler() {
 
 /******** API ADVANCED :: DEBUG OPTIONS *********/
 
-void ArancinoClass::enableDebugMessages(){
-	//Default config for Arancino Boards
-	#if defined(SERIAL_DEBUG) && defined(BAUDRATE_DEBUG)
-	SERIAL_DEBUG.begin(BAUDRATE_DEBUG);
-	_isDebug = true;
-	_dbgSerial = &SERIAL_DEBUG;
-	#endif
+void ArancinoClass::enableDebugMessages(bool sendViaCommMode){
+	if (sendViaCommMode){
+		_isDebug = true;
+		_commMode = true;
+	} else {
+		//Default config for Arancino Boards
+		#if defined(SERIAL_DEBUG) && defined(BAUDRATE_DEBUG)
+		SERIAL_DEBUG.begin(BAUDRATE_DEBUG);
+		_isDebug = true;
+		_dbgSerial = &SERIAL_DEBUG;
+		#endif
+	}
 }
 
 void ArancinoClass::enableDebugMessages(Stream& dbgSerial){
 	//Custom debug serial should be provided here and already should be already initialized
-	_isDebug = true;
-	this->_dbgSerial = &dbgSerial;
+	if (dbgSerial != NULL){
+		_isDebug = true;
+		this->_dbgSerial = &dbgSerial;
+	}
 }
 
 void ArancinoClass::disableDebugMessages(){
@@ -1071,12 +1072,6 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char**
 	}
 	strcat(str, endTXStr);
 
-	#if defined(__SAMD21G18A__)
-		if(!digitalRead(DBG_PIN)){
-			Serial.print(SENT_STRING);
-		}
-	#endif
-
 	char *message = NULL;
 	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE)
 	{
@@ -1115,13 +1110,6 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	int strLength = commandLength + 1 + param1_length + 1 + param2_length + 1 + param3_length + 1 + 1;
 
 	char* str = (char *)calloc(strLength, sizeof(char));
-
-
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
 
 	strcpy(str, command);
 	if(param1 != NULL){
@@ -1264,14 +1252,12 @@ int ArancinoClass::_getDigit(long value) {
 }
 
 void ArancinoClass::_printDebugMessage(char* value) {
-	#ifdef SEND_VIA_COMM_MODE
+	if (_isDebug && _commMode){
 	__publish(MONITOR_KEY, value);
 	__set(MONITOR_KEY, value);
-	#else
-	if(_isDebug && _dbgSerial != NULL){
+	} else if(_isDebug && _dbgSerial != NULL){
 		_dbgSerial->print(value);
 	}
-	#endif
 }
 
 int ArancinoClass::_getResponseCode(char* message) {
@@ -1336,16 +1322,6 @@ char* ArancinoClass::_parse(char* message) {
 		strncpy(value, &message[DSCIndex + 1], messageLength - (DSCIndex + 2));
 		value[messageLength - (DSCIndex + 2)] = '\0'; //replace END_TX_CHAR with '\0'
 	}
-
-	//DEBUG
-	#if defined(__SAMD21G18A__)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(RCV_STRING);
-		Serial.print(status);
-		Serial.print(" ");
-		Serial.println(value);
-	}
-	#endif
 
 	free(status);
 

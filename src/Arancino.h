@@ -193,7 +193,7 @@ class ArancinoClass {
 
 		/***** DEBUG OPTIONS *****/
 
-		void enableDebugMessages();
+		void enableDebugMessages(bool sendViaCommMode=false);
 		void enableDebugMessages(Stream& dbgSerial);
 		void disableDebugMessages();
 
@@ -293,6 +293,7 @@ class ArancinoClass {
 		//Debug options
 		Stream* _dbgSerial;
 		bool _isDebug = false;
+		bool _commMode = false;
 
 		//TEMPLATE WRAPPED
 		// ArancinoPacket _getPacket(char* key);
