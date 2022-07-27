@@ -199,13 +199,6 @@ class ArancinoClass {
 		template<class T = char*> T store(char* key, float value,char* timestamp);
 		template<class T = char*> T store(char* key, long value,char* timestamp);
 
-		//STORE RAW
-		template<class T = void> T storeRaw(char* key, int value, char* timestamp);
-		template<class T = void> T storeRaw(char* key, uint32_t value, char* timestamp);
-		template<class T = void> T storeRaw(char* key, double value, char* timestamp);
-		template<class T = void> T storeRaw(char* key, float value, char* timestamp);
-		template<class T = void> T storeRaw(char* key, long value, char* timestamp);
-
 		//MSTORE
 		template<class T = char**> T mstore(char** keys, char** values, int len);
 		template<class T = void> T mstore(char** keys, char** values, int len,char* timestamp);
@@ -283,7 +276,6 @@ class ArancinoClass {
 		ArancinoPacket __set(char* key, char* value, bool isPersistent);
 		ArancinoPacket __publish(char* channel, char* msg);
 		ArancinoPacket __store(char* key, char* value,char* timestamp=NULL);
-		void __storeRaw(char* key, char* value,char* timestamp);
 
 
 		template<class T = char*> T getReserved(char* key, bool id_prefix);
