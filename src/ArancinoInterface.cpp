@@ -46,6 +46,13 @@ void SerialIface::sendArancinoCommand(char* command){
 	}
 	//command must terminate with '\0'!
 	this->_serialPort->write(command, strlen(command)); //excluded '\0'
+
+	#if defined(USEFREERTOS) && defined(USE_TINYUSB)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING)
+	{
+		yield();
+	}
+	#endif
 }
 
 char* SerialIface::receiveArancinoResponse(char terminator){

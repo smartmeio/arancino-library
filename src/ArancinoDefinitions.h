@@ -22,20 +22,28 @@ under the License
 #define MCU_FAMILY (char*)"undefined"
 #endif
 
-//TODO: This should be removed
 #if defined(__SAMD21G18A__)
 #define BAUDRATE 4000000
-#define BAUDRATE_DEBUG 115200
 #define TIMEOUT 100
 #define SERIAL_PORT SerialUSB
 #define SERIAL_DEBUG Serial
+#elif defined(ARDUINO_ARCH_RP2040) && defined(USEFREERTOS)
+#define BAUDRATE 256000
+#define TIMEOUT 10000
+#if defined(USE_TINYUSB)
+#define SERIAL_PORT SerialTinyUSB
+#else
+#define SERIAL_PORT Serial
+#endif
+#define SERIAL_DEBUG Serial1
 #else
 #define BAUDRATE 256000
-#define BAUDRATE_DEBUG 115200
 #define TIMEOUT 10000
 #define SERIAL_PORT Serial
 #define SERIAL_DEBUG Serial1
 #endif
+
+#define SERIAL_TRANSPORT typeof(SERIAL_PORT)
 
 #define START_COMMAND			(char*)"START"
 #define MSET_COMMAND			(char*)"MSET"
@@ -73,7 +81,7 @@ under the License
 #define RSP_OK							100
 #define RSP_HSET_NEW					101
 #define RSP_HSET_UPD					102
-#define ERR_GENERIC						200		//Generic Error
+#define ERR								200		//Generic Error
 #define ERR_NULL						201		//Null value
 #define ERR_SET							202		//Error during SET
 #define ERR_CMD_NOT_FND					203		//Command Not Found

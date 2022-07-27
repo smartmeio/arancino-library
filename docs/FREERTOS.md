@@ -10,8 +10,22 @@ The Arancino library currently supports 4 architectures.
 |--------------|-----------|------------|
 | Arancino Mignon | SAMD21     | yes     |
 | Arancino Volante | NRF52     | yes     |
-| Arancino Pico      | RP2040| no     |
+| Arancino Pico      | RP2040| yes     |
 | Arancino V   | STM32| yes    |
+
+
+When FreeRTOS is supported it's also enabled by default. You can enable or disable it:
+
+#### Arduino IDE:
+Go into the directory of the desidered core (depends by your system) and open the `boards.txt` file. In the `build.extra_flags` property of the desired board, append this flag `-DUSEFREERTOS` to enable or remove it to disable FreeRTOS
+
+#### Platform.IO:
+Go into the directory of the desidered platform (depends by your system) and open the json file of the desider board. In the `extra_flags` attribute append this flag `-DUSEFREERTOS` to enable or remove it to disable FreeRTOS. 
+
+
+>Note:
+When you disable FreeRTOS, most of the adavanced features of Arancino Library are disabled (Device Identification, Interoception and others in the futures).
+
 ___
 ### startScheduler
 ##### *void startScheduler*

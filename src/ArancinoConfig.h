@@ -20,11 +20,9 @@ under the License
 
 #include <ArancinoDefinitions.h>
 
-
-/******** CONFIGURATIONS *********/
-
 class ArancinoConfig{
 	public:
+
 		/*
 			It is intended as the precision number of decimal digits for float and
 				double data types.
@@ -60,4 +58,5 @@ class ArancinoConfig{
 				9 -> Highest Priority.
 		*/
 		int FREERTOS_LOOP_TASK_PRIORITY = 0;
+
 };

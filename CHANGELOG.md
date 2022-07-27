@@ -1,6 +1,7 @@
 # Changelog
 
-#### v 2.0.0 - 2021.12.02
+#### v 2.0.0 - 2022.01.17
+* Upd: updated unit test examples. [#1uqbjbp] (https://app.clickup.com/t/1uqbjbp)
 * Add: added useFreeRtos parameter in `start` command. [#1vht0nc] (https://app.clickup.com/t/1vht0nc)
 * Fix: bug into `deviceIdentification` task. [#1w8qx9m] (https://app.clickup.com/t/1w8qx9m)
 * Add: added examples wthout freeRtos. [#1vhrhj2] (https://app.clickup.com/t/1vhrhj2)

@@ -51,13 +51,20 @@ extern "C" {
 #elif defined (ARDUINO_ARANCINO_VOLANTE)
 //need to serial
 #include <Adafruit_TinyUSB.h>
+#elif defined (ARDUINO_ARCH_RP2040)
+#include <FreeRTOS.h>
+#include <task.h>
+#include <semphr.h>
+#if defined(USE_TINYUSB)
+#include <Adafruit_TinyUSB.h>
+#endif
 #endif
 
 
 #endif//end USEFREERTOS
 
 //RP2040
-#if defined(ARDUINO_ARANCINO_PICO)
+#if defined(ARDUINO_ARCH_RP2040)
 #include <hardware/adc.h>
 #include <hardware/watchdog.h>
 #endif
@@ -276,7 +283,7 @@ class ArancinoClass {
 
 		char* _parse(char* message);
 		char** _parseArray(char* message);
-
+		
 		BaseType_t takeCommMutex(TickType_t timeout);
 		void giveCommMutex();
 		void taskSuspend();
