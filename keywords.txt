@@ -60,3 +60,4 @@ setPassword	KEYWORD2
 setPort	KEYWORD2
 setNetworkClient	KEYWORD2
 setBLESerial	KEYWORD2
+getTimestamp	KEYWORD2
