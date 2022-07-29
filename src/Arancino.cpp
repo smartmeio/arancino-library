@@ -669,7 +669,7 @@ ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, int value)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
-	return __store(key, str);
+	return  __store(key, str);
 }
 
 template <>
@@ -677,7 +677,7 @@ char *ArancinoClass::store(char *key, int value)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
-	ArancinoPacket packet = __store(key, str);
+	ArancinoPacket packet =  __store(key, str);
 	if (!packet.isError)
 		return packet.response.string;
 	else
@@ -689,7 +689,7 @@ ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, uint32_t value)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
-	return __store(key, str);
+	return  __store(key, str);
 }
 
 template <>
@@ -697,7 +697,7 @@ char *ArancinoClass::store(char *key, uint32_t value)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
-	ArancinoPacket packet = __store(key, str);
+	ArancinoPacket packet =  __store(key, str);
 	if (!packet.isError)
 		return packet.response.string;
 	else
@@ -709,7 +709,7 @@ ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, long value)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
-	return __store(key, str);
+	return  __store(key, str);
 }
 
 template <>
@@ -717,7 +717,7 @@ char *ArancinoClass::store(char *key, long value)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
-	ArancinoPacket packet = __store(key, str);
+	ArancinoPacket packet =__store(key, str);
 	if (!packet.isError)
 		return packet.response.string;
 	else
@@ -729,7 +729,7 @@ ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, float value)
 {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
-	return __store(key, str);
+	return  __store(key, str);
 }
 
 template <>
@@ -737,7 +737,7 @@ char *ArancinoClass::store(char *key, float value)
 {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
-	ArancinoPacket packet = __store(key, str);
+	ArancinoPacket packet =  __store(key, str);
 	if (!packet.isError)
 		return packet.response.string;
 	else
@@ -749,7 +749,7 @@ ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, double value)
 {
 	char str[20] = "";
 	_doubleToString(value, decimal_digits, str);
-	return __store(key, str);
+	return  __store(key, str);
 }
 
 template <>
@@ -764,14 +764,101 @@ char *ArancinoClass::store(char *key, double value)
 		return NULL;
 }
 
-ArancinoPacket ArancinoClass::__store(char *key, char *value)
-{
-	char *ts = getTimestamp();
-	if (key == NULL && value == NULL && strcmp(key, "") == 0)
-	{
+template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, int value,char* timestamp) {
+	char str[20] = "";
+	itoa(value, str, 10);
+	return  __store(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::store(char* key, int value,char* timestamp){
+	char str[20] = "";
+	itoa(value, str, 10);
+	ArancinoPacket packet = __store(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, uint32_t value,char* timestamp) {
+	char str[20] = "";
+	itoa(value, str, 10);
+	return  __store(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::store(char* key, uint32_t value,char* timestamp){
+	char str[20] = "";
+	itoa(value, str, 10);
+	ArancinoPacket packet = __store(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, long value,char* timestamp) {
+	char str[20] = "";
+	itoa(value, str, 10);
+	return  __store(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::store(char* key, long value,char* timestamp){
+	char str[20] = "";
+	itoa(value, str, 10);
+	ArancinoPacket packet =__store(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, float value,char* timestamp) {
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	return  __store(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::store(char* key, float value,char* timestamp){
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	ArancinoPacket packet =  __store(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, double value,char* timestamp) {
+	char str[20] = "";
+	_doubleToString(value, decimal_digits, str);
+	return  __store(key, str,timestamp);
+}
+
+template<> char* ArancinoClass::store(char* key, double value,char* timestamp){
+	char str[20] = "";
+	_doubleToString(value, decimal_digits, str);
+	ArancinoPacket packet = __store(key, str,timestamp);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+ArancinoPacket ArancinoClass::__store( char* key, char* value, char* timestamp) {
+
+	char* ts;
+
+	if(timestamp==NULL){
+		 ts=getTimestamp();
+	}
+	else{
+		ts = timestamp;
+	}
+
+	if(key == NULL && value == NULL && strcmp(key, "") == 0){
 		return invalidCommandErrorPacket;
 	}
-	return executeCommand(STORE_COMMAND, key, value, ts, false, STRING);
+	return executeCommand(STORE_COMMAND,key,value,ts,false,STRING);
 }
 
 /******** API BASIC :: MSTORE *********/
@@ -785,6 +872,22 @@ ArancinoPacket ArancinoClass::mstore<ArancinoPacket>(char **keys, char **values,
 		return invalidCommandErrorPacket;
 	}
 	return executeCommand(MSTORE_COMMAND, NULL, keys, values, ts, len, false, STRING_ARRAY);
+}
+// template<> ArancinoPacket ArancinoClass::mstore<ArancinoPacket> (char** keys, char** values, int len,char* timestamp) {
+// 	char* ts = timestamp;
+// 	if ((keys == NULL) || (values == NULL) || (len <= 0)) {
+// 		return invalidCommandErrorPacket;
+// 	}
+// 	return executeCommand(MSTORE_COMMAND, NULL, keys, values, ts, len, false, STRING_ARRAY);
+// }
+
+template<> void ArancinoClass::mstore(char** keys, char** values, int len,char* timestamp) {
+	char* ts = timestamp;
+	 if ((keys == NULL) || (values == NULL) || (len <= 0)) {
+		//return invalidCommandErrorPacket;
+		
+	}
+	return executeCommandFast(MSTORE_COMMAND, NULL, keys, values, ts, len, false, STRING_ARRAY);
 }
 
 template <>
@@ -1242,8 +1345,130 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 	return packet;
 }
 
-ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *param2, char *param3, bool id_prefix, int type_return)
-{
+
+void ArancinoClass::executeCommandFast(char* command, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int type_return){
+	int commandLength = strlen(command);
+	int strLength = commandLength + 1;
+	int param1_length = 0;
+	int param4_length = 0;
+
+	if(param1 != NULL){
+		param1_length = strlen(param1);
+		if(id_prefix){
+			param1_length += idSize + 1;
+		}
+		strLength += param1_length + 1;
+	}
+
+	// Calculating Cortex Protocol command length
+	for (int i = 0; i < len; i ++) {
+		char* param2 = params2[i];
+		char* param3 = NULL;
+		if(params3 != NULL)
+			param3 = params3[i];
+
+		int param2_length = strlen(param2);
+		if(id_prefix && param1 == NULL){
+			param2_length += idSize + 1;
+		}
+		int param3_length = 0;
+		if(params3 != NULL)
+			param3_length = strlen(param3);
+		// For every key-value pair the length of both tag and value is added
+		// two 1s are added in order to take into account the % chr and
+		// the # and @ chrs in the case of last tag or last value respectively
+		strLength += param2_length + 1;
+		if(params3 != NULL)
+			strLength +=param3_length + 1;
+	}
+
+	if(param4 != NULL){
+		param4_length = strlen(param4);
+		strLength += param4_length + 1;
+	}
+
+	char* str = (char*) calloc(strLength, sizeof(char));
+
+	strcpy(str, command);
+	if(param1 != NULL){
+		strcat(str, dataSplitStr);
+		if(id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
+		strcat(str, param1);
+	}
+	strcat(str, dataSplitStr);
+	// Points to the memory area where tags have to be written
+	char* params2Pointer = str + commandLength + strlen(dataSplitStr);
+	if(param1 != NULL)
+		params2Pointer += param1_length + strlen(dataSplitStr);
+
+	// Points at the end of the string less the space reserved to timestamp
+	char* params3Pointer = NULL;
+	if(params3 != NULL)
+		params3Pointer = str + strLength;
+	if(param4 != NULL)
+		params3Pointer = params3Pointer - param4_length - strlen(endTXStr);
+
+	// The string to send is built in 1 single loop.
+	// keys are copied from first to last (left to right in string)
+	// and values are copied from last to first (right to left in string)
+	for(int i = 0; i < len; i ++) {
+		char* param2 = params2[i];
+		char* param3 = NULL;
+		if(params3 != NULL)
+			param3 = params3[len - (i + 1)];
+
+		if(id_prefix && param1 == NULL){
+			strcat(params2Pointer, id);
+			strcat(params2Pointer, ID_SEPARATOR);
+		}
+		strcat(params2Pointer, param2);
+
+		if (i == len - 1) { // If it's the last key we have to use #(\4) instead of %(\16)
+			if(params3 != NULL)
+				strcat(params2Pointer, dataSplitStr);
+		} else {
+			strcat(params2Pointer, arraySplitStr);
+		}
+
+		// We use memcpy rather than strcat here because it would append \0,
+		// thus terminating the string prematurely
+		if(params3 != NULL){
+			params3Pointer -= strlen(param3) + 1;
+
+			memcpy(params3Pointer, param3, strlen(param3));
+
+			if (i != 0) {
+				memcpy(params3Pointer + strlen(param3), arraySplitStr, 1);
+			}
+		}
+
+	}
+	//timestamp
+	if(param4 != NULL){
+		strcat(str, dataSplitStr);
+		strcat(str, param4);
+	}
+	strcat(str, endTXStr);
+
+	#if defined(__SAMD21G18A__)
+		if(!digitalRead(DBG_PIN)){
+			Serial.print(SENT_STRING);
+		}
+	#endif
+
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE)
+	{
+		_sendArancinoCommand(str);
+		giveCommMutex();
+	}
+	free(str);
+}
+
+
+ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return){
 	int commandLength = strlen(command);
 	int param1_length = 0;
 	if (param1 != NULL)
@@ -1313,8 +1538,61 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 	return packet;
 }
 
-ArancinoPacket ArancinoClass::createArancinoPacket(char *message, int type_return)
-{
+void ArancinoClass::executeCommandFast(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return){
+	int commandLength = strlen(command);
+	int param1_length = 0;
+	if(param1 != NULL){
+		param1_length = strlen(param1);
+		if(id_prefix){
+			param1_length += idSize + 1;
+		}
+	}
+	int param2_length = 0;
+	if(param2 != NULL)
+		param2_length=strlen(param2);
+	int param3_length = 0;
+	if(param3 != NULL)
+		param3_length=strlen(param3);
+	int strLength = commandLength + 1 + param1_length + 1 + param2_length + 1 + param3_length + 1 + 1;
+
+	char* str = (char *)calloc(strLength, sizeof(char));
+
+
+	#if defined(__SAMD21G18A__)
+	if(!digitalRead(DBG_PIN)){
+		Serial.print(SENT_STRING);
+	}
+	#endif
+
+	strcpy(str, command);
+	if(param1 != NULL){
+		strcat(str, dataSplitStr);
+		if(id_prefix){
+			strcat(str, id);
+			strcat(str, ID_SEPARATOR);
+		}
+		strcat(str, param1);
+	}
+	if(param2 != NULL){
+		strcat(str, dataSplitStr);
+		strcat(str, param2);
+	}
+	if(param3 != NULL){
+		strcat(str, dataSplitStr);
+		strcat(str, param3);
+	}
+	strcat(str, endTXStr);
+
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE)
+	{
+		_sendArancinoCommand(str);
+		giveCommMutex();
+	}
+	free(str);
+
+}
+
+ArancinoPacket ArancinoClass::createArancinoPacket(char* message, int type_return){
 	ArancinoPacket packet;
 	if (message == NULL)
 		return communicationErrorPacket;
@@ -1448,29 +1726,8 @@ void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char *
 void ArancinoClass::_floatToString(float value, unsigned int _nDecimal, char *str)
 {
 	noInterrupts();
-	char val[20] = "";
-	sprintf(val, "%d", int(value));
-	int valueLength = strlen(val);
-	if (valueLength + _nDecimal > 7)
-	{ // The float data type has 7 decimal digits of precision
-		_nDecimal = 7 - valueLength;
-		if (_nDecimal < 0)
-		{
-			_nDecimal = 0;
-		}
-	}
-	double rounding = 0.5;
-	rounding /= pow(10, _nDecimal);
-	int decimalPart = pow(10, _nDecimal) * (value - int(value) + rounding);
-	char dec[2];
-	itoa(_nDecimal, dec, 10);
-	char param[10];
-	strcpy(param, "%d.%0");
-	strcat(param, dec);
-	strcat(param, "d");
-	sprintf(str, param, int(value), decimalPart);
+	dtostrf(value,7,_nDecimal,str);
 	interrupts();
-	// return str;
 }
 
 int ArancinoClass::_getDigit(long value)

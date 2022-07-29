@@ -28,8 +28,8 @@ under the License
 #include <stdlib.h>
 #include <cstdlib>
 #include <type_traits>
-
-#define USEFREERTOS
+#include <avr/dtostrf.h>
+//#define USEFREERTOS
 #if defined(USEFREERTOS)
 #if defined(__SAMD21G18A__)
 
@@ -183,8 +183,15 @@ class ArancinoClass {
 		template<class T = char*> T store(char* key, float value);
 		template<class T = char*> T store(char* key, long value);
 
+		template<class T = char*> T store(char* key, int value,char* timestamp);
+		template<class T = char*> T store(char* key, uint32_t value,char* timestamp);
+		template<class T = char*> T store(char* key, double value,char* timestamp);
+		template<class T = char*> T store(char* key, float value,char* timestamp);
+		template<class T = char*> T store(char* key, long value,char* timestamp);
+
 		//MSTORE
 		template<class T = char**> T mstore(char** keys, char** values, int len);
+		template<class T = void> T mstore(char** keys, char** values, int len,char* timestamp);
 
 		//STORE TAGS
 		ArancinoPacket storetags(char* key, char** tags, char** values, int len);
@@ -255,7 +262,8 @@ class ArancinoClass {
 
 		ArancinoPacket __set(char* key, char* value, bool isPersistent);
 		ArancinoPacket __publish(char* channel, char* msg);
-		ArancinoPacket __store(char* key, char* value);
+		ArancinoPacket __store(char* key, char* value,char* timestamp=NULL);
+
 
 		template<class T = char*> T getReserved(char* key, bool id_prefix);
 		ArancinoPacket setReserved( char* key, char* value, bool id_prefix);
@@ -286,6 +294,8 @@ class ArancinoClass {
 		//execute command
 		ArancinoPacket executeCommand(char* command_id, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int response_type);
 		ArancinoPacket executeCommand(char* command_id, char* param1, char* param2, char*param3, bool id_prefix, int response_type);
+		void executeCommandFast(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return);
+		void executeCommandFast(char* command, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int type_return);
 		ArancinoPacket createArancinoPacket(char* response_raw, int response_type);
 		//TEMPLATE WRAPPED
 		// ArancinoPacket _getPacket(char* key);
