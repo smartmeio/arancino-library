@@ -48,4 +48,4 @@ mstore	KEYWORD2
 storetags	KEYWORD2
 setReservedCommunicationMode	KEYWORD2
 isValidUTF8	KEYWORD2
-
+getTimestamp    KEYWORD2
