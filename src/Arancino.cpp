@@ -92,7 +92,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg)
 	char *values[] = {LIB_VERSION, _metadata.fwname, _metadata.fwversion, str_build_time, (char *)ARANCINO_CORE_VERSION, (char *)MCU_FAMILY, (char *)useFreeRtos};
 
 // DEBUG
-#if defined(__SAMD21G18A__)
+#if defined(ARDUINO_ARANCINO)
 	pinMode(DBG_PIN, INPUT);
 	if (!digitalRead(DBG_PIN))
 		Serial.begin(115200);
@@ -170,7 +170,7 @@ void ArancinoClass::startScheduler()
 	// runLoopAsTask(128, tskIDLE_PRIORITY);
 	// initFreeRTOS(); //128 = stack depth for loop, tskIDLE_PRIORITY = priority
 #elif defined(__SAMD21G18A__)
-	runLoopAsTask(128, tskIDLE_PRIORITY);
+	//runLoopAsTask(128, tskIDLE_PRIORITY);
 	vTaskStartScheduler();
 #elif defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
 	vTaskStartScheduler();
@@ -1318,7 +1318,7 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 	}
 	strcat(str, endTXStr);
 
-#if defined(__SAMD21G18A__)
+#if defined(ARDUINO_ARANCINO)
 	if (!digitalRead(DBG_PIN))
 	{
 		Serial.print(SENT_STRING);
@@ -1453,7 +1453,7 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char** param
 	}
 	strcat(str, endTXStr);
 
-	#if defined(__SAMD21G18A__)
+	#if defined(ARDUINO_ARANCINO)
 		if(!digitalRead(DBG_PIN)){
 			Serial.print(SENT_STRING);
 		}
@@ -1489,7 +1489,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 
 	char *str = (char *)calloc(strLength, sizeof(char));
 
-#if defined(__SAMD21G18A__)
+#if defined(ARDUINO_ARANCINO)
 	if (!digitalRead(DBG_PIN))
 	{
 		Serial.print(SENT_STRING);
@@ -1558,7 +1558,7 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char* param2
 	char* str = (char *)calloc(strLength, sizeof(char));
 
 
-	#if defined(__SAMD21G18A__)
+	#if defined(ARDUINO_ARANCINO)
 	if(!digitalRead(DBG_PIN)){
 		Serial.print(SENT_STRING);
 	}
@@ -1653,7 +1653,7 @@ void ArancinoClass::_sendArancinoCommand(char *command)
 	}
 #endif
 
-#if defined(__SAMD21G18A__)
+#if defined(ARDUINO_ARANCINO)
 	if (!digitalRead(DBG_PIN))
 	{
 		if (command[strlen(command) - 1] == END_TX_CHAR)
@@ -1821,7 +1821,7 @@ char *ArancinoClass::_parse(char *message)
 	}
 
 // DEBUG
-#if defined(__SAMD21G18A__)
+#if defined(ARDUINO_ARANCINO)
 	if (!digitalRead(DBG_PIN))
 	{
 		Serial.print(RCV_STRING);
@@ -1983,83 +1983,5 @@ void ArancinoClass::taskResume()
 	}
 #endif
 }
-
-#if defined(ARDUINO_ARCH_RP2040)
-void __interoceptionSetupADC()
-{
-	adc_init();
-	adc_set_temp_sensor_enabled(true);
-}
-
-void __interoception()
-{
-	// mcu temperature
-	float temperature = __mcuTemp();
-	char temp[20];
-	dtostrf(temperature, 4, 2, temp);
-
-	char mem_tot_key[] = "MEM_TOT";
-	char temp_key[] = "TEMP";
-
-	char *keys[] = {mem_tot_key, temp_key};
-	char *values[] = {"264000", temp};
-	ArancinoPacket acpkt = Arancino.mstore<ArancinoPacket>(keys, values, 2);
-	Arancino.free(acpkt);
-}
-
-float __mcuTemp()
-{
-	uint8_t input = adc_get_selected_input(); // Get currently ADC used pin and save it in order to restore it later
-	adc_select_input(4);
-	uint16_t raw = adc_read();
-	float result = raw * (3.3f / (1 << 12));
-	float temp = 27 - (result - 0.706) / 0.001721; // Temp is computed on a 3V3 internal reference. Still AREF may not be precise so temp value is estimated
-	adc_select_input(input);
-	return temp;
-}
-
-void __deviceIdentification()
-{
-
-	char *value = Arancino.getBlinkId();
-	if (!strcmp(value, "1"))
-	{
-		for (int i = 0; i < 20; i++)
-		{
-#if defined(ARDUINO_ARANCINO_VOLANTE)
-			digitalWrite(LED_BUILTIN, LOW);
-#else
-			digitalWrite(LED_BUILTIN, HIGH);
-#endif
-			delay(100);
-#if defined(ARDUINO_ARANCINO_VOLANTE)
-			digitalWrite(LED_BUILTIN, HIGH);
-#else
-			digitalWrite(LED_BUILTIN, LOW);
-#endif
-			delay(200);
-		}
-		Arancino.setBlinkId(0);
-	}
-}
-
-/*
-	Disable setup1 and loop1 functions and rewrite them in the sketch if you want to use core1 in your code.
-	Please be aware that interoception task is expected to run once every 60 seconds (but even a slightly shorter period of time is acceptable)
-*/
-
-void setup1()
-{
-	__interoceptionSetupADC();
-}
-
-void loop1()
-{
-	__interoception();
-	__deviceIdentification();
-	delay(60000);
-}
-
-#endif /* ARDUINO_ARCH_RP2040 */
 
 ArancinoClass Arancino;

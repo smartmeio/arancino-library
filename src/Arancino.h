@@ -331,20 +331,4 @@ class ArancinoClass {
 
 extern ArancinoClass Arancino;
 
-#if defined(ARDUINO_ARCH_RP2040)
-/*
-	Right now FreeRTOS is not currently supported for RP2040. Still Arancino Protocol works flawlessly on it so we can take advantage of multicore arch
-	in order to implement support tasks on a separate core. Keep in mind that core1 will not be available for usage unless you disable this and rewrite 
-	the function in your sketch.
-
-	This is intended as a temporary "fix" until FreeRTOS will be properly implemented.
-*/
-
-void __interoceptionSetupADC();
-void __interoception();
-float __mcuTemp();
-void __deviceIdentification();
-
-#endif /* ARDUINO_ARCH_RP2040 */
-
 #endif /* ARANCINO_H_ */
