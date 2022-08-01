@@ -26,11 +26,9 @@ under the License
 #include <ArancinoConfig.h>
 #include <Stream.h>
 #include <stdlib.h>
-#if ! defined(__AVR__)
+#include <cstdlib>
+#include <type_traits>
 #include <avr/dtostrf.h>
-#endif
-
-
 //#define USEFREERTOS
 #if defined(USEFREERTOS)
 #if defined(__SAMD21G18A__)
@@ -51,6 +49,13 @@ extern "C" {
 #elif defined (ARDUINO_ARANCINO_VOLANTE)
 //need to serial
 #include <Adafruit_TinyUSB.h>
+#elif defined (ARDUINO_ARCH_RP2040)
+#include <FreeRTOS.h>
+#include <task.h>
+#include <semphr.h>
+#if defined(USE_TINYUSB)
+#include <Adafruit_TinyUSB.h>
+#endif
 #endif
 
 
@@ -178,8 +183,15 @@ class ArancinoClass {
 		template<class T = char*> T store(char* key, float value);
 		template<class T = char*> T store(char* key, long value);
 
+		template<class T = char*> T store(char* key, int value,char* timestamp);
+		template<class T = char*> T store(char* key, uint32_t value,char* timestamp);
+		template<class T = char*> T store(char* key, double value,char* timestamp);
+		template<class T = char*> T store(char* key, float value,char* timestamp);
+		template<class T = char*> T store(char* key, long value,char* timestamp);
+
 		//MSTORE
 		template<class T = char**> T mstore(char** keys, char** values, int len);
+		template<class T = void> T mstore(char** keys, char** values, int len,char* timestamp);
 
 		//STORE TAGS
 		ArancinoPacket storetags(char* key, char** tags, char** values, int len);
@@ -212,10 +224,13 @@ class ArancinoClass {
 		//CHECK UTF-8
 		bool isValidUTF8(const char * string);
 
+		//DELAY
+		void delay(long milli);
+
 	private:
 		//void dropAll();
 
-		bool started;
+		bool started = false;
 		bool comm_timeout = false;
 		bool arancino_id_prefix;
 		int decimal_digits;
@@ -247,7 +262,8 @@ class ArancinoClass {
 
 		ArancinoPacket __set(char* key, char* value, bool isPersistent);
 		ArancinoPacket __publish(char* channel, char* msg);
-		ArancinoPacket __store(char* key, char* value);
+		ArancinoPacket __store(char* key, char* value,char* timestamp=NULL);
+
 
 		template<class T = char*> T getReserved(char* key, bool id_prefix);
 		ArancinoPacket setReserved( char* key, char* value, bool id_prefix);
@@ -270,12 +286,16 @@ class ArancinoClass {
 		char* _parse(char* message);
 		char** _parseArray(char* message);
 
+		BaseType_t takeCommMutex(TickType_t timeout);
+		void giveCommMutex();
 		void taskSuspend();
 		void taskResume();
 
 		//execute command
 		ArancinoPacket executeCommand(char* command_id, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int response_type);
 		ArancinoPacket executeCommand(char* command_id, char* param1, char* param2, char*param3, bool id_prefix, int response_type);
+		void executeCommandFast(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return);
+		void executeCommandFast(char* command, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int type_return);
 		ArancinoPacket createArancinoPacket(char* response_raw, int response_type);
 		//TEMPLATE WRAPPED
 		// ArancinoPacket _getPacket(char* key);
@@ -310,21 +330,5 @@ class ArancinoClass {
 };
 
 extern ArancinoClass Arancino;
-
-#if defined(ARDUINO_ARCH_RP2040)
-/*
-	Right now FreeRTOS is not currently supported for RP2040. Still Arancino Protocol works flawlessly on it so we can take advantage of multicore arch
-	in order to implement support tasks on a separate core. Keep in mind that core1 will not be available for usage unless you disable this and rewrite 
-	the function in your sketch.
-
-	This is intended as a temporary "fix" until FreeRTOS will be properly implemented.
-*/
-
-void __interoceptionSetupADC();
-void __interoception();
-float __mcuTemp();
-void __deviceIdentification();
-
-#endif /* ARDUINO_ARCH_RP2040 */
 
 #endif /* ARANCINO_H_ */

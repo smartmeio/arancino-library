@@ -10,7 +10,7 @@ The Arancino library currently supports 4 architectures.
 |--------------|-----------|------------|
 | Arancino Mignon | SAMD21     | yes     |
 | Arancino Volante | NRF52     | yes     |
-| Arancino Pico      | RP2040| no     |
+| Arancino Pico      | RP2040| yes     |
 | Arancino V   | STM32| yes    |
 
 

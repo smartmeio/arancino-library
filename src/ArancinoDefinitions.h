@@ -27,6 +27,15 @@ under the License
 #define TIMEOUT 100
 #define SERIAL_PORT SerialUSB
 #define SERIAL_DEBUG Serial
+#elif defined(ARDUINO_ARCH_RP2040) && defined(USEFREERTOS)
+#define BAUDRATE 256000
+#define TIMEOUT 10000
+#if defined(USE_TINYUSB)
+#define SERIAL_PORT SerialTinyUSB
+#else
+#define SERIAL_PORT Serial
+#endif
+#define SERIAL_DEBUG Serial1
 #else
 #define BAUDRATE 256000
 #define TIMEOUT 10000
