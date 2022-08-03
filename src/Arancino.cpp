@@ -91,12 +91,12 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg)
 	char *keys[] = {fw_lib_ver, fw_name, fw_ver, fw_build_time, fw_core_ver, mcu_family, fw_use_freertos};
 	char *values[] = {LIB_VERSION, _metadata.fwname, _metadata.fwversion, str_build_time, (char *)ARANCINO_CORE_VERSION, (char *)MCU_FAMILY, (char *)useFreeRtos};
 
-// DEBUG
-#if defined(ARDUINO_ARANCINO)
-	pinMode(DBG_PIN, INPUT);
-	if (!digitalRead(DBG_PIN))
+	//DEBUG
+	#if defined(ARDUINO_ARANCINO)
+	pinMode(DBG_PIN,INPUT);
+	if(!digitalRead(DBG_PIN))
 		Serial.begin(115200);
-#endif
+	#endif
 
 	start(keys, values, 7);
 
@@ -885,7 +885,7 @@ template<> void ArancinoClass::mstore(char** keys, char** values, int len,char* 
 	char* ts = timestamp;
 	 if ((keys == NULL) || (values == NULL) || (len <= 0)) {
 		//return invalidCommandErrorPacket;
-		
+
 	}
 	return executeCommandFast(MSTORE_COMMAND, NULL, keys, values, ts, len, false, STRING_ARRAY);
 }
@@ -1326,12 +1326,16 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 #endif
 
 	char *message = NULL;
-	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE)
-	{
+
+	#if defined(USEFREERTOS)
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
+	#endif
 		_sendArancinoCommand(str);
 		message = _receiveArancinoResponse(END_TX_CHAR);
+	#if defined(USEFREERTOS)
 		giveCommMutex();
 	}
+	#endif
 
 	free(str);
 
@@ -1459,11 +1463,14 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char** param
 		}
 	#endif
 
-	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE)
-	{
+	#if defined(USEFREERTOS)
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
+	#endif
 		_sendArancinoCommand(str);
+	#if defined(USEFREERTOS)
 		giveCommMutex();
 	}
+	#endif
 	free(str);
 }
 
@@ -1520,12 +1527,15 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	strcat(str, endTXStr);
 
 	char *message = NULL;
-	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE)
-	{
+	#if defined(USEFREERTOS)
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
+	#endif
 		_sendArancinoCommand(str);
 		message = _receiveArancinoResponse(END_TX_CHAR);
+	#if defined(USEFREERTOS)
 		giveCommMutex();
 	}
+	#endif
 	free(str);
 
 	if (message == NULL)
@@ -1583,11 +1593,14 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char* param2
 	}
 	strcat(str, endTXStr);
 
-	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE)
-	{
+	#if defined(USEFREERTOS)
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
+	#endif
 		_sendArancinoCommand(str);
+	#if defined(USEFREERTOS)
 		giveCommMutex();
 	}
+	#endif
 	free(str);
 
 }
@@ -1820,16 +1833,15 @@ char *ArancinoClass::_parse(char *message)
 		value[messageLength - (DSCIndex + 2)] = '\0'; // replace END_TX_CHAR with '\0'
 	}
 
-// DEBUG
-#if defined(ARDUINO_ARANCINO)
-	if (!digitalRead(DBG_PIN))
-	{
+	//DEBUG
+	#if defined(ARDUINO_ARANCINO)
+	if(!digitalRead(DBG_PIN)){
 		Serial.print(RCV_STRING);
 		Serial.print(status);
 		Serial.print(" ");
 		Serial.println(value);
 	}
-#endif
+	#endif
 
 	free(status);
 
@@ -1921,10 +1933,9 @@ char **ArancinoClass::_parseArray(char *data)
 	return (data != NULL && arrayParsed != NULL) ? &arrayParsed[1] : NULL;
 }
 
+#if defined(USEFREERTOS)
 BaseType_t ArancinoClass::takeCommMutex(TickType_t timeout)
 {
-#if defined(USEFREERTOS)
-
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
 		if (CommMutex != NULL)
@@ -1945,10 +1956,8 @@ BaseType_t ArancinoClass::takeCommMutex(TickType_t timeout)
 		*/
 		return pdTRUE;
 	}
-#else
-	return pdTRUE;
-#endif
 }
+#endif
 
 void ArancinoClass::giveCommMutex()
 {
