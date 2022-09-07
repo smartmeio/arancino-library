@@ -1243,7 +1243,7 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 		strLength += param4_length + 1;
 	}
 
-	char *str = (char *)calloc(strLength, sizeof(char));
+	char *str = (char *)calloc(strLength + 1, sizeof(char));
 
 	strcpy(str, command);
 	if (param1 != NULL)
@@ -1391,7 +1391,7 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char** param
 		strLength += param4_length + 1;
 	}
 
-	char* str = (char*) calloc(strLength, sizeof(char));
+	char* str = (char*) calloc(strLength + 1, sizeof(char));
 
 	strcpy(str, command);
 	if(param1 != NULL){
