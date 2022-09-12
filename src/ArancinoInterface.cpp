@@ -234,7 +234,10 @@ void BluetoothIface::setBLESerial(Stream& bleUart){
 }
 
 void BluetoothIface::ifaceBegin(){
-	//Nothing to initialize here. BLEuart should be already initialized when passed to Arancino library
+	#if defined(ARDUINO_ARCH_NRF52)
+	//Patch for NRF52 as the used id is the BLE MAC rather than the micro id
+	strcpy(Arancino.id, getMacAddr());
+	#endif
 }
 
 void BluetoothIface::sendArancinoCommand(char* command){

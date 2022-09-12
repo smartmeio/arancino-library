@@ -103,13 +103,14 @@ void ArancinoTasks::interoception(void *pvPramaters){
 }
 
 void ArancinoTasks::sendHeartbeat(void *pvPramaters){
-  char topic[ID_SIZE + 5]; //ID_SIZE + '_HBx' + '\0'
+  uint8_t idSize = strlen(Arancino.id);
+  char topic[idSize + 5]; //ID_SIZE + '_HBx' + '\0'
   strcpy(topic, Arancino.id);
   strcat(topic, "_HB0");
   while (1) {
-    topic[ID_SIZE+3] = '0'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
+    topic[idSize+3] = '0'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
     Arancino.publish(topic, Arancino.getTimestamp());
-    topic[ID_SIZE+3] = '1';
+    topic[idSize+3] = '1';
     Arancino.publish(topic, Arancino.getTimestamp());
     vTaskDelay(10000);
   }

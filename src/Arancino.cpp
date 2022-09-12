@@ -71,12 +71,8 @@ void ArancinoClass::begin(ArancinoMetadata _amdata)
 }
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
-	#if defined(ARDUINO_ARCH_NRF52)
-	//Patch for NRF52 as the used id is the BLE MAC rather than the micro id
-	strcpy(id, getMacAddr());
-	#else
+
 	MicroID.getUniqueIDString(id, ID_SIZE/2);
-	#endif
 	_iface->ifaceBegin();
 	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
 	decimal_digits = _acfg.DECIMAL_DIGITS;
@@ -1220,13 +1216,14 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 	int strLength = commandLength + 1;
 	int param1_length = 0;
 	int param4_length = 0;
+	uint8_t idSize = strlen(id);
 
 	if (param1 != NULL)
 	{
 		param1_length = strlen(param1);
 		if (id_prefix)
 		{
-			param1_length += ID_SIZE + 1;
+			param1_length += idSize + 1;
 		}
 		strLength += param1_length + 1;
 	}
@@ -1242,7 +1239,7 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 		int param2_length = strlen(param2);
 		if (id_prefix && param1 == NULL)
 		{
-			param2_length += ID_SIZE + 1;
+			param2_length += idSize + 1;
 		}
 		int param3_length = 0;
 		if (params3 != NULL)
@@ -1362,11 +1359,12 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char** param
 	int strLength = commandLength + 1;
 	int param1_length = 0;
 	int param4_length = 0;
+	uint8_t idSize = strlen(id);
 
 	if(param1 != NULL){
 		param1_length = strlen(param1);
 		if(id_prefix){
-			param1_length += ID_SIZE + 1;
+			param1_length += idSize + 1;
 		}
 		strLength += param1_length + 1;
 	}
@@ -1380,7 +1378,7 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char** param
 
 		int param2_length = strlen(param2);
 		if(id_prefix && param1 == NULL){
-			param2_length += ID_SIZE + 1;
+			param2_length += idSize + 1;
 		}
 		int param3_length = 0;
 		if(params3 != NULL)
@@ -1484,12 +1482,14 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char** param
 ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return){
 	int commandLength = strlen(command);
 	int param1_length = 0;
+	uint8_t idSize = strlen(id);
+
 	if (param1 != NULL)
 	{
 		param1_length = strlen(param1);
 		if (id_prefix)
 		{
-			param1_length += ID_SIZE + 1;
+			param1_length += idSize + 1;
 		}
 	}
 	int param2_length = 0;
@@ -1548,10 +1548,12 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 void ArancinoClass::executeCommandFast(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return){
 	int commandLength = strlen(command);
 	int param1_length = 0;
+	uint8_t idSize = strlen(id);
+	
 	if(param1 != NULL){
 		param1_length = strlen(param1);
 		if(id_prefix){
-			param1_length += ID_SIZE + 1;
+			param1_length += idSize + 1;
 		}
 	}
 	int param2_length = 0;
