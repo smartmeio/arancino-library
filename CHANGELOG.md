@@ -1,11 +1,15 @@
 # Changelog
 
+#### v 2.1.1 - 2022.09.19
+* Fix: fixed an error that occurred when FreeRTOS was not enabled
+* Fix: fixed a bug in executeCommandFast function
+* Fix: fixed an error in STORE_packet example
+
 #### v 2.1.0 - 2022.07.29
 * Upd: ERR_GENERIC was redefined as ERR [#1jz91mu] (https://app.clickup.com/t/1jz91mu)
 * Upd: ID_PREFIX removed from `store`, `mstore` and `storeTags` commands [#23v2xn3] (https://app.clickup.com/t/23v2xn3)
 * Add: added executeCommandFast command [#394mek4] (https://app.clickup.com/t/394mek4)
 * Add: added `mstore` with timestamp argument [#394memb] (https://app.clickup.com/t/394memb)
-
 
 #### v 2.0.1 - 2022.05.27
 * Fix: bug debug for arancino mignon board. [#2g4fxvx] (https://app.clickup.com/t/2g4fxvx)
