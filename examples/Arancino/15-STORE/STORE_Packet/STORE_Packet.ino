@@ -74,6 +74,7 @@ void loop(){
       SERIAL_DEBUG.println("STORE ERROR");
     }
 
+    Arancino.free(apckt);
     delay(2000);
 
 }

@@ -85,6 +85,7 @@ void loopTask(void *pvParameters) {
       SERIAL_DEBUG.println("STORE ERROR");
     }
 
+    Arancino.free(apckt);
     vTaskDelay(2000);
   }
 }
