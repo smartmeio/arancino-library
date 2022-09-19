@@ -102,7 +102,7 @@ under the License
 #define MODLOGLVL_KEY			(char*)"___MODLOGLVL___"
 #define MODENV_KEY              (char*)"___MODENV___"
 #define BLINK_ID_KEY			(char*)"___BLINK_ID___"
-#define LIB_VERSION				(char*)"2.0.1"	//library version
+#define LIB_VERSION				(char*)"2.1.1"	//library version
 
 //RESPONSE CODE
 #define INVALID_VALUE_ERROR     -4

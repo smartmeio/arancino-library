@@ -286,7 +286,9 @@ class ArancinoClass {
 		char* _parse(char* message);
 		char** _parseArray(char* message);
 
+		#if defined(USEFREERTOS)	//The entire prototype would be ill-formed if freertos is not defined
 		BaseType_t takeCommMutex(TickType_t timeout);
+		#endif
 		void giveCommMutex();
 		void taskSuspend();
 		void taskResume();
