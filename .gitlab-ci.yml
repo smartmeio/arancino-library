@@ -215,7 +215,7 @@ package_release:
     - echo $CI_COMMIT_TAG > tmp/target_path.tmp
     - mv tmp/ ../tmp && cd ../
     #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
-    - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/check-version-tag.py" -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
+    - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/*test*" -x "$CI_PROJECT_NAME/check-version-tag.py" -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
     - mv tmp/ $CI_PROJECT_NAME/
     - mv $PKG_NAME.zip $CI_PROJECT_NAME/tmp/
 
