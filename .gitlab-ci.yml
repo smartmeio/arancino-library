@@ -260,7 +260,7 @@ upload:
     # publishing to PlatformIO
     - >
       if [[ ${PRE_RELEASE} == "" ]]; then
-        pio package publish --owner smartme-io --non-interactive --notify tmp/Arancino-${CI_COMMIT_TAG}.tar.gz
+        pio package publish --owner smartme-io --type library --no-interactive --notify tmp/Arancino-${CI_COMMIT_TAG}.tar.gz
       fi
 
 #################################
