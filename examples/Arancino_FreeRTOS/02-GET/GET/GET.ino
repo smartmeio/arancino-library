@@ -33,6 +33,9 @@ Return value - String reply:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "2.1 - Get Example",
   .fwversion = "1.0.1",
@@ -45,9 +48,17 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  //Please remember to provide a serial port when not using an Arancino board
+  //iface.setSerialPort(Serial);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
+
+  //Debug options
+  //Likewise to interface, a Serial port should be provided as argument when using non-Arancino boards
+  Arancino.enableDebugMessages();
 
   Arancino.begin(amdata);
+  
 	xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
@@ -64,8 +75,8 @@ void loopTask(void *pvParameters){
 
     //gets the value from the 'foo' key
     char* value = Arancino.get("EX_02_1");
-    SERIAL_DEBUG.print("EX_02_1 -> ");
-    SERIAL_DEBUG.println(value);
+    Arancino.print("EX_02_1 -> ");
+    Arancino.println(value);
     //foo -> bar
     Arancino.free(value); //frees memory
 
@@ -75,8 +86,8 @@ void loopTask(void *pvParameters){
 
     //gets the value from the 'foo' key
     value = Arancino.get("EX_02_1");
-    SERIAL_DEBUG.print("EX_02_1 -> ");
-    SERIAL_DEBUG.println(value);
+    Arancino.print("EX_02_1 -> ");
+    Arancino.println(value);
     //foo -> baz
     Arancino.free(value); //frees memory
 

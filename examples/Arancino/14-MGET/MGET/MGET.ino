@@ -43,6 +43,9 @@ If a key doesn't exist the corresponding element in the returned array is `NULL`
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "14.1 - MGet Example",
   .fwversion = "1.0.0",
@@ -53,8 +56,10 @@ char* keys[] = {"EX_14_1_foo1", "EX_14_1_foo2", "EX_14_1_foo3"};
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   Arancino.set("EX_14_1_foo1", "a");
@@ -67,9 +72,9 @@ void loop(){
     char** result = Arancino.mget(keys, 3);
 
     for(int i = 0; i < Arancino.getArraySize(result); i++) {
-      SERIAL_DEBUG.print(keys[i]);
-      SERIAL_DEBUG.print(" -> ");
-      SERIAL_DEBUG.println(result[i]);
+      Arancino.print(keys[i]);
+      Arancino.print(" -> ");
+      Arancino.println(result[i]);
     }
 
     Arancino.free(result);

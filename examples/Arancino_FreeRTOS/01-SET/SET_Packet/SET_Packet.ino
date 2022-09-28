@@ -42,41 +42,58 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Interface for Arancino protocol
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "01.2 - Set w/ Packet Example",
   .fwversion = "1.0.1",
   .tzoffset = "+1000"
 };
 
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
+
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  //Debug options
+  //Likewise to interface, a Serial port should be provided as argument when using non-Arancino boards
+  Arancino.enableDebugMessages();
 
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
   Arancino.begin(amdata);
 
   ArancinoPacket apckt = Arancino.set("EX_01_2_foo", "bar");
 
   if (apckt.isError == 0){
 
-    SERIAL_DEBUG.println("SET OK");
-    SERIAL_DEBUG.print("Response code: ");
-    SERIAL_DEBUG.println(apckt.responseCode);
-    SERIAL_DEBUG.print("Response type: ");
-    SERIAL_DEBUG.println(apckt.responseType);
-    SERIAL_DEBUG.print("Response value: ");
-    SERIAL_DEBUG.println(apckt.response.integer);
+    Arancino.println("SET OK");
+    Arancino.print("Response code: ");
+    Arancino.println(apckt.responseCode);
+    Arancino.print("Response type: ");
+    Arancino.println(apckt.responseType);
+    Arancino.print("Response value: ");
+    Arancino.println(apckt.response.integer);
 
   }
   else{
-    SERIAL_DEBUG.println("SET ERROR");
+    Arancino.println("SET ERROR");
   }
 
   Arancino.free(apckt); //delete packet from memory
 
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
-
 }
 
 void loop() {
+  //empty
+}
+
+void loopTask(void *pvParameters){
+  while(1){
     //do something
+  }
 }

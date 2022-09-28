@@ -33,6 +33,9 @@ Return value - char** reply:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "08.1 - HKeys Example",
   .fwversion = "1.0.1",
@@ -41,7 +44,10 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
+
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   Arancino.hset("EX_08_1_foo","bar","yeah");
@@ -53,8 +59,8 @@ void loop(){
 
     char** fields = Arancino.hkeys("EX_08_1_foo");
     for (int i = 0; i < Arancino.getArraySize(fields); i++) {
-      SERIAL_DEBUG.print("EX_08_1_foo -> ");
-      SERIAL_DEBUG.println(fields[i]);
+      Arancino.print("EX_08_1_foo -> ");
+      Arancino.println(fields[i]);
       // foo -> bar
       // foo -> baz
     }

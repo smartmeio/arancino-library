@@ -42,6 +42,9 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Interface for Arancino protocol
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "01 - Set Persistent and Volatile Example",
   .fwversion = "1.0.0",
@@ -50,6 +53,8 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
   Arancino.begin(amdata);
 
   Arancino.set("EX_01_3_key_1", "bar", true);      //persistent key

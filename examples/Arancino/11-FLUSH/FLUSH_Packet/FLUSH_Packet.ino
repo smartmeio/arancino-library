@@ -32,6 +32,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "11.2 - Flush w/ Packet Example",
   .fwversion = "1.0.1",
@@ -40,8 +43,10 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   Arancino.set("EX_11_2_foo","bar");
@@ -51,14 +56,14 @@ void setup() {
   ArancinoPacket apckt = Arancino.flush();
 
   if (!apckt.isError){
-    SERIAL_DEBUG.println("FLUSH OK");
-    SERIAL_DEBUG.print("Response code: ");
-    SERIAL_DEBUG.println(apckt.responseCode);
-    SERIAL_DEBUG.print("Response type: ");
-    SERIAL_DEBUG.println(apckt.responseType);
+    Arancino.println("FLUSH OK");
+    Arancino.print("Response code: ");
+    Arancino.println(apckt.responseCode);
+    Arancino.print("Response type: ");
+    Arancino.println(apckt.responseType);
   }
   else{
-    SERIAL_DEBUG.println("FLUSH ERROR");
+    Arancino.println("FLUSH ERROR");
   }
 
   Arancino.free(apckt);

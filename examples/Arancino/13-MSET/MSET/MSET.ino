@@ -44,6 +44,9 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "13.1 - MSet Example",
   .fwversion = "1.0.0",
@@ -55,25 +58,27 @@ char* values[] = {"value1", "value2", "value3"};
 
 void setup(){
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   ArancinoPacket apckt = Arancino.mset(keys, values, 3);
 
   if (apckt.isError == 0)
   {
-    SERIAL_DEBUG.println("MSET OK");
-    SERIAL_DEBUG.print("Response code: ");
-    SERIAL_DEBUG.println(apckt.responseCode);
-    SERIAL_DEBUG.print("Response type: ");
-    SERIAL_DEBUG.println(apckt.responseType);
-    SERIAL_DEBUG.print("Response value: ");
-    SERIAL_DEBUG.println(apckt.response.integer);
+    Arancino.println("MSET OK");
+    Arancino.print("Response code: ");
+    Arancino.println(apckt.responseCode);
+    Arancino.print("Response type: ");
+    Arancino.println(apckt.responseType);
+    Arancino.print("Response value: ");
+    Arancino.println(apckt.response.integer);
   }
   else
   {
-    SERIAL_DEBUG.println("MSET ERROR");
+    Arancino.println("MSET ERROR");
   }
 
   Arancino.free(apckt);

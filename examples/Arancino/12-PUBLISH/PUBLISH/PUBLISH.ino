@@ -38,6 +38,9 @@ Return value - void reply
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "12.1 - Publish Example",
   .fwversion = "1.0.1",
@@ -46,8 +49,10 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   //int
@@ -71,9 +76,9 @@ void loop(){
     //publish the value 'hooray' into the 'EX_12_1_channel1' channel
     int num_client = Arancino.publish(channel1, message1);
 
-    SERIAL_DEBUG.print("message received by ");
-    SERIAL_DEBUG.print(num_client);
-    SERIAL_DEBUG.println(" clients");
+    Arancino.print("message received by ");
+    Arancino.print(num_client);
+    Arancino.println(" clients");
     delay(10000);
 
 }

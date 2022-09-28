@@ -7,6 +7,9 @@
 #######################################
 
 Arancino	KEYWORD3
+SerialIface	KEYWORD3
+BluetoothIface	KEYWORD3
+MqttIface	KEYWORD3
 
 #######################################
 # Stucts (KEYWORD1)
@@ -48,4 +51,13 @@ mstore	KEYWORD2
 storetags	KEYWORD2
 setReservedCommunicationMode	KEYWORD2
 isValidUTF8	KEYWORD2
-getTimestamp    KEYWORD2
+attachInterface	KEYWORD2
+setSerialPort	KEYWORD2
+setDaemonID	KEYWORD2
+setBrokerAddress	KEYWORD2
+setUsername	KEYWORD2
+setPassword	KEYWORD2
+setPort	KEYWORD2
+setNetworkClient	KEYWORD2
+setBLESerial	KEYWORD2
+getTimestamp	KEYWORD2

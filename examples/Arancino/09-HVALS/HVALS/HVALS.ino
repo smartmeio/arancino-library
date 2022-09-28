@@ -32,6 +32,9 @@
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "09.1 - HVals Example",
   .fwversion = "1.0.1",
@@ -40,8 +43,10 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   Arancino.hset("EX_09_1_foo", "bar", "yeah");
@@ -53,8 +58,8 @@ void loop(){
 
     char** values = Arancino.hvals("EX_09_1_foo");
     for (int i = 0; i < Arancino.getArraySize(values); i++) {
-      SERIAL_DEBUG.print("EX_09_1_foo -> ");
-      SERIAL_DEBUG.println(values[i]);
+      Arancino.print("EX_09_1_foo -> ");
+      Arancino.println(values[i]);
       // foo -> yeah
       // foo -> whoo
     }

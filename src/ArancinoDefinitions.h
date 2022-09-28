@@ -124,3 +124,8 @@ under the License
 #define MAX_UNSIGNED_LONG_VALUE     4294967295
 
 #define ARANCINO_TASK_PRIORITY      2
+
+#define MQTT_MAX_RETRIES            100
+#define BLUETOOTH_MAX_RETRIES       100
+
+#define ID_SIZE IDSIZE*2 //IDSIZE will be provided by microcontroller-id library

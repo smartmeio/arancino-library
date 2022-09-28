@@ -42,14 +42,23 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Interface for Arancino protocol
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "01 - Set Persistent and Volatile Example",
   .fwversion = "1.0.0",
   .tzoffset = "+1000"
 };
 
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
+
 void setup() {
 
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
   Arancino.begin(amdata);
 
   Arancino.set("EX_01_3_key_1", "bar", true);      //persistent key
@@ -58,8 +67,8 @@ void setup() {
   Arancino.set("EX_01_3_key_4", "bar", NULL);      //volatile key
   Arancino.set("EX_01_3_key_5", "bar");            //volatile key
 
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
-
 }
 
 void loop() {

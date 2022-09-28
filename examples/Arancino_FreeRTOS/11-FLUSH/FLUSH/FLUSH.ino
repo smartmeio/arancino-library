@@ -32,6 +32,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "11.1 - Flush Example",
   .fwversion = "1.0.1",
@@ -39,22 +42,33 @@ ArancinoMetadata amdata = {
 };
 
 //FreeRtos
-//TaskHandle_t loopTaskHandle;
-//void loopTask(void *pvParameters);
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
 
 void setup() {
 
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
+
   Arancino.begin(amdata);
+
   Arancino.set("EX_11_1_foo","bar");
   Arancino.set("EX_11_1_foo","baz");
 
   //delete all the keys
   Arancino.flush();
 
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
 
 void loop() {
-  //do something
+  //empty
+}
+
+void loopTask(void *pvParameters){
+  while(1){
+    //do something
+  }
 }

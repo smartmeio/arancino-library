@@ -36,6 +36,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "07.2 - HGetAll w/ Packet Example",
   .fwversion = "1.0.1",
@@ -44,8 +47,12 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
+
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
+
   Arancino.hset("EX_07_02_foo", "bar", "yeah");
   Arancino.hset("EX_07_02_foo", "baz", "whoo");
 
@@ -57,24 +64,24 @@ void loop(){
 
     if (!apckt.isError){
 
-      SERIAL_DEBUG.println("HGETALL OK");
-      SERIAL_DEBUG.print("Response code: ");
-      SERIAL_DEBUG.println(apckt.responseCode);
-      SERIAL_DEBUG.print("Response type: ");
-      SERIAL_DEBUG.println(apckt.responseType);
+      Arancino.println("HGETALL OK");
+      Arancino.print("Response code: ");
+      Arancino.println(apckt.responseCode);
+      Arancino.print("Response type: ");
+      Arancino.println(apckt.responseType);
 
       char** values = apckt.response.stringArray;
       int arraySize = Arancino.getArraySize(values);
 
       for (int i = 0; i < arraySize; i += 2){
-        SERIAL_DEBUG.print("foo ");
-        SERIAL_DEBUG.print(values[i]);
-        SERIAL_DEBUG.print(" = ");
-        SERIAL_DEBUG.println(values[i + 1]);
+        Arancino.print("foo ");
+        Arancino.print(values[i]);
+        Arancino.print(" = ");
+        Arancino.println(values[i + 1]);
       }
     }
     else{
-      SERIAL_DEBUG.print("HGETALL ERROR");
+      Arancino.print("HGETALL ERROR");
     }
 
     Arancino.free(apckt); //delete the array from memory

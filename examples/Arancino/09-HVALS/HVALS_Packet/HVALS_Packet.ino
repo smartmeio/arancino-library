@@ -34,6 +34,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "09.2 - HVals w/ Packet Example",
   .fwversion = "1.0.1",
@@ -43,8 +46,10 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   Arancino.hset("EX_09_2_foo", "bar", "yeah");
@@ -59,20 +64,20 @@ void loop(){
 
     if (!apckt.isError){
 
-      SERIAL_DEBUG.println("HVALS OK");
-      SERIAL_DEBUG.print("Response code: ");
-      SERIAL_DEBUG.println(apckt.responseCode);
-      SERIAL_DEBUG.print("Response type: ");
-      SERIAL_DEBUG.println(apckt.responseType);
+      Arancino.println("HVALS OK");
+      Arancino.print("Response code: ");
+      Arancino.println(apckt.responseCode);
+      Arancino.print("Response type: ");
+      Arancino.println(apckt.responseType);
       for (int i = 0; i < Arancino.getArraySize(values); i++) {
-        SERIAL_DEBUG.print("EX_09_2_foo -> ");
-        SERIAL_DEBUG.println(values[i]);
+        Arancino.print("EX_09_2_foo -> ");
+        Arancino.println(values[i]);
         // foo -> yeah
         // foo -> whoo
       }
     }
     else{
-      SERIAL_DEBUG.println("HVALS ERROR");
+      Arancino.println("HVALS ERROR");
     }
 
     Arancino.free(apckt);

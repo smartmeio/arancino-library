@@ -35,6 +35,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "10.2 - HDel w/ Packet Example",
   .fwversion = "1.0.1",
@@ -42,15 +45,16 @@ ArancinoMetadata amdata = {
 };
 
 //FreeRtos
-//TaskHandle_t loopTaskHandle;
-//void loopTask(void *pvParameters);
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
-  //xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.hset("EX_10_2_foo","bar","yeah");
   Arancino.hset("EX_10_2_foo","baz","whoo");
@@ -59,23 +63,31 @@ void setup() {
 
   if (!apckt.isError)
   {
-    SERIAL_DEBUG.println("HDEL OK");
-    SERIAL_DEBUG.print("Response code: ");
-    SERIAL_DEBUG.println(apckt.responseCode);
-    SERIAL_DEBUG.print("Response type: ");
-    SERIAL_DEBUG.println(apckt.responseType);
+    Arancino.println("HDEL OK");
+    Arancino.print("Response code: ");
+    Arancino.println(apckt.responseCode);
+    Arancino.print("Response type: ");
+    Arancino.println(apckt.responseType);
     int value = apckt.response.integer;
-    SERIAL_DEBUG.println(value ? "Field removed" : "Field/key not found");
+    Arancino.println(value ? "Field removed" : "Field/key not found");
   }
   else
   {
-    SERIAL_DEBUG.println("HDEL ERROR");
+    Arancino.println("HDEL ERROR");
   }
 
   Arancino.free(apckt);
+
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }
 
 void loop() {
-  //do something
+  //empty
+}
+
+void loopTask(void *pvParameters){
+  while(1){
+    //do something
+  }
 }

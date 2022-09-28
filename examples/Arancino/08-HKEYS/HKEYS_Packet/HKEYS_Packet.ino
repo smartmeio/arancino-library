@@ -34,6 +34,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "08.2 - HKeys w/ Packet Example",
   .fwversion = "1.0.1",
@@ -42,8 +45,10 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   Arancino.hset("EX_08_2_foo","bar","yeah");
@@ -57,21 +62,21 @@ void loop(){
     char** fields = apckt.response.stringArray;
     if (!apckt.isError)
     {
-      SERIAL_DEBUG.println("HKEYS OK");
-      SERIAL_DEBUG.print("Response code: ");
-      SERIAL_DEBUG.println(apckt.responseCode);
-      SERIAL_DEBUG.print("Response type: ");
-      SERIAL_DEBUG.println(apckt.responseType);
+      Arancino.println("HKEYS OK");
+      Arancino.print("Response code: ");
+      Arancino.println(apckt.responseCode);
+      Arancino.print("Response type: ");
+      Arancino.println(apckt.responseType);
       for (int i = 0; i < Arancino.getArraySize(fields); i++) {
-        SERIAL_DEBUG.print("EX_08_2_foo -> ");
-        SERIAL_DEBUG.println(fields[i]);
+        Arancino.print("EX_08_2_foo -> ");
+        Arancino.println(fields[i]);
         // foo -> bar
         // foo -> baz
       }
     }
     else
     {
-      SERIAL_DEBUG.println("HKEYS ERROR");
+      Arancino.println("HKEYS ERROR");
     }
 
     Arancino.free(apckt);

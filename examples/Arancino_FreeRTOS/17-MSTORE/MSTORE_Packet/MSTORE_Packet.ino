@@ -38,7 +38,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 
 #include <Arancino.h>
-#include <avr/dtostrf.h>
+
+//Arancino interface
+SerialIface iface;
 
 ArancinoMetadata amdata = {
   .fwname = "17.1 - MStore Packet Example",
@@ -54,9 +56,12 @@ char* keys[] = {"EX_sample_foo1", "EX_sample_foo2", "EX_sample_foo3"};
 
 void setup(){
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
+
   xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
@@ -83,23 +88,23 @@ void loopTask(void *pvParameters){
 
     if (!apckt.isError){
 
-      SERIAL_DEBUG.println("MSTORE OK");
-      SERIAL_DEBUG.print("Response code: ");
-      SERIAL_DEBUG.println(apckt.responseCode);
-      SERIAL_DEBUG.print("Response type: ");
-      SERIAL_DEBUG.println(apckt.responseType);
+      Arancino.println("MSTORE OK");
+      Arancino.print("Response code: ");
+      Arancino.println(apckt.responseCode);
+      Arancino.print("Response type: ");
+      Arancino.println(apckt.responseType);
 
       char** values = apckt.response.stringArray;
       int arraySize = Arancino.getArraySize(values);
 
       for (int i = 0; i < arraySize; i++){
-        SERIAL_DEBUG.print(" timestamp ");
-        SERIAL_DEBUG.print(keys[i]);
-        SERIAL_DEBUG.print(" -> ");
-        SERIAL_DEBUG.println(values[0]);
+        Arancino.print(" timestamp ");
+        Arancino.print(keys[i]);
+        Arancino.print(" -> ");
+        Arancino.println(values[0]);
       }
     }else{
-      SERIAL_DEBUG.println("MSTORE ERROR");
+      Arancino.println("MSTORE ERROR");
     }
 
     Arancino.free(apckt);
