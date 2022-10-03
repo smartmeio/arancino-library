@@ -44,44 +44,60 @@ Return value - ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "13.1 - MSet Example",
   .fwversion = "1.0.0",
   .tzoffset = "+1000"
 };
 
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
+
 char* keys[] = {"EX_13_1_foo1", "EX_13_1_foo2", "EX_13_1_foo3"};
 char* values[] = {"value1", "value2", "value3"};
 
 void setup(){
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   ArancinoPacket apckt = Arancino.mset(keys, values, 3);
 
   if (apckt.isError == 0)
   {
-    SERIAL_DEBUG.println("MSET OK");
-    SERIAL_DEBUG.print("Response code: ");
-    SERIAL_DEBUG.println(apckt.responseCode);
-    SERIAL_DEBUG.print("Response type: ");
-    SERIAL_DEBUG.println(apckt.responseType);
-    SERIAL_DEBUG.print("Response value: ");
-    SERIAL_DEBUG.println(apckt.response.integer);
+    Arancino.println("MSET OK");
+    Arancino.print("Response code: ");
+    Arancino.println(apckt.responseCode);
+    Arancino.print("Response type: ");
+    Arancino.println(apckt.responseType);
+    Arancino.print("Response value: ");
+    Arancino.println(apckt.response.integer);
   }
   else
   {
-    SERIAL_DEBUG.println("MSET ERROR");
+    Arancino.println("MSET ERROR");
   }
 
   Arancino.free(apckt);
 
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
 
 void loop() {
-  // Do something
+  //empty
+}
+
+void loopTask(void *pvParameters){
+  while(1){
+    //do something
+  }
 }

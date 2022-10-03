@@ -31,8 +31,8 @@ under the License
  #define greenPin 9
  #define bluePin 24
 
-//FreeRtos
-TaskHandle_t loopTaskHandle;
+//Arancino interface
+SerialIface iface;
 
 ArancinoMetadata amdata = {
   .fwname = "CS.2 - Smart_Light",
@@ -40,12 +40,19 @@ ArancinoMetadata amdata = {
   .tzoffset = "+1000"
 };
 
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
+
 char* keys[] = {"CS_2-Red", "CS_2-Green", "CS_2-Blue"};
 
 void setup() {
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
   Arancino.begin(amdata);
   char* startingValues[] = {"255", "255", "255"}; //White
   Arancino.mset(keys, startingValues, 3);
+
   xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }
@@ -55,15 +62,15 @@ void loop() {
 }
 
 void loopTask(void *pvParameters){
-  while (1){
+  while(1){
     //Update RGB values
     char** result = Arancino.mget(keys,3);
     //Set newly fetched values
     setRGBValues(atoi(result[0]), atoi(result[1]), atoi(result[2]));
     Arancino.free(result);
-    vTaskDelay(500);
+    delay(500);
   }
-}
+}<
 
 void setRGBValues(int red, int green, int blue){
   analogWrite(redPin, red);

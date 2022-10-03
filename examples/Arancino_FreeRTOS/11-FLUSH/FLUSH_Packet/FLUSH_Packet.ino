@@ -32,6 +32,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "11.2 - Flush w/ Packet Example",
   .fwversion = "1.0.1",
@@ -39,37 +42,47 @@ ArancinoMetadata amdata = {
 };
 
 //FreeRtos
-//TaskHandle_t loopTaskHandle;
-//void loopTask(void *pvParameters);
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   Arancino.set("EX_11_2_foo","bar");
   Arancino.set("EX_11_2_foo","baz");
-  //delete all the keys
 
+  //delete all the keys
   ArancinoPacket apckt = Arancino.flush();
 
   if (!apckt.isError){
-    SERIAL_DEBUG.println("FLUSH OK");
-    SERIAL_DEBUG.print("Response code: ");
-    SERIAL_DEBUG.println(apckt.responseCode);
-    SERIAL_DEBUG.print("Response type: ");
-    SERIAL_DEBUG.println(apckt.responseType);
+    Arancino.println("FLUSH OK");
+    Arancino.print("Response code: ");
+    Arancino.println(apckt.responseCode);
+    Arancino.print("Response type: ");
+    Arancino.println(apckt.responseType);
   }
   else{
-    SERIAL_DEBUG.println("FLUSH ERROR");
+    Arancino.println("FLUSH ERROR");
   }
 
   Arancino.free(apckt);
+
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
 
 void loop() {
-  //do something
+  //empty
+}
+
+void loopTask(void *pvParameters){
+  while(1){
+    //do something
+  }
 }

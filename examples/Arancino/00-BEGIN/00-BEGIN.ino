@@ -57,12 +57,21 @@ ArancinoMetadata amdata = {
   .tzoffset = "+1000"
 };
 
+SerialIface iface;
+
 void setup() {
 
   // Arancino Configuration
   ArancinoConfig acfg;
   acfg.SERIAL_TIMEOUT = 200;
   acfg.DECIMAL_DIGITS = 4;
+
+  //when using Arancino boards, default serial port will be chosen.
+  //when using non-Arancino boards or if you want to change default serial port you can pass it as argument
+  iface.setSerialPort();
+
+  //tell Arancino to talk by using serial
+  Arancino.attachInterface(iface);
 
   //calls begin w/o paramenter: it is assumed 100ms timeout by default
   Arancino.begin(amdata, acfg);

@@ -32,6 +32,9 @@
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "07.1 - HGetAll Example",
   .fwversion = "1.0.1",
@@ -44,13 +47,16 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
+
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.hset("EX_07_1_foo", "bar", "yeah");
   Arancino.hset("EX_07_1_foo", "baz", "whoo");
 
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
@@ -65,10 +71,10 @@ void loopTask(void *pvParameters){
     int arraySize = Arancino.getArraySize(values);
     for (int i = 0; i < arraySize; i += 2)
     {
-      SERIAL_DEBUG.print("foo ");
-      SERIAL_DEBUG.print(values[i]);
-      SERIAL_DEBUG.print(" = ");
-      SERIAL_DEBUG.println(values[i + 1]);
+      Arancino.print("foo ");
+      Arancino.print(values[i]);
+      Arancino.print(" = ");
+      Arancino.println(values[i + 1]);
     }
     Arancino.free(values); //delete the array from memory
 

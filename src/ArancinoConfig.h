@@ -40,13 +40,6 @@ class ArancinoConfig{
 
 
 		/*
-			Is a time period which a sent command can waits for the response.
-				It's expressed in milliseconds.
-		*/
-		int SERIAL_TIMEOUT = TIMEOUT;
-
-
-		/*
 			Enables by default the Arduino Loop function as a FreeRTOS Task.
 		*/
 		bool FREERTOS_LOOP_TASK_ENABLE = false;

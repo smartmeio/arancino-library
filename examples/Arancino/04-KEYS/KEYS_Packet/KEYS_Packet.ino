@@ -43,6 +43,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "04.2 - Keys w/ Packet Example",
   .fwversion = "1.0.1",
@@ -51,8 +54,12 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
+
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
+
   Arancino.set("EX_04_2_pressure", 1023);
   Arancino.set("EX_04_2_humidity", 67.5);
   Arancino.set("EX_04_2_temperature", 24.4);
@@ -66,20 +73,20 @@ void loop(){
 
     if (apckt.isError == 0){
 
-      SERIAL_DEBUG.println("KEYS OK");
-      SERIAL_DEBUG.print("Response code: ");
-      SERIAL_DEBUG.println(apckt.responseCode);
-      SERIAL_DEBUG.print("Response type: ");
-      SERIAL_DEBUG.println(apckt.responseType);
+      Arancino.println("KEYS OK");
+      Arancino.print("Response code: ");
+      Arancino.println(apckt.responseCode);
+      Arancino.print("Response type: ");
+      Arancino.println(apckt.responseType);
       for (int i = 0; i < Arancino.getArraySize(keys); i++) {
-        SERIAL_DEBUG.println(keys[i]);
+        Arancino.println(keys[i]);
       }
       //pressure
       //humidity
       //temperature
     }
     else{
-      SERIAL_DEBUG.println("KEYS ERROR");
+      Arancino.println("KEYS ERROR");
     }
 
     Arancino.free(apckt);
@@ -91,17 +98,17 @@ void loop(){
 
     if (apckt.isError == 0){
 
-      SERIAL_DEBUG.println("KEYS OK");
-      SERIAL_DEBUG.print("Response code: ");
-      SERIAL_DEBUG.println(apckt.responseCode);
-      SERIAL_DEBUG.print("Response type: ");
-      SERIAL_DEBUG.println(apckt.responseType);
+      Arancino.println("KEYS OK");
+      Arancino.print("Response code: ");
+      Arancino.println(apckt.responseCode);
+      Arancino.print("Response type: ");
+      Arancino.println(apckt.responseType);
       for (int i = 0; i < Arancino.getArraySize(keys); i++) {
-        SERIAL_DEBUG.println(keys[i]);
+        Arancino.println(keys[i]);
       }
     }
     else{
-      SERIAL_DEBUG.println("KEYS ERROR");
+      Arancino.println("KEYS ERROR");
     }
 
     Arancino.free(apckt);

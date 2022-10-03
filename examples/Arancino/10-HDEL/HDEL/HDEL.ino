@@ -37,6 +37,9 @@ Return value - int reply:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "10.1 - HDel Example",
   .fwversion = "1.0.1",
@@ -45,10 +48,11 @@ ArancinoMetadata amdata = {
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
-  //xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.hset("EX_10_1_foo","bar","yeah");
   Arancino.hset("EX_10_1_foo","baz","whoo");
@@ -56,8 +60,8 @@ void setup() {
   int value = Arancino.hdel("EX_10_1_foo","bar"); //return 1
   char* str = Arancino.hget("EX_10_1_foo","bar"); //return NULL
 
-  SERIAL_DEBUG.print("HGet: ");
-  SERIAL_DEBUG.println(str);
+  Arancino.print("HGet: ");
+  Arancino.println(str);
 
   Arancino.free(str);
 

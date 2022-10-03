@@ -44,6 +44,7 @@ under the License
 #endif
 
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
+#define BAUDRATE_DEBUG 115200
 
 #define START_COMMAND			(char*)"START"
 #define MSET_COMMAND			(char*)"MSET"
@@ -124,3 +125,8 @@ under the License
 #define MAX_UNSIGNED_LONG_VALUE     4294967295
 
 #define ARANCINO_TASK_PRIORITY      2
+
+#define MQTT_MAX_RETRIES            100
+#define BLUETOOTH_MAX_RETRIES       100
+
+#define ID_SIZE IDSIZE*2 //IDSIZE will be provided by microcontroller-id library

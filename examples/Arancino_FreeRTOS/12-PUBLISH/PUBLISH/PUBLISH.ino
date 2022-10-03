@@ -38,6 +38,9 @@ Return value - void reply
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "12.1 - Publish Example",
   .fwversion = "1.0.1",
@@ -50,10 +53,11 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   //int
   char* channel2 = "EX_12_1_channel2";
@@ -66,6 +70,8 @@ void setup() {
   double message3 = 123.456;
   //publish the value 123.456 into the 'EX_12_1_channel3' channel
   Arancino.publish(channel3, message3);
+
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
@@ -81,9 +87,9 @@ void loopTask(void *pvParameters) {
     //publish the value 'hooray' into the 'EX_12_1_channel1' channel
     int num_client = Arancino.publish(channel1, message1);
 
-    SERIAL_DEBUG.print("message received by ");
-    SERIAL_DEBUG.print(num_client);
-    SERIAL_DEBUG.println(" clients");
+    Arancino.print("message received by ");
+    Arancino.print(num_client);
+    Arancino.println(" clients");
     vTaskDelay(10000);
   }
 }
