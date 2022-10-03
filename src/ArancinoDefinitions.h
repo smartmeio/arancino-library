@@ -44,6 +44,7 @@ under the License
 #endif
 
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
+#define BAUDRATE_DEBUG 115200
 
 #define START_COMMAND			(char*)"START"
 #define MSET_COMMAND			(char*)"MSET"

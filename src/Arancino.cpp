@@ -207,7 +207,7 @@ void ArancinoClass::enableDebugMessages(bool sendViaCommMode){
 
 void ArancinoClass::enableDebugMessages(Stream& dbgSerial){
 	//Custom debug serial should be provided here and already should be already initialized
-	if (_dbgSerial != NULL){
+	if (&dbgSerial != NULL){
 		_isDebug = true;
 		this->_dbgSerial = &dbgSerial;
 	}
