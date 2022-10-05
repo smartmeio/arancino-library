@@ -40,7 +40,6 @@ class SerialIface : public ArancinoIface {
 		Is a time period which a sent command can waits for the response.
 		It's expressed in milliseconds.
 	*/
-	void setSerialTimeout(int timeout);
 	void setSerialPort();
 	void setSerialPort(Stream& serialPort);
 
@@ -50,7 +49,6 @@ class SerialIface : public ArancinoIface {
 	char* receiveArancinoResponse(char terminator);
 
 	Stream* _serialPort;
-	int _serialTimeout = 10000;
 	bool comm_timeout = false;
 };
 

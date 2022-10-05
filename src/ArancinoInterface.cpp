@@ -76,10 +76,6 @@ char* SerialIface::receiveArancinoResponse(char terminator){
 	return response;
 }
 
-void SerialIface::setSerialTimeout(int timeout){
-	this->_serialTimeout = timeout;
-}
-
 void SerialIface::setSerialPort(Stream& serialPort){
 	this->_serialPort = &serialPort;
 }
@@ -88,8 +84,7 @@ void SerialIface::setSerialPort(){
 	//default implementation for Arancino boards
 	#if defined (SERIAL_PORT) && defined(BAUDRATE) && defined (TIMEOUT)
 	SERIAL_PORT.begin(BAUDRATE);
-	SERIAL_PORT.setTimeout(_serialTimeout);
-	this->_serialTimeout = TIMEOUT;
+	SERIAL_PORT.setTimeout(TIMEOUT);
 	this->_serialPort = &SERIAL_PORT;
 	#endif
 }
