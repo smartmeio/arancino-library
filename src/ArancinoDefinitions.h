@@ -129,3 +129,17 @@ under the License
 #define BLUETOOTH_MAX_RETRIES       100
 
 #define ID_SIZE IDSIZE*2 //IDSIZE will be provided by microcontroller-id library
+
+//MsgPack
+#define CMD_DOC_SIZE 512
+#define RSP_DOC_SIZE 256
+#define CFG_UNSET 0
+#define CFG_TRUE 1
+#define CFG_FALSE 2
+
+#define VOID_RESPONSE 0
+#define KEY_VALUE_RESPONSE 1
+#define KEY_RESPONSE 2
+#define FIELDS_ITEMS_RESPONSE 3
+#define ITEMS_RESPONSE 4
+#define CLIENTS_RESPONSE 5
