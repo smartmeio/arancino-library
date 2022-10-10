@@ -38,7 +38,9 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 
 #include <Arancino.h>
-#include <avr/dtostrf.h>
+
+//Arancino interface
+SerialIface iface;
 
 ArancinoMetadata amdata = {
   .fwname = "16.1 - StoreTags Packet Example",
@@ -55,9 +57,12 @@ char* tags[] = {"EX_tags_1", "EX_tags_2", "EX_tags_3"};
 
 
 void setup() {
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
+
   xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }
@@ -83,15 +88,15 @@ void loopTask(void *pvParameters) {
 
     if (!apckt.isError)
     {
-        SERIAL_DEBUG.println("STORETAGS OK");
-        SERIAL_DEBUG.print("Response code: ");
-        SERIAL_DEBUG.println(apckt.responseCode);
-        SERIAL_DEBUG.print("Response type: ");
-        SERIAL_DEBUG.println(apckt.responseType);
+        Arancino.println("STORETAGS OK");
+        Arancino.print("Response code: ");
+        Arancino.println(apckt.responseCode);
+        Arancino.print("Response type: ");
+        Arancino.println(apckt.responseType);
     }
     else
     {
-        SERIAL_DEBUG.println("STORETAGS ERROR");
+        Arancino.println("STORETAGS ERROR");
     }
 
     Arancino.free(apckt); //delete the string from memory

@@ -38,37 +38,54 @@ ArancinoPacket reply: ArancinoPacket containing:
 */
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "05.2 - HSet w/ Packet Example",
   .fwversion = "1.0.1",
   .tzoffset = "+1000" 
 };
 
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
+
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
+
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   ArancinoPacket apckt = Arancino.hset("EX_05_2_foo", "bar", "yeah");
 
   if (apckt.isError == 0)
   {
-    SERIAL_DEBUG.println("HSET OK");
-    SERIAL_DEBUG.print("Response code: ");
-    SERIAL_DEBUG.println(apckt.responseCode);
-    SERIAL_DEBUG.print("Response type: ");
-    SERIAL_DEBUG.println(apckt.responseType);
+    Arancino.println("HSET OK");
+    Arancino.print("Response code: ");
+    Arancino.println(apckt.responseCode);
+    Arancino.print("Response type: ");
+    Arancino.println(apckt.responseType);
   }
   else
   {
-    SERIAL_DEBUG.println("HSET ERROR");
+    Arancino.println("HSET ERROR");
   }
 
   Arancino.free(apckt);
 
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }
 
 void loop() {
-  //do something
+  //empty
+}
+
+void loopTask(void *pvParameters){
+  while(1){
+    //do something
+  }
 }

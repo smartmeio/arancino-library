@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/smartmeio/arancino-library.git"
   },
-  "version": "2.1.1",
+  "version": "3.0.0",
   "authors": {
     "name": "smartme.IO",
     "url": "https://www.arancino.cc"
@@ -17,7 +17,10 @@
     ".gitignore",
     ".gitlab",
     ".gitlab-ci.yml",
-    "extras"
+    ".DS_Store",
+    "extras",
+    "test",
+    "*.py"
   ],
   "frameworks": "arduino",
   "platforms": "*"

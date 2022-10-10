@@ -31,12 +31,35 @@ ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_V
 #if defined(USEFREERTOS)
 TaskHandle_t arancinoHandle1;
 TaskHandle_t arancinoHandle2;
+TaskHandle_t arancinoHandle3;
 SemaphoreHandle_t CommMutex;
 #endif
 
 /********************************************************
 					API FUNCTIONS
 ********************************************************/
+
+/******** API BASIC :: ATTACH_IFACE *********/
+
+void ArancinoClass::attachInterface(ArancinoIface& iface){
+	this->_iface = &iface;
+}
+
+/******** API BASIC :: DELAY *********/
+void ArancinoClass::delay(long milli){
+	//Check if scheduler was started or not
+#if defined(USEFREERTOS)
+	if(xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED){
+		long startmillis = millis();
+		while(millis() - startmillis < milli);
+	} else {
+		vTaskDelay(milli);
+	}
+#else
+	long startmillis = millis();
+	while(millis() - startmillis < milli);
+#endif
+}
 
 /******** API BASIC :: BEGIN *********/
 
@@ -47,20 +70,20 @@ void ArancinoClass::begin(ArancinoMetadata _amdata)
 	begin(_amdata, _acfg);
 }
 
-void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg)
-{
-	SERIAL_PORT.begin(BAUDRATE);
+void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
+
+	MicroID.getUniqueIDString(id, ID_SIZE/2);
+	_iface->ifaceBegin();
 	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
-	SERIAL_PORT.setTimeout(_acfg.SERIAL_TIMEOUT);
 	decimal_digits = _acfg.DECIMAL_DIGITS;
 
 	_metadata = _amdata;
 
 	int arancinocoreversionLength = 0; // assuming is not defined
 
-#ifdef ARANCINO_CORE_VERSION
+	#ifdef ARANCINO_CORE_VERSION
 	arancinocoreversionLength += strlen(ARANCINO_CORE_VERSION);
-#endif
+	#endif
 
 	// firmware build time
 	char str_build_time[strlen(__DATE__) + 1 + strlen(__TIME__) + 1 + strlen(_metadata.tzoffset)] = "";
@@ -70,39 +93,31 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg)
 	strcat(str_build_time, " ");
 	strcat(str_build_time, _metadata.tzoffset);
 
-	char fw_lib_ver[] = "FW_LIB_VER";
-	char fw_name[] = "FW_NAME";
-	char fw_ver[] = "FW_VER";
-	char fw_build_time[] = "FW_BUILD_TIME";
-	char fw_core_ver[] = "FW_CORE_VER";
-	char mcu_family[] = "MCU_FAMILY";
-	char fw_use_freertos[] = "FW_USE_FREERTOS";
-#if defined(USEFREERTOS)
-	//#if defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040)
+	char fw_lib_ver[]="FW_LIB_VER";
+	char fw_name[]="FW_NAME";
+	char fw_ver[]="FW_VER";
+	char fw_build_time[]="FW_BUILD_TIME";
+	char fw_core_ver[]="FW_CORE_VER";
+	char mcu_family[]="MCU_FAMILY";
+	char fw_use_freertos[]="FW_USE_FREERTOS";
+	#if defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
 		CommMutex = xSemaphoreCreateMutex();
 	}
-	//#endif
-	char *useFreeRtos = "1";
-#else
-	char *useFreeRtos = "0";
-#endif
-	char *keys[] = {fw_lib_ver, fw_name, fw_ver, fw_build_time, fw_core_ver, mcu_family, fw_use_freertos};
-	char *values[] = {LIB_VERSION, _metadata.fwname, _metadata.fwversion, str_build_time, (char *)ARANCINO_CORE_VERSION, (char *)MCU_FAMILY, (char *)useFreeRtos};
 
-	//DEBUG
-	#if defined(ARDUINO_ARANCINO)
-	pinMode(DBG_PIN,INPUT);
-	if(!digitalRead(DBG_PIN))
-		Serial.begin(115200);
+	char* useFreeRtos = "1";
+	#else
+	char* useFreeRtos = "0";
 	#endif
+	char* keys[] = {fw_lib_ver,fw_name,fw_ver,fw_build_time,fw_core_ver, mcu_family, fw_use_freertos};
+	char* values[] = {LIB_VERSION, _metadata.fwname,_metadata.fwversion,str_build_time,(char*)ARANCINO_CORE_VERSION,(char*)MCU_FAMILY,(char*)useFreeRtos};
 
-	start(keys, values, 7);
-
-	strcpy(LOG_LEVEL, getModuleLogLevel());
-#if defined(USEFREERTOS)
-	// TASK
+	start(keys,values,7);
+	started = true;
+	
+	strcpy(LOG_LEVEL,getModuleLogLevel());
+	#if defined(USEFREERTOS)
 	/*	All the FreeRTOS initialization should be put here, at the end of the
 		the ArancinoClass::begin method.
 	*/
@@ -110,14 +125,12 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg)
 	{
 		CommMutex = xSemaphoreCreateMutex();
 	}
+	//TASK
 	ArancinoTasks _atask;
 	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
 	xTaskCreate(_atask.interoception, "interoception", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle2);
-
-// #if !defined(ARDUINO_ARANCINO_VOLANTE) || !defined(ARDUINO_ARCH_RP2040)
-// 	CommMutex = xSemaphoreCreateMutex();
-// #endif
-#endif
+	xTaskCreate(_atask.sendHeartbeat, "heartbeat", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle3);
+	#endif
 }
 
 /******** API BASIC :: START *********/
@@ -133,10 +146,6 @@ void ArancinoClass::start(char **keys, char **values, int len)
 		packet = executeCommand(START_COMMAND, NULL, keys, values, NULL, len, false, STRING_ARRAY);
 		if (packet.responseCode == RSP_OK)
 		{
-			// store arancino serial port id
-			idSize = strlen(packet.response.stringArray[0]);
-			id = (char *)calloc(idSize + 1, sizeof(char));
-			memcpy(id, packet.response.stringArray[0], idSize);
 			// timestamp from arancino module
 			memcpy(timestamp, packet.response.stringArray[1], 13);
 			char tmst_part[5];
@@ -179,6 +188,37 @@ void ArancinoClass::startScheduler()
 #endif
 }
 #endif
+
+/******** API ADVANCED :: DEBUG OPTIONS *********/
+
+void ArancinoClass::enableDebugMessages(bool sendViaCommMode){
+	if (sendViaCommMode){
+		_isDebug = true;
+		_commMode = true;
+	} else {
+		//Default config for Arancino Boards
+		#if defined(SERIAL_DEBUG) && defined(BAUDRATE_DEBUG)
+		SERIAL_DEBUG.begin(BAUDRATE_DEBUG);
+		_isDebug = true;
+		_dbgSerial = &SERIAL_DEBUG;
+		#endif
+	}
+}
+
+void ArancinoClass::enableDebugMessages(Stream& dbgSerial){
+	//Custom debug serial should be provided here and already should be already initialized
+	if (&dbgSerial != NULL){
+		_isDebug = true;
+		this->_dbgSerial = &dbgSerial;
+	}
+}
+
+void ArancinoClass::disableDebugMessages(){
+	//This only stops debug messages from being processed. If you want to reuse the dedicated
+	//serial port at a different baud rate you should manually end the serial yourself
+	_isDebug = false;
+	_dbgSerial = NULL;
+}
 
 /******** API BASIC :: MSET *********/
 
@@ -885,7 +925,6 @@ template<> void ArancinoClass::mstore(char** keys, char** values, int len,char* 
 	char* ts = timestamp;
 	 if ((keys == NULL) || (values == NULL) || (len <= 0)) {
 		//return invalidCommandErrorPacket;
-
 	}
 	return executeCommandFast(MSTORE_COMMAND, NULL, keys, values, ts, len, false, STRING_ARRAY);
 }
@@ -1046,40 +1085,14 @@ bool ArancinoClass::isValidUTF8(const char *string) // From: https://stackoverfl
 	return true;
 }
 
-/******** API UTILITY :: DELAY *********/
-
-void ArancinoClass::delay(long milli)
-{
-	// Check if scheduler was started or not
-	// TODO: add Full duplex support
-#if defined(USEFREERTOS)
-	if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)
-	{
-		long startmillis = millis();
-		while (millis() - startmillis < milli)
-			;
-	}
-	else
-	{
-		vTaskDelay(milli);
-	}
-#else
-	long startmillis = millis();
-	while (millis() - startmillis < milli)
-		;
-#endif
-}
-
 /******** API ADVANCED :: PRINT *********/
 
-void ArancinoClass::print(char *value)
-{
-	_sendViaCOMM_MODE(MONITOR_KEY, value);
+void ArancinoClass::print(char* value){
+	_printDebugMessage(value);
 }
 
-void ArancinoClass::print(String value)
-{
-	_sendViaCOMM_MODE(MONITOR_KEY, value.begin());
+void ArancinoClass::print(String value){
+	_printDebugMessage(value.begin());
 }
 
 void ArancinoClass::print(int value)
@@ -1202,6 +1215,7 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 	int strLength = commandLength + 1;
 	int param1_length = 0;
 	int param4_length = 0;
+	uint8_t idSize = strlen(id);
 
 	if (param1 != NULL)
 	{
@@ -1318,20 +1332,13 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 	}
 	strcat(str, endTXStr);
 
-#if defined(ARDUINO_ARANCINO)
-	if (!digitalRead(DBG_PIN))
-	{
-		Serial.print(SENT_STRING);
-	}
-#endif
-
 	char *message = NULL;
 
 	#if defined(USEFREERTOS)
 	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
 	#endif
-		_sendArancinoCommand(str);
-		message = _receiveArancinoResponse(END_TX_CHAR);
+		_iface->sendArancinoCommand(str);
+		message = _iface->receiveArancinoResponse(END_TX_CHAR);
 	#if defined(USEFREERTOS)
 		giveCommMutex();
 	}
@@ -1355,6 +1362,7 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char** param
 	int strLength = commandLength + 1;
 	int param1_length = 0;
 	int param4_length = 0;
+	uint8_t idSize = strlen(id);
 
 	if(param1 != NULL){
 		param1_length = strlen(param1);
@@ -1457,16 +1465,10 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char** param
 	}
 	strcat(str, endTXStr);
 
-	#if defined(ARDUINO_ARANCINO)
-		if(!digitalRead(DBG_PIN)){
-			Serial.print(SENT_STRING);
-		}
-	#endif
-
 	#if defined(USEFREERTOS)
 	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
 	#endif
-		_sendArancinoCommand(str);
+		_iface->sendArancinoCommand(str);
 	#if defined(USEFREERTOS)
 		giveCommMutex();
 	}
@@ -1478,6 +1480,8 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char** param
 ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return){
 	int commandLength = strlen(command);
 	int param1_length = 0;
+	uint8_t idSize = strlen(id);
+
 	if (param1 != NULL)
 	{
 		param1_length = strlen(param1);
@@ -1495,13 +1499,6 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	int strLength = commandLength + 1 + param1_length + 1 + param2_length + 1 + param3_length + 1 + 1;
 
 	char *str = (char *)calloc(strLength, sizeof(char));
-
-#if defined(ARDUINO_ARANCINO)
-	if (!digitalRead(DBG_PIN))
-	{
-		Serial.print(SENT_STRING);
-	}
-#endif
 
 	strcpy(str, command);
 	if (param1 != NULL)
@@ -1530,8 +1527,8 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	#if defined(USEFREERTOS)
 	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
 	#endif
-		_sendArancinoCommand(str);
-		message = _receiveArancinoResponse(END_TX_CHAR);
+		_iface->sendArancinoCommand(str);
+		message = _iface->receiveArancinoResponse(END_TX_CHAR);
 	#if defined(USEFREERTOS)
 		giveCommMutex();
 	}
@@ -1551,6 +1548,8 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 void ArancinoClass::executeCommandFast(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return){
 	int commandLength = strlen(command);
 	int param1_length = 0;
+	uint8_t idSize = strlen(id);
+	
 	if(param1 != NULL){
 		param1_length = strlen(param1);
 		if(id_prefix){
@@ -1566,13 +1565,6 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char* param2
 	int strLength = commandLength + 1 + param1_length + 1 + param2_length + 1 + param3_length + 1 + 1;
 
 	char* str = (char *)calloc(strLength, sizeof(char));
-
-
-	#if defined(ARDUINO_ARANCINO)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(SENT_STRING);
-	}
-	#endif
 
 	strcpy(str, command);
 	if(param1 != NULL){
@@ -1596,7 +1588,7 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char* param2
 	#if defined(USEFREERTOS)
 	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
 	#endif
-		_sendArancinoCommand(str);
+		_iface->sendArancinoCommand(str);
 	#if defined(USEFREERTOS)
 		giveCommMutex();
 	}
@@ -1640,71 +1632,14 @@ ArancinoPacket ArancinoClass::createArancinoPacket(char* message, int type_retur
 	return packet;
 }
 
-void ArancinoClass::_sendArancinoCommand(char *command)
-{
-	// check communication timeout with arancino module
-	if (comm_timeout)
-	{
-		/*
-			Flush data on serial communication to avoid of lost
-			synchronization between arancino library and arancino module.
-			By this way I prevent to receive reposonse of a previous sent command.
-		*/
-		while (SERIAL_PORT.available() > 0)
-		{
-			SERIAL_PORT.read();
-		}
-		comm_timeout = false;
-	}
-	// command must terminate with '\0'!
-	SERIAL_PORT.write(command, strlen(command)); // excluded '\0'
-
-#if defined(USEFREERTOS) && defined(USE_TINYUSB)
-	if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING)
-	{
-		yield();
-	}
-#endif
-
-#if defined(ARDUINO_ARANCINO)
-	if (!digitalRead(DBG_PIN))
-	{
-		if (command[strlen(command) - 1] == END_TX_CHAR)
-		{
-			Serial.println(command);
-		}
-		else
-			Serial.print(command);
-	}
-#endif
-}
-
-/*
- * 'terminator' char is used only for non-freeRTOS implementations.
- * For freeRTOS implementations is always used END_TX_CHAR as terminator char (see commTask()).
- */
-char *ArancinoClass::_receiveArancinoResponse(char terminator)
-{
-	char *response = NULL; // must be freed
-	String str = "";
-	str = SERIAL_PORT.readStringUntil(terminator);
-	if (str == "")
-	{
-		// enable timeout check
-		comm_timeout = true;
-	}
-	else
-	{
-		int responseLength = strlen(str.begin());
-		if (responseLength > 0)
-		{
-			response = (char *)calloc(responseLength + 1 + 1, sizeof(char));
-			strcpy(response, str.begin());
-			response[responseLength] = END_TX_CHAR;
-			response[responseLength + 1] = '\0';
-		}
-	}
-	return response;
+void ArancinoClass::systemReset(){
+	#if defined(ARDUINO_ARCH_RP2040)
+	watchdog_reboot(0,0,0);
+	#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_STM32) || defined(ARDUINO_ARCH_NRF52)
+	NVIC_SystemReset();
+	#else 
+	#warning "Unsupported board selected. Please make sure to provide a reset implementation inside Arancino.cpp otherwise non-serial communication may not work as intended"
+	#endif
 }
 
 void ArancinoClass::_doubleToString(double value, unsigned int _nDecimal, char *str)
@@ -1755,16 +1690,12 @@ int ArancinoClass::_getDigit(long value)
 	return digit;
 }
 
-void ArancinoClass::_sendViaCOMM_MODE(char *key, char *value, bool isPersistent)
-{
-	if (strcmp(LOG_LEVEL, "DEBUG") == 0)
-	{
-		__publish(key, value);
-		__set(key, value, isPersistent);
-	}
-	else
-	{
-		__set(key, value, isPersistent);
+void ArancinoClass::_printDebugMessage(char* value) {
+	if (_isDebug && _commMode){
+	__publish(MONITOR_KEY, value);
+	__set(MONITOR_KEY, value, false);
+	} else if(_isDebug && _dbgSerial != NULL){
+		_dbgSerial->print(value);
 	}
 }
 
@@ -1832,16 +1763,6 @@ char *ArancinoClass::_parse(char *message)
 		strncpy(value, &message[DSCIndex + 1], messageLength - (DSCIndex + 2));
 		value[messageLength - (DSCIndex + 2)] = '\0'; // replace END_TX_CHAR with '\0'
 	}
-
-	//DEBUG
-	#if defined(ARDUINO_ARANCINO)
-	if(!digitalRead(DBG_PIN)){
-		Serial.print(RCV_STRING);
-		Serial.print(status);
-		Serial.print(" ");
-		Serial.println(value);
-	}
-	#endif
 
 	free(status);
 

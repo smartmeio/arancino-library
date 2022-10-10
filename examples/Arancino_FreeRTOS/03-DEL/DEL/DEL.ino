@@ -33,27 +33,44 @@ The number of keys that were removed.
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "03.1 - Del Example",
   .fwversion = "1.0.1",
   .tzoffset = "+1000" 
 };
 
-void setup() {
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
 
-  SERIAL_DEBUG.begin(115200);
+void setup() {
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
+
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
+
   Arancino.set("EX_03_1_foo","bar");
 
   int num = Arancino.del("EX_03_1_baz");
-  SERIAL_DEBUG.println(num ? "Key deleted" : "Key not found");
-  //0
+  Arancino.println(num ? "Key deleted" : "Key not found"); //0
+
   num = Arancino.del("EX_03_1_foo");
-  SERIAL_DEBUG.println(num ? "Key deleted" : "Key not found");
-  //1
+  Arancino.println(num ? "Key deleted" : "Key not found"); //1
+  
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }
 
 void loop() {
-  //do something
+  //empty
+}
+
+void loopTask(void *pvParameters){
+  while(1){
+    //do something
+  }
 }

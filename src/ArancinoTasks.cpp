@@ -102,6 +102,20 @@ void ArancinoTasks::interoception(void *pvPramaters){
 
 }
 
+void ArancinoTasks::sendHeartbeat(void *pvPramaters){
+  uint8_t idSize = strlen(Arancino.id);
+  char topic[idSize + 5]; //ID_SIZE + '_HBx' + '\0'
+  strcpy(topic, Arancino.id);
+  strcat(topic, "_HB0");
+  while (1) {
+    topic[idSize+3] = '0'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
+    Arancino.publish(topic, Arancino.getTimestamp());
+    topic[idSize+3] = '1';
+    Arancino.publish(topic, Arancino.getTimestamp());
+    vTaskDelay(10000);
+  }
+}
+
 #if defined(__SAMD21G18A__)
 float ArancinoTasks::mcuTemp(){
   TemperatureZero tempZero = TemperatureZero();

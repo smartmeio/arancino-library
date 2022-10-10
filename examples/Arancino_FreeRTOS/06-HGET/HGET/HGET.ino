@@ -36,6 +36,9 @@ Return value - char* reply:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "06.1 - HGet Example",
   .fwversion = "1.0.1",
@@ -48,14 +51,16 @@ void loopTask(void *pvParameters);
 
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
 
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
 
   Arancino.hset("EX_06_1_foo","bar","yeah");
   Arancino.hset("EX_06_1_foo","baz","whoo");
 
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
@@ -67,14 +72,14 @@ void loop(){
 void loopTask(void *pvParameters){
   while(1){
     char* value = Arancino.hget("EX_06_1_foo","bar");
-    SERIAL_DEBUG.print("foo bar -> ");
-    SERIAL_DEBUG.println(value);
+    Arancino.print("foo bar -> ");
+    Arancino.println(value);
     //foo bar -> yeah
     Arancino.free(value);
 
     value = Arancino.hget("EX_06_1_foo","baz");
-    SERIAL_DEBUG.print("foo baz -> ");
-    SERIAL_DEBUG.println(value);
+    Arancino.print("foo baz -> ");
+    Arancino.println(value);
     //foo bar -> whoo
     Arancino.free(value);
 

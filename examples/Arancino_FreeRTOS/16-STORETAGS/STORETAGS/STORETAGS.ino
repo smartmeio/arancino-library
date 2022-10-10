@@ -33,7 +33,9 @@ Return value - void
 */
 
 #include <Arancino.h>
-#include <avr/dtostrf.h>
+
+//Arancino interface
+SerialIface iface;
 
 ArancinoMetadata amdata = {
   .fwname = "16.1 - StoreTags Example",
@@ -50,8 +52,11 @@ char* tags[] = {"EX_tags_1", "EX_tags_2", "EX_tags_3"};
 
 
 void setup() {
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
+
   Arancino.begin(amdata);
+  
   xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }

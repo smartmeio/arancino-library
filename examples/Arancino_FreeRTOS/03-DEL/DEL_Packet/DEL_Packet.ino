@@ -35,15 +35,25 @@ ArancinoPacket reply: ArancinoPacket containing:
 
 #include <Arancino.h>
 
+//Arancino interface
+SerialIface iface;
+
 ArancinoMetadata amdata = {
   .fwname = "03.2 - Del w/ Packet Example",
   .fwversion = "1.0.1",
   .tzoffset = "+1000" 
 };
 
+//FreeRtos
+TaskHandle_t loopTaskHandle;
+void loopTask(void *pvParameters);
+
 void setup() {
 
-  SERIAL_DEBUG.begin(115200);
+  iface.setSerialPort();
+  Arancino.attachInterface(iface);
+
+  Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
   Arancino.set("EX_03_2_foo","bar");
@@ -52,16 +62,15 @@ void setup() {
   
   if (apckt.isError == 0){
 
-    SERIAL_DEBUG.println("DEL OK");
-    SERIAL_DEBUG.print("Response code: ");
-    SERIAL_DEBUG.println(apckt.responseCode);
-    SERIAL_DEBUG.print("Response type: ");
-    SERIAL_DEBUG.println(apckt.responseType);
-    SERIAL_DEBUG.println(apckt.response.integer ? "Key deleted" : "Key not found");
-    //0
+    Arancino.println("DEL OK");
+    Arancino.print("Response code: ");
+    Arancino.println(apckt.responseCode);
+    Arancino.print("Response type: ");
+    Arancino.println(apckt.responseType);
+    Arancino.println(apckt.response.integer ? "Key deleted" : "Key not found"); //0
   }
   else{
-    SERIAL_DEBUG.println("DEL ERROR");    
+    Arancino.println("DEL ERROR");    
   }
   
   Arancino.free(apckt); //delete packet from memory
@@ -70,24 +79,30 @@ void setup() {
   
   if (apckt.isError == 0){
     
-    SERIAL_DEBUG.println("DEL OK");
-    SERIAL_DEBUG.print("Response code: ");
-    SERIAL_DEBUG.println(apckt.responseCode);
-    SERIAL_DEBUG.print("Response type: ");
-    SERIAL_DEBUG.println(apckt.responseType);
-    SERIAL_DEBUG.println(apckt.response.integer ? "Key deleted" : "Key not found");
-    //1
+    Arancino.println("DEL OK");
+    Arancino.print("Response code: ");
+    Arancino.println(apckt.responseCode);
+    Arancino.print("Response type: ");
+    Arancino.println(apckt.responseType);
+    Arancino.println(apckt.response.integer ? "Key deleted" : "Key not found"); //1
   }
   else{
-    SERIAL_DEBUG.println("DEL ERROR");    
+    Arancino.println("DEL ERROR");    
   }
   
   Arancino.free(apckt); //delete packet from memory
   
+  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }
 
 void loop(){
   //empty
+}
+
+void loopTask(void *pvParameters){
+  while(1){
+    //do something
+  }
 }

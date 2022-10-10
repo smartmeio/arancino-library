@@ -22,7 +22,7 @@
 #                   REPO_BASE_URL:  url di base del repository: https://download.smartme.io
 #
 
-image: smartmeio/arancino-library-build:0.18.3
+image: smartmeio/arancino-library-build:0.18.3-2
 
 
 stages:
@@ -215,7 +215,7 @@ package_release:
     - echo $CI_COMMIT_TAG > tmp/target_path.tmp
     - mv tmp/ ../tmp && cd ../
     #- tar --exclude='*.git*' --exclude='*.DS_Store*' -zcvf $PKG_NAME.zip $CI_PROJECT_NAME/
-    - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/check-version-tag.py" -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
+    - zip -r $PKG_NAME.zip $CI_PROJECT_NAME -x "$CI_PROJECT_NAME/*test*" -x "$CI_PROJECT_NAME/check-version-tag.py" -x "$CI_PROJECT_NAME/*.git*" "$CI_PROJECT_NAME/*.DS_Store*"
     - mv tmp/ $CI_PROJECT_NAME/
     - mv $PKG_NAME.zip $CI_PROJECT_NAME/tmp/
 
@@ -260,7 +260,7 @@ upload:
     # publishing to PlatformIO
     - >
       if [[ ${PRE_RELEASE} == "" ]]; then
-        pio package publish --owner smartme-io tmp/Arancino-${CI_COMMIT_TAG}.tar.gz
+        pio package publish --owner smartme-io --type library --no-interactive --notify tmp/Arancino-${CI_COMMIT_TAG}.tar.gz
       fi
 
 #################################
