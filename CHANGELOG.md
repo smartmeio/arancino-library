@@ -1,5 +1,11 @@
 # Changelog
 
+#### v 3.0.0 - 2022.10.10
+* Add: added interface system with MQTT and BLE_UART communication mediums [#1nwtwna]
+* Upd: improved debug messages handling [#1ww0cnr]
+* Add: added Arancino delay function [#n1c5tx]
+* Add: Added hearbeat function as additional task [#1raryn7]
+
 #### v 2.1.1 - 2022.09.19
 * Fix: fixed an error that occurred when FreeRTOS was not enabled
 * Fix: fixed a bug in executeCommandFast function
