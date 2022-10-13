@@ -22,7 +22,11 @@ under the License
 #if defined(__SAMD21G18A__)
 #include <TemperatureZero.h>
 #endif
+#if defined(ARDUINO_ARCH_ESP32)
+#include <stdlib.h>
+#else
 #include <avr/dtostrf.h>
+#endif
 #if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
 #include "stm32yyxx_ll_adc.h"
 #define CALX_TEMP 25
@@ -41,7 +45,7 @@ void ArancinoTasks::deviceIdentification(void *pvPramaters){
   while (1)
   {
     char* value = Arancino.getBlinkId();
-    if(!strcmp(value,"1")){
+    if(value != NULL && !strcmp(value,"1")){
         for(int i=0;i < 20; i++){
             #if defined (ARDUINO_ARANCINO_VOLANTE)
             digitalWrite(LED_BUILTIN,LOW);
@@ -66,7 +70,7 @@ void ArancinoTasks::deviceIdentification(void *pvPramaters){
 void ArancinoTasks::interoception(void *pvPramaters){
   while (1)
   {
-    #if !defined(ARDUINO_ARANCINO_VOLANTE) && !defined(ARDUINO_ARCH_RP2040)
+    #if !defined(ARDUINO_ARANCINO_VOLANTE) && !defined(ARDUINO_ARCH_RP2040) && !defined(ARDUINO_ARCH_ESP32)
     //free memory
     int memory_free = xPortGetFreeHeapSize();
     char mem_free[20];
@@ -87,7 +91,7 @@ void ArancinoTasks::interoception(void *pvPramaters){
     char mem_used_key[]="MEM_USED";
     char mem_tot_key[]="MEM_TOT";
     char temp_key[]="TEMP";
-    #if defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040)
+    #if defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_ESP32)
     char* keys[] = {mem_tot_key,temp_key};
     char* values[] = {mem_tot,temp};
     ArancinoPacket acpkt = Arancino.mstore<ArancinoPacket>(keys,values,2);

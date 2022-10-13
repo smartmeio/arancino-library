@@ -71,6 +71,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata)
 }
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
+#if defined(ARDUINO_ARCH_ESP32)
+	esp_task_wdt_init(120, true);
+#endif
 
 	MicroID.getUniqueIDString(id, ID_SIZE/2);
 	_iface->ifaceBegin();
@@ -127,9 +130,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	}
 	//TASK
 	ArancinoTasks _atask;
-	xTaskCreate(_atask.deviceIdentification, "identification", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
-	xTaskCreate(_atask.interoception, "interoception", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle2);
-	xTaskCreate(_atask.sendHeartbeat, "heartbeat", 256, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle3);
+	xTaskCreate(_atask.deviceIdentification, "identification", IDENTIFICATION_STACK, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
+	xTaskCreate(_atask.interoception, "interoception", INTEROCEPTION_STACK, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle2);
+	xTaskCreate(_atask.sendHeartbeat, "heartbeat", HEARTBEAT_STACK, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle3);
 	#endif
 }
 
@@ -183,6 +186,8 @@ void ArancinoClass::startScheduler()
 	vTaskStartScheduler();
 #elif defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
 	vTaskStartScheduler();
+#elif defined(ARDUINO_ARCH_ESP32)
+
 #else
 #error "FreeRTOS not supported on the selected board!"
 #endif
@@ -1016,6 +1021,8 @@ void *ArancinoClass::calloc(size_t nmemb, size_t _size)
 	uint8_t *ptr = (uint8_t *)malloc(nmemb * (_size));
 	memset(ptr, 0, nmemb); // clear the buffer #pte4c0
 	return ptr;
+#elif defined(ARDUINO_ARCH_ESP32)
+	return std::calloc(nmemb, _size);
 #else
 	return pvPortCalloc(nmemb, _size);
 #endif

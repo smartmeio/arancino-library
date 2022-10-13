@@ -36,6 +36,11 @@ under the License
 #define SERIAL_PORT Serial
 #endif
 #define SERIAL_DEBUG Serial1
+#elif defined(ARDUINO_ARCH_ESP32)
+#define BAUDRATE 115200
+#define TIMEOUT 10000
+#define SERIAL_PORT Serial
+#define SERIAL_DEBUG Serial1
 #else
 #define BAUDRATE 256000
 #define TIMEOUT 10000
@@ -124,7 +129,18 @@ under the License
 //MAX UNSIGNED LONG VALUE
 #define MAX_UNSIGNED_LONG_VALUE     4294967295
 
+#if defined(ARDUINO_ARCH_ESP32)
+//ESP32 configMAX_PRIORITIES is 25
+#define ARANCINO_TASK_PRIORITY      20
+#define IDENTIFICATION_STACK        configMINIMAL_STACK_SIZE * 4
+#define INTEROCEPTION_STACK         configMINIMAL_STACK_SIZE * 4
+#define HEARTBEAT_STACK             configMINIMAL_STACK_SIZE * 4
+#else
 #define ARANCINO_TASK_PRIORITY      2
+#define IDENTIFICATION_STACK        256
+#define INTEROCEPTION_STACK         256
+#define HEARTBEAT_STACK             256
+#endif
 
 #define MQTT_MAX_RETRIES            100
 #define BLUETOOTH_MAX_RETRIES       100

@@ -30,7 +30,11 @@ under the License
 #include <cstdlib>
 #include <type_traits>
 #include <MicrocontrollerID.h>
+#if defined(ARDUINO_ARCH_ESP32)
+#include <stdlib.h>
+#else
 #include <avr/dtostrf.h>
+#endif
 
 //#define USEFREERTOS
 #if defined(USEFREERTOS)
@@ -68,6 +72,12 @@ extern "C" {
 #if defined(ARDUINO_ARCH_RP2040)
 #include <hardware/adc.h>
 #include <hardware/watchdog.h>
+#endif
+
+#if defined(ARDUINO_ARCH_ESP32)
+#include <esp_task_wdt.h>
+#define pvPortMalloc std::malloc
+#define vPortFree std::free
 #endif
 
 //Power Mode
