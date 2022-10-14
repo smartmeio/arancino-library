@@ -103,6 +103,7 @@ under the License
 #define MODENV_KEY              (char*)"___MODENV___"
 #define BLINK_ID_KEY			(char*)"___BLINK_ID___"
 #define LIB_VERSION				(char*)"2.0.0"	//library version
+#define CRTX_VERSION            (char*)"1.0.0"  //cortex version
 
 //RESPONSE CODE
 #define INVALID_VALUE_ERROR     -4
@@ -141,5 +142,6 @@ under the License
 #define KEY_VALUE_RESPONSE 1
 #define KEY_RESPONSE 2
 #define FIELDS_ITEMS_RESPONSE 3
-#define ITEMS_RESPONSE 4
-#define CLIENTS_RESPONSE 5
+#define FIELDS_RESPONSE 4
+#define ITEMS_RESPONSE 5
+#define CLIENTS_RESPONSE 6

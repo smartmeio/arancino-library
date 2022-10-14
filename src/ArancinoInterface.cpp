@@ -31,7 +31,7 @@ void SerialIface::ifaceBegin(){
     //Nothing to initialize here.
 }
 
-void SerialIface::sendArancinoCommand(char* command){
+void SerialIface::sendArancinoCommand(JsonDocument& command){
     //check communication timeout with arancino module
 	if (comm_timeout){
 		/*
@@ -45,7 +45,7 @@ void SerialIface::sendArancinoCommand(char* command){
 		comm_timeout=false;
 	}
 	//command must terminate with '\0'!
-	this->_serialPort->write(command, strlen(command)); //excluded '\0'
+	serializeJsonPretty(command, *_serialPort);
 
 	#if defined(USEFREERTOS) && defined(USE_TINYUSB)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING)
@@ -55,30 +55,13 @@ void SerialIface::sendArancinoCommand(char* command){
 	#endif
 }
 
-char* SerialIface::receiveArancinoResponse(char terminator){
-    char* response = NULL; //must be freed
-	String str = "";
-	str = this->_serialPort->readStringUntil(terminator);
-	if( str == ""){
-		//enable timeout check
-		comm_timeout = true;
-	}
-	else {
-		int responseLength = strlen(str.begin());
-		if (responseLength > 0)
-		{
-			response = (char *)Arancino.calloc(responseLength + 1 + 1, sizeof(char));
-			strcpy(response, str.begin());
-			response[responseLength] = END_TX_CHAR;
-			response[responseLength + 1] = '\0';
-		}
-	}
-	return response;
+bool SerialIface::receiveArancinoResponse(JsonDocument& response){
+	
+	DeserializationError error = deserializeMsgPack(response, *_serialPort);
+	comm_timeout = error;  //Deserialization may not always fail due to comm timeout, but just in case
+	return error;
 }
 
-void SerialIface::setSerialTimeout(int timeout){
-	this->_serialTimeout = timeout;
-}
 
 void SerialIface::setSerialPort(Stream& serialPort){
 	this->_serialPort = &serialPort;
@@ -88,14 +71,14 @@ void SerialIface::setSerialPort(){
 	//default implementation for Arancino boards
 	#if defined (SERIAL_PORT) && defined(BAUDRATE) && defined (TIMEOUT)
 	SERIAL_PORT.begin(BAUDRATE);
-	SERIAL_PORT.setTimeout(_serialTimeout);
-	this->_serialTimeout = TIMEOUT;
+	SERIAL_PORT.setTimeout(TIMEOUT);
 	this->_serialPort = &SERIAL_PORT;
 	#endif
 }
 
-/******** MQTT interface *********/
 
+/******** MQTT interface *********/
+/*
 //Static variables definition
 char* MqttIface::_inputBuffer;
 bool MqttIface::_newIncomingMessage = false;
@@ -226,9 +209,10 @@ void MqttIface::_reconnect(){
 		}
 	}
 }
-
+*/
 /******** Bluetooth interface *********/
 
+/*
 void BluetoothIface::setBLESerial(Stream& bleUart){
 	this->_bleSerial = &bleUart;
 }
@@ -262,3 +246,4 @@ char* BluetoothIface::receiveArancinoResponse(char terminator){
 	}
 	return response; 
 }
+*/

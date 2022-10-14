@@ -24,12 +24,13 @@ under the License
 #include <Arduino.h>
 #include <ArancinoDefinitions.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 class ArancinoIface{
 	public:
 	virtual void ifaceBegin() = 0;
-	virtual void sendArancinoCommand(char* command) = 0;
-	virtual char* receiveArancinoResponse(char terminator) = 0;
+	virtual void sendArancinoCommand(JsonDocument& command) = 0;
+	virtual bool receiveArancinoResponse(JsonDocument& response) = 0;
 };
 
 /******** INTERFACES *********/
@@ -40,19 +41,19 @@ class SerialIface : public ArancinoIface {
 		Is a time period which a sent command can waits for the response.
 		It's expressed in milliseconds.
 	*/
-	void setSerialTimeout(int timeout);
 	void setSerialPort();
 	void setSerialPort(Stream& serialPort);
 
 	private:
 	void ifaceBegin();
-	void sendArancinoCommand(char* command);
-	char* receiveArancinoResponse(char terminator);
+	void sendArancinoCommand(JsonDocument& command);
+	bool receiveArancinoResponse(JsonDocument& response);
 
 	Stream* _serialPort;
-	int _serialTimeout = 10000;
 	bool comm_timeout = false;
 };
+
+/*
 
 class MqttIface : public ArancinoIface, public PubSubClient {
 	public:
@@ -100,5 +101,5 @@ class BluetoothIface : public ArancinoIface {
 	Stream* _bleSerial;
 	unsigned int _timeoutCounter = 0;
 };
-
+*/
 #endif /* ARANCINOINTERFACE_H_ */
