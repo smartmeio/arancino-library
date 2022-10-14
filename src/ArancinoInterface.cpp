@@ -21,6 +21,10 @@ under the License
 #include "ArancinoInterface.h"
 #include <Arancino.h>
 
+#if defined(ARDUINO_ARCH_ESP32) && defined(CUSTOM_SERIAL)
+HardwareSerial SERIAL_PORT(UARTx);
+#endif
+
 /*
     All the interface specific methods should be placed here
 */
@@ -83,7 +87,13 @@ void SerialIface::setSerialPort(Stream& serialPort){
 void SerialIface::setSerialPort(){
 	//default implementation for Arancino boards
 	#if defined (SERIAL_PORT) && defined(BAUDRATE) && defined (TIMEOUT)
+	
+	#if defined(ARDUINO_ARCH_ESP32) && defined(UART_RX) && defined(UART_TX)
+	SERIAL_PORT.begin(BAUDRATE, SERIAL_8N1, UART_RX, UART_TX);
+	#else
 	SERIAL_PORT.begin(BAUDRATE);
+	#endif
+
 	SERIAL_PORT.setTimeout(TIMEOUT);
 	this->_serialPort = &SERIAL_PORT;
 	#endif

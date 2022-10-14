@@ -37,10 +37,28 @@ under the License
 #endif
 #define SERIAL_DEBUG Serial1
 #elif defined(ARDUINO_ARCH_ESP32)
+/*
+    Enable CUSTOM_SERIAL if you want to use a custom serial port
+    other than Serial1 (SERIAL_PORT defined below)
+*/
+#define CUSTOM_SERIAL
+
 #define BAUDRATE 115200
 #define TIMEOUT 10000
-#define SERIAL_PORT Serial
-#define SERIAL_DEBUG Serial1
+
+#if defined(CUSTOM_SERIAL)
+#define SERIAL_PORT SerialPort
+#define UARTx   1 //UART1
+#define UART_TX   13
+#define UART_RX   15
+#else
+/*
+    If CUSTOM_SERIAL is disabled and you want to use a standard 
+    serial (e.g. Serial 1) define it here:
+*/
+#define SERIAL_PORT Serial1
+#endif
+#define SERIAL_DEBUG Serial
 #else
 #define BAUDRATE 256000
 #define TIMEOUT 10000
