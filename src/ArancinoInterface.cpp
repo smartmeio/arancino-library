@@ -246,7 +246,10 @@ void BluetoothIface::ifaceBegin(){
 }
 
 void BluetoothIface::sendArancinoCommand(char* command){
-	_bleSerial->write(command, strlen(command));
+	if (_bleSerial != NULL && command != NULL)
+	{
+		_bleSerial->write(command, strlen(command));
+	}
 }
 
 char* BluetoothIface::receiveArancinoResponse(char terminator){

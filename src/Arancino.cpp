@@ -119,7 +119,12 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 	start(keys,values,7);
 	started = true;
 	
-	strcpy(LOG_LEVEL,getModuleLogLevel());
+	char* _log_level = getModuleLogLevel();
+	if (_log_level != NULL)
+	{
+		strcpy(LOG_LEVEL, _log_level);
+	}
+
 	#if defined(USEFREERTOS)
 	/*	All the FreeRTOS initialization should be put here, at the end of the
 		the ArancinoClass::begin method.
@@ -1344,8 +1349,11 @@ ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char *
 	#if defined(USEFREERTOS)
 	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
 	#endif
+	if (str != NULL)
+	{
 		_iface->sendArancinoCommand(str);
 		message = _iface->receiveArancinoResponse(END_TX_CHAR);
+	}
 	#if defined(USEFREERTOS)
 		giveCommMutex();
 	}
@@ -1475,7 +1483,10 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char** param
 	#if defined(USEFREERTOS)
 	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
 	#endif
+	if (str != NULL)
+	{
 		_iface->sendArancinoCommand(str);
+	}
 	#if defined(USEFREERTOS)
 		giveCommMutex();
 	}
@@ -1534,8 +1545,11 @@ ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* 
 	#if defined(USEFREERTOS)
 	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
 	#endif
+	if (str != NULL)
+	{
 		_iface->sendArancinoCommand(str);
-		message = _iface->receiveArancinoResponse(END_TX_CHAR);
+	}
+	message = _iface->receiveArancinoResponse(END_TX_CHAR);
 	#if defined(USEFREERTOS)
 		giveCommMutex();
 	}
@@ -1595,7 +1609,10 @@ void ArancinoClass::executeCommandFast(char* command, char* param1, char* param2
 	#if defined(USEFREERTOS)
 	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
 	#endif
+	if (str != NULL)
+	{
 		_iface->sendArancinoCommand(str);
+	}
 	#if defined(USEFREERTOS)
 		giveCommMutex();
 	}
@@ -1617,7 +1634,16 @@ ArancinoPacket ArancinoClass::createArancinoPacket(char* message, int type_retur
 	else if (type_return == INT)
 	{
 		char *messageParsed = _parse(message);
-		ArancinoPacket temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
+		ArancinoPacket temp;
+		if (messageParsed != NULL)
+		{
+			temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
+		}
+		else
+		{
+			temp = {false, _getResponseCode(message), INT, {.integer = 0}};
+		}
+
 		free(messageParsed);
 		packet = temp;
 	}
@@ -1773,7 +1799,7 @@ char *ArancinoClass::_parse(char *message)
 
 	free(status);
 
-	if (strcmp(value, nullStr) == 0)
+	if (value != NULL && strcmp(value, nullStr) == 0)
 	{
 		free(value);
 		return NULL;
