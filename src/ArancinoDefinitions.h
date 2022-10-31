@@ -160,7 +160,7 @@ under the License
 #define HEARTBEAT_STACK             256
 #endif
 
-#define MQTT_MAX_RETRIES            100
+#define MQTT_MAX_RETRIES            500
 #define BLUETOOTH_MAX_RETRIES       100
 
 #define ID_SIZE IDSIZE*2 //IDSIZE will be provided by microcontroller-id library

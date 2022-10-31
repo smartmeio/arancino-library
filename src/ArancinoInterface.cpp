@@ -169,6 +169,7 @@ char* MqttIface::receiveArancinoResponse(char terminator){
 		if (counter < MQTT_MAX_RETRIES){
 			this->loop();
 			counter++;
+			delay(10);
 		} else {
 			//No need for cleanup: no message was received nor memory allocated for it
 			return NULL;
@@ -186,10 +187,9 @@ void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int lengt
 		//should check whether the message is "reset" or no other messages will be sent here?
 		Arancino.systemReset();
 	} else if (!strcmp(topic, _inputTopic)){
-		_inputBuffer = (char*)Arancino.calloc(length+2, sizeof(char));
+		_inputBuffer = (char*)Arancino.calloc(length + 1, sizeof(char));
 		memcpy(_inputBuffer, payload, length);
-		_inputBuffer[length] = END_TX_CHAR;
-		_inputBuffer[length+1] = '\0';
+		_inputBuffer[length] = '\0';
 		_newIncomingMessage = true;
 	} 
 }
