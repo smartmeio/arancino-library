@@ -154,7 +154,7 @@ under the License
 #define INTEROCEPTION_STACK         configMINIMAL_STACK_SIZE * 4
 #define HEARTBEAT_STACK             configMINIMAL_STACK_SIZE * 4
 #else
-#define ARANCINO_TASK_PRIORITY      2
+#define ARANCINO_TASK_PRIORITY      configMAX_PRIORITIES - 1
 #define IDENTIFICATION_STACK        256
 #define INTEROCEPTION_STACK         256
 #define HEARTBEAT_STACK             256
