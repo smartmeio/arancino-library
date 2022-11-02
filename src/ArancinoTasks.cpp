@@ -70,15 +70,22 @@ void ArancinoTasks::deviceIdentification(void *pvPramaters){
 void ArancinoTasks::interoception(void *pvPramaters){
   while (1)
   {
-    #if !defined(ARDUINO_ARANCINO_VOLANTE) && !defined(ARDUINO_ARCH_RP2040) && !defined(ARDUINO_ARCH_ESP32)
+    #if !defined(ARDUINO_ARANCINO_VOLANTE) && !defined(ARDUINO_ARCH_RP2040)
     //free memory
     int memory_free = xPortGetFreeHeapSize();
     char mem_free[20];
-    itoa(memory_free,mem_free,10);
+    itoa(memory_free, mem_free, 10);
+
     //used memory
-    int memory_used=configTOTAL_HEAP_SIZE-memory_free;
+#if defined(ARDUINO_ARCH_ESP32)
+    int memory_used = ESP.getHeapSize() - memory_free;
+#else
+    int memory_used = configTOTAL_HEAP_SIZE - memory_free;
+#endif
+
     char mem_used[20];
     itoa(memory_used, mem_used, 10);
+
     #endif
     //mcu temperature
     float temperature = arancinoTask.mcuTemp();
@@ -86,12 +93,18 @@ void ArancinoTasks::interoception(void *pvPramaters){
     dtostrf(temperature,4,2,temp);
     //total memory
     char mem_tot[20];
+
+#if defined(ARDUINO_ARCH_ESP32)
+    itoa(ESP.getHeapSize(), mem_tot, 10);
+#else
     itoa(configTOTAL_HEAP_SIZE, mem_tot, 10);
+#endif
+
     char mem_free_key[]="MEM_FREE";
     char mem_used_key[]="MEM_USED";
     char mem_tot_key[]="MEM_TOT";
     char temp_key[]="TEMP";
-    #if defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_ESP32)
+    #if defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040)
     char* keys[] = {mem_tot_key,temp_key};
     char* values[] = {mem_tot,temp};
     ArancinoPacket acpkt = Arancino.mstore<ArancinoPacket>(keys,values,2);
