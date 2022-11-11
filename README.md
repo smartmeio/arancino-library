@@ -18,14 +18,14 @@ Arancino Library allows to export/import data to/from the Linux environment usin
 
 - Insights
 
--  [Cortex Protocol](CORTEX_PROTOCOL.md)
+-  [Cortex Protocol](docs/CORTEX.md)
 
 -  [Debug](docs/DEBUG.md)
 
 -  [Reserved Keys](docs/RESERVED_KEYS.md)
 
 ##  Compatibility list
-The Arancino Library `2.1.0` officially supports the following Arancino Core versions:
+The Arancino Library `3.1.0` officially supports the following Arancino Core versions:
 |Board| Core Version |
 |--|--|
 | SAMD21 | 1.3.0 |
