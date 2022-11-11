@@ -63,68 +63,66 @@ void ArancinoClass::delay(long milli){
 
 /******** API BASIC :: BEGIN *********/
 
-void ArancinoClass::begin(ArancinoMetadata _amdata)
+void ArancinoClass::begin(ArancinoMetadata _amdata, char* custom_v1, char* custom_v2)
 {
 	ArancinoConfig _acfg;
 	// setting default configuration value
 	begin(_amdata, _acfg);
 }
 
-void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
-#if defined(ARDUINO_ARCH_ESP32)
-	esp_task_wdt_init(120, true);
-#endif
+void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* custom_v1, char* custom_v2) {
 
 	MicroID.getUniqueIDString(id, ID_SIZE/2);
 	_iface->ifaceBegin();
-	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
-	decimal_digits = _acfg.DECIMAL_DIGITS;
-
-	_metadata = _amdata;
-
-	int arancinocoreversionLength = 0; // assuming is not defined
-
-	#ifdef ARANCINO_CORE_VERSION
-	arancinocoreversionLength += strlen(ARANCINO_CORE_VERSION);
-	#endif
-
+	
 	// firmware build time
-	char str_build_time[strlen(__DATE__) + 1 + strlen(__TIME__) + 1 + strlen(_metadata.tzoffset)] = "";
+	char str_build_time[strlen(__DATE__) + 1 + strlen(__TIME__) + 1 + strlen(_amdata.tzoffset)] = "";
 	strcpy(str_build_time, __DATE__);
 	strcat(str_build_time, " ");
 	strcat(str_build_time, __TIME__);
 	strcat(str_build_time, " ");
-	strcat(str_build_time, _metadata.tzoffset);
+	strcat(str_build_time, _amdata.tzoffset);
 
-	char fw_lib_ver[]="FW_LIB_VER";
-	char fw_name[]="FW_NAME";
-	char fw_ver[]="FW_VER";
-	char fw_build_time[]="FW_BUILD_TIME";
-	char fw_core_ver[]="FW_CORE_VER";
-	char mcu_family[]="MCU_FAMILY";
-	char fw_use_freertos[]="FW_USE_FREERTOS";
 	#if defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
 		CommMutex = xSemaphoreCreateMutex();
 	}
 
-	char* useFreeRtos = "1";
+	//TODO: this should be notified to module
+	bool useFreeRtos = true;
 	#else
-	char* useFreeRtos = "0";
+	bool useFreeRtos = false;
 	#endif
-	char* keys[] = {fw_lib_ver,fw_name,fw_ver,fw_build_time,fw_core_ver, mcu_family, fw_use_freertos};
-	char* values[] = {LIB_VERSION, _metadata.fwname,_metadata.fwversion,str_build_time,(char*)ARANCINO_CORE_VERSION,(char*)MCU_FAMILY,(char*)useFreeRtos};
 
-	start(keys,values,7);
+	StaticJsonDocument<CMD_DOC_SIZE>cmd_doc;
+	//Build start json
+	cmd_doc["cmd"] = START_COMMAND;
+	JsonObject cmd_args = cmd_doc.createNestedObject("args");
+	cmd_args["port_id"] = id;
+	cmd_args["fw_mcu_family"] = (char*)MCU_FAMILY;
+	cmd_args["fw_lib_ver"] = LIB_VERSION;
+	cmd_args["fw_name"] = _amdata.fwname;
+	cmd_args["fw_ver"] = _amdata.fwversion;
+	cmd_args["fw_build_time"] = str_build_time;
+	cmd_args["fw_core_ver"] = (char*)ARANCINO_CORE_VERSION;
+	cmd_args["fw_crtx_ver"] = CRTX_VERSION;
+	cmd_args["use_freertos"] = useFreeRtos ? 1 : 0;
+	if(custom_v1)
+		cmd_args["CUSTOM_KEY_1"] = custom_v1;
+	if(custom_v2)
+		cmd_args["CUSTOM_KEY_2"] = custom_v2;
+	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
+
+	//Hard coded. Secure mode is not available yet
+	cmd_cfg["scr_mod"] = 0;
+	cmd_cfg["crt_sig"] = "None";
+	cmd_cfg["crt_dev"] = "None";
+
+	start(cmd_doc);
 	started = true;
-	
-	char* _log_level = getModuleLogLevel();
-	if (_log_level != NULL)
-	{
-		strcpy(LOG_LEVEL, _log_level);
-	}
 
+	//strcpy(LOG_LEVEL,getModuleLogLevel());
 	#if defined(USEFREERTOS)
 	/*	All the FreeRTOS initialization should be put here, at the end of the
 		the ArancinoClass::begin method.
@@ -143,27 +141,47 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg) {
 
 /******** API BASIC :: START *********/
 
-void ArancinoClass::start(char **keys, char **values, int len)
-{
-	ArancinoPacket packet;
+void ArancinoClass::start(JsonDocument& cmd_doc) {
+	bool isError = true;
 	do
 	{
-		// try to start comunication every 2,5 seconds.
+		//Retry communication every 2.5 seconds of blocking delay
 		delay(2500);
 
-		packet = executeCommand(START_COMMAND, NULL, keys, values, NULL, len, false, STRING_ARRAY);
-		if (packet.responseCode == RSP_OK)
-		{
-			// timestamp from arancino module
-			memcpy(timestamp, packet.response.stringArray[1], 13);
-			char tmst_part[5];
-			memcpy(tmst_part, timestamp, 4); // first 4 digits of epoch
-			tmst_sup = atoi(tmst_part);
-			tmst_inf = atoi(&timestamp[4]); // last 9 digits of epoch
-			millis_previous = millis();
+		StaticJsonDocument<RSP_DOC_SIZE>rsp_doc;
+		bool error;
+
+		#if defined(USEFREERTOS)
+		if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
+		#endif
+			_iface->sendArancinoCommand(cmd_doc);
+			error = _iface->receiveArancinoResponse(rsp_doc);
+		#if defined(USEFREERTOS)
+			giveCommMutex();
 		}
-	} while (packet.isError == true || packet.responseCode != RSP_OK);
-	free(packet);
+		#endif
+
+		if (error == DeserializationError::Ok) {
+			//Handle start response
+			if (rsp_doc["rsp_code"] == 100){
+				isError = false;
+				const char* d_ver = rsp_doc["args"]["dmn_ver"];
+				const char* d_env = rsp_doc["args"]["dmn_env"];
+				strcpy(DAEMON_VER, d_ver);
+				strcpy(DAEMON_ENV, d_env);
+
+				//Timestamp handling
+				const char* ts = rsp_doc["cfg"]["ts"];
+				
+				memcpy(timestamp, ts, 13);
+				char tmst_part[5];
+				memcpy(tmst_part, timestamp, 4);
+				tmst_sup = atoi(tmst_part);  // first 4 digits of epoch
+				tmst_inf = atoi(&timestamp[4]); // last 4 digits of epoch
+				millis_previous = millis();				
+			}
+		}
+	} while (isError == true);
 }
 
 #if defined(USEFREERTOS)
@@ -199,7 +217,7 @@ void ArancinoClass::startScheduler()
 }
 #endif
 
-/******** API ADVANCED :: DEBUG OPTIONS *********/
+/******** API BASIC :: DEBUG OPTIONS *********/
 
 void ArancinoClass::enableDebugMessages(bool sendViaCommMode){
 	if (sendViaCommMode){
@@ -230,133 +248,581 @@ void ArancinoClass::disableDebugMessages(){
 	_dbgSerial = NULL;
 }
 
-/******** API BASIC :: MSET *********/
-
-ArancinoPacket ArancinoClass::mset(char **keys, char **values, int len, bool isPersistent)
-{
-	if ((keys == NULL) || (values == NULL) || (len <= 0))
-		return invalidCommandErrorPacket;
-	if (isPersistent)
-		return executeCommand(MSET_PERS_COMMAND, NULL, keys, values, NULL, len, arancino_id_prefix, VOID);
-	else
-		return executeCommand(MSET_COMMAND, NULL, keys, values, NULL, len, arancino_id_prefix, VOID);
-}
-
-/******** API BASIC :: MGET *********/
-
-template <>
-ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char **keys, int len)
-{
-	if ((keys == NULL) || (len <= 0))
-		return invalidCommandErrorPacket;
-	return executeCommand(MGET_COMMAND, NULL, keys, NULL, NULL, len, arancino_id_prefix, STRING_ARRAY);
-}
-
-template <>
-char **ArancinoClass::mget(char **keys, int len)
-{
-	ArancinoPacket packet = mget<ArancinoPacket>(keys, len);
-	if (packet.isError)
-		return NULL;
-	return packet.response.stringArray;
-}
 
 /******** API BASIC :: SET *********/
 
-ArancinoPacket ArancinoClass::set(char *key, int value, bool isPersistent)
+ArancinoPacket ArancinoClass::set(char *key, int value, bool isAck, bool isPersistent, char* type)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
-	return set(key, str, isPersistent);
+	return set(key, str, isAck, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set(char *key, uint32_t value, bool isPersistent)
+ArancinoPacket ArancinoClass::set(char *key, uint32_t value, bool isAck, bool isPersistent, char* type)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
-	return set(key, str, isPersistent);
+	return set(key, str, isAck, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set(char *key, long value, bool isPersistent)
+ArancinoPacket ArancinoClass::set(char *key, long value, bool isAck, bool isPersistent, char* type)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
-	return set(key, str, isPersistent);
+	return set(key, str, isAck, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set(char *key, float value, bool isPersistent)
+ArancinoPacket ArancinoClass::set(char *key, float value, bool isAck, bool isPersistent, char* type)
 {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
-	return set(key, str, isPersistent);
+	return set(key, str, isAck, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set(char *key, double value, bool isPersistent)
+ArancinoPacket ArancinoClass::set(char *key, double value, bool isAck, bool isPersistent, char* type)
 {
 	char str[20] = "";
 	_doubleToString(value, decimal_digits, str);
-	return set(key, str, isPersistent);
+	return set(key, str, isAck, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set(char *key, char *value, bool isPersistent)
+ArancinoPacket ArancinoClass::set(char *key, char *value, bool isAck, bool isPersistent, char* type)
 {
-	return __set(key, value, isPersistent);
-}
-
-ArancinoPacket ArancinoClass::__set(char *key, char *value, bool isPersistent)
-{
-	if (key == NULL && value == NULL && strcmp(key, "") == 0)
+	if (key == NULL || value == NULL || strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
-	if (isPersistent)
-		return executeCommand(SET_PERS_COMMAND, key, value, NULL, arancino_id_prefix, VOID);
-	else
-		return executeCommand(SET_COMMAND, key, value, NULL, arancino_id_prefix, VOID);
+
+	ArancinoCFG cfg;
+	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
+	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
+	cfg.type = type;
+	return executeCommand(SET_COMMAND, key, NULL, value, isAck, true, true, cfg, VOID_RESPONSE);
+}
+
+
+/******** API BASIC :: MSET *********/
+
+ArancinoPacket ArancinoClass::mset(char **keys, char **values, int len, bool isAck, bool isPersistent, char* type )
+{
+	if ((keys == NULL) || (values == NULL) || (len <= 0))
+		return invalidCommandErrorPacket;
+	
+	ArancinoCFG cfg;
+	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
+	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
+	cfg.type = type;
+	return executeCommand(SET_COMMAND, keys, NULL, values, len, isAck, true, true, cfg, VOID_RESPONSE);
 }
 
 /******** API BASIC :: GET *********/
 
 template <>
-ArancinoPacket ArancinoClass::get<ArancinoPacket>(char *key)
+ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key, bool isPersistent, char* type)
 {
 	if (key == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
-	char *param = NULL;
-	return executeCommand(GET_COMMAND, key, param, param, arancino_id_prefix, STRING);
+	
+	ArancinoCFG cfg;
+	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
+	cfg.type = type;
+	return executeCommand(GET_COMMAND, key, NULL, NULL, true, true, false, cfg, KEY_VALUE_RESPONSE);
 }
 
-template <>
-char *ArancinoClass::get(char *key)
+template <> char *ArancinoClass::get(char* key, bool isPersistent, char* type)
 {
-	ArancinoPacket packet = get<ArancinoPacket>(key);
+	ArancinoPacket packet = get<ArancinoPacket>(key, isPersistent, type);
 	if (!packet.isError)
 		return packet.response.string;
 	else
 		return NULL;
 }
 
+/******** API BASIC :: MGET *********/
+
+template <> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char **keys, int len, bool isPersistent, char* type)
+{
+	if ((keys == NULL) || (len <= 0))
+		return invalidCommandErrorPacket;
+
+	ArancinoCFG cfg;
+	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
+	cfg.type = type;
+	return executeCommand(GET_COMMAND, keys, NULL, NULL, len, true, true, false, cfg, KEY_VALUE_RESPONSE);
+}
+
+template <> char **ArancinoClass::mget(char** keys, int len, bool isPersistent, char* type)
+{
+	ArancinoPacket packet = mget<ArancinoPacket>(keys, len, isPersistent, type);
+	if (packet.isError)
+		return NULL;
+	return packet.response.stringArray;
+}
+
+/******** API BASIC :: DEL *********/
+
+template <>
+ArancinoPacket ArancinoClass::del<ArancinoPacket>(char* key, bool isAck, bool isPersistent, char* type)
+{
+	if (key == NULL && strcmp(key, "") == 0)
+		return invalidCommandErrorPacket;
+	
+	ArancinoCFG cfg;
+	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
+	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
+	cfg.type = type;
+	return executeCommand(DEL_COMMAND, key, NULL, NULL, isAck, true, false, cfg, KEY_RESPONSE);
+}
+
+template <>
+int ArancinoClass::del(char* key, bool isAck, bool isPersistent, char* type)
+{
+	ArancinoPacket packet = del<ArancinoPacket>(key, isAck, isPersistent, type);
+	if (!packet.isError)
+		return packet.response.integer;
+	else
+		return 0;
+}
+
+/******** API BASIC :: HSET *********/
+
+ArancinoPacket ArancinoClass::hset(char *key, char *field, int value, bool isAck, bool isPersistent, char* type)
+{
+	char str[20];
+	itoa(value, str, 10);
+	return hset(key, field, str, isAck, isPersistent, type);
+}
+
+ArancinoPacket ArancinoClass::hset(char *key, char *field, float value, bool isAck, bool isPersistent, char* type)
+{
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	return hset(key, field, str);
+}
+
+ArancinoPacket ArancinoClass::hset(char *key, char *field, double value, bool isAck, bool isPersistent, char* type)
+{
+	char str[20] = "";
+	_doubleToString(value, decimal_digits, str);
+	return hset(key, field, str, isAck, isPersistent, type);
+}
+
+ArancinoPacket ArancinoClass::hset(char *key, char *field, uint32_t value, bool isAck, bool isPersistent, char* type)
+{
+	char str[20];
+	itoa(value, str, 10);
+	return hset(key, field, str, isAck, isPersistent, type);
+}
+
+ArancinoPacket ArancinoClass::hset(char *key, char *field, long value, bool isAck, bool isPersistent, char* type)
+{
+	char str[20];
+	itoa(value, str, 10);
+	return hset(key, field, str, isAck, isPersistent, type);
+}
+
+ArancinoPacket ArancinoClass::hset(char *key, char *field, char *value, bool isAck, bool isPersistent, char* type)
+{
+	if (key == NULL && field == NULL || value == NULL || strcmp(key, "") == 0 || strcmp(field, "") == 0)
+		return invalidCommandErrorPacket;
+	
+	ArancinoCFG cfg;
+	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
+	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
+	cfg.type = type;
+	return executeCommand(HSET_COMMAND, key, field, value, isAck, true, true, cfg, VOID_RESPONSE);
+}
+
+/******** API BASIC :: HGET *********/
+
+template <>
+ArancinoPacket ArancinoClass::hget<ArancinoPacket>(char *key, char *field, bool isPersistent, char* type)
+{
+	if (key == NULL || field == NULL || strcmp(key, "") == 0 || strcmp(field, "") == 0)
+		return invalidCommandErrorPacket;
+
+	ArancinoCFG cfg;
+	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
+	cfg.type = type;
+	return executeCommand(HGET_COMMAND, key, field, NULL, true, true, true, cfg, KEY_VALUE_RESPONSE);
+}
+
+template <>
+char *ArancinoClass::hget(char *key, char *field, bool isPersistent, char* type)
+{
+	ArancinoPacket packet = hget<ArancinoPacket>(key, field, isPersistent, type);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+/******** API BASIC :: HDEL *********/
+
+template <>
+ArancinoPacket ArancinoClass::hdel<ArancinoPacket>(char *key, char *field, bool isAck, bool isPersistent)
+{
+	if (key == NULL && field == NULL && strcmp(key, "") == 0 && strcmp(field, "") == 0)
+		return invalidCommandErrorPacket;
+	
+	ArancinoCFG cfg;
+	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
+	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
+	return executeCommand(HDEL_COMMAND, key, field, NULL, isAck, true, true, cfg, FIELDS_RESPONSE);
+}
+
+template <>
+int ArancinoClass::hdel(char *key, char *field, bool isAck, bool isPersistent)
+{
+	ArancinoPacket packet = hdel<ArancinoPacket>(key, field, isAck, isPersistent);
+	int retValue = 0;
+	if (!packet.isError)
+		retValue = packet.response.integer;
+	return retValue;
+}
+
+/******** API BASIC :: PUBLISH *********/
+
+template <>
+ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, char *msg, bool isAck)
+{
+	return __publish(channel, msg, isAck);
+}
+
+template <>
+int ArancinoClass::publish(char *channel, char *msg, bool isAck)
+{
+	ArancinoPacket packet = __publish(channel, msg, isAck);
+	if (!packet.isError)
+		return packet.response.integer;
+	else
+		return 0;
+}
+
+template <>
+ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, double msg, bool isAck)
+{
+	char str[20] = "";
+	_doubleToString(msg, decimal_digits, str);
+	return __publish(channel, str, isAck);
+}
+
+template <>
+int ArancinoClass::publish(char *channel, double msg, bool isAck)
+{
+	char str[20] = "";
+	_doubleToString(msg, decimal_digits, str);
+	ArancinoPacket packet = __publish(channel, str, isAck);
+	if (!packet.isError)
+		return packet.response.integer;
+	else
+		return 0;
+}
+
+template <>
+ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, int msg, bool isAck)
+{
+	char str[20] = "";
+	itoa(msg, str, 10);
+	return __publish(channel, str, isAck);
+}
+
+template <>
+int ArancinoClass::publish(char *channel, int msg, bool isAck)
+{
+	char str[20] = "";
+	itoa(msg, str, 10);
+	ArancinoPacket packet = __publish(channel, str, isAck);
+	if (!packet.isError)
+		return packet.response.integer;
+	else
+		return 0;
+}
+
+template <>
+ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, uint32_t msg, bool isAck)
+{
+	char str[20] = "";
+	itoa(msg, str, 10);
+	return __publish(channel, str, isAck);
+}
+
+template <>
+int ArancinoClass::publish(char *channel, uint32_t msg, bool isAck)
+{
+	char str[20] = "";
+	itoa(msg, str, 10);
+	ArancinoPacket packet = __publish(channel, str, isAck);
+	if (!packet.isError)
+		return packet.response.integer;
+	else
+		return 0;
+}
+
+template <>
+ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, long msg, bool isAck)
+{
+	char str[20] = "";
+	itoa(msg, str, 10);
+	return __publish(channel, str, isAck);
+}
+
+template <>
+int ArancinoClass::publish(char *channel, long msg, bool isAck)
+{
+	char str[20] = "";
+	itoa(msg, str, 10);
+	ArancinoPacket packet = __publish(channel, str, isAck);
+	if (!packet.isError)
+		return packet.response.integer;
+	else
+		return 0;
+}
+
+ArancinoPacket ArancinoClass::__publish(char *channel, char *msg, bool isAck)
+{
+	if (channel == NULL || msg == NULL || strcmp(channel, "") == 0)
+		return invalidCommandErrorPacket;
+
+	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
+	JsonObject cmd_args = cmd_doc.createNestedObject("args");
+	cmd_doc["cmd"] = PUBLISH_COMMAND;
+	JsonArray cmd_items = cmd_args.createNestedArray("items");
+	JsonObject items_obj = cmd_items.createNestedObject();
+	items_obj["channel"] = channel;
+	items_obj["message"] = msg;
+
+	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
+	cmd_cfg["ack"] = isAck? 0 : 1;
+	return executeCommand(cmd_doc, isAck, CLIENTS_RESPONSE);
+}
+
+/******** API BASIC :: FLUSH *********/
+
+ArancinoPacket ArancinoClass::flush(bool isAck, bool isPersistent)
+{
+	ArancinoCFG cfg;
+	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
+	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
+	return executeCommand(FLUSH_COMMAND, NULL, NULL, NULL, isAck, false, false, cfg, VOID_RESPONSE);
+}
+
+/******** API BASIC :: STORE *********/
+
+template <>
+ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, int value, char* timestamp, bool isAck)
+{
+	char str[20] = "";
+	itoa(value, str, 10);
+	return  __store(key, str, timestamp, isAck);
+}
+
+template <>
+char *ArancinoClass::store(char *key, int value, char* timestamp, bool isAck)
+{
+	char str[20] = "";
+	itoa(value, str, 10);
+	ArancinoPacket packet =  __store(key, str, timestamp, isAck);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template <>
+ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, uint32_t value, char* timestamp, bool isAck)
+{
+	char str[20] = "";
+	itoa(value, str, 10);
+	return  __store(key, str, timestamp, isAck);
+}
+
+template <>
+char *ArancinoClass::store(char *key, uint32_t value, char* timestamp, bool isAck)
+{
+	char str[20] = "";
+	itoa(value, str, 10);
+	ArancinoPacket packet =  __store(key, str, timestamp, isAck);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template <>
+ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, long value, char* timestamp, bool isAck)
+{
+	char str[20] = "";
+	itoa(value, str, 10);
+	return  __store(key, str, timestamp, isAck);
+}
+
+template <>
+char *ArancinoClass::store(char *key, long value, char* timestamp, bool isAck)
+{
+	char str[20] = "";
+	itoa(value, str, 10);
+	ArancinoPacket packet = __store(key, str, timestamp, isAck);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+template <>
+ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, float value, char* timestamp, bool isAck)
+{
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	return  __store(key, str, timestamp, isAck);
+}
+
+template <>
+char *ArancinoClass::store(char *key, float value, char* timestamp, bool isAck)
+{
+	char str[20] = "";
+	_floatToString(value, decimal_digits, str);
+	ArancinoPacket packet =  __store(key, str, timestamp, isAck);
+	if (!packet.isError)
+		return packet.response.string;
+	else
+		return NULL;
+}
+
+ArancinoPacket ArancinoClass::__store( char* key, char* value, char* timestamp, bool isAck) {
+
+	if(timestamp==NULL){
+		 timestamp = getTimestamp();
+	}
+
+	if(key == NULL || value == NULL || strcmp(key, "") == 0){
+		return invalidCommandErrorPacket;
+	}
+
+	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
+	JsonObject cmd_args = cmd_doc.createNestedObject("args");
+	cmd_doc["cmd"] = STORE_COMMAND;
+	JsonArray cmd_items = cmd_args.createNestedArray("items");
+	JsonObject items_obj = cmd_items.createNestedObject();
+	items_obj["key"] = key;
+	items_obj["value"] = value;
+	items_obj["ts"] = timestamp;
+
+	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
+	cmd_cfg["ack"] = isAck? 0 : 1;
+	cmd_cfg["type"] = "tse";
+	return executeCommand(cmd_doc, isAck, ITEMS_RESPONSE);
+}
+
+/******** API BASIC :: MSTORE *********/
+
+template <>
+ArancinoPacket ArancinoClass::mstore<ArancinoPacket>(char** keys, char** values, int len, char* timestamp, bool isAck)
+{
+	if(timestamp==NULL){
+		 timestamp = getTimestamp();
+	}
+
+	if ((keys == NULL) || (values == NULL) || (len <= 0))
+	{
+		return invalidCommandErrorPacket;
+	}
+
+	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
+	JsonObject cmd_args = cmd_doc.createNestedObject("args");
+	cmd_doc["cmd"] = STORE_COMMAND;
+	JsonArray cmd_items = cmd_args.createNestedArray("items");
+	for (int i=0; i<len; i++){
+		JsonObject items_obj = cmd_items.createNestedObject();
+		items_obj["key"] = keys[i];
+		items_obj["value"] = values[i];
+		items_obj["ts"] = timestamp;
+	}
+
+	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
+	cmd_cfg["ack"] = isAck? 0 : 1;
+	cmd_cfg["type"] = "tse";
+	return executeCommand(cmd_doc, isAck, ITEMS_RESPONSE);
+}
+
+template<> 
+void ArancinoClass::mstore(char** keys, char** values, int len, char* timestamp, bool isAck) {
+	if(timestamp==NULL){
+		 timestamp = getTimestamp();
+	}
+	if ((keys == NULL) || (values == NULL) || (len <= 0)) {
+		return;
+	}
+	ArancinoPacket packet = mstore<ArancinoPacket>(keys, values, len, timestamp, isAck);
+	free (packet);
+}
+
+template <>
+char **ArancinoClass::mstore(char** keys, char** values, int len, char* timestamp, bool isAck)
+{
+	if(timestamp==NULL){
+		 timestamp = getTimestamp();
+	}
+	if ((keys == NULL) || (values == NULL) || (len <= 0)) {
+		return NULL;
+	}
+	ArancinoPacket packet = mstore<ArancinoPacket>(keys, values, len, timestamp, isAck);
+	if (!packet.isError)
+		return packet.response.stringArray;
+	else
+		return NULL;
+}
+
+/******** API BASIC :: STORETAGS *********/
+
+ArancinoPacket ArancinoClass::storetags(char *key, char **tags, char **values, int len, char* timestamp, bool isAck)
+{
+	if(timestamp==NULL){
+		 timestamp = getTimestamp();
+	}
+	if ((key == NULL) || (tags == NULL) || (values == NULL) || (len <= 0))
+		return invalidCommandErrorPacket;
+	
+	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
+	JsonObject cmd_args = cmd_doc.createNestedObject("args");
+	cmd_doc["cmd"] = STORETAGS_COMMAND;
+	cmd_args["key"] = key;
+	JsonArray cmd_items = cmd_args.createNestedArray("items");
+	for (int i=0; i<len; i++){
+		JsonObject items_obj = cmd_items.createNestedObject();
+		items_obj["tag"] = tags[i];
+		items_obj["value"] = values[i];
+	}
+	cmd_args["ts"] = timestamp;
+
+	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
+	cmd_cfg["ack"] = isAck? 0 : 1;
+	cmd_cfg["type"] = "tags";
+	return executeCommand(cmd_doc, isAck, VOID_RESPONSE);
+}
+
 /******** API BASIC :: SETRESERVED *********/
 
-ArancinoPacket ArancinoClass::setReserved(char *key, char *value, bool id_prefix)
+ArancinoPacket ArancinoClass::setReserved(char *key, char *value)
 {
 	if (key == NULL && value == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
-	return executeCommand(SETRESERVED_COMMAND, key, value, NULL, id_prefix, VOID);
+	return set(key, value, true, true, "rsvd");
 }
 
 /******** API BASIC :: GETRESERVED *********/
 
 template <>
-ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char *key, bool id_prefix)
+ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char *key)
 {
 	if (key == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
-	return executeCommand(GETRESERVED_COMMAND, key, NULL, NULL, id_prefix, STRING);
+
+	return get<ArancinoPacket>(key, true, "rsvd");
 }
 
 template <>
-char *ArancinoClass::getReserved(char *key, bool id_prefix)
+char *ArancinoClass::getReserved(char *key)
 {
-	ArancinoPacket packet = getReserved<ArancinoPacket>(key, id_prefix);
+	ArancinoPacket packet = getReserved<ArancinoPacket>(key);
 	if (!packet.isError)
 		return packet.response.string;
 	else
@@ -367,7 +833,7 @@ char *ArancinoClass::getModuleVersion()
 {
 	char key[strlen(MODVERS_KEY) + 1];
 	strcpy(key, MODVERS_KEY);
-	char *retString = getReserved(key, false);
+	char *retString = getReserved(key);
 	return retString;
 }
 
@@ -375,7 +841,7 @@ char *ArancinoClass::getModuleLogLevel()
 {
 	char key[strlen(MODLOGLVL_KEY) + 1];
 	strcpy(key, MODLOGLVL_KEY);
-	char *retString = getReserved(key, false);
+	char *retString = getReserved(key);
 	return retString;
 }
 
@@ -383,7 +849,7 @@ char *ArancinoClass::getModuleEnvironment()
 {
 	char key[strlen(MODENV_KEY) + 1];
 	strcpy(key, MODENV_KEY);
-	char *retString = getReserved(key, false);
+	char *retString = getReserved(key);
 	return retString;
 }
 
@@ -391,7 +857,7 @@ char *ArancinoClass::getBlinkId()
 {
 	char key[strlen(BLINK_ID_KEY) + 1];
 	strcpy(key, BLINK_ID_KEY);
-	char *retString = getReserved(key, true);
+	char *retString = getReserved(key);
 	return retString;
 }
 
@@ -401,562 +867,7 @@ ArancinoPacket ArancinoClass::setBlinkId(int value)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
-	return setReserved(BLINK_ID_KEY, str, true);
-}
-
-/******** API BASIC :: DEL *********/
-
-template <>
-ArancinoPacket ArancinoClass::del<ArancinoPacket>(char *key)
-{
-	if (key == NULL && strcmp(key, "") == 0)
-		return invalidCommandErrorPacket;
-	return executeCommand(DEL_COMMAND, key, NULL, NULL, arancino_id_prefix, INT);
-}
-
-template <>
-int ArancinoClass::del(char *key)
-{
-	ArancinoPacket packet = del<ArancinoPacket>(key);
-	if (!packet.isError)
-		return packet.response.integer;
-	else
-		return 0;
-}
-
-/******** API BASIC :: HSET *********/
-
-ArancinoPacket ArancinoClass::hset(char *key, char *field, int value, bool isPersistent)
-{
-	char str[20];
-	itoa(value, str, 10);
-	return hset(key, field, str);
-}
-
-ArancinoPacket ArancinoClass::hset(char *key, char *field, float value, bool isPersistent)
-{
-	char str[20] = "";
-	_floatToString(value, decimal_digits, str);
-	return hset(key, field, str);
-}
-
-ArancinoPacket ArancinoClass::hset(char *key, char *field, double value, bool isPersistent)
-{
-	char str[20] = "";
-	_doubleToString(value, decimal_digits, str);
-	return hset(key, field, str);
-}
-
-ArancinoPacket ArancinoClass::hset(char *key, char *field, uint32_t value, bool isPersistent)
-{
-	char str[20];
-	itoa(value, str, 10);
-	return hset(key, field, str);
-}
-
-ArancinoPacket ArancinoClass::hset(char *key, char *field, long value, bool isPersistent)
-{
-	char str[20];
-	itoa(value, str, 10);
-	return hset(key, field, str);
-}
-
-ArancinoPacket ArancinoClass::hset(char *key, char *field, char *value, bool isPersistent)
-{
-	if (key == NULL && field == NULL && value == NULL && strcmp(key, "") == 0 && strcmp(field, "") == 0)
-		return invalidCommandErrorPacket;
-	if (isPersistent)
-		return executeCommand(HSET_PERS_COMMAND, key, field, value, arancino_id_prefix, VOID);
-	else
-		return executeCommand(HSET_COMMAND, key, field, value, arancino_id_prefix, VOID);
-}
-
-/******** API BASIC :: HGET *********/
-
-template <>
-ArancinoPacket ArancinoClass::hget<ArancinoPacket>(char *key, char *field)
-{
-	if (key == NULL && field == NULL && strcmp(key, "") == 0 && strcmp(field, "") == 0)
-		return invalidCommandErrorPacket;
-	return executeCommand(HGET_COMMAND, key, field, NULL, arancino_id_prefix, STRING);
-}
-
-template <>
-char *ArancinoClass::hget(char *key, char *field)
-{
-	ArancinoPacket packet = hget<ArancinoPacket>(key, field);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-/******** API BASIC :: HGETALL PACKET *********/
-
-template <>
-ArancinoPacket ArancinoClass::hgetall<ArancinoPacket>(char *key)
-{
-	if (key == NULL && strcmp(key, "") == 0)
-		return invalidCommandErrorPacket;
-	char *param = NULL;
-	return executeCommand(HGETALL_COMMAND, key, param, param, arancino_id_prefix, STRING_ARRAY);
-}
-
-template <>
-char **ArancinoClass::hgetall(char *key)
-{
-	ArancinoPacket packet = hgetall<ArancinoPacket>(key);
-	if (!packet.isError)
-		return packet.response.stringArray;
-	else
-		return NULL;
-}
-
-/******** API BASIC :: HKEYS *********/
-
-template <>
-ArancinoPacket ArancinoClass::hkeys<ArancinoPacket>(char *key)
-{
-	if (key == NULL && strcmp(key, "") == 0)
-		return invalidCommandErrorPacket;
-	char *param = NULL;
-	return executeCommand(HKEYS_COMMAND, key, param, param, arancino_id_prefix, STRING_ARRAY);
-}
-
-template <>
-char **ArancinoClass::hkeys(char *key)
-{
-	ArancinoPacket packet = hkeys<ArancinoPacket>(key);
-	char **retArray;
-	if (!packet.isError)
-		retArray = packet.response.stringArray;
-	else
-		retArray = NULL;
-	return retArray;
-}
-
-/******** API BASIC :: HVALS *********/
-
-template <>
-ArancinoPacket ArancinoClass::hvals<ArancinoPacket>(char *key)
-{
-	if (key == NULL && strcmp(key, "") == 0)
-		return invalidCommandErrorPacket;
-	char *param = NULL;
-	return executeCommand(HVALS_COMMAND, key, param, param, arancino_id_prefix, STRING_ARRAY);
-}
-
-template <>
-char **ArancinoClass::hvals(char *key)
-{
-	ArancinoPacket packet = hvals<ArancinoPacket>(key);
-	char **retArray;
-	if (!packet.isError)
-		retArray = packet.response.stringArray;
-	else
-		retArray = NULL;
-	return retArray;
-}
-
-/******** API BASIC :: HDEL *********/
-
-template <>
-ArancinoPacket ArancinoClass::hdel<ArancinoPacket>(char *key, char *field)
-{
-	if (key == NULL && field == NULL && strcmp(key, "") == 0 && strcmp(field, "") == 0)
-		return invalidCommandErrorPacket;
-	return executeCommand(HDEL_COMMAND, key, field, NULL, arancino_id_prefix, INT);
-}
-
-template <>
-int ArancinoClass::hdel(char *key, char *field)
-{
-	ArancinoPacket packet = hdel<ArancinoPacket>(key, field);
-	int retValue = 0;
-	if (!packet.isError)
-		retValue = packet.response.integer;
-	return retValue;
-}
-
-/******** API BASIC :: KEYS PACKET *********/
-
-template <>
-ArancinoPacket ArancinoClass::keys<ArancinoPacket>(char *pattern)
-{
-	if (pattern == NULL && strcmp(pattern, "") == 0)
-		return invalidCommandErrorPacket;
-	char *param = NULL;
-	return executeCommand(KEYS_COMMAND, pattern, param, param, false, STRING_ARRAY);
-}
-
-template <>
-char **ArancinoClass::keys(char *pattern)
-{
-	ArancinoPacket packet = keys<ArancinoPacket>(pattern);
-	if (!packet.isError)
-		return packet.response.stringArray;
-	else
-		return NULL;
-}
-
-/******** API BASIC :: PUBLISH *********/
-
-ArancinoPacket ArancinoClass::__publish(char *channel, char *msg)
-{
-	if (channel == NULL && msg == NULL && strcmp(channel, "") == 0)
-		return invalidCommandErrorPacket;
-	return executeCommand(PUBLISH_COMMAND, channel, msg, NULL, arancino_id_prefix, INT);
-}
-
-template <>
-ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, char *msg)
-{
-	return __publish(channel, msg);
-}
-
-template <>
-int ArancinoClass::publish(char *channel, char *msg)
-{
-	ArancinoPacket packet = __publish(channel, msg);
-	if (!packet.isError)
-		return packet.response.integer;
-	else
-		return 0;
-}
-
-template <>
-ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, double msg)
-{
-	char str[20] = "";
-	_doubleToString(msg, decimal_digits, str);
-	return __publish(channel, str);
-}
-
-template <>
-int ArancinoClass::publish(char *channel, double msg)
-{
-	char str[20] = "";
-	_doubleToString(msg, decimal_digits, str);
-	ArancinoPacket packet = __publish(channel, str);
-	if (!packet.isError)
-		return packet.response.integer;
-	else
-		return 0;
-}
-
-template <>
-ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, int msg)
-{
-	char str[20] = "";
-	itoa(msg, str, 10);
-	return __publish(channel, str);
-}
-
-template <>
-int ArancinoClass::publish(char *channel, int msg)
-{
-	char str[20] = "";
-	itoa(msg, str, 10);
-	ArancinoPacket packet = __publish(channel, str);
-	if (!packet.isError)
-		return packet.response.integer;
-	else
-		return 0;
-}
-
-template <>
-ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, uint32_t msg)
-{
-	char str[20] = "";
-	itoa(msg, str, 10);
-	return __publish(channel, str);
-}
-
-template <>
-int ArancinoClass::publish(char *channel, uint32_t msg)
-{
-	char str[20] = "";
-	itoa(msg, str, 10);
-	ArancinoPacket packet = __publish(channel, str);
-	if (!packet.isError)
-		return packet.response.integer;
-	else
-		return 0;
-}
-
-template <>
-ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, long msg)
-{
-	char str[20] = "";
-	itoa(msg, str, 10);
-	return __publish(channel, str);
-}
-
-template <>
-int ArancinoClass::publish(char *channel, long msg)
-{
-	char str[20] = "";
-	itoa(msg, str, 10);
-	ArancinoPacket packet = __publish(channel, str);
-	if (!packet.isError)
-		return packet.response.integer;
-	else
-		return 0;
-}
-
-/******** API BASIC :: FLUSH *********/
-
-ArancinoPacket ArancinoClass::flush()
-{
-	char *param = NULL;
-	return executeCommand(FLUSH_COMMAND, param, param, param, false, VOID);
-}
-
-/******** API BASIC :: STORE *********/
-
-template <>
-ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, int value)
-{
-	char str[20] = "";
-	itoa(value, str, 10);
-	return  __store(key, str);
-}
-
-template <>
-char *ArancinoClass::store(char *key, int value)
-{
-	char str[20] = "";
-	itoa(value, str, 10);
-	ArancinoPacket packet =  __store(key, str);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-template <>
-ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, uint32_t value)
-{
-	char str[20] = "";
-	itoa(value, str, 10);
-	return  __store(key, str);
-}
-
-template <>
-char *ArancinoClass::store(char *key, uint32_t value)
-{
-	char str[20] = "";
-	itoa(value, str, 10);
-	ArancinoPacket packet =  __store(key, str);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-template <>
-ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, long value)
-{
-	char str[20] = "";
-	itoa(value, str, 10);
-	return  __store(key, str);
-}
-
-template <>
-char *ArancinoClass::store(char *key, long value)
-{
-	char str[20] = "";
-	itoa(value, str, 10);
-	ArancinoPacket packet =__store(key, str);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-template <>
-ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, float value)
-{
-	char str[20] = "";
-	_floatToString(value, decimal_digits, str);
-	return  __store(key, str);
-}
-
-template <>
-char *ArancinoClass::store(char *key, float value)
-{
-	char str[20] = "";
-	_floatToString(value, decimal_digits, str);
-	ArancinoPacket packet =  __store(key, str);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-template <>
-ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, double value)
-{
-	char str[20] = "";
-	_doubleToString(value, decimal_digits, str);
-	return  __store(key, str);
-}
-
-template <>
-char *ArancinoClass::store(char *key, double value)
-{
-	char str[20] = "";
-	_doubleToString(value, decimal_digits, str);
-	ArancinoPacket packet = __store(key, str);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, int value,char* timestamp) {
-	char str[20] = "";
-	itoa(value, str, 10);
-	return  __store(key, str,timestamp);
-}
-
-template<> char* ArancinoClass::store(char* key, int value,char* timestamp){
-	char str[20] = "";
-	itoa(value, str, 10);
-	ArancinoPacket packet = __store(key, str,timestamp);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, uint32_t value,char* timestamp) {
-	char str[20] = "";
-	itoa(value, str, 10);
-	return  __store(key, str,timestamp);
-}
-
-template<> char* ArancinoClass::store(char* key, uint32_t value,char* timestamp){
-	char str[20] = "";
-	itoa(value, str, 10);
-	ArancinoPacket packet = __store(key, str,timestamp);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, long value,char* timestamp) {
-	char str[20] = "";
-	itoa(value, str, 10);
-	return  __store(key, str,timestamp);
-}
-
-template<> char* ArancinoClass::store(char* key, long value,char* timestamp){
-	char str[20] = "";
-	itoa(value, str, 10);
-	ArancinoPacket packet =__store(key, str,timestamp);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, float value,char* timestamp) {
-	char str[20] = "";
-	_floatToString(value, decimal_digits, str);
-	return  __store(key, str,timestamp);
-}
-
-template<> char* ArancinoClass::store(char* key, float value,char* timestamp){
-	char str[20] = "";
-	_floatToString(value, decimal_digits, str);
-	ArancinoPacket packet =  __store(key, str,timestamp);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-template<> ArancinoPacket ArancinoClass::store<ArancinoPacket>( char* key, double value,char* timestamp) {
-	char str[20] = "";
-	_doubleToString(value, decimal_digits, str);
-	return  __store(key, str,timestamp);
-}
-
-template<> char* ArancinoClass::store(char* key, double value,char* timestamp){
-	char str[20] = "";
-	_doubleToString(value, decimal_digits, str);
-	ArancinoPacket packet = __store(key, str,timestamp);
-	if (!packet.isError)
-		return packet.response.string;
-	else
-		return NULL;
-}
-
-ArancinoPacket ArancinoClass::__store( char* key, char* value, char* timestamp) {
-
-	char* ts;
-
-	if(timestamp==NULL){
-		 ts=getTimestamp();
-	}
-	else{
-		ts = timestamp;
-	}
-
-	if(key == NULL && value == NULL && strcmp(key, "") == 0){
-		return invalidCommandErrorPacket;
-	}
-	return executeCommand(STORE_COMMAND,key,value,ts,false,STRING);
-}
-
-/******** API BASIC :: MSTORE *********/
-
-template <>
-ArancinoPacket ArancinoClass::mstore<ArancinoPacket>(char **keys, char **values, int len)
-{
-	char *ts = getTimestamp();
-	if ((keys == NULL) || (values == NULL) || (len <= 0))
-	{
-		return invalidCommandErrorPacket;
-	}
-	return executeCommand(MSTORE_COMMAND, NULL, keys, values, ts, len, false, STRING_ARRAY);
-}
-// template<> ArancinoPacket ArancinoClass::mstore<ArancinoPacket> (char** keys, char** values, int len,char* timestamp) {
-// 	char* ts = timestamp;
-// 	if ((keys == NULL) || (values == NULL) || (len <= 0)) {
-// 		return invalidCommandErrorPacket;
-// 	}
-// 	return executeCommand(MSTORE_COMMAND, NULL, keys, values, ts, len, false, STRING_ARRAY);
-// }
-
-template<> void ArancinoClass::mstore(char** keys, char** values, int len,char* timestamp) {
-	char* ts = timestamp;
-	 if ((keys == NULL) || (values == NULL) || (len <= 0)) {
-		//return invalidCommandErrorPacket;
-	}
-	return executeCommandFast(MSTORE_COMMAND, NULL, keys, values, ts, len, false, STRING_ARRAY);
-}
-
-template <>
-char **ArancinoClass::mstore(char **key, char **value, int len)
-{
-	ArancinoPacket packet = mstore<ArancinoPacket>(key, value, len);
-	if (!packet.isError)
-		return packet.response.stringArray;
-	else
-		return NULL;
-}
-
-/******** API BASIC :: STORETAGS *********/
-
-ArancinoPacket ArancinoClass::storetags(char *key, char **tags, char **values, int len)
-{
-	char *ts = getTimestamp();
-	if ((key == NULL) || (tags == NULL) || (values == NULL) || (len <= 0))
-		return invalidCommandErrorPacket;
-	return executeCommand(STORETAGS_COMMAND, key, tags, values, ts, len, false, VOID);
+	return setReserved(BLINK_ID_KEY, str);
 }
 
 /******** API UTILITY :: FREE *********/
@@ -1192,477 +1103,282 @@ char *ArancinoClass::getTimestamp()
 	return timestamp;
 }
 
-/*char* ArancinoClass::getTimestamp() {
-
-	unsigned long ts = rtc.getEpoch(); //10 digits
-	unsigned long mls_tmp = (millis() - millis_start) % 1000;
-	unsigned int ts_inf = ts % 1000000000; //last 9 digits of epoch
-  unsigned int ts_sup = ts/1000000000; //first digits of epoch
-	unsigned int mls =mls_tmp; //+ timestampMillis ; //millis + delta;
-	if(mls > 999){ //millis + delta is greater than 1 seconds (1000)
-		ts_inf=ts_inf+1;
-		if(ts_inf> 999999999){
-			ts_sup=ts_sup+1;
-			ts_inf=0;
-		}
-	}
-	mls=mls % 1000; //last 3 digits of millis
-
-	itoa(ts_sup, timestamp, 10);
-	char ts_tmp[9];
-	sprintf(ts_tmp, "%09d", ts_inf);
-	strcat(timestamp, ts_tmp);
-	char mill[6];
-	sprintf(mill, "%03d", mls);
-	strcat(timestamp, mill);
-	//itoa(ts, timestamp, 10);
-	return timestamp;
-}*/
-
 /******** INTERNAL UTILS :: FREE *********/
 
-ArancinoPacket ArancinoClass::executeCommand(char *command, char *param1, char **params2, char **params3, char *param4, int len, bool id_prefix, int type_return)
-{
-	int commandLength = strlen(command);
-	int strLength = commandLength + 1;
-	int param1_length = 0;
-	int param4_length = 0;
-	uint8_t idSize = strlen(id);
-
-	if (param1 != NULL)
-	{
-		param1_length = strlen(param1);
-		if (id_prefix)
-		{
-			param1_length += idSize + 1;
-		}
-		strLength += param1_length + 1;
-	}
-
-	// Calculating Cortex Protocol command length
-	for (int i = 0; i < len; i++)
-	{
-		char *param2 = params2[i];
-		char *param3 = NULL;
-		if (params3 != NULL)
-			param3 = params3[i];
-
-		int param2_length = strlen(param2);
-		if (id_prefix && param1 == NULL)
-		{
-			param2_length += idSize + 1;
-		}
-		int param3_length = 0;
-		if (params3 != NULL)
-			param3_length = strlen(param3);
-		// For every key-value pair the length of both tag and value is added
-		// two 1s are added in order to take into account the % chr and
-		// the # and @ chrs in the case of last tag or last value respectively
-		strLength += param2_length + 1;
-		if (params3 != NULL)
-			strLength += param3_length + 1;
-	}
-
-	if (param4 != NULL)
-	{
-		param4_length = strlen(param4);
-		strLength += param4_length + 1;
-	}
-
-	char *str = (char *)calloc(strLength + 1, sizeof(char));
-
-	strcpy(str, command);
-	if (param1 != NULL)
-	{
-		strcat(str, dataSplitStr);
-		if (id_prefix)
-		{
-			strcat(str, id);
-			strcat(str, ID_SEPARATOR);
-		}
-		strcat(str, param1);
-	}
-	strcat(str, dataSplitStr);
-	// Points to the memory area where tags have to be written
-	char *params2Pointer = str + commandLength + strlen(dataSplitStr);
-	if (param1 != NULL)
-		params2Pointer += param1_length + strlen(dataSplitStr);
-
-	// Points at the end of the string less the space reserved to timestamp
-	char *params3Pointer = NULL;
-	if (params3 != NULL)
-		params3Pointer = str + strLength;
-	if (param4 != NULL)
-		params3Pointer = params3Pointer - param4_length - strlen(endTXStr);
-
-	// The string to send is built in 1 single loop.
-	// keys are copied from first to last (left to right in string)
-	// and values are copied from last to first (right to left in string)
-	for (int i = 0; i < len; i++)
-	{
-		char *param2 = params2[i];
-		char *param3 = NULL;
-		if (params3 != NULL)
-			param3 = params3[len - (i + 1)];
-
-		if (id_prefix && param1 == NULL)
-		{
-			strcat(params2Pointer, id);
-			strcat(params2Pointer, ID_SEPARATOR);
-		}
-		strcat(params2Pointer, param2);
-
-		if (i == len - 1)
-		{ // If it's the last key we have to use #(\4) instead of %(\16)
-			if (params3 != NULL)
-				strcat(params2Pointer, dataSplitStr);
-		}
-		else
-		{
-			strcat(params2Pointer, arraySplitStr);
-		}
-
-		// We use memcpy rather than strcat here because it would append \0,
-		// thus terminating the string prematurely
-		if (params3 != NULL)
-		{
-			params3Pointer -= strlen(param3) + 1;
-
-			memcpy(params3Pointer, param3, strlen(param3));
-
-			if (i != 0)
-			{
-				memcpy(params3Pointer + strlen(param3), arraySplitStr, 1);
-			}
-		}
-	}
-	// timestamp
-	if (param4 != NULL)
-	{
-		strcat(str, dataSplitStr);
-		strcat(str, param4);
-	}
-	strcat(str, endTXStr);
-
-	char *message = NULL;
+ArancinoPacket ArancinoClass::executeCommand(char* cmd, char* key, char* field, char* value, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
+	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
+	_buildArancinoJson(cmd_doc, cmd, key, field, value, argsHasItems, itemsHasDict, cfg);
 
 	#if defined(USEFREERTOS)
-	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
+	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
 	#endif
-	if (str != NULL)
-	{
-		_iface->sendArancinoCommand(str);
-		message = _iface->receiveArancinoResponse(END_TX_CHAR);
+	_iface->sendArancinoCommand(cmd_doc);
+
+	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
+	if(isAck){
+		bool error = true;
+		int counter = 0;
+		while (error && counter < 5){
+			counter++;
+			error = _iface->receiveArancinoResponse(rsp_doc);
+		}
+		if(error) 
+			return communicationErrorPacket;
 	}
+			
 	#if defined(USEFREERTOS)
-		giveCommMutex();
-	}
+	giveCommMutex();
 	#endif
 
-	free(str);
-
-	if (message == NULL)
+	if(rsp_doc.isNull()) 
 		return communicationErrorPacket;
-
-	ArancinoPacket packet = createArancinoPacket(message, type_return);
-
-	free(message);
-
+ 
+ 	ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
 	return packet;
 }
 
-
-void ArancinoClass::executeCommandFast(char* command, char* param1, char** params2, char** params3, char* param4, int len, bool id_prefix, int type_return){
-	int commandLength = strlen(command);
-	int strLength = commandLength + 1;
-	int param1_length = 0;
-	int param4_length = 0;
-	uint8_t idSize = strlen(id);
-
-	if(param1 != NULL){
-		param1_length = strlen(param1);
-		if(id_prefix){
-			param1_length += idSize + 1;
-		}
-		strLength += param1_length + 1;
-	}
-
-	// Calculating Cortex Protocol command length
-	for (int i = 0; i < len; i ++) {
-		char* param2 = params2[i];
-		char* param3 = NULL;
-		if(params3 != NULL)
-			param3 = params3[i];
-
-		int param2_length = strlen(param2);
-		if(id_prefix && param1 == NULL){
-			param2_length += idSize + 1;
-		}
-		int param3_length = 0;
-		if(params3 != NULL)
-			param3_length = strlen(param3);
-		// For every key-value pair the length of both tag and value is added
-		// two 1s are added in order to take into account the % chr and
-		// the # and @ chrs in the case of last tag or last value respectively
-		strLength += param2_length + 1;
-		if(params3 != NULL)
-			strLength +=param3_length + 1;
-	}
-
-	if(param4 != NULL){
-		param4_length = strlen(param4);
-		strLength += param4_length + 1;
-	}
-
-	char* str = (char*) calloc(strLength + 1, sizeof(char));
-
-	strcpy(str, command);
-	if(param1 != NULL){
-		strcat(str, dataSplitStr);
-		if(id_prefix){
-			strcat(str, id);
-			strcat(str, ID_SEPARATOR);
-		}
-		strcat(str, param1);
-	}
-	strcat(str, dataSplitStr);
-	// Points to the memory area where tags have to be written
-	char* params2Pointer = str + commandLength + strlen(dataSplitStr);
-	if(param1 != NULL)
-		params2Pointer += param1_length + strlen(dataSplitStr);
-
-	// Points at the end of the string less the space reserved to timestamp
-	char* params3Pointer = NULL;
-	if(params3 != NULL)
-		params3Pointer = str + strLength;
-	if(param4 != NULL)
-		params3Pointer = params3Pointer - param4_length - strlen(endTXStr);
-
-	// The string to send is built in 1 single loop.
-	// keys are copied from first to last (left to right in string)
-	// and values are copied from last to first (right to left in string)
-	for(int i = 0; i < len; i ++) {
-		char* param2 = params2[i];
-		char* param3 = NULL;
-		if(params3 != NULL)
-			param3 = params3[len - (i + 1)];
-
-		if(id_prefix && param1 == NULL){
-			strcat(params2Pointer, id);
-			strcat(params2Pointer, ID_SEPARATOR);
-		}
-		strcat(params2Pointer, param2);
-
-		if (i == len - 1) { // If it's the last key we have to use #(\4) instead of %(\16)
-			if(params3 != NULL)
-				strcat(params2Pointer, dataSplitStr);
-		} else {
-			strcat(params2Pointer, arraySplitStr);
-		}
-
-		// We use memcpy rather than strcat here because it would append \0,
-		// thus terminating the string prematurely
-		if(params3 != NULL){
-			params3Pointer -= strlen(param3) + 1;
-
-			memcpy(params3Pointer, param3, strlen(param3));
-
-			if (i != 0) {
-				memcpy(params3Pointer + strlen(param3), arraySplitStr, 1);
-			}
-		}
-
-	}
-	//timestamp
-	if(param4 != NULL){
-		strcat(str, dataSplitStr);
-		strcat(str, param4);
-	}
-	strcat(str, endTXStr);
-
-	#if defined(USEFREERTOS)
-	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
-	#endif
-	if (str != NULL)
-	{
-		_iface->sendArancinoCommand(str);
-	}
-	#if defined(USEFREERTOS)
-		giveCommMutex();
-	}
-	#endif
-	free(str);
-}
-
-
-ArancinoPacket ArancinoClass::executeCommand(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return){
-	int commandLength = strlen(command);
-	int param1_length = 0;
-	uint8_t idSize = strlen(id);
-
-	if (param1 != NULL)
-	{
-		param1_length = strlen(param1);
-		if (id_prefix)
-		{
-			param1_length += idSize + 1;
-		}
-	}
-	int param2_length = 0;
-	if (param2 != NULL)
-		param2_length = strlen(param2);
-	int param3_length = 0;
-	if (param3 != NULL)
-		param3_length = strlen(param3);
-	int strLength = commandLength + 1 + param1_length + 1 + param2_length + 1 + param3_length + 1 + 1;
-
-	char *str = (char *)calloc(strLength, sizeof(char));
-
-	strcpy(str, command);
-	if (param1 != NULL)
-	{
-		strcat(str, dataSplitStr);
-		if (id_prefix)
-		{
-			strcat(str, id);
-			strcat(str, ID_SEPARATOR);
-		}
-		strcat(str, param1);
-	}
-	if (param2 != NULL)
-	{
-		strcat(str, dataSplitStr);
-		strcat(str, param2);
-	}
-	if (param3 != NULL)
-	{
-		strcat(str, dataSplitStr);
-		strcat(str, param3);
-	}
-	strcat(str, endTXStr);
-
-	char *message = NULL;
-	#if defined(USEFREERTOS)
-	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
-	#endif
-	if (str != NULL)
-	{
-		_iface->sendArancinoCommand(str);
-	}
-	message = _iface->receiveArancinoResponse(END_TX_CHAR);
-	#if defined(USEFREERTOS)
-		giveCommMutex();
-	}
-	#endif
-	free(str);
-
-	if (message == NULL)
-		return communicationErrorPacket;
-	// parse response
-	ArancinoPacket packet = createArancinoPacket(message, type_return);
-
-	free(message);
-
-	return packet;
-}
-
-void ArancinoClass::executeCommandFast(char* command, char* param1, char* param2, char* param3, bool id_prefix, int type_return){
-	int commandLength = strlen(command);
-	int param1_length = 0;
-	uint8_t idSize = strlen(id);
+ArancinoPacket ArancinoClass::executeCommand(char* cmd, char** keys, char** fields, char** values, int len, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
+	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
+	_buildArancinoJson(cmd_doc, cmd, keys, fields, values, len, argsHasItems, itemsHasDict, cfg);
 	
-	if(param1 != NULL){
-		param1_length = strlen(param1);
-		if(id_prefix){
-			param1_length += idSize + 1;
-		}
-	}
-	int param2_length = 0;
-	if(param2 != NULL)
-		param2_length=strlen(param2);
-	int param3_length = 0;
-	if(param3 != NULL)
-		param3_length=strlen(param3);
-	int strLength = commandLength + 1 + param1_length + 1 + param2_length + 1 + param3_length + 1 + 1;
-
-	char* str = (char *)calloc(strLength, sizeof(char));
-
-	strcpy(str, command);
-	if(param1 != NULL){
-		strcat(str, dataSplitStr);
-		if(id_prefix){
-			strcat(str, id);
-			strcat(str, ID_SEPARATOR);
-		}
-		strcat(str, param1);
-	}
-	if(param2 != NULL){
-		strcat(str, dataSplitStr);
-		strcat(str, param2);
-	}
-	if(param3 != NULL){
-		strcat(str, dataSplitStr);
-		strcat(str, param3);
-	}
-	strcat(str, endTXStr);
-
 	#if defined(USEFREERTOS)
-	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
+	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
 	#endif
-	if (str != NULL)
-	{
-		_iface->sendArancinoCommand(str);
-	}
-	#if defined(USEFREERTOS)
-		giveCommMutex();
-	}
-	#endif
-	free(str);
+	_iface->sendArancinoCommand(cmd_doc);
 
+	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
+	if(isAck){
+		bool error = true;
+		int counter = 0;
+		while (error && counter < 5){
+			counter++;
+			error = _iface->receiveArancinoResponse(rsp_doc);
+		}
+		if(error) 
+			return communicationErrorPacket;
+	}
+			
+	#if defined(USEFREERTOS)
+	giveCommMutex();
+	#endif
+
+	if(rsp_doc.isNull()) 
+		return communicationErrorPacket;
+ 
+	ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
+	return packet;
 }
 
-ArancinoPacket ArancinoClass::createArancinoPacket(char* message, int type_return){
-	ArancinoPacket packet;
-	if (message == NULL)
+ArancinoPacket ArancinoClass::executeCommand(JsonDocument& cmd_doc, bool isAck, int response_type){
+	#if defined(USEFREERTOS)
+	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
+	#endif
+	_iface->sendArancinoCommand(cmd_doc);
+
+	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
+	if(isAck){
+		bool error = true;
+		int counter = 0;
+		while (error && counter < 5){
+			counter++;
+			error = _iface->receiveArancinoResponse(rsp_doc);
+		}
+		if(error) 
+			return communicationErrorPacket;
+	}
+			
+	#if defined(USEFREERTOS)
+	giveCommMutex();
+	#endif
+
+	if(rsp_doc.isNull()) 
 		return communicationErrorPacket;
+ 
+	ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
+	return packet;
+}
 
-	if (type_return == VOID)
-	{
-		ArancinoPacket temp = {false, _getResponseCode(message), VOID, {.string = NULL}};
-		packet = temp;
-	}
-	else if (type_return == INT)
-	{
-		char *messageParsed = _parse(message);
-		ArancinoPacket temp;
-		if (messageParsed != NULL)
-		{
-			temp = {false, _getResponseCode(message), INT, {.integer = atoi(messageParsed)}};
-		}
-		else
-		{
-			temp = {false, _getResponseCode(message), INT, {.integer = 0}};
-		}
+ArancinoPacket ArancinoClass::executeCommand(JsonDocument& cmd_doc, JsonDocument& rsp_doc, bool isAck, int response_type){
+	#if defined(USEFREERTOS)
+	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
+	#endif
+	_iface->sendArancinoCommand(cmd_doc);
 
-		free(messageParsed);
-		packet = temp;
+	if(isAck){
+		bool error = true;
+		int counter = 0;
+		while (error && counter < 5){
+			counter++;
+			error = _iface->receiveArancinoResponse(rsp_doc);
+		}
+		if(error) 
+			return communicationErrorPacket;
 	}
-	else if (type_return == STRING)
-	{
-		ArancinoPacket temp = {false, _getResponseCode(message), STRING, {.string = _parse(message)}};
-		packet = temp;
-	}
-	else if (type_return == STRING_ARRAY)
-	{
-		ArancinoPacket temp = {false, _getResponseCode(message), STRING_ARRAY, {.stringArray = _parseArray(_parse(message))}};
-		packet = temp;
-	}
-	else
-	{
-		ArancinoPacket temp = invalidCommandErrorPacket;
-		packet = temp;
+			
+	#if defined(USEFREERTOS)
+	giveCommMutex();
+	#endif
+
+	if(rsp_doc.isNull()) 
+		return communicationErrorPacket;
+ 
+	ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
+	return packet;
+}
+
+ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, int response_type){
+	ArancinoPacket packet;
+
+	switch(response_type){
+		case VOID_RESPONSE: {
+			// SET - HSET - FLUSH - STORETAGS*
+			ArancinoPacket temp = {false, response_dict["rsp_code"], VOID, {.string = NULL}};
+			packet = temp;
+			break;
+		}
+		case KEY_VALUE_RESPONSE: {
+			// GET - MGET - HGET
+			JsonArray resp_items = response_dict["args"]["items"];
+			int resp_size = resp_items.size();
+			if (resp_size > 0 && resp_size < 2) {
+				const char* value = resp_items[0]["value"];
+				char* ret_value = (char*) calloc(strlen(value), sizeof(char));
+				strcpy(ret_value, value);
+				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING, {.string = ret_value}};
+				packet = temp;
+			} else if (resp_size > 1) {
+				char* resp_values[resp_size];
+				for (int i=0; i<resp_size; i++){
+					const char* value = resp_items[i]["value"];
+					resp_values[i] = (char*) calloc(strlen(value), sizeof(char));
+					strcpy(resp_values[i], value);
+				}
+				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING_ARRAY, {.stringArray = resp_values}};
+				packet = temp;
+			}
+			break;
+		}
+		case KEY_RESPONSE: {
+			// DEL
+			ArancinoPacket temp = {false, response_dict["rsp_code"], INT, {.integer = response_dict["args"]["keys"]}};
+			packet = temp;
+			break;
+		}
+		case FIELDS_RESPONSE: {
+			// HDEL
+			ArancinoPacket temp = {false, response_dict["rsp_code"], INT, {.integer = response_dict["args"]["fields"]}};
+			packet = temp;
+			break;
+		}
+		case ITEMS_RESPONSE: {
+			// STORE - MSTORE
+			JsonArray resp_items = response_dict["args"]["items"];
+			int resp_size = resp_items.size();
+			if (resp_size > 0 && resp_size < 2) {
+				const char* value = resp_items[0];
+				char* ret_value = (char*) calloc(strlen(value), sizeof(char));
+				strcpy(ret_value, value);
+				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING, {.string = ret_value}};
+				packet = temp;
+			} else if (resp_size > 1) {
+				char* resp_values[resp_size];
+				for (int i=0; i<resp_size; i++){
+					const char* value = resp_items[i];
+					resp_values[i] = (char*) calloc(strlen(value), sizeof(char));
+					strcpy(resp_values[i], value);
+				}
+				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING_ARRAY, {.stringArray = resp_values}};
+				packet = temp;
+			}
+			break;
+		}
+		case CLIENTS_RESPONSE: {
+			// PUBLISH
+			ArancinoPacket temp = {false, response_dict["rsp_code"], INT, {.integer = response_dict["args"]["clients"]}};
+			packet = temp;
+			break;
+		}
+		default:
+			return communicationErrorPacket;
 	}
 	return packet;
+}
+
+void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, char* cmd, char* key, char* field, char* value, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg){
+  JsonObject cmd_args = cmd_doc.createNestedObject("args");
+  cmd_doc["cmd"] = cmd;
+
+  if (argsHasItems){
+    JsonArray cmd_items = cmd_args.createNestedArray("items");
+    if (itemsHasDict){
+      JsonObject items_obj = cmd_items.createNestedObject();
+      
+      if (key){
+        items_obj["key"] = key;
+      }
+
+      if (field){
+        items_obj["field"] = field;
+      }
+
+	  if(value){
+		items_obj["value"] = value;
+	  }
+    } else {
+      cmd_items.add(key);
+    }
+  }
+
+  JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
+  if (cfg.pers){
+    cmd_cfg["pers"] = cfg.pers == CFG_FALSE ? 0 : 1;
+  }
+  if (cfg.ack){
+    cmd_cfg["ack"] = cfg.ack == CFG_FALSE ? 0 : 1;
+  }
+  if (cfg.type){
+    cmd_cfg["type"] = cfg.type;
+  }
+}
+
+void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, char* cmd, char** keys, char** fields, char** values, int len, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg){
+	JsonObject cmd_args = cmd_doc.createNestedObject("args");
+	cmd_doc["cmd"] = cmd;
+
+	if (argsHasItems){
+		JsonArray cmd_items = cmd_args.createNestedArray("items");
+		if (itemsHasDict){
+			for (int i=0; i<len; i++) {
+				JsonObject items_obj = cmd_items.createNestedObject();
+				if (keys){
+					items_obj["key"] = keys[i];
+				}
+				if (fields){
+					items_obj["field"] = fields[i];
+				}
+				if (values){
+					items_obj["value"] = values[i];
+				}
+			}
+		} else {
+			for (int i=0; i<len; i++) {
+				if(keys){
+					cmd_items.add(keys[i]);
+				}
+			}
+		}
+	}
+
+	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
+	if (cfg.pers){
+		cmd_cfg["pers"] = cfg.pers == CFG_FALSE ? 0 : 1;
+	}
+	if (cfg.ack){
+		cmd_cfg["ack"] = cfg.ack == CFG_FALSE ? 0 : 1;
+	}
+	if (cfg.type){
+		cmd_cfg["type"] = cfg.type;
+	}
 }
 
 void ArancinoClass::systemReset(){
@@ -1711,180 +1427,13 @@ void ArancinoClass::_floatToString(float value, unsigned int _nDecimal, char *st
 	interrupts();
 }
 
-int ArancinoClass::_getDigit(long value)
-{
-	int digit = 0;
-	long _val = value;
-	while (abs(_val) > 0)
-	{
-		++digit;
-		_val /= 10;
-	}
-	return digit;
-}
-
 void ArancinoClass::_printDebugMessage(char* value) {
 	if (_isDebug && _commMode){
 	__publish(MONITOR_KEY, value);
-	__set(MONITOR_KEY, value, false);
+	set(MONITOR_KEY, value, false);
 	} else if(_isDebug && _dbgSerial != NULL){
 		_dbgSerial->print(value);
 	}
-}
-
-int ArancinoClass::_getResponseCode(char *message)
-{
-	int value = -1;
-	int separatorIndex = -1;
-	char *temp = NULL;
-	char *charAddr = strchr(message, DATA_SPLIT_CHAR); // address of DATA_SPLIT_CHAR
-	if (charAddr == NULL)							   // NO DATA_SPLIT_CHAR
-	{
-		charAddr = strchr(message, END_TX_CHAR); //-> search for END_TX_CHAR
-	}
-
-	if (charAddr != NULL)
-	{
-		separatorIndex = charAddr - message; // index of DATA_SPLIT_CHAR/END_TX_CHAR on message string
-		temp = (char *)calloc(separatorIndex + 1, sizeof(char));
-		strncpy(temp, message, separatorIndex + 1);
-		temp[separatorIndex] = '\0'; // replace separator with null-character
-
-		value = atoi(temp);
-		free(temp);
-	}
-	else
-	{
-		value = -1; // error
-	}
-
-	return value;
-}
-
-char *ArancinoClass::_parse(char *message)
-{
-
-	char *status = NULL;
-	char *value = NULL;
-	int DSCIndex;									   // DATA_SPLIT_CHAR index
-	char *charAddr = strchr(message, DATA_SPLIT_CHAR); // address of DATA_SPLIT_CHAR
-
-	if (charAddr != NULL)
-	{
-		DSCIndex = charAddr - message; // index of DATA_SPLIT_CHAR on message string
-	}
-	else
-	{
-		DSCIndex = -1; // DATA_SPLIT_CHAR not found --> received only 'status'
-	}
-
-	int messageLength = strlen(message);
-
-	if (DSCIndex == -1)
-	{
-		status = (char *)calloc(messageLength + 1, sizeof(char)); // response = [STATUS] + @
-		strncpy(status, message, messageLength);
-		status[messageLength] = '\0'; // replace END_TX_CHAR with '\0'
-	}
-	else
-	{
-		status = (char *)calloc(DSCIndex + 1, sizeof(char)); // response = [STATUS] + # + [VALUE] + @
-		strncpy(status, message, DSCIndex);
-		status[DSCIndex] = '\0'; // replace DATA_SPLIT_CHAR with '\0'
-
-		value = (char *)calloc(messageLength - DSCIndex - 1, sizeof(char));
-		strncpy(value, &message[DSCIndex + 1], messageLength - (DSCIndex + 2));
-		value[messageLength - (DSCIndex + 2)] = '\0'; // replace END_TX_CHAR with '\0'
-	}
-
-	free(status);
-
-	if (value != NULL && strcmp(value, nullStr) == 0)
-	{
-		free(value);
-		return NULL;
-	}
-	else
-	{
-		return value;
-	}
-}
-
-char **ArancinoClass::_parseArray(char *data)
-{
-	char **arrayParsed = NULL;
-	char *tempArray;
-
-	char *previousDSCIndex = data;
-	char *DSCIndex = data;
-
-	int fieldCount = data != NULL; // at least 1 field
-	int maxLength = 0;
-
-	if (data != NULL)
-	{
-
-		// get the key count
-		do
-		{
-			DSCIndex = strchr(previousDSCIndex, DATA_SPLIT_CHAR);
-
-			if (DSCIndex != NULL)
-			{
-				++fieldCount;
-				if (DSCIndex - previousDSCIndex > maxLength)
-					maxLength = DSCIndex - previousDSCIndex;
-			}
-			else if (int(strlen(previousDSCIndex)) > maxLength)
-			{
-				maxLength = strlen(previousDSCIndex);
-			}
-			previousDSCIndex = DSCIndex + 1;
-
-		} while (DSCIndex != NULL);
-
-		/*
-		 * Alloco un elemento in più (fieldCount + 1).
-		 * Nel primo elemento inserisco la lunghezza del vettore;
-		 * Il valore di ritorno della funzione sarà l'elemento 1 del vettore (e non l'elemento 0)
-		 */
-		arrayParsed = (char **)malloc((fieldCount + 1) * sizeof(char *));			   // user must free!
-		tempArray = (char *)malloc((fieldCount + 1) * (maxLength + 1) * sizeof(char)); // user must free!
-		arrayParsed[0] = (char *)fieldCount;
-
-		previousDSCIndex = data;
-
-		for (int i = 1; i < (fieldCount + 1); ++i)
-		{
-			arrayParsed[i] = tempArray + ((i - 1) * (maxLength + 1));
-			DSCIndex = strchr(previousDSCIndex + 1, DATA_SPLIT_CHAR);
-
-			if (DSCIndex != NULL)
-			{
-				if (strncmp(previousDSCIndex, nullStr, DSCIndex - previousDSCIndex) == 0)
-				{
-					arrayParsed[i] = NULL;
-				}
-				else
-				{
-					strncpy(arrayParsed[i], previousDSCIndex, DSCIndex - previousDSCIndex);
-					arrayParsed[i][DSCIndex - previousDSCIndex] = '\0';
-				}
-				previousDSCIndex = DSCIndex + 1;
-			}
-			else
-			{
-				strcpy(arrayParsed[i], previousDSCIndex);
-			}
-		}
-
-		if (data != NULL)
-		{
-			free(data);
-		}
-	}
-
-	return (data != NULL && arrayParsed != NULL) ? &arrayParsed[1] : NULL;
 }
 
 #if defined(USEFREERTOS)

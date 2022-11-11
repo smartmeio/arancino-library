@@ -18,16 +18,26 @@ License for the specific language governing permissions and limitations
 under the License
 */
 
-#include <Arancino.h>
+#ifndef ARANCINOTASKS_H_
+#define ARANCINOTASKS_H_
+
 #include <ArancinoDefinitions.h>
+#include <Arancino.h>
+
 
 class ArancinoTasks{
 	public:
+		ArancinoTasks();
 		static void deviceIdentification(void *pvPramaters);
         static void interoception(void *pvPramaters);
 		static void sendHeartbeat(void *pvPramaters);
 	private:
-		float mcuTemp();
-		bool temp_initialized = false;  //temp inizialized
+		static float mcuTemp();
+		static DynamicJsonDocument* cmd_doc;
+		static DynamicJsonDocument* rsp_doc;
+		#ifdef USEFREERTOS
+		static SemaphoreHandle_t jsonMutex;
+		#endif
 };
 
+#endif 

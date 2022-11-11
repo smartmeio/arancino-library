@@ -60,7 +60,7 @@ under the License
 #endif
 #define SERIAL_DEBUG Serial
 #else
-#define BAUDRATE 256000
+//#define BAUDRATE 256000
 #define TIMEOUT 10000
 #define SERIAL_PORT Serial
 #define SERIAL_DEBUG Serial1
@@ -105,7 +105,7 @@ under the License
 #define RSP_OK							100
 #define RSP_HSET_NEW					101
 #define RSP_HSET_UPD					102
-#define ERR								200		//Generic Error
+#define ERR_GENERIC						200		//Generic Error
 #define ERR_NULL						201		//Null value
 #define ERR_SET							202		//Error during SET
 #define ERR_CMD_NOT_FND					203		//Command Not Found
@@ -126,7 +126,8 @@ under the License
 #define MODLOGLVL_KEY			(char*)"___MODLOGLVL___"
 #define MODENV_KEY              (char*)"___MODENV___"
 #define BLINK_ID_KEY			(char*)"___BLINK_ID___"
-#define LIB_VERSION				(char*)"2.1.1"	//library version
+#define LIB_VERSION				(char*)"2.0.0"	//library version
+#define CRTX_VERSION            (char*)"1.0.0"  //cortex version
 
 //RESPONSE CODE
 #define INVALID_VALUE_ERROR     -4
@@ -160,7 +161,23 @@ under the License
 #define HEARTBEAT_STACK             256
 #endif
 
-#define MQTT_MAX_RETRIES            500
+#define SERIAL_MAX_RETRIES          10
+#define MQTT_MAX_RETRIES            100
 #define BLUETOOTH_MAX_RETRIES       100
 
 #define ID_SIZE IDSIZE*2 //IDSIZE will be provided by microcontroller-id library
+
+//MsgPack
+#define CMD_DOC_SIZE 512
+#define RSP_DOC_SIZE 256
+#define CFG_UNSET 0
+#define CFG_TRUE 1
+#define CFG_FALSE 2
+
+#define VOID_RESPONSE 0
+#define KEY_VALUE_RESPONSE 1
+#define KEY_RESPONSE 2
+#define FIELDS_ITEMS_RESPONSE 3
+#define FIELDS_RESPONSE 4
+#define ITEMS_RESPONSE 5
+#define CLIENTS_RESPONSE 6
