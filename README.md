@@ -16,8 +16,6 @@ Arancino Library allows to export/import data to/from the Linux environment usin
 
 -  [FreeRTOS](docs/FREERTOS.md)
 
-- Insights
-
 -  [Cortex Protocol](docs/CORTEX.md)
 
 -  [Debug](docs/DEBUG.md)
@@ -28,9 +26,9 @@ Arancino Library allows to export/import data to/from the Linux environment usin
 The Arancino Library `3.1.0` officially supports the following Arancino Core versions:
 |Board| Core Version |
 |--|--|
-| SAMD21 | 1.3.0 |
+| SAMD21 | 1.3.1 |
 | nRF52 | 1.1.0 |
-| RP2040 | 1.1.0 |
+| RP2040 | 1.2.0 |
 | STM32 | 1.0.0 |
 
 
