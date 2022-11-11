@@ -32,20 +32,7 @@ void SerialIface::ifaceBegin(){
 }
 
 void SerialIface::sendArancinoCommand(JsonDocument& command){
-    //check communication timeout with arancino module
-	if (comm_timeout){
-		/*
-			Flush data on serial communication to avoid of lost
-			synchronization between arancino library and arancino module.
-			By this way I prevent to receive reposonse of a previous sent command.
-		*/
-		while(this->_serialPort->available() > 0){
-				this->_serialPort->read();
-		}
-		comm_timeout=false;
-	}
-	//command must terminate with '\0'!
-	serializeJsonPretty(command, *_serialPort);
+	serializeMsgPack(command, *_serialPort);
 
 	#if defined(USEFREERTOS) && defined(USE_TINYUSB)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING)
@@ -58,7 +45,6 @@ void SerialIface::sendArancinoCommand(JsonDocument& command){
 bool SerialIface::receiveArancinoResponse(JsonDocument& response){
 	
 	DeserializationError error = deserializeMsgPack(response, *_serialPort);
-	comm_timeout = error;  //Deserialization may not always fail due to comm timeout, but just in case
 	return error;
 }
 
@@ -70,7 +56,7 @@ void SerialIface::setSerialPort(Stream& serialPort){
 void SerialIface::setSerialPort(){
 	//default implementation for Arancino boards
 	#if defined (SERIAL_PORT) && defined(BAUDRATE) && defined (TIMEOUT)
-	SERIAL_PORT.begin(BAUDRATE);
+	//SERIAL_PORT.begin(BAUDRATE);
 	SERIAL_PORT.setTimeout(TIMEOUT);
 	this->_serialPort = &SERIAL_PORT;
 	#endif
@@ -78,7 +64,7 @@ void SerialIface::setSerialPort(){
 
 
 /******** MQTT interface *********/
-/*
+
 //Static variables definition
 char* MqttIface::_inputBuffer;
 bool MqttIface::_newIncomingMessage = false;
@@ -90,6 +76,7 @@ void MqttIface::ifaceBegin(){
 	setClient(*_client);
 	setServer(_broker, _port);
 	setCallback(_arancinoCallback);
+	setBufferSize(CMD_DOC_SIZE);
 
 	//+1 because of \n
 	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
@@ -114,11 +101,6 @@ void MqttIface::ifaceBegin(){
 	this->subscribe(_serviceTopic); //arancino/service/dID
 	this->subscribe(_inputTopic);
 
-	//strcat(_serviceTopic, "/");
-	//strcat(_serviceTopic, Arancino.id);
-
-	//this->subscribe(_serviceTopic); //arancino/service/dID/cID
-
 	char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
 	strcpy(discoverytopic, "arancino/discovery/");
 	strcat(discoverytopic, _daemonID);
@@ -126,10 +108,12 @@ void MqttIface::ifaceBegin(){
 	Arancino.free(discoverytopic);
 }
 
-void MqttIface::sendArancinoCommand(char* command){
+void MqttIface::sendArancinoCommand(JsonDocument& command){
 	int counter = 0;
+	char buff[CMD_DOC_SIZE];
+	serializeMsgPack(command, buff);
 	while (counter < MQTT_MAX_RETRIES){
-		if (this->publish(_outputTopic, command)){
+		if (this->publish(_outputTopic, buff)){
 			return;
 		}
 		Arancino.println("Failed to send message, retrying.");
@@ -141,7 +125,7 @@ void MqttIface::sendArancinoCommand(char* command){
 	this->_reconnect();
 }
 
-char* MqttIface::receiveArancinoResponse(char terminator){
+bool MqttIface::receiveArancinoResponse(JsonDocument& response){
 	int counter = 0;
 	while(!_newIncomingMessage){
 		if (counter < MQTT_MAX_RETRIES){
@@ -149,13 +133,14 @@ char* MqttIface::receiveArancinoResponse(char terminator){
 			counter++;
 		} else {
 			//No need for cleanup: no message was received nor memory allocated for it
-			return NULL;
+			return true;
 		}
 	}
 
-	//Clean this before going out. _inputBuffer will be freed by caller function
 	_newIncomingMessage = false;
-	return _inputBuffer;
+	bool error = deserializeMsgPack(response, _inputBuffer, sizeof(_inputBuffer));
+	Arancino.free(_inputBuffer);
+	return error;
 }
 
 void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int length){
@@ -164,10 +149,8 @@ void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int lengt
 		//should check whether the message is "reset" or no other messages will be sent here?
 		Arancino.systemReset();
 	} else if (!strcmp(topic, _inputTopic)){
-		_inputBuffer = (char*)Arancino.calloc(length+2, sizeof(char));
+		_inputBuffer = (char*)Arancino.calloc(length, sizeof(char));
 		memcpy(_inputBuffer, payload, length);
-		_inputBuffer[length] = END_TX_CHAR;
-		_inputBuffer[length+1] = '\0';
 		_newIncomingMessage = true;
 	} 
 }
@@ -209,10 +192,10 @@ void MqttIface::_reconnect(){
 		}
 	}
 }
-*/
+
 /******** Bluetooth interface *********/
 
-/*
+
 void BluetoothIface::setBLESerial(Stream& bleUart){
 	this->_bleSerial = &bleUart;
 }
@@ -224,26 +207,21 @@ void BluetoothIface::ifaceBegin(){
 	#endif
 }
 
-void BluetoothIface::sendArancinoCommand(char* command){
-	_bleSerial->write(command, strlen(command));
+void BluetoothIface::sendArancinoCommand(JsonDocument& command){
+	serializeMsgPack(command, *_bleSerial);
 }
 
-char* BluetoothIface::receiveArancinoResponse(char terminator){
-	char* response = NULL;
-	String str = "";
-	str = _bleSerial->readStringUntil(terminator);
+bool BluetoothIface::receiveArancinoResponse(JsonDocument& response){
+	DeserializationError error = deserializeMsgPack(response, *_bleSerial);
 
-	int responseLenght = strlen(str.begin());
-	if (responseLenght > 0){
+	if(error){
+		if (++_timeoutCounter == BLUETOOTH_MAX_RETRIES){
+			//For each serial timeout this will get incremented - board will reset after a certain number of timeouts
+			Arancino.systemReset();
+		}
+	} else {
 		_timeoutCounter = 0;
-		response = (char*) Arancino.calloc(responseLenght+1+1, sizeof(char));
-		strcpy(response, str.begin());
-		response[responseLenght] = END_TX_CHAR;
-		response[responseLenght+1] = '\0';
-	} else if (++_timeoutCounter == BLUETOOTH_MAX_RETRIES){
-		//For each serial timeout this will get incremented - board will reset after a certain number of timeouts
-		Arancino.systemReset();
 	}
-	return response; 
+
+	return error;
 }
-*/

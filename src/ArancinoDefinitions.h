@@ -37,7 +37,7 @@ under the License
 #endif
 #define SERIAL_DEBUG Serial1
 #else
-#define BAUDRATE 256000
+//#define BAUDRATE 256000
 #define TIMEOUT 10000
 #define SERIAL_PORT Serial
 #define SERIAL_DEBUG Serial1
@@ -81,7 +81,7 @@ under the License
 #define RSP_OK							100
 #define RSP_HSET_NEW					101
 #define RSP_HSET_UPD					102
-#define ERR								200		//Generic Error
+#define ERR_GENERIC						200		//Generic Error
 #define ERR_NULL						201		//Null value
 #define ERR_SET							202		//Error during SET
 #define ERR_CMD_NOT_FND					203		//Command Not Found
@@ -126,6 +126,7 @@ under the License
 
 #define ARANCINO_TASK_PRIORITY      2
 
+#define SERIAL_MAX_RETRIES          10
 #define MQTT_MAX_RETRIES            100
 #define BLUETOOTH_MAX_RETRIES       100
 

@@ -72,6 +72,8 @@ extern "C" {
 #include <hardware/watchdog.h>
 #endif
 
+#include "ArancinoTasks.h"
+
 //Power Mode
 enum POWER_MODE {
 	BATTERY = 0,
@@ -127,8 +129,8 @@ class ArancinoClass {
 		void attachInterface(ArancinoIface& iface);
 
 		//BEGIN
-		void begin(ArancinoMetadata amdata, ArancinoConfig aconfig, char* custom_v1 = NULL, char* custom_v2 = NULL);
-		void begin(ArancinoMetadata amdata, char* custom_v1 = NULL, char* custom_v2 = NULL);
+		void begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* custom_v1 = NULL, char* custom_v2 = NULL);
+		void begin(ArancinoMetadata _amdata, char* custom_v1 = NULL, char* custom_v2 = NULL);
 
 		ArancinoPacket set(char* key, int value, bool isAck = true, bool isPersistent = false, char* type = "appl");
 		ArancinoPacket set(char* key, double value, bool isAck = true, bool isPersistent = false, char* type = "appl");
@@ -247,12 +249,6 @@ class ArancinoClass {
 		char DAEMON_VER[10];
 		char DAEMON_ENV[10];
 
-		ArancinoMetadata _metadata = {
-			(char*)"",
-			(char*)"",
-			(char*)"+0000"
-		};
-
 		//START
 		void start(JsonDocument& cmd_doc);
 
@@ -260,7 +256,6 @@ class ArancinoClass {
 		void _freeArray(char** _array);
 		void _freePacket(ArancinoPacket packet);
 
-		ArancinoPacket __set(char* key, char* value, bool isPersistent);
 		ArancinoPacket __publish(char* channel, char* msg, bool isAck = true);
 		ArancinoPacket __store(char* key, char* value, char* timestamp=NULL, bool isAck = true);
 
@@ -285,9 +280,10 @@ class ArancinoClass {
 
 		ArancinoPacket createArancinoPacket(char* response_raw, int response_type);
 
-		ArancinoPacket executeCommand(char* cmd, char* key, char* field, char* value, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type);
-		ArancinoPacket executeCommand(char* cmd, char** keys, char** fields, char** values, int len, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type);
-		ArancinoPacket executeCommand(JsonDocument& cmd_doc, int response_type);
+		ArancinoPacket executeCommand(char* cmd, char* key, char* field, char* value, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type);
+		ArancinoPacket executeCommand(char* cmd, char** keys, char** fields, char** values, int len, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type);
+		ArancinoPacket executeCommand(JsonDocument& cmd_doc, bool isAck, int response_type);
+		ArancinoPacket executeCommand(JsonDocument& cmd_doc, JsonDocument& rsp_doc, bool isAck, int response_type);
 		ArancinoPacket createArancinoPacket(JsonDocument& response_dict, int response_type);
 
 		void _buildArancinoJson(JsonDocument& doc, char* cmd, char* key, char* field, char* value, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg);
@@ -332,6 +328,7 @@ class ArancinoClass {
 		// int _publish(int channel, char* msg);
 		// int _publish(char* channel, char* msg);
 
+	friend class ArancinoTasks;
 };
 
 extern ArancinoClass Arancino;

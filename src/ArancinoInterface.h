@@ -53,7 +53,6 @@ class SerialIface : public ArancinoIface {
 	bool comm_timeout = false;
 };
 
-/*
 
 class MqttIface : public ArancinoIface, public PubSubClient {
 	public:
@@ -66,8 +65,8 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 
 	private:
 	void ifaceBegin();
-	void sendArancinoCommand(char* command);
-	char* receiveArancinoResponse(char terminator);
+	void sendArancinoCommand(JsonDocument& command);
+	bool receiveArancinoResponse(JsonDocument& response);
 
 	void _reconnect();
 
@@ -94,12 +93,12 @@ class BluetoothIface : public ArancinoIface {
 
 	private:
 	void ifaceBegin();
-	void sendArancinoCommand(char* command);
-	char* receiveArancinoResponse(char terminator);
+	void sendArancinoCommand(JsonDocument& command);
+	bool receiveArancinoResponse(JsonDocument& response);
 	
 	bool comm_timeout = false;
 	Stream* _bleSerial;
 	unsigned int _timeoutCounter = 0;
 };
-*/
+
 #endif /* ARANCINOINTERFACE_H_ */

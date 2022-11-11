@@ -75,26 +75,13 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* 
 	MicroID.getUniqueIDString(id, ID_SIZE/2);
 	_iface->ifaceBegin();
 	
-	return;
-
-	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
-	decimal_digits = _acfg.DECIMAL_DIGITS;
-
-	_metadata = _amdata;
-
-	int arancinocoreversionLength = 0; // assuming is not defined
-
-	#ifdef ARANCINO_CORE_VERSION
-	arancinocoreversionLength += strlen(ARANCINO_CORE_VERSION);
-	#endif
-
 	// firmware build time
-	char str_build_time[strlen(__DATE__) + 1 + strlen(__TIME__) + 1 + strlen(_metadata.tzoffset)] = "";
+	char str_build_time[strlen(__DATE__) + 1 + strlen(__TIME__) + 1 + strlen(_amdata.tzoffset)] = "";
 	strcpy(str_build_time, __DATE__);
 	strcat(str_build_time, " ");
 	strcat(str_build_time, __TIME__);
 	strcat(str_build_time, " ");
-	strcat(str_build_time, _metadata.tzoffset);
+	strcat(str_build_time, _amdata.tzoffset);
 
 	#if defined(USEFREERTOS)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
@@ -102,9 +89,10 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* 
 		CommMutex = xSemaphoreCreateMutex();
 	}
 
-	char* useFreeRtos = "1";
+	//TODO: this should be notified to module
+	bool useFreeRtos = true;
 	#else
-	char* useFreeRtos = "0";
+	bool useFreeRtos = false;
 	#endif
 
 	StaticJsonDocument<CMD_DOC_SIZE>cmd_doc;
@@ -114,11 +102,12 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* 
 	cmd_args["port_id"] = id;
 	cmd_args["fw_mcu_family"] = (char*)MCU_FAMILY;
 	cmd_args["fw_lib_ver"] = LIB_VERSION;
-	cmd_args["fw_name"] = _metadata.fwname;
-	cmd_args["fw_ver"] = _metadata.fwversion;
+	cmd_args["fw_name"] = _amdata.fwname;
+	cmd_args["fw_ver"] = _amdata.fwversion;
 	cmd_args["fw_build_time"] = str_build_time;
 	cmd_args["fw_core_ver"] = (char*)ARANCINO_CORE_VERSION;
 	cmd_args["fw_crtx_ver"] = CRTX_VERSION;
+	cmd_args["use_freertos"] = useFreeRtos ? 1 : 0;
 	if(custom_v1)
 		cmd_args["CUSTOM_KEY_1"] = custom_v1;
 	if(custom_v2)
@@ -133,7 +122,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* 
 	start(cmd_doc);
 	started = true;
 
-	strcpy(LOG_LEVEL,getModuleLogLevel());
+	//strcpy(LOG_LEVEL,getModuleLogLevel());
 	#if defined(USEFREERTOS)
 	/*	All the FreeRTOS initialization should be put here, at the end of the
 		the ArancinoClass::begin method.
@@ -153,9 +142,12 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* 
 /******** API BASIC :: START *********/
 
 void ArancinoClass::start(JsonDocument& cmd_doc) {
-	ArancinoPacket packet;
+	bool isError = true;
 	do
 	{
+		//Retry communication every 2.5 seconds of blocking delay
+		delay(2500);
+
 		StaticJsonDocument<RSP_DOC_SIZE>rsp_doc;
 		bool error;
 
@@ -169,28 +161,27 @@ void ArancinoClass::start(JsonDocument& cmd_doc) {
 		}
 		#endif
 
-		if (!error) {
+		if (error == DeserializationError::Ok) {
 			//Handle start response
 			if (rsp_doc["rsp_code"] == 100){
-				strcpy(DAEMON_VER, rsp_doc["args"]["dmn_ver"]);
-				strcpy(DAEMON_ENV, rsp_doc["args"]["dmn_env"]);
+				isError = false;
+				const char* d_ver = rsp_doc["args"]["dmn_ver"];
+				const char* d_env = rsp_doc["args"]["dmn_env"];
+				strcpy(DAEMON_VER, d_ver);
+				strcpy(DAEMON_ENV, d_env);
 
 				//Timestamp handling
 				const char* ts = rsp_doc["cfg"]["ts"];
-				memcpy(timestamp, ts, 4);
+				
+				memcpy(timestamp, ts, 13);
 				char tmst_part[5];
 				memcpy(tmst_part, timestamp, 4);
 				tmst_sup = atoi(tmst_part);  // first 4 digits of epoch
 				tmst_inf = atoi(&timestamp[4]); // last 4 digits of epoch
-				millis_previous = millis();
+				millis_previous = millis();				
 			}
 		}
-
-		//Retry communication every 2.5 seconds of blocking delay
-		delay(2500);
-	} while (packet.isError == true || packet.responseCode != RSP_OK);
-	free(packet);
-
+	} while (isError == true);
 }
 
 #if defined(USEFREERTOS)
@@ -302,7 +293,7 @@ ArancinoPacket ArancinoClass::set(char *key, char *value, bool isAck, bool isPer
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
-	return executeCommand(SET_COMMAND, key, NULL, value, true, true, cfg, VOID_RESPONSE);
+	return executeCommand(SET_COMMAND, key, NULL, value, isAck, true, true, cfg, VOID_RESPONSE);
 }
 
 
@@ -317,7 +308,7 @@ ArancinoPacket ArancinoClass::mset(char **keys, char **values, int len, bool isA
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
-	return executeCommand(SET_COMMAND, keys, NULL, values, len, true, true, cfg, VOID_RESPONSE);
+	return executeCommand(SET_COMMAND, keys, NULL, values, len, isAck, true, true, cfg, VOID_RESPONSE);
 }
 
 /******** API BASIC :: GET *********/
@@ -331,7 +322,7 @@ ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key, bool isPersistent, 
 	ArancinoCFG cfg;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
-	return executeCommand(GET_COMMAND, key, NULL, NULL, true, false, cfg, KEY_VALUE_RESPONSE);
+	return executeCommand(GET_COMMAND, key, NULL, NULL, true, true, false, cfg, KEY_VALUE_RESPONSE);
 }
 
 template <> char *ArancinoClass::get(char* key, bool isPersistent, char* type)
@@ -353,7 +344,7 @@ template <> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char **keys, int 
 	ArancinoCFG cfg;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
-	return executeCommand(GET_COMMAND, keys, NULL, NULL, len, true, false, cfg, KEY_VALUE_RESPONSE);
+	return executeCommand(GET_COMMAND, keys, NULL, NULL, len, true, true, false, cfg, KEY_VALUE_RESPONSE);
 }
 
 template <> char **ArancinoClass::mget(char** keys, int len, bool isPersistent, char* type)
@@ -376,7 +367,7 @@ ArancinoPacket ArancinoClass::del<ArancinoPacket>(char* key, bool isAck, bool is
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
-	return executeCommand(DEL_COMMAND, key, NULL, NULL, true, false, cfg, KEY_RESPONSE);
+	return executeCommand(DEL_COMMAND, key, NULL, NULL, isAck, true, false, cfg, KEY_RESPONSE);
 }
 
 template <>
@@ -435,7 +426,7 @@ ArancinoPacket ArancinoClass::hset(char *key, char *field, char *value, bool isA
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
-	return executeCommand(HSET_COMMAND, key, field, value, true, true, cfg, VOID_RESPONSE);
+	return executeCommand(HSET_COMMAND, key, field, value, isAck, true, true, cfg, VOID_RESPONSE);
 }
 
 /******** API BASIC :: HGET *********/
@@ -449,7 +440,7 @@ ArancinoPacket ArancinoClass::hget<ArancinoPacket>(char *key, char *field, bool 
 	ArancinoCFG cfg;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
-	return executeCommand(HGET_COMMAND, key, field, NULL, true, true, cfg, KEY_VALUE_RESPONSE);
+	return executeCommand(HGET_COMMAND, key, field, NULL, true, true, true, cfg, KEY_VALUE_RESPONSE);
 }
 
 template <>
@@ -473,7 +464,7 @@ ArancinoPacket ArancinoClass::hdel<ArancinoPacket>(char *key, char *field, bool 
 	ArancinoCFG cfg;
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
-	return executeCommand(HDEL_COMMAND, key, field, NULL, true, true, cfg, FIELDS_RESPONSE);
+	return executeCommand(HDEL_COMMAND, key, field, NULL, isAck, true, true, cfg, FIELDS_RESPONSE);
 }
 
 template <>
@@ -599,7 +590,7 @@ ArancinoPacket ArancinoClass::__publish(char *channel, char *msg, bool isAck)
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
 	cmd_cfg["ack"] = isAck? 0 : 1;
-	return executeCommand(cmd_doc, CLIENTS_RESPONSE);
+	return executeCommand(cmd_doc, isAck, CLIENTS_RESPONSE);
 }
 
 /******** API BASIC :: FLUSH *********/
@@ -609,7 +600,7 @@ ArancinoPacket ArancinoClass::flush(bool isAck, bool isPersistent)
 	ArancinoCFG cfg;
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
-	return executeCommand(FLUSH_COMMAND, NULL, NULL, NULL, false, false, cfg, VOID_RESPONSE);
+	return executeCommand(FLUSH_COMMAND, NULL, NULL, NULL, isAck, false, false, cfg, VOID_RESPONSE);
 }
 
 /******** API BASIC :: STORE *********/
@@ -715,7 +706,8 @@ ArancinoPacket ArancinoClass::__store( char* key, char* value, char* timestamp, 
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
 	cmd_cfg["ack"] = isAck? 0 : 1;
-	return executeCommand(cmd_doc, ITEMS_RESPONSE);
+	cmd_cfg["type"] = "tse";
+	return executeCommand(cmd_doc, isAck, ITEMS_RESPONSE);
 }
 
 /******** API BASIC :: MSTORE *********/
@@ -745,7 +737,8 @@ ArancinoPacket ArancinoClass::mstore<ArancinoPacket>(char** keys, char** values,
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
 	cmd_cfg["ack"] = isAck? 0 : 1;
-	return executeCommand(cmd_doc, ITEMS_RESPONSE);
+	cmd_cfg["type"] = "tse";
+	return executeCommand(cmd_doc, isAck, ITEMS_RESPONSE);
 }
 
 template<> 
@@ -789,6 +782,7 @@ ArancinoPacket ArancinoClass::storetags(char *key, char **tags, char **values, i
 	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
 	JsonObject cmd_args = cmd_doc.createNestedObject("args");
 	cmd_doc["cmd"] = STORETAGS_COMMAND;
+	cmd_args["key"] = key;
 	JsonArray cmd_items = cmd_args.createNestedArray("items");
 	for (int i=0; i<len; i++){
 		JsonObject items_obj = cmd_items.createNestedObject();
@@ -799,7 +793,8 @@ ArancinoPacket ArancinoClass::storetags(char *key, char **tags, char **values, i
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
 	cmd_cfg["ack"] = isAck? 0 : 1;
-	return executeCommand(cmd_doc, VOID_RESPONSE);
+	cmd_cfg["type"] = "tags";
+	return executeCommand(cmd_doc, isAck, VOID_RESPONSE);
 }
 
 /******** API BASIC :: SETRESERVED *********/
@@ -1106,46 +1101,61 @@ char *ArancinoClass::getTimestamp()
 
 /******** INTERNAL UTILS :: FREE *********/
 
-ArancinoPacket ArancinoClass::executeCommand(char* cmd, char* key, char* field, char* value, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
+ArancinoPacket ArancinoClass::executeCommand(char* cmd, char* key, char* field, char* value, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
 	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
-	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
 	_buildArancinoJson(cmd_doc, cmd, key, field, value, argsHasItems, itemsHasDict, cfg);
 
 	#if defined(USEFREERTOS)
-	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
+	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
 	#endif
-		_iface->sendArancinoCommand(cmd_doc);
-		
-		SerialUSB.println();
-		
-		if(cmd_doc["cfg"]["ack"] == 1)
-			//_iface->receiveArancinoResponse(rsp_doc);
-	#if defined(USEFREERTOS)
-		giveCommMutex();
+	_iface->sendArancinoCommand(cmd_doc);
+
+	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
+	if(isAck){
+		bool error = true;
+		int counter = 0;
+		while (error && counter < 5){
+			counter++;
+			error = _iface->receiveArancinoResponse(rsp_doc);
+		}
+		if(error) 
+			return communicationErrorPacket;
 	}
+			
+	#if defined(USEFREERTOS)
+	giveCommMutex();
 	#endif
 
 	if(rsp_doc.isNull()) 
 		return communicationErrorPacket;
  
-	ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
+ 	ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
 	return packet;
 }
 
-ArancinoPacket ArancinoClass::executeCommand(char* cmd, char** keys, char** fields, char** values, int len, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
+ArancinoPacket ArancinoClass::executeCommand(char* cmd, char** keys, char** fields, char** values, int len, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
 	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
-	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
 	_buildArancinoJson(cmd_doc, cmd, keys, fields, values, len, argsHasItems, itemsHasDict, cfg);
 	
 	#if defined(USEFREERTOS)
-	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
+	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
 	#endif
-		//_iface->sendArancinoCommand(cmd_doc);
-		if(cmd_doc["cfg"]["ack"] == 1)
-			//_iface->receiveArancinoResponse(rsp_doc);
-	#if defined(USEFREERTOS)
-		giveCommMutex();
+	_iface->sendArancinoCommand(cmd_doc);
+
+	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
+	if(isAck){
+		bool error = true;
+		int counter = 0;
+		while (error && counter < 5){
+			counter++;
+			error = _iface->receiveArancinoResponse(rsp_doc);
+		}
+		if(error) 
+			return communicationErrorPacket;
 	}
+			
+	#if defined(USEFREERTOS)
+	giveCommMutex();
 	#endif
 
 	if(rsp_doc.isNull()) 
@@ -1155,18 +1165,54 @@ ArancinoPacket ArancinoClass::executeCommand(char* cmd, char** keys, char** fiel
 	return packet;
 }
 
-ArancinoPacket ArancinoClass::executeCommand(JsonDocument& cmd_doc, int response_type){
-	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
-
+ArancinoPacket ArancinoClass::executeCommand(JsonDocument& cmd_doc, bool isAck, int response_type){
 	#if defined(USEFREERTOS)
-	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE) {
+	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
 	#endif
-		//_iface->sendArancinoCommand(cmd_doc);
-		if(cmd_doc["cfg"]["ack"] == 1)
-			//_iface->receiveArancinoResponse(rsp_doc);
-	#if defined(USEFREERTOS)
-		giveCommMutex();
+	_iface->sendArancinoCommand(cmd_doc);
+
+	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
+	if(isAck){
+		bool error = true;
+		int counter = 0;
+		while (error && counter < 5){
+			counter++;
+			error = _iface->receiveArancinoResponse(rsp_doc);
+		}
+		if(error) 
+			return communicationErrorPacket;
 	}
+			
+	#if defined(USEFREERTOS)
+	giveCommMutex();
+	#endif
+
+	if(rsp_doc.isNull()) 
+		return communicationErrorPacket;
+ 
+	ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
+	return packet;
+}
+
+ArancinoPacket ArancinoClass::executeCommand(JsonDocument& cmd_doc, JsonDocument& rsp_doc, bool isAck, int response_type){
+	#if defined(USEFREERTOS)
+	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
+	#endif
+	_iface->sendArancinoCommand(cmd_doc);
+
+	if(isAck){
+		bool error = true;
+		int counter = 0;
+		while (error && counter < 5){
+			counter++;
+			error = _iface->receiveArancinoResponse(rsp_doc);
+		}
+		if(error) 
+			return communicationErrorPacket;
+	}
+			
+	#if defined(USEFREERTOS)
+	giveCommMutex();
 	#endif
 
 	if(rsp_doc.isNull()) 
@@ -1191,15 +1237,17 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 			JsonArray resp_items = response_dict["args"]["items"];
 			int resp_size = resp_items.size();
 			if (resp_size > 0 && resp_size < 2) {
-				char* value = (char*) calloc(strlen(resp_items[0]["value"]), sizeof(char));
-				strcpy(value, resp_items[0]["value"]);
-				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING, {.string = value}};
+				const char* value = resp_items[0]["value"];
+				char* ret_value = (char*) calloc(strlen(value), sizeof(char));
+				strcpy(ret_value, value);
+				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING, {.string = ret_value}};
 				packet = temp;
 			} else if (resp_size > 1) {
 				char* resp_values[resp_size];
 				for (int i=0; i<resp_size; i++){
-					resp_values[i] = (char*) calloc(strlen(resp_items[i]["value"]), sizeof(char));
-					strcpy(resp_values[i], resp_items[i]["values"]);
+					const char* value = resp_items[i]["value"];
+					resp_values[i] = (char*) calloc(strlen(value), sizeof(char));
+					strcpy(resp_values[i], value);
 				}
 				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING_ARRAY, {.stringArray = resp_values}};
 				packet = temp;
@@ -1223,15 +1271,17 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 			JsonArray resp_items = response_dict["args"]["items"];
 			int resp_size = resp_items.size();
 			if (resp_size > 0 && resp_size < 2) {
-				char* value = (char*) calloc(strlen(resp_items[0]), sizeof(char));
-				strcpy(value, resp_items[0]);
-				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING, {.string = value}};
+				const char* value = resp_items[0];
+				char* ret_value = (char*) calloc(strlen(value), sizeof(char));
+				strcpy(ret_value, value);
+				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING, {.string = ret_value}};
 				packet = temp;
 			} else if (resp_size > 1) {
 				char* resp_values[resp_size];
 				for (int i=0; i<resp_size; i++){
-					resp_values[i] = (char*) calloc(strlen(resp_items[i]), sizeof(char));
-					strcpy(resp_values[i], resp_items[i]);
+					const char* value = resp_items[i];
+					resp_values[i] = (char*) calloc(strlen(value), sizeof(char));
+					strcpy(resp_values[i], value);
 				}
 				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING_ARRAY, {.stringArray = resp_values}};
 				packet = temp;
@@ -1245,7 +1295,7 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 			break;
 		}
 		default:
-			return invalidCommandErrorPacket;
+			return communicationErrorPacket;
 	}
 	return packet;
 }
@@ -1376,7 +1426,7 @@ void ArancinoClass::_floatToString(float value, unsigned int _nDecimal, char *st
 void ArancinoClass::_printDebugMessage(char* value) {
 	if (_isDebug && _commMode){
 	__publish(MONITOR_KEY, value);
-	__set(MONITOR_KEY, value, false);
+	set(MONITOR_KEY, value, false);
 	} else if(_isDebug && _dbgSerial != NULL){
 		_dbgSerial->print(value);
 	}
