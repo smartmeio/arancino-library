@@ -142,7 +142,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* 
 	ArancinoTasks _atask;
 	timerHandle1 = xTimerCreate("Heartbeat", pdMS_TO_TICKS(10000), pdTRUE, (void*)0, _atask.heartbeatCallback);
 	timerHandle2 = xTimerCreate("Interoception", pdMS_TO_TICKS(60000), pdTRUE, (void*)0, _atask.interoceptionCallback);
-	timerHandle3 = xTimerCreate("Identification", pdMS_TO_TICKS(10000), pdTRUE, (void*)0, _atask.interoceptionCallback);
+	timerHandle3 = xTimerCreate("Identification", pdMS_TO_TICKS(10000), pdTRUE, (void*)0, _atask.identificationCallback);
 
 	xTimerStart(timerHandle1, 0);
 	xTimerStart(timerHandle2, 0);
