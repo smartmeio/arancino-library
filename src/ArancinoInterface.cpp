@@ -35,6 +35,9 @@ void SerialIface::ifaceBegin(){
     //Nothing to initialize here.
 }
 
+size_t docSize;
+char* docStr;
+
 void SerialIface::sendArancinoCommand(JsonDocument& command){
 	if (this->comm_timeout){
 		while(this->_serialPort->available() > 0){
@@ -43,8 +46,12 @@ void SerialIface::sendArancinoCommand(JsonDocument& command){
 		comm_timeout=false;
 
 	}
-	serializeMsgPack(command, *_serialPort);
-	
+	docSize = measureMsgPack(command);
+	docStr = (char*)malloc(docSize * sizeof(char));
+	serializeMsgPack(command, docStr, docSize);
+	(*_serialPort).write(docStr, docSize);
+	//serializeMsgPack(command, *_serialPort);
+	free(docStr);
 
 	#if defined(USEFREERTOS) && defined(USE_TINYUSB)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING)
