@@ -60,6 +60,7 @@ extern "C" {
 #include <Adafruit_TinyUSB.h>
 #elif defined (ARDUINO_ARCH_RP2040)
 #include <FreeRTOS.h>
+#include <timers.h>
 #include <task.h>
 #include <semphr.h>
 #if defined(USE_TINYUSB)
