@@ -35,10 +35,56 @@ void SerialIface::ifaceBegin(){
     //Nothing to initialize here.
 }
 
-size_t docSize;
-char* docStr;
+int SerialIface::serialWrite(const char* str, uint32_t len, long timeout){
+	int sent = 0; //successfully sent chars count
+	int written = -1;
+	int i; //sending command index
+	long send_ts;
+	for (i = 0; i < len; i++) {
+		written = -1;
+		send_ts = millis(); 
+		do
+		{
+			written = (*_serialPort).write(str[i]);
+			if (written > 0)
+			{
+				// SERIAL_DEBUG.print("Sent: ");
+				// SERIAL_DEBUG.print(" 0x");
+				// SERIAL_DEBUG.print(str[i], HEX);
+				// SERIAL_DEBUG.print(" = ");
+				// SERIAL_DEBUG.println(str[i]);
+			}
+			else
+			{
+				SERIAL_DEBUG.print("Retry: ");
+				SERIAL_DEBUG.print(" 0x");
+				SERIAL_DEBUG.print(str[i], HEX);
+				SERIAL_DEBUG.print(" = ");
+				SERIAL_DEBUG.println(str[i]);
+			}
+		} while (written < 1 && millis() < (send_ts + timeout));
+
+		if (written < 1)
+		{
+			SERIAL_DEBUG.print("Error sending: ");
+			SERIAL_DEBUG.print(" 0x");
+			SERIAL_DEBUG.print(str[i], HEX);
+			SERIAL_DEBUG.print(" = ");
+			SERIAL_DEBUG.println(str[i]);
+			break;
+		}
+		else
+		{
+			++sent; //increasing successfully sent chars
+		}
+	}
+	return sent; //if sent < len then error!
+}
 
 void SerialIface::sendArancinoCommand(JsonDocument& command){
+	size_t docSize;
+	char* docStr;
+
 	if (this->comm_timeout){
 		while(this->_serialPort->available() > 0){
 				this->_serialPort->read();
@@ -46,10 +92,20 @@ void SerialIface::sendArancinoCommand(JsonDocument& command){
 		comm_timeout=false;
 
 	}
+	
 	docSize = measureMsgPack(command);
 	docStr = (char*)malloc(docSize * sizeof(char));
 	serializeMsgPack(command, docStr, docSize);
-	(*_serialPort).write(docStr, docSize);
+
+	int sent = serialWrite(docStr, docSize, 500); //TODO: set correct timeout
+	if (sent < docSize)
+	{
+		SERIAL_DEBUG.print("Error: sent ");
+		SERIAL_DEBUG.print(sent);
+		SERIAL_DEBUG.print(" of ");
+		SERIAL_DEBUG.println(docSize);	
+		__NOP();
+	}
 	//serializeMsgPack(command, *_serialPort);
 	free(docStr);
 

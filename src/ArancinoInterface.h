@@ -46,6 +46,7 @@ class SerialIface : public ArancinoIface {
 
 	private:
 	void ifaceBegin();
+	int serialWrite(const char* str, uint32_t len, long timeout);
 	void sendArancinoCommand(JsonDocument& command);
 	bool receiveArancinoResponse(JsonDocument& response);
 
