@@ -61,7 +61,7 @@ void setup() {
   Arancino.hset("EX_06_2_foo","bar","yeah");
   Arancino.hset("EX_06_2_foo","baz","whoo");
 
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 512, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }

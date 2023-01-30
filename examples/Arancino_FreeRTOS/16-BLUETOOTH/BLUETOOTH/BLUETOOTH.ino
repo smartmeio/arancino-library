@@ -62,7 +62,7 @@ void setup()
   Arancino.attachInterface(iface);
 
   Arancino.begin(amdata);
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 512, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }
 

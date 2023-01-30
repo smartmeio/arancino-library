@@ -67,7 +67,7 @@ void setup() {
   Arancino.set("EX_01_3_key_4", "bar", NULL);      //volatile key
   Arancino.set("EX_01_3_key_5", "bar");            //volatile key
 
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 512, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }
 

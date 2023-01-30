@@ -61,7 +61,7 @@ void setup() {
   num = Arancino.del("EX_03_1_foo");
   Arancino.println(num ? "Key deleted" : "Key not found"); //1
   
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 512, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }
 

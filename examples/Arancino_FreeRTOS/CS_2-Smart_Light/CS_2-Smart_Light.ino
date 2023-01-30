@@ -53,7 +53,7 @@ void setup() {
   char* startingValues[] = {"255", "255", "255"}; //White
   Arancino.mset(keys, startingValues, 3);
 
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 512, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 }
 

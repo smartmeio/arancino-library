@@ -591,7 +591,7 @@ ArancinoPacket ArancinoClass::__publish(char *channel, char *msg, bool isAck)
 	items_obj["message"] = msg;
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
-	cmd_cfg["ack"] = isAck? 0 : 1;
+	cmd_cfg["ack"] = isAck? 1 : 0;
 	return executeCommand(cmd_doc, isAck, CLIENTS_RESPONSE);
 }
 
@@ -707,7 +707,7 @@ ArancinoPacket ArancinoClass::__store( char* key, char* value, char* timestamp, 
 	items_obj["ts"] = timestamp;
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
-	cmd_cfg["ack"] = isAck? 0 : 1;
+	cmd_cfg["ack"] = isAck? 1 : 0;
 	cmd_cfg["type"] = "tse";
 	return executeCommand(cmd_doc, isAck, ITEMS_RESPONSE);
 }
@@ -738,7 +738,7 @@ ArancinoPacket ArancinoClass::mstore<ArancinoPacket>(char** keys, char** values,
 	}
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
-	cmd_cfg["ack"] = isAck? 0 : 1;
+	cmd_cfg["ack"] = isAck? 1 : 0;
 	cmd_cfg["type"] = "tse";
 	return executeCommand(cmd_doc, isAck, ITEMS_RESPONSE);
 }
@@ -794,7 +794,7 @@ ArancinoPacket ArancinoClass::storetags(char *key, char **tags, char **values, i
 	cmd_args["ts"] = timestamp;
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
-	cmd_cfg["ack"] = isAck? 0 : 1;
+	cmd_cfg["ack"] = isAck? 1 : 0;
 	cmd_cfg["type"] = "tags";
 	return executeCommand(cmd_doc, isAck, VOID_RESPONSE);
 }
@@ -1112,6 +1112,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* cmd, char* key, char* field, 
 	#if defined(USEFREERTOS)
 	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
 	#endif
+
 	_iface->sendArancinoCommand(cmd_doc);
 
 	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;

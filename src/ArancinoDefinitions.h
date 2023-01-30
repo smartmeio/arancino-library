@@ -154,11 +154,16 @@ under the License
 #define IDENTIFICATION_STACK        configMINIMAL_STACK_SIZE * 4
 #define INTEROCEPTION_STACK         configMINIMAL_STACK_SIZE * 4
 #define HEARTBEAT_STACK             configMINIMAL_STACK_SIZE * 4
-#else
+#elif defined(__SAMD21G18A__)
 #define ARANCINO_TASK_PRIORITY      configMAX_PRIORITIES - 1
 #define IDENTIFICATION_STACK        256
 #define INTEROCEPTION_STACK         256
 #define HEARTBEAT_STACK             256
+#elif defined(ARDUINO_ARCH_RP2040)
+#define ARANCINO_TASK_PRIORITY      configMAX_PRIORITIES - 1
+#define IDENTIFICATION_STACK        512
+#define INTEROCEPTION_STACK         512
+#define HEARTBEAT_STACK             512
 #endif
 
 #define SERIAL_MAX_RETRIES          10

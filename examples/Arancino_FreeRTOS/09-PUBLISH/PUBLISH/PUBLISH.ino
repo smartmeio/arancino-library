@@ -71,7 +71,7 @@ void setup() {
   //publish the value 123.456 into the 'EX_12_1_channel3' channel
   Arancino.publish(channel3, message3);
 
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
+  xTaskCreate(loopTask, "loopTask", 512, NULL, 1, &loopTaskHandle);
   Arancino.startScheduler();
 
 }

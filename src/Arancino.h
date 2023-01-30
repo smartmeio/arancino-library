@@ -144,7 +144,7 @@ class ArancinoClass {
 		ArancinoPacket set(char* key, char* value, bool isAck = true, bool isPersistent = false, char* type = "appl");
 
 		//MSET
-		ArancinoPacket mset(char** keys, char** values, int len, bool isAck, bool isPersistent = false, char* type = "appl");
+		ArancinoPacket mset(char** keys, char** values, int len, bool isAck=true, bool isPersistent = false, char* type = "appl");
 
 		//GET
 		template<class T = char*> T get(char* key, bool isPersistent = false, char* type = "appl");
