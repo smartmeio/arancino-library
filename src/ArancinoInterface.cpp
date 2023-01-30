@@ -36,7 +36,15 @@ void SerialIface::ifaceBegin(){
 }
 
 void SerialIface::sendArancinoCommand(JsonDocument& command){
+	if (this->comm_timeout){
+		while(this->_serialPort->available() > 0){
+				this->_serialPort->read();
+		}
+		comm_timeout=false;
+
+	}
 	serializeMsgPack(command, *_serialPort);
+	
 
 	#if defined(USEFREERTOS) && defined(USE_TINYUSB)
 	if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING)
@@ -49,6 +57,9 @@ void SerialIface::sendArancinoCommand(JsonDocument& command){
 bool SerialIface::receiveArancinoResponse(JsonDocument& response){
 	
 	DeserializationError error = deserializeMsgPack(response, *_serialPort);
+	if (error){
+		this->comm_timeout = true;
+	}
 	return error;
 }
 
@@ -60,7 +71,7 @@ void SerialIface::setSerialPort(Stream& serialPort){
 void SerialIface::setSerialPort(){
 	//default implementation for Arancino boards
 	#if defined (SERIAL_PORT) && defined(BAUDRATE) && defined (TIMEOUT)
-	//SERIAL_PORT.begin(BAUDRATE);
+	SERIAL_PORT.begin(BAUDRATE);
 	SERIAL_PORT.setTimeout(TIMEOUT);
 	this->_serialPort = &SERIAL_PORT;
 	#endif
