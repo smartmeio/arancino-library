@@ -21,8 +21,6 @@ under the License
 #include "Arancino.h"
 #include "ArancinoTasks.h"
 
-#define DEBUG 0
-
 ArancinoPacket reservedKeyErrorPacket = {true, RESERVED_KEY_ERROR, RESERVED_KEY_ERROR, {.string = NULL}};	   // default reserved key error packet
 ArancinoPacket communicationErrorPacket = {true, COMMUNICATION_ERROR, COMMUNICATION_ERROR, {.string = NULL}};  // default reserved key error packet
 ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_VALUE_ERROR, {.string = NULL}}; // default reserved key error packet
@@ -147,7 +145,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* 
 	xTimerStart(timerHandle1, 0);
 	xTimerStart(timerHandle2, 0);
 	xTimerStart(timerHandle3, 0);
-	xTaskCreate(_atask.serviceTask, "serviceTask", 512, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
+	xTaskCreate(_atask.serviceTask, "serviceTask", SERVICETASK_STACK, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
 	#endif
 }
 
@@ -1121,151 +1119,133 @@ char *ArancinoClass::getTimestamp()
 
 ArancinoPacket ArancinoClass::executeCommand(char* cmd, char* key, char* field, char* value, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
 	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
-	int tx_counter = 0;
 	bool error = true;
 
-	do {
-		_buildArancinoJson(cmd_doc, cmd, key, field, value, argsHasItems, itemsHasDict, cfg);
+	_buildArancinoJson(cmd_doc, cmd, key, field, value, argsHasItems, itemsHasDict, cfg);
 
-		#if defined(USEFREERTOS)
-		if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
-		#endif
-			_iface->sendArancinoCommand(cmd_doc);
+	#if defined(USEFREERTOS)
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
+	#endif
+		_iface->sendArancinoCommand(cmd_doc);
 
-			if(isAck){
-				error = _iface->receiveArancinoResponse(cmd_doc);
-			} else {
-				#if defined(USEFREERTOS)
-				giveCommMutex();
-				#endif
-				return voidCommunicationPacket;
-			}
-
-		#if defined(USEFREERTOS)
-		giveCommMutex();
-		}
-		#endif
-
-		if(!cmd_doc.isNull() && !error) {
-			ArancinoPacket packet = createArancinoPacket(cmd_doc, response_type);
-			return packet;
+		if(isAck){
+			error = _iface->receiveArancinoResponse(cmd_doc);
 		} else {
-			tx_counter++;
+			#if defined(USEFREERTOS)
+			giveCommMutex();
+			#endif
+			return voidCommunicationPacket;
 		}
-	} while (tx_counter < TX_MAX_RETRIES);
 
-	return communicationErrorPacket;
+	#if defined(USEFREERTOS)
+	giveCommMutex();
+	}
+	#endif
+
+	if(!cmd_doc.isNull() && !error) {
+		ArancinoPacket packet = createArancinoPacket(cmd_doc, response_type);
+		return packet;
+	} else {
+		return communicationErrorPacket;
+	}
 }
 
 ArancinoPacket ArancinoClass::executeCommand(char* cmd, char** keys, char** fields, char** values, int len, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
 	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
-	int tx_counter = 0;
 	bool error = true;
 
-	do {
-		_buildArancinoJson(cmd_doc, cmd, keys, fields, values, len, argsHasItems, itemsHasDict, cfg);
+	_buildArancinoJson(cmd_doc, cmd, keys, fields, values, len, argsHasItems, itemsHasDict, cfg);
 
-		#if defined(USEFREERTOS)
-		if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
-		#endif
-			_iface->sendArancinoCommand(cmd_doc);
+	#if defined(USEFREERTOS)
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
+	#endif
+		_iface->sendArancinoCommand(cmd_doc);
 
-			if(isAck){
-				error = _iface->receiveArancinoResponse(cmd_doc);
-			} else {
-				#if defined(USEFREERTOS)
-				giveCommMutex();
-				#endif
-				return voidCommunicationPacket;
-			}
-				
-		#if defined(USEFREERTOS)
-		}
-		giveCommMutex();
-		#endif
-
-		if(!cmd_doc.isNull() && !error){
-			ArancinoPacket packet = createArancinoPacket(cmd_doc, response_type);
-			return packet;
+		if(isAck){
+			error = _iface->receiveArancinoResponse(cmd_doc);
 		} else {
-			tx_counter++;
+			#if defined(USEFREERTOS)
+			giveCommMutex();
+			#endif
+			return voidCommunicationPacket;
 		}
-	} while (tx_counter < TX_MAX_RETRIES);
+			
+	#if defined(USEFREERTOS)
+	giveCommMutex();
+	}
+	#endif
 
-	return communicationErrorPacket;
+	if(!cmd_doc.isNull() && !error){
+		ArancinoPacket packet = createArancinoPacket(cmd_doc, response_type);
+		return packet;
+	} else {
+		return communicationErrorPacket;
+	}
+
+	
 }
 
 ArancinoPacket ArancinoClass::executeCommand(JsonDocument& cmd_doc, bool isAck, int response_type){
-	int tx_counter = 0;
 	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
 	bool error = true;
 
-	do {
-		#if defined(USEFREERTOS)
-		if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
-		#endif
+	#if defined(USEFREERTOS)
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
+	#endif
 
-			_iface->sendArancinoCommand(cmd_doc);
+	_iface->sendArancinoCommand(cmd_doc);
 
-			if(isAck){
-				error = _iface->receiveArancinoResponse(rsp_doc);
-			} else {
-				#if defined(USEFREERTOS)
-				giveCommMutex();
-				#endif
-				return voidCommunicationPacket;
-			}
-				
+	if(isAck){
+		error = _iface->receiveArancinoResponse(rsp_doc);
+	} else {
 		#if defined(USEFREERTOS)
-		}
 		giveCommMutex();
 		#endif
+		return voidCommunicationPacket;
+	}
+			
+	#if defined(USEFREERTOS)
+	giveCommMutex();
+	}
+	#endif
 
-		if(!rsp_doc.isNull() && !error){
-			ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
-			return packet;
-		} else {
-			tx_counter++;
-		}
-	} while (tx_counter < TX_MAX_RETRIES);
-
-	return communicationErrorPacket;
+	if(!rsp_doc.isNull() && !error){
+		ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
+		return packet;
+	} else {
+		return communicationErrorPacket;
+	}
 }
 
 ArancinoPacket ArancinoClass::executeCommand(JsonDocument& cmd_doc, JsonDocument& rsp_doc, bool isAck, int response_type){
-	int tx_counter = 0;
 	bool error = true;
 
-	do {
-		#if defined(USEFREERTOS)
-		if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
-		#endif
+	#if defined(USEFREERTOS)
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
+	#endif
 
-			_iface->sendArancinoCommand(cmd_doc);
+		_iface->sendArancinoCommand(cmd_doc);
 
-			if(isAck){
-				error = _iface->receiveArancinoResponse(rsp_doc);
-			} else {
-				#if defined(USEFREERTOS)
-				giveCommMutex();
-				#endif
-				return voidCommunicationPacket;
-			}
-				
-		#if defined(USEFREERTOS)
-		}
-		giveCommMutex();
-		#endif
-
-		if(!rsp_doc.isNull() && !error){
-			ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
-			return packet;
+		if(isAck){
+			error = _iface->receiveArancinoResponse(rsp_doc);
 		} else {
-			tx_counter++;
+			#if defined(USEFREERTOS)
+			giveCommMutex();
+			#endif
+			return voidCommunicationPacket;
 		}
-	} while (tx_counter < TX_MAX_RETRIES);
+			
+	#if defined(USEFREERTOS)
+	giveCommMutex();
+	}
+	#endif
 
-	return communicationErrorPacket;
+	if(!rsp_doc.isNull() && !error){
+		ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
+		return packet;
+	} else {
+		return communicationErrorPacket;
+	}
 }
 
 ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, int response_type){

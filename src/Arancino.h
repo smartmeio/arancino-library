@@ -294,7 +294,6 @@ class ArancinoClass {
 		void _buildArancinoJson(JsonDocument& doc, char* cmd, char* key, char* field, char* value, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg);
 		void _buildArancinoJson(JsonDocument& doc, char* cmd, char** keys, char** fields, char** values, int len, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg);
 
-
 		//Protocol interface
 		ArancinoIface* _iface;
 
