@@ -24,7 +24,7 @@ under the License
 
 #if defined(__SAMD21G18A__)
 #define BAUDRATE 4000000
-#define TIMEOUT 100
+#define TIMEOUT 1000
 #define SERIAL_PORT SerialUSB
 #define SERIAL_DEBUG Serial
 #elif defined(ARDUINO_ARCH_RP2040) && defined(USEFREERTOS)
@@ -115,7 +115,9 @@ under the License
 #define ERR_REDIS_KEY_EXISTS_IN_STD	    207		//Key exists in the Standard Data Store
 #define ERR_REDIS_KEY_EXISTS_IN_PERS	208		//Key exists in the Persistent Data Store
 #define ERR_NON_COMPATIBILITY		    209		//Non compatibility between Arancino Module and Library
-#define ERR_STORE_CONVERSION		    211		//Non compatibility between Arancino Module and Library
+#define ERR_INVALID_ARGUMENTS           210     //Generic Invalid Arguments
+#define ERR_VALUE           		    211		//Invalid value
+#define ERR_CMD_TYPE                    212     //Error during packet transmission
 
 #define DBG_PIN					26		//pin used to Debug Message
 //#define PWR_PIN				??		//pin used for Power Management
@@ -134,6 +136,7 @@ under the License
 #define RESERVED_KEY_ERROR		-3
 #define COMMUNICATION_ERROR		-2
 #define GENERIC_ERROR			-1
+#define VOID_ERROR_TYPE          0
 
 //RESPONSE TYPE
 #define VOID			(int)0
@@ -151,19 +154,13 @@ under the License
 #if defined(ARDUINO_ARCH_ESP32)
 //ESP32 configMAX_PRIORITIES is 25
 #define ARANCINO_TASK_PRIORITY      20
-#define IDENTIFICATION_STACK        configMINIMAL_STACK_SIZE * 4
-#define INTEROCEPTION_STACK         configMINIMAL_STACK_SIZE * 4
-#define HEARTBEAT_STACK             configMINIMAL_STACK_SIZE * 4
+#define SERVICETASK_STACK           (1024 * 4)
 #elif defined(__SAMD21G18A__)
 #define ARANCINO_TASK_PRIORITY      configMAX_PRIORITIES - 1
-#define IDENTIFICATION_STACK        256
-#define INTEROCEPTION_STACK         256
-#define HEARTBEAT_STACK             256
+#define SERVICETASK_STACK           768
 #elif defined(ARDUINO_ARCH_RP2040)
 #define ARANCINO_TASK_PRIORITY      configMAX_PRIORITIES - 1
-#define IDENTIFICATION_STACK        512
-#define INTEROCEPTION_STACK         512
-#define HEARTBEAT_STACK             512
+#define SERVICETASK_STACK           1024
 #endif
 
 #define SERIAL_MAX_RETRIES          10

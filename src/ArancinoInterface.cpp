@@ -36,6 +36,9 @@ void SerialIface::ifaceBegin(){
 }
 
 int SerialIface::serialWrite(const char* str, uint32_t len, long timeout){
+	if (!str || !len)
+		return 0;
+
 	int sent = 0; //successfully sent chars count
 	int written = -1;
 	int i; //sending command index
@@ -46,21 +49,15 @@ int SerialIface::serialWrite(const char* str, uint32_t len, long timeout){
 		do
 		{
 			written = (*_serialPort).write(str[i]);
-			if (written > 0)
+			if (written <= 0)
 			{
-				// SERIAL_DEBUG.print("Sent: ");
-				// SERIAL_DEBUG.print(" 0x");
-				// SERIAL_DEBUG.print(str[i], HEX);
-				// SERIAL_DEBUG.print(" = ");
-				// SERIAL_DEBUG.println(str[i]);
-			}
-			else
-			{
+				#if DEBUG
 				SERIAL_DEBUG.print("Retry: ");
 				SERIAL_DEBUG.print(" 0x");
 				SERIAL_DEBUG.print(str[i], HEX);
 				SERIAL_DEBUG.print(" = ");
 				SERIAL_DEBUG.println(str[i]);
+				#endif
 			}
 		} while (written < 1 && millis() < (send_ts + timeout));
 
@@ -100,13 +97,15 @@ void SerialIface::sendArancinoCommand(JsonDocument& command){
 	int sent = serialWrite(docStr, docSize, 500); //TODO: set correct timeout
 	if (sent < docSize)
 	{
+		#if DEBUG
 		SERIAL_DEBUG.print("Error: sent ");
 		SERIAL_DEBUG.print(sent);
 		SERIAL_DEBUG.print(" of ");
 		SERIAL_DEBUG.println(docSize);	
 		__NOP();
+		#endif
 	}
-	//serializeMsgPack(command, *_serialPort);
+
 	free(docStr);
 
 	#if defined(USEFREERTOS) && defined(USE_TINYUSB)

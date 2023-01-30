@@ -25,18 +25,6 @@ under the License
 #include <Arancino.h>
 #include <ArduinoJson.h>
 
-struct FreeRTOSAllocator {
-  void* allocate(size_t n) {
-    return pvPortMalloc(n);
-  }
-
-  void deallocate(void* p) {
-    vPortFree(p);
-  }
-};
-
-typedef BasicJsonDocument<FreeRTOSAllocator> FreeRTOSDynamicJsonDocument;
-
 class ArancinoTasks{
 	#ifdef USEFREERTOS
 	public:
@@ -52,9 +40,13 @@ class ArancinoTasks{
 		
 	private:
 		static float mcuTemp();
-		static FreeRTOSDynamicJsonDocument* cmd_doc;
-		static FreeRTOSDynamicJsonDocument* rsp_doc;
+		static DynamicJsonDocument* cmd_doc;
+		static DynamicJsonDocument* rsp_doc;
 		static SemaphoreHandle_t jsonMutex;
+
+		static void identificationTask();
+		static void interoceptionTask();
+		static void heartbeatTask();
 
 		static bool _identificationFlag;
 		static bool _interoceptionFlag;
