@@ -38,38 +38,97 @@ under the License
 
 #if defined(USEFREERTOS)
 
-DynamicJsonDocument* ArancinoTasks::cmd_doc;
-DynamicJsonDocument* ArancinoTasks::rsp_doc;
-SemaphoreHandle_t ArancinoTasks::jsonMutex;
-
+FreeRTOSDynamicJsonDocument* ArancinoTasks::cmd_doc;
+FreeRTOSDynamicJsonDocument* ArancinoTasks::rsp_doc;
+// SemaphoreHandle_t ArancinoTasks::jsonMutex;
+bool ArancinoTasks::_identificationFlag;
+bool ArancinoTasks::_interoceptionFlag;
+bool ArancinoTasks::_heartbeatFlag; 
 
 ArancinoTasks::ArancinoTasks(){
-  cmd_doc = new DynamicJsonDocument(CMD_DOC_SIZE);
-  rsp_doc = new DynamicJsonDocument(RSP_DOC_SIZE);
-  jsonMutex = xSemaphoreCreateMutex();
+  cmd_doc = new FreeRTOSDynamicJsonDocument(CMD_DOC_SIZE);
+  rsp_doc = new FreeRTOSDynamicJsonDocument(RSP_DOC_SIZE);
+  //jsonMutex = xSemaphoreCreateMutex();
 
+  _identificationFlag = false;
+  _interoceptionFlag = false;
+  _heartbeatFlag = false; 
 }
 
-void ArancinoTasks::deviceIdentification(void *pvPramaters){
+void ArancinoTasks::identificationCallback (TimerHandle_t xTimer){
+  ArancinoTasks::_identificationFlag = true;
+}
+
+void ArancinoTasks::interoceptionCallback (TimerHandle_t xTimer){
+  ArancinoTasks::_interoceptionFlag = true;
+}
+
+void ArancinoTasks::heartbeatCallback (TimerHandle_t xTimer){
+  _heartbeatFlag = true;
+}
+
+
+void ArancinoTasks::serviceTask(void* pvParameters){
+  //Heartbeat region
+  uint8_t idSize = strlen(Arancino.id);
+  char topic[idSize + 5]; //ID_SIZE + '_HBx' + '\0'
+  strcpy(topic, Arancino.id);
+  strcat(topic, "_HB0");
+
+  //Identification region
   pinMode(LED_BUILTIN,OUTPUT);
-  while (1)
-  {
-    xSemaphoreTake(jsonMutex, (TickType_t)portMAX_DELAY);
-    (*cmd_doc).clear();
-    JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
-    (*cmd_doc)["cmd"] = GET_COMMAND;
-    JsonArray cmd_items = cmd_args.createNestedArray("items");
-    cmd_items.add(BLINK_ID_KEY);
 
-    JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
-    cmd_cfg["pers"] = 1;
-    cmd_cfg["type"] = "rsvd";
-    
-    ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), true, KEY_VALUE_RESPONSE);
-    xSemaphoreGive(jsonMutex);
+  // digitalWrite(LED_BUILTIN, HIGH);
+  // Arancino.delay(200);
+  // digitalWrite(LED_BUILTIN, LOW);
+  // Arancino.delay(200);
+  
+
+  while(1){
+
+    if(_heartbeatFlag){
+      topic[idSize+3] = '0'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
+
+      JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
+      (*cmd_doc)["cmd"] = PUBLISH_COMMAND;
+      JsonArray cmd_items = cmd_args.createNestedArray("items");
+      JsonObject items_obj = cmd_items.createNestedObject();
+      items_obj["channel"] = topic;
+      items_obj["message"] = Arancino.getTimestamp();
+
+      JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+      cmd_cfg["ack"] = 0;
+      cmd_cfg["pers"] = 0;
+
+      ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, CLIENTS_RESPONSE);
+      
+      topic[idSize+3] = '1'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
+
+      items_obj["channel"] = topic;
+      items_obj["message"] = Arancino.getTimestamp();
+
+      rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, CLIENTS_RESPONSE);
+      (*cmd_doc).clear();
+      _heartbeatFlag = false;
+    }
+
+/*
 
 
-    if(!strcmp(rsp.response.string, "1")){
+    if(_identificationFlag){
+      JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
+      (*cmd_doc)["cmd"] = GET_COMMAND;
+      JsonArray cmd_items = cmd_args.createNestedArray("items");
+      cmd_items.add(BLINK_ID_KEY);
+
+      JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+      cmd_cfg["pers"] = 1;
+      cmd_cfg["type"] = "rsvd";
+      
+      ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), true, KEY_VALUE_RESPONSE);
+      (*cmd_doc).clear();
+
+      if(!strcmp(rsp.response.string, "1")){
         for(int i=0;i < 20; i++){
             #if defined (ARDUINO_ARANCINO_VOLANTE)
             digitalWrite(LED_BUILTIN,LOW);
@@ -85,183 +144,289 @@ void ArancinoTasks::deviceIdentification(void *pvPramaters){
             vTaskDelay(200);
         }
 
-        xSemaphoreTake(jsonMutex, (TickType_t)portMAX_DELAY);
-        (*cmd_doc).clear();
         JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
         (*cmd_doc)["cmd"] = SET_COMMAND;
         JsonArray cmd_items = cmd_args.createNestedArray("items");
         JsonObject items_obj = cmd_items.createNestedObject();
         items_obj["key"] = BLINK_ID_KEY;
         items_obj["value"] = 0;
-        //cmd_items.add(BLINK_ID_KEY);
 
         JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
         cmd_cfg["pers"] = 1;
         cmd_cfg["type"] = "rsvd";
         cmd_cfg["ack"] = 0;
         
-        ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, VOID_RESPONSE);
-        xSemaphoreGive(jsonMutex);
+        ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), false, VOID_RESPONSE);
+        (*cmd_doc).clear();
+        _identificationFlag = false;
+      }
 
+      if (_interoceptionFlag){
+        #if !defined(ARDUINO_ARANCINO_VOLANTE) && !defined(ARDUINO_ARCH_RP2040)
+        int memory_free = xPortGetFreeHeapSize();
+        int memory_used=configTOTAL_HEAP_SIZE-memory_free;
+        #endif
+
+        #if defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040)
+        char* ts = Arancino.getTimestamp();
+        JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
+        (*cmd_doc)["cmd"] = STORE_COMMAND;
+        JsonArray cmd_items = cmd_args.createNestedArray("items");
+        JsonObject memfree_obj = cmd_items.createNestedObject();
+        JsonObject temp_obj = cmd_items.createNestedObject();
+        
+        memfree_obj["key"] = "MEM_TOT";
+        memfree_obj["value"] = configTOTAL_HEAP_SIZE;
+        memfree_obj["ts"] = ts;
+        temp_obj["key"] = "TEMP";
+        temp_obj["value"] = mcuTemp();
+        temp_obj["ts"] = ts;
+        JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+        cmd_cfg["ack"] = 0;
+        cmd_cfg["type"] = "tse";
+        
+        ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), false, ITEMS_RESPONSE);
+        (*cmd_doc).clear();
+        #else
+        char* ts = Arancino.getTimestamp();
+        JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
+        (*cmd_doc)["cmd"] = STORE_COMMAND;
+        JsonArray cmd_items = cmd_args.createNestedArray("items");
+        JsonObject memfree_obj = cmd_items.createNestedObject();
+        JsonObject temp_obj = cmd_items.createNestedObject();
+        JsonObject memtot_obj = cmd_items.createNestedObject();
+        JsonObject memused_obj = cmd_items.createNestedObject();
+        
+        memtot_obj["key"] = "MEM_TOT";
+        memtot_obj["value"] = configTOTAL_HEAP_SIZE;
+        memtot_obj["ts"] = ts;
+        temp_obj["key"] = "TEMP";
+        temp_obj["value"] = 0;
+        temp_obj["ts"] = ts;
+        memfree_obj["key"] = "MEM_FREE";
+        memfree_obj["value"] = xPortGetFreeHeapSize();
+        memfree_obj["ts"] = ts;
+        memused_obj["key"] = "MEM_USED";
+        memused_obj["value"] = configTOTAL_HEAP_SIZE-memory_free;
+        memused_obj["ts"] = ts;
+        JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+        cmd_cfg["ack"] = 0;
+        cmd_cfg["type"] = "tse";
+        
+        ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), false, ITEMS_RESPONSE);
+        (*cmd_doc).clear();
+      }
     }
-    Arancino.free(rsp);
-    vTaskDelay(10000); //wait 10 seconds (non-blocking delay)
+
+*/
+    //METTERE LO YIELD
+    vTaskDelay(1000);
   }
 }
 
-void ArancinoTasks::interoception(void *pvPramaters){
-  while (1)
-  {
-    #if !defined(ARDUINO_ARANCINO_VOLANTE) && !defined(ARDUINO_ARCH_RP2040)
-    int memory_free = xPortGetFreeHeapSize();
-    int memory_used=configTOTAL_HEAP_SIZE-memory_free;
-    #endif
 
-    float temperature = mcuTemp();
+// void ArancinoTasks::deviceIdentification(void *pvPramaters){
+//   pinMode(LED_BUILTIN,OUTPUT);
+//   while (1)
+//   {
+//     xSemaphoreTake(jsonMutex, (TickType_t)portMAX_DELAY);
+//     JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
+//     (*cmd_doc)["cmd"] = GET_COMMAND;
+//     JsonArray cmd_items = cmd_args.createNestedArray("items");
+//     cmd_items.add(BLINK_ID_KEY);
 
-    #if defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040)
-    xSemaphoreTake(jsonMutex, (TickType_t)portMAX_DELAY);
-    char* ts = Arancino.getTimestamp();
-    (*cmd_doc).clear();
-    JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
-    (*cmd_doc)["cmd"] = STORE_COMMAND;
-    JsonArray cmd_items = cmd_args.createNestedArray("items");
-    JsonObject memfree_obj = cmd_items.createNestedObject();
-    JsonObject temp_obj = cmd_items.createNestedObject();
+//     JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+//     cmd_cfg["pers"] = 1;
+//     cmd_cfg["type"] = "rsvd";
     
-    memfree_obj["key"] = "MEM_TOT";
-    memfree_obj["value"] = configTOTAL_HEAP_SIZE;
-    memfree_obj["ts"] = ts;
-    temp_obj["key"] = "TEMP";
-    temp_obj["value"] = temperature;
-    temp_obj["ts"] = ts;
-    JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
-    cmd_cfg["ack"] = 0;
-    cmd_cfg["type"] = "tse";
+//     ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), true, KEY_VALUE_RESPONSE);
+//     xSemaphoreGive(jsonMutex);
+
+
+//     if(!strcmp(rsp.response.string, "1")){
+//         for(int i=0;i < 20; i++){
+//             #if defined (ARDUINO_ARANCINO_VOLANTE)
+//             digitalWrite(LED_BUILTIN,LOW);
+//             #else
+//             digitalWrite(LED_BUILTIN,HIGH);
+//             #endif
+//             vTaskDelay(100);
+//             #if defined (ARDUINO_ARANCINO_VOLANTE)
+//             digitalWrite(LED_BUILTIN,HIGH);
+//             #else
+//             digitalWrite(LED_BUILTIN,LOW);
+//             #endif
+//             vTaskDelay(200);
+//         }
+
+//         xSemaphoreTake(jsonMutex, (TickType_t)portMAX_DELAY);
+//         JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
+//         (*cmd_doc)["cmd"] = SET_COMMAND;
+//         JsonArray cmd_items = cmd_args.createNestedArray("items");
+//         JsonObject items_obj = cmd_items.createNestedObject();
+//         items_obj["key"] = BLINK_ID_KEY;
+//         items_obj["value"] = 0;
+//         //cmd_items.add(BLINK_ID_KEY);
+
+//         JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+//         cmd_cfg["pers"] = 1;
+//         cmd_cfg["type"] = "rsvd";
+//         cmd_cfg["ack"] = 0;
+        
+//         ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), false, VOID_RESPONSE);
+//         (*cmd_doc).clear();
+//         xSemaphoreGive(jsonMutex);
+
+//     }
+//     Arancino.free(rsp);
+//     vTaskDelay(10000); //wait 10 seconds (non-blocking delay)
+//   }
+// }
+
+// void ArancinoTasks::interoception(void *pvPramaters){
+//   while (1)
+//   {
+//     #if !defined(ARDUINO_ARANCINO_VOLANTE) && !defined(ARDUINO_ARCH_RP2040)
+//     int memory_free = xPortGetFreeHeapSize();
+//     int memory_used=configTOTAL_HEAP_SIZE-memory_free;
+//     #endif
+
+//     #if defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040)
+//     xSemaphoreTake(jsonMutex, (TickType_t)portMAX_DELAY);
+//     char* ts = Arancino.getTimestamp();
+//     JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
+//     (*cmd_doc)["cmd"] = STORE_COMMAND;
+//     JsonArray cmd_items = cmd_args.createNestedArray("items");
+//     JsonObject memfree_obj = cmd_items.createNestedObject();
+//     JsonObject temp_obj = cmd_items.createNestedObject();
     
-    ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, ITEMS_RESPONSE);
-    xSemaphoreGive(jsonMutex);
-
-    #else
-    xSemaphoreTake(jsonMutex, (TickType_t)portMAX_DELAY);
-    char* ts = Arancino.getTimestamp();
-    (*cmd_doc).clear();
-    JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
-    (*cmd_doc)["cmd"] = STORE_COMMAND;
-    JsonArray cmd_items = cmd_args.createNestedArray("items");
-    JsonObject memfree_obj = cmd_items.createNestedObject();
-    JsonObject temp_obj = cmd_items.createNestedObject();
+//     memfree_obj["key"] = "MEM_TOT";
+//     memfree_obj["value"] = configTOTAL_HEAP_SIZE;
+//     memfree_obj["ts"] = ts;
+//     temp_obj["key"] = "TEMP";
+//     temp_obj["value"] = mcuTemp();
+//     temp_obj["ts"] = ts;
+//     JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+//     cmd_cfg["ack"] = 0;
+//     cmd_cfg["type"] = "tse";
     
-    memfree_obj["key"] = "MEM_TOT";
-    memfree_obj["value"] = configTOTAL_HEAP_SIZE;
-    memfree_obj["ts"] = ts;
-    temp_obj["key"] = "TEMP";
-    temp_obj["value"] = temperature;
-    temp_obj["ts"] = ts;
-    temp_obj["key"] = "MEM_FREE";
-    temp_obj["value"] = xPortGetFreeHeapSize();
-    temp_obj["ts"] = ts;
-    temp_obj["key"] = "MEM_USED";
-    temp_obj["value"] = configTOTAL_HEAP_SIZE-memory_free;
-    temp_obj["ts"] = ts;
-    JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
-    cmd_cfg["ack"] = 0;
-    cmd_cfg["type"] = "tse";
+//     ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), false, ITEMS_RESPONSE);
+//     xSemaphoreGive(jsonMutex);
+
+//     #else
+//     xSemaphoreTake(jsonMutex, (TickType_t)portMAX_DELAY);
+//     char* ts = Arancino.getTimestamp();
+//     JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
+//     (*cmd_doc)["cmd"] = STORE_COMMAND;
+//     JsonArray cmd_items = cmd_args.createNestedArray("items");
+//     JsonObject memfree_obj = cmd_items.createNestedObject();
+//     JsonObject temp_obj = cmd_items.createNestedObject();
+//     JsonObject memtot_obj = cmd_items.createNestedObject();
+//     JsonObject memused_obj = cmd_items.createNestedObject();
     
-    ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, ITEMS_RESPONSE);
-    xSemaphoreGive(jsonMutex);
-    #endif
-    Arancino.free(rsp);
-    vTaskDelay(60000); //wait 60 seconds (non-blocking delay)
-  }
-
-}
-
-void ArancinoTasks::sendHeartbeat(void *pvPramaters){
-  uint8_t idSize = strlen(Arancino.id);
-  char topic[idSize + 5]; //ID_SIZE + '_HBx' + '\0'
-  strcpy(topic, Arancino.id);
-  strcat(topic, "_HB0");
-
-  while (1) {
-    xSemaphoreTake(jsonMutex, (TickType_t)portMAX_DELAY);
-    topic[idSize+3] = '0'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
+//     memtot_obj["key"] = "MEM_TOT";
+//     memtot_obj["value"] = configTOTAL_HEAP_SIZE;
+//     memtot_obj["ts"] = ts;
+//     temp_obj["key"] = "TEMP";
+//     temp_obj["value"] = 0;
+//     temp_obj["ts"] = ts;
+//     memfree_obj["key"] = "MEM_FREE";
+//     memfree_obj["value"] = xPortGetFreeHeapSize();
+//     memfree_obj["ts"] = ts;
+//     memused_obj["key"] = "MEM_USED";
+//     memused_obj["value"] = configTOTAL_HEAP_SIZE-memory_free;
+//     memused_obj["ts"] = ts;
+//     JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+//     cmd_cfg["ack"] = 0;
+//     cmd_cfg["type"] = "tse";
     
-    (*cmd_doc).clear();
-    JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
-    (*cmd_doc)["cmd"] = PUBLISH_COMMAND;
-    JsonArray cmd_items = cmd_args.createNestedArray("items");
-    JsonObject items_obj = cmd_items.createNestedObject();
-    items_obj["channel"] = topic;
-    items_obj["message"] = Arancino.getTimestamp();
+//     ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), false, ITEMS_RESPONSE);
+//     (*cmd_doc).clear();
+//     xSemaphoreGive(jsonMutex);
+//     #endif
+//     Arancino.free(rsp);
+//     vTaskDelay(60000); //wait 60 seconds (non-blocking delay)
+//   }
 
-    JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
-    cmd_cfg["ack"] = 0;
+// }
+
+// void ArancinoTasks::sendHeartbeat(void *pvPramaters){
+//   uint8_t idSize = strlen(Arancino.id);
+//   char topic[idSize + 5]; //ID_SIZE + '_HBx' + '\0'
+//   strcpy(topic, Arancino.id);
+//   strcat(topic, "_HB0");
+
+//   while (1) {
+//     xSemaphoreTake(jsonMutex, (TickType_t)portMAX_DELAY);
+//     topic[idSize+3] = '0'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
     
-    ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, CLIENTS_RESPONSE);
+//     JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
+//     (*cmd_doc)["cmd"] = PUBLISH_COMMAND;
+//     JsonArray cmd_items = cmd_args.createNestedArray("items");
+//     JsonObject items_obj = cmd_items.createNestedObject();
+//     items_obj["channel"] = topic;
+//     items_obj["message"] = Arancino.getTimestamp();
+
+//     JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+//     cmd_cfg["ack"] = 0;
+//     cmd_cfg["pers"] = 0;
+
+//     ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, CLIENTS_RESPONSE);
     
-    topic[idSize+3] = '1'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
-    
-    (*cmd_doc).clear();
-    cmd_args = (*cmd_doc).createNestedObject("args");
-    (*cmd_doc)["cmd"] = PUBLISH_COMMAND;
-    cmd_items = cmd_args.createNestedArray("items");
-    items_obj = cmd_items.createNestedObject();
-    items_obj["channel"] = topic;
-    items_obj["message"] = Arancino.getTimestamp();
+//     topic[idSize+3] = '1'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
 
-    cmd_cfg = (*cmd_doc).createNestedObject("cfg");
-    cmd_cfg["ack"] = 0;
-    
-    rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, CLIENTS_RESPONSE);
-    
-    xSemaphoreGive(jsonMutex);
+//     items_obj["channel"] = topic;
+//     items_obj["message"] = Arancino.getTimestamp();
 
-    vTaskDelay(10000);
-  }
-}
+//     rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, CLIENTS_RESPONSE);
+//     (*cmd_doc).clear();
+//     xSemaphoreGive(jsonMutex);
 
-#if defined(__SAMD21G18A__)
-float ArancinoTasks::mcuTemp(){
-  TemperatureZero tempZero = TemperatureZero();
-  tempZero.init();
-  return tempZero.readInternalTemperature();
-}
+//     vTaskDelay(10000);
+//   }
+// }
 
-#elif defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
+// #if defined(__SAMD21G18A__)
+// float ArancinoTasks::mcuTemp(){
+//   TemperatureZero tempZero = TemperatureZero();
+//   tempZero.init();
+//   return tempZero.readInternalTemperature();
+// }
+
+// #elif defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
 
 
-float ArancinoTasks::mcuTemp(){
-  #ifdef ATEMP
-  int32_t VRef;
-    #ifdef __LL_ADC_CALC_VREFANALOG_VOLTAGE
-       VRef= (__LL_ADC_CALC_VREFANALOG_VOLTAGE(analogRead(AVREF), LL_ADC_RESOLUTION));
-    #else
-       VRef= (VREFINT * ADC_RANGE / analogRead(AVREF)); // ADC sample to mV
-    #endif
-    #ifdef __LL_ADC_CALC_TEMPERATURE
-      return (__LL_ADC_CALC_TEMPERATURE(VRef, analogRead(ATEMP), LL_ADC_RESOLUTION));
-    #elif defined(__LL_ADC_CALC_TEMPERATURE_TYP_PARAMS)
-      return (__LL_ADC_CALC_TEMPERATURE_TYP_PARAMS(AVG_SLOPE, V25, CALX_TEMP, VRef, analogRead(ATEMP), LL_ADC_RESOLUTION));
-    #else
-      return 0;
-    #endif
-  #else
-    return 0;
-  #endif
+// float ArancinoTasks::mcuTemp(){
+//   #ifdef ATEMP
+//   int32_t VRef;
+//     #ifdef __LL_ADC_CALC_VREFANALOG_VOLTAGE
+//        VRef= (__LL_ADC_CALC_VREFANALOG_VOLTAGE(analogRead(AVREF), LL_ADC_RESOLUTION));
+//     #else
+//        VRef= (VREFINT * ADC_RANGE / analogRead(AVREF)); // ADC sample to mV
+//     #endif
+//     #ifdef __LL_ADC_CALC_TEMPERATURE
+//       return (__LL_ADC_CALC_TEMPERATURE(VRef, analogRead(ATEMP), LL_ADC_RESOLUTION));
+//     #elif defined(__LL_ADC_CALC_TEMPERATURE_TYP_PARAMS)
+//       return (__LL_ADC_CALC_TEMPERATURE_TYP_PARAMS(AVG_SLOPE, V25, CALX_TEMP, VRef, analogRead(ATEMP), LL_ADC_RESOLUTION));
+//     #else
+//       return 0;
+//     #endif
+//   #else
+//     return 0;
+//   #endif
 
-}
+// }
 
-#elif defined (ARDUINO_ARANCINO_VOLANTE)
+// #elif defined (ARDUINO_ARANCINO_VOLANTE)
 
-float ArancinoTasks::mcuTemp(){
-  return readCPUTemperature();
-}
+// float ArancinoTasks::mcuTemp(){
+//   return readCPUTemperature();
+// }
 
-#else
+// #else
 
-float ArancinoTasks::mcuTemp(){
-  return 0;
-}
-#endif
+// float ArancinoTasks::mcuTemp(){
+//   return 0;
+// }
+// #endif
 #endif

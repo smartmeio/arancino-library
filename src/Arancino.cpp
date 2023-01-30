@@ -26,12 +26,18 @@ under the License
 ArancinoPacket reservedKeyErrorPacket = {true, RESERVED_KEY_ERROR, RESERVED_KEY_ERROR, {.string = NULL}};	   // default reserved key error packet
 ArancinoPacket communicationErrorPacket = {true, COMMUNICATION_ERROR, COMMUNICATION_ERROR, {.string = NULL}};  // default reserved key error packet
 ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_VALUE_ERROR, {.string = NULL}}; // default reserved key error packet
+ArancinoPacket voidCommunicationPacket = {false, RSP_OK, VOID_ERROR_TYPE, {.string = NULL}}; 							   // default reserved key for non-ack messages
 
 // TASK
 #if defined(USEFREERTOS)
 TaskHandle_t arancinoHandle1;
-TaskHandle_t arancinoHandle2;
-TaskHandle_t arancinoHandle3;
+// TaskHandle_t arancinoHandle2;
+// TaskHandle_t arancinoHandle3;
+
+TimerHandle_t timerHandle1;
+TimerHandle_t timerHandle2;
+TimerHandle_t timerHandle3;
+
 SemaphoreHandle_t CommMutex;
 #endif
 
@@ -131,11 +137,17 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* 
 	{
 		CommMutex = xSemaphoreCreateMutex();
 	}
+
 	//TASK
 	ArancinoTasks _atask;
-	xTaskCreate(_atask.deviceIdentification, "identification", IDENTIFICATION_STACK, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
-	xTaskCreate(_atask.interoception, "interoception", INTEROCEPTION_STACK, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle2);
-	xTaskCreate(_atask.sendHeartbeat, "heartbeat", HEARTBEAT_STACK, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle3);
+	timerHandle1 = xTimerCreate("Heartbeat", pdMS_TO_TICKS(10000), pdTRUE, (void*)0, _atask.heartbeatCallback);
+	timerHandle2 = xTimerCreate("Interoception", pdMS_TO_TICKS(60000), pdTRUE, (void*)0, _atask.interoceptionCallback);
+	timerHandle3 = xTimerCreate("Identification", pdMS_TO_TICKS(10000), pdTRUE, (void*)0, _atask.interoceptionCallback);
+
+	xTimerStart(timerHandle1, 0);
+	xTimerStart(timerHandle2, 0);
+	xTimerStart(timerHandle3, 0);
+	xTaskCreate(_atask.serviceTask, "serviceTask", 512, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
 	#endif
 }
 
@@ -330,8 +342,9 @@ ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key, bool isPersistent, 
 template <> char *ArancinoClass::get(char* key, bool isPersistent, char* type)
 {
 	ArancinoPacket packet = get<ArancinoPacket>(key, isPersistent, type);
-	if (!packet.isError)
+	if (!packet.isError){
 		return packet.response.string;
+	}
 	else
 		return NULL;
 }
@@ -681,8 +694,9 @@ char *ArancinoClass::store(char *key, float value, char* timestamp, bool isAck)
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
 	ArancinoPacket packet =  __store(key, str, timestamp, isAck);
-	if (!packet.isError)
+	if (!packet.isError){		
 		return packet.response.string;
+	}
 	else
 		return NULL;
 }
@@ -1107,124 +1121,151 @@ char *ArancinoClass::getTimestamp()
 
 ArancinoPacket ArancinoClass::executeCommand(char* cmd, char* key, char* field, char* value, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
 	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
-	_buildArancinoJson(cmd_doc, cmd, key, field, value, argsHasItems, itemsHasDict, cfg);
+	int tx_counter = 0;
+	bool error = true;
 
-	#if defined(USEFREERTOS)
-	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
-	#endif
+	do {
+		_buildArancinoJson(cmd_doc, cmd, key, field, value, argsHasItems, itemsHasDict, cfg);
 
-	_iface->sendArancinoCommand(cmd_doc);
+		#if defined(USEFREERTOS)
+		if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
+		#endif
+			_iface->sendArancinoCommand(cmd_doc);
 
-	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
-	if(isAck){
-		bool error = true;
-		int counter = 0;
-		while (error && counter < 5){
-			counter++;
-			error = _iface->receiveArancinoResponse(rsp_doc);
+			if(isAck){
+				error = _iface->receiveArancinoResponse(cmd_doc);
+			} else {
+				#if defined(USEFREERTOS)
+				giveCommMutex();
+				#endif
+				return voidCommunicationPacket;
+			}
+
+		#if defined(USEFREERTOS)
+		giveCommMutex();
 		}
-		if(error) 
-			return communicationErrorPacket;
-	}
-			
-	#if defined(USEFREERTOS)
-	giveCommMutex();
-	#endif
+		#endif
 
-	if(rsp_doc.isNull()) 
-		return communicationErrorPacket;
- 
- 	ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
-	return packet;
+		if(!cmd_doc.isNull() && !error) {
+			ArancinoPacket packet = createArancinoPacket(cmd_doc, response_type);
+			return packet;
+		} else {
+			tx_counter++;
+		}
+	} while (tx_counter < TX_MAX_RETRIES);
+
+	return communicationErrorPacket;
 }
 
 ArancinoPacket ArancinoClass::executeCommand(char* cmd, char** keys, char** fields, char** values, int len, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
 	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
-	_buildArancinoJson(cmd_doc, cmd, keys, fields, values, len, argsHasItems, itemsHasDict, cfg);
-	
-	#if defined(USEFREERTOS)
-	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
-	#endif
-	_iface->sendArancinoCommand(cmd_doc);
+	int tx_counter = 0;
+	bool error = true;
 
-	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
-	if(isAck){
-		bool error = true;
-		int counter = 0;
-		while (error && counter < 5){
-			counter++;
-			error = _iface->receiveArancinoResponse(rsp_doc);
+	do {
+		_buildArancinoJson(cmd_doc, cmd, keys, fields, values, len, argsHasItems, itemsHasDict, cfg);
+
+		#if defined(USEFREERTOS)
+		if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
+		#endif
+			_iface->sendArancinoCommand(cmd_doc);
+
+			if(isAck){
+				error = _iface->receiveArancinoResponse(cmd_doc);
+			} else {
+				#if defined(USEFREERTOS)
+				giveCommMutex();
+				#endif
+				return voidCommunicationPacket;
+			}
+				
+		#if defined(USEFREERTOS)
 		}
-		if(error) 
-			return communicationErrorPacket;
-	}
-			
-	#if defined(USEFREERTOS)
-	giveCommMutex();
-	#endif
+		giveCommMutex();
+		#endif
 
-	if(rsp_doc.isNull()) 
-		return communicationErrorPacket;
- 
-	ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
-	return packet;
+		if(!cmd_doc.isNull() && !error){
+			ArancinoPacket packet = createArancinoPacket(cmd_doc, response_type);
+			return packet;
+		} else {
+			tx_counter++;
+		}
+	} while (tx_counter < TX_MAX_RETRIES);
+
+	return communicationErrorPacket;
 }
 
 ArancinoPacket ArancinoClass::executeCommand(JsonDocument& cmd_doc, bool isAck, int response_type){
-	#if defined(USEFREERTOS)
-	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
-	#endif
-	_iface->sendArancinoCommand(cmd_doc);
-
+	int tx_counter = 0;
 	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
-	if(isAck){
-		bool error = true;
-		int counter = 0;
-		while (error && counter < 5){
-			counter++;
-			error = _iface->receiveArancinoResponse(rsp_doc);
-		}
-		if(error) 
-			return communicationErrorPacket;
-	}
-			
-	#if defined(USEFREERTOS)
-	giveCommMutex();
-	#endif
+	bool error = true;
 
-	if(rsp_doc.isNull()) 
-		return communicationErrorPacket;
- 
-	ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
-	return packet;
+	do {
+		#if defined(USEFREERTOS)
+		if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
+		#endif
+
+			_iface->sendArancinoCommand(cmd_doc);
+
+			if(isAck){
+				error = _iface->receiveArancinoResponse(rsp_doc);
+			} else {
+				#if defined(USEFREERTOS)
+				giveCommMutex();
+				#endif
+				return voidCommunicationPacket;
+			}
+				
+		#if defined(USEFREERTOS)
+		}
+		giveCommMutex();
+		#endif
+
+		if(!rsp_doc.isNull() && !error){
+			ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
+			return packet;
+		} else {
+			tx_counter++;
+		}
+	} while (tx_counter < TX_MAX_RETRIES);
+
+	return communicationErrorPacket;
 }
 
 ArancinoPacket ArancinoClass::executeCommand(JsonDocument& cmd_doc, JsonDocument& rsp_doc, bool isAck, int response_type){
-	#if defined(USEFREERTOS)
-	while (!takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE);
-	#endif
-	_iface->sendArancinoCommand(cmd_doc);
+	int tx_counter = 0;
+	bool error = true;
 
-	if(isAck){
-		bool error = true;
-		int counter = 0;
-		while (error && counter < 5){
-			counter++;
-			error = _iface->receiveArancinoResponse(rsp_doc);
+	do {
+		#if defined(USEFREERTOS)
+		if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
+		#endif
+
+			_iface->sendArancinoCommand(cmd_doc);
+
+			if(isAck){
+				error = _iface->receiveArancinoResponse(rsp_doc);
+			} else {
+				#if defined(USEFREERTOS)
+				giveCommMutex();
+				#endif
+				return voidCommunicationPacket;
+			}
+				
+		#if defined(USEFREERTOS)
 		}
-		if(error) 
-			return communicationErrorPacket;
-	}
-			
-	#if defined(USEFREERTOS)
-	giveCommMutex();
-	#endif
+		giveCommMutex();
+		#endif
 
-	if(rsp_doc.isNull()) 
-		return communicationErrorPacket;
- 
-	ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
-	return packet;
+		if(!rsp_doc.isNull() && !error){
+			ArancinoPacket packet = createArancinoPacket(rsp_doc, response_type);
+			return packet;
+		} else {
+			tx_counter++;
+		}
+	} while (tx_counter < TX_MAX_RETRIES);
+
+	return communicationErrorPacket;
 }
 
 ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, int response_type){
@@ -1256,6 +1297,9 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 				}
 				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING_ARRAY, {.stringArray = resp_values}};
 				packet = temp;
+			}
+			else{
+				packet = communicationErrorPacket;
 			}
 			break;
 		}
@@ -1306,40 +1350,41 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 }
 
 void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, char* cmd, char* key, char* field, char* value, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg){
-  JsonObject cmd_args = cmd_doc.createNestedObject("args");
-  cmd_doc["cmd"] = cmd;
+	
+	JsonObject cmd_args = cmd_doc.createNestedObject("args");
+	cmd_doc["cmd"] = cmd;
 
-  if (argsHasItems){
-    JsonArray cmd_items = cmd_args.createNestedArray("items");
-    if (itemsHasDict){
-      JsonObject items_obj = cmd_items.createNestedObject();
-      
-      if (key){
-        items_obj["key"] = key;
-      }
+	if (argsHasItems){
+		JsonArray cmd_items = cmd_args.createNestedArray("items");
+		if (itemsHasDict){
+			JsonObject items_obj = cmd_items.createNestedObject();
+			
+			if (key){
+			items_obj["key"] = key;
+			}
 
-      if (field){
-        items_obj["field"] = field;
-      }
+			if (field){
+			items_obj["field"] = field;
+			}
 
-	  if(value){
-		items_obj["value"] = value;
-	  }
-    } else {
-      cmd_items.add(key);
-    }
-  }
+			if(value){
+			items_obj["value"] = value;
+			}
+		} else {
+			cmd_items.add(key);
+		}
+	}
 
-  JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
-  if (cfg.pers){
-    cmd_cfg["pers"] = cfg.pers == CFG_FALSE ? 0 : 1;
-  }
-  if (cfg.ack){
-    cmd_cfg["ack"] = cfg.ack == CFG_FALSE ? 0 : 1;
-  }
-  if (cfg.type){
-    cmd_cfg["type"] = cfg.type;
-  }
+	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
+	if (cfg.pers){
+		cmd_cfg["pers"] = cfg.pers == CFG_FALSE ? 0 : 1;
+	}
+	if (cfg.ack){
+		cmd_cfg["ack"] = cfg.ack == CFG_FALSE ? 0 : 1;
+	}
+	if (cfg.type){
+		cmd_cfg["type"] = cfg.type;
+	}
 }
 
 void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, char* cmd, char** keys, char** fields, char** values, int len, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg){
