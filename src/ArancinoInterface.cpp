@@ -42,10 +42,13 @@ int SerialIface::serialWrite(const char* str, uint32_t len, long timeout){
 	int sent = 0; //successfully sent chars count
 	int written = -1;
 	int i; //sending command index
-	long send_ts;
+	long str_send_ts = millis(); //start timestamp of string sending
+	long char_send_ts; //start timestamp of single char sending
+	const long char_timeout = 100;
+
 	for (i = 0; i < len; i++) {
 		written = -1;
-		send_ts = millis(); 
+		char_send_ts = millis(); 
 		do
 		{
 			written = (*_serialPort).write(str[i]);
@@ -59,20 +62,31 @@ int SerialIface::serialWrite(const char* str, uint32_t len, long timeout){
 				SERIAL_DEBUG.println(str[i]);
 				#endif
 			}
-		} while (written < 1 && millis() < (send_ts + timeout));
+		} while (written < 1 && millis() < (char_send_ts + char_timeout));
 
 		if (written < 1)
 		{
+			#if DEBUG
 			SERIAL_DEBUG.print("Error sending: ");
 			SERIAL_DEBUG.print(" 0x");
 			SERIAL_DEBUG.print(str[i], HEX);
 			SERIAL_DEBUG.print(" = ");
 			SERIAL_DEBUG.println(str[i]);
+			#endif
 			break;
 		}
 		else
 		{
 			++sent; //increasing successfully sent chars
+		}
+
+		if (millis() > (str_send_ts + timeout))
+		{
+			//Command sending timeout, exit from for-cycle
+			#if DEBUG
+			SERIAL_DEBUG.println("serialWrite timeout");
+			#endif
+			break;
 		}
 	}
 	return sent; //if sent < len then error!
@@ -94,15 +108,14 @@ void SerialIface::sendArancinoCommand(JsonDocument& command){
 	docStr = (char*)malloc(docSize * sizeof(char));
 	serializeMsgPack(command, docStr, docSize);
 
-	int sent = serialWrite(docStr, docSize, 500); //TODO: set correct timeout
+	int sent = serialWrite(docStr, docSize, this->_serialPort->getTimeout());
 	if (sent < docSize)
 	{
 		#if DEBUG
 		SERIAL_DEBUG.print("Error: sent ");
 		SERIAL_DEBUG.print(sent);
 		SERIAL_DEBUG.print(" of ");
-		SERIAL_DEBUG.println(docSize);	
-		__NOP();
+		SERIAL_DEBUG.println(docSize);
 		#endif
 	}
 
