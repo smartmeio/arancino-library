@@ -380,7 +380,7 @@ ArancinoPacket ArancinoClass::del<ArancinoPacket>(char* key, bool isAck, bool is
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
-	return executeCommand(DEL_COMMAND, key, NULL, NULL, isAck, true, false, cfg, KEY_RESPONSE);
+	return executeCommand(DEL_COMMAND, key, NULL, NULL, isAck, true, false, cfg, KEYS_RESPONSE);
 }
 
 template <>
@@ -477,7 +477,7 @@ ArancinoPacket ArancinoClass::hdel<ArancinoPacket>(char *key, char *field, bool 
 	ArancinoCFG cfg;
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
-	return executeCommand(HDEL_COMMAND, key, field, NULL, isAck, true, true, cfg, FIELDS_RESPONSE);
+	return executeCommand(HDEL_COMMAND, key, field, NULL, isAck, true, true, cfg, KEYS_RESPONSE);
 }
 
 template <>
@@ -1283,15 +1283,9 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 			}
 			break;
 		}
-		case KEY_RESPONSE: {
-			// DEL
+		case KEYS_RESPONSE: {
+			// DEL - HDEL
 			ArancinoPacket temp = {false, response_dict["rsp_code"], INT, {.integer = response_dict["args"]["keys"]}};
-			packet = temp;
-			break;
-		}
-		case FIELDS_RESPONSE: {
-			// HDEL
-			ArancinoPacket temp = {false, response_dict["rsp_code"], INT, {.integer = response_dict["args"]["fields"]}};
 			packet = temp;
 			break;
 		}
