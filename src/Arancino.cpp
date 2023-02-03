@@ -1262,13 +1262,20 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 			// GET - MGET - HGET
 			JsonArray resp_items = response_dict["args"]["items"];
 			int resp_size = resp_items.size();
-			if (resp_size > 0 && resp_size < 2) {
+			if (resp_size == 0)
+			{
+				packet = communicationErrorPacket;
+			}
+			else if (resp_size == 1)
+			{
 				const char* value = resp_items[0]["value"];
 				char* ret_value = (char*) calloc(strlen(value), sizeof(char));
 				strcpy(ret_value, value);
 				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING, {.string = ret_value}};
 				packet = temp;
-			} else if (resp_size > 1) {
+			}
+			else if (resp_size > 1)
+			{
 				char* resp_values[resp_size];
 				for (int i=0; i<resp_size; i++){
 					const char* value = resp_items[i]["value"];
@@ -1293,13 +1300,20 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 			// STORE - MSTORE
 			JsonArray resp_items = response_dict["args"]["items"];
 			int resp_size = resp_items.size();
-			if (resp_size > 0 && resp_size < 2) {
+			if (resp_size == 0)
+			{
+				packet = communicationErrorPacket;
+			}
+			else if (resp_size == 1)
+			{
 				const char* value = resp_items[0];
 				char* ret_value = (char*) calloc(strlen(value), sizeof(char));
 				strcpy(ret_value, value);
 				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING, {.string = ret_value}};
 				packet = temp;
-			} else if (resp_size > 1) {
+			}
+			else if (resp_size > 1)
+			{
 				char* resp_values[resp_size];
 				for (int i=0; i<resp_size; i++){
 					const char* value = resp_items[i];
