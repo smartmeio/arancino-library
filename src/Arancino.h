@@ -165,7 +165,7 @@ class ArancinoClass {
 		ArancinoPacket hset(char* key, char* field, long value, bool isAck = true, bool isPersistent = false, char* type = "appl");
 
 		//HGET
-		template<class T = char*> T hget(char* key, char* field, bool isPersistent = true, char* type = "appl");
+		template<class T = char*> T hget(char* key, char* field, bool isPersistent = false, char* type = "appl");
 
 		//HDEL
 		template<class T = int> T hdel(char* key, char* field, bool isAck = true, bool isPersistent = false);
