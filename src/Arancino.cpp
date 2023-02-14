@@ -75,6 +75,9 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, char* custom_v1, char* custo
 }
 
 void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* custom_v1, char* custom_v2) {
+#if defined(ARDUINO_ARCH_ESP32)
+	esp_task_wdt_init(120, true);
+#endif
 
 	MicroID.getUniqueIDString(id, ID_SIZE/2);
 	_iface->ifaceBegin();

@@ -77,6 +77,13 @@ extern "C" {
 #include <hardware/watchdog.h>
 #endif
 
+#if defined(ARDUINO_ARCH_ESP32)
+#include <HardwareSerial.h>
+#include <esp_task_wdt.h>
+#define pvPortMalloc std::malloc
+#define vPortFree std::free
+#endif
+
 #include "ArancinoTasks.h"
 
 //Power Mode

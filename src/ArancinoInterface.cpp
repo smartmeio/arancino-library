@@ -108,7 +108,7 @@ void SerialIface::sendArancinoCommand(JsonDocument& command){
 	docStr = (char*)malloc(docSize * sizeof(char));
 	serializeMsgPack(command, docStr, docSize);
 
-	int sent = serialWrite(docStr, docSize, this->_serialPort->getTimeout());
+	int sent = serialWrite(docStr, docSize, TIMEOUT);
 	if (sent < docSize)
 	{
 		#if DEBUG
@@ -146,7 +146,13 @@ void SerialIface::setSerialPort(Stream& serialPort){
 void SerialIface::setSerialPort(){
 	//default implementation for Arancino boards
 	#if defined (SERIAL_PORT) && defined(BAUDRATE) && defined (TIMEOUT)
+	
+	#if defined(ARDUINO_ARCH_ESP32) && defined(UART_RX) && defined(UART_TX)
+	SERIAL_PORT.begin(BAUDRATE, SERIAL_8N1, UART_RX, UART_TX);
+	#else
 	SERIAL_PORT.begin(BAUDRATE);
+	#endif
+
 	SERIAL_PORT.setTimeout(TIMEOUT);
 	this->_serialPort = &SERIAL_PORT;
 	#endif
