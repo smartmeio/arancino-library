@@ -119,7 +119,7 @@ under the License
     ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), true, KEY_VALUE_RESPONSE);
     (*cmd_doc).clear();
 
-    if(!strcmp(rsp.response.string, "1")){
+    if(rsp.response.string != NULL && !strcmp(rsp.response.string, "1")){
       for(int i=0;i < 20; i++){
           #if defined (ARDUINO_ARANCINO_VOLANTE)
           digitalWrite(LED_BUILTIN,LOW);
