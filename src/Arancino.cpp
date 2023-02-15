@@ -898,16 +898,25 @@ void ArancinoClass::free(char *str)
 
 void ArancinoClass::free(char **_array)
 {
+	if (_array == NULL)
+		return;
+	
 	char **dummy = (_array != NULL) ? _array - 1 : NULL;
 
-	if (*_array != NULL)
+	size_t str_count = (int)dummy[0];
+	for (size_t i = 0; i < str_count; i++)
 	{
+		char* str = _array[i];
+		if (str != NULL)
+		{
 #if defined(USEFREERTOS)
-		vPortFree(*_array);
+			vPortFree(str);
 #else
-		std::free(*_array);
+			std::free(str);
 #endif
+		}
 	}
+
 	if (dummy != NULL)
 	{
 #if defined(USEFREERTOS)
@@ -1299,37 +1308,21 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 					will contain the items count */
 				++strings_array;
 
-				size_t stringsLen = 0; //sum of lengths of all the returned strings
 				for (size_t i = 0; i < resp_size; i++)
 				{
-					if (resp_items[i]["value"] != NULL)
+					const char* value = resp_items[i]["value"];
+					if (value != NULL)
 					{
-						stringsLen += strlen(resp_items[i]["value"]);
-					}
-					stringsLen += 1; //adding an element for \0
-				}
-
-				response_strings = (char*)malloc(stringsLen * sizeof(char));
-
-				uint32_t start_index = 0; //Index at which the next string must be written
-
-				for (int i = 0; i < resp_size; i++){
-					if (resp_items[i]["value"] != NULL)
-					{
-						size_t current_str_len = strlen(resp_items[i]["value"]);
-						strncpy(&response_strings[start_index], resp_items[i]["value"], current_str_len);
-						response_strings[start_index + current_str_len] = '\0';
-						strings_array[i] = &response_strings[start_index];
-						start_index += (current_str_len + 1);
+						size_t stringsLen = strlen(value) + 1; //adding an element for \0
+						strings_array[i] = (char*)malloc(stringsLen * sizeof(char));
+						strcpy(strings_array[i], value);
 					}
 					else
 					{
-						//in case of missing value (value = None)
-						response_strings[start_index] = '\0';
-						start_index += 1;
+						strings_array[i] = NULL;
 					}
-
 				}
+
 				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING_ARRAY, {.stringArray = strings_array}};
 				packet = temp;
 			}
@@ -1383,33 +1376,18 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 					will contain the items count */
 				++strings_array;
 
-				size_t stringsLen = 0; //sum of lengths of all the returned strings
 				for (size_t i = 0; i < resp_size; i++)
 				{
-					if (resp_items[i] != NULL)
+					const char* value = resp_items[i];
+					if (value != NULL)
 					{
-						stringsLen += strlen(resp_items[i]);
-					}
-					stringsLen += 1; //adding an element for \0
-				}
-
-				response_strings = (char*)malloc(stringsLen * sizeof(char));
-				uint32_t start_index = 0; //Index at which the next string must be written
-
-				for (int i = 0; i < resp_size; i++){
-					if (resp_items[i] != NULL)
-					{
-						size_t current_str_len = strlen(resp_items[i]);
-						strncpy(&response_strings[start_index], resp_items[i], current_str_len);
-						response_strings[start_index + current_str_len] = '\0';
-						strings_array[i] = &response_strings[start_index];
-						start_index += (current_str_len + 1);
+						size_t stringsLen = strlen(value) + 1; //adding an element for \0
+						strings_array[i] = (char*)malloc(stringsLen * sizeof(char));
+						strcpy(strings_array[i], value);
 					}
 					else
 					{
-						//in case of missing value (value = None)
-						response_strings[start_index] = '\0';
-						start_index += 1;
+						strings_array[i] = NULL;
 					}
 				}
 				ArancinoPacket temp = {false, response_dict["rsp_code"], STRING_ARRAY, {.stringArray = strings_array}};
