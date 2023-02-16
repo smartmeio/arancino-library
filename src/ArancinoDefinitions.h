@@ -18,18 +18,30 @@ License for the specific language governing permissions and limitations
 under the License
 */
 
+#ifndef __ARANCINODEFINITIONS_H__
+#define __ARANCINODEFINITIONS_H__
+#include <cstdint>
+
 #ifndef MCU_FAMILY
 #define MCU_FAMILY (char*)"undefined"
 #endif
 
+#ifdef BAUDRATE
+#undef BAUDRATE
+#endif
+
+#ifdef TIMEOUT
+#undef TIMEOUT
+#endif
+
 #if defined(__SAMD21G18A__)
-#define BAUDRATE 4000000
-#define TIMEOUT 1000
+const uint32_t BAUDRATE = 4000000;
+const uint32_t TIMEOUT = 1000;
 #define SERIAL_PORT SerialUSB
 #define SERIAL_DEBUG Serial
 #elif defined(ARDUINO_ARCH_RP2040) && defined(USEFREERTOS)
-#define BAUDRATE 256000
-#define TIMEOUT 10000
+const uint32_t BAUDRATE = 256000;
+const uint32_t TIMEOUT = 10000;
 #if defined(USE_TINYUSB)
 #define SERIAL_PORT SerialTinyUSB
 #else
@@ -43,8 +55,8 @@ under the License
 */
 #define CUSTOM_SERIAL
 
-#define BAUDRATE 115200
-#define TIMEOUT 10000
+const uint32_t BAUDRATE = 115200;
+const uint32_t TIMEOUT = 10000;
 
 #if defined(CUSTOM_SERIAL)
 #define SERIAL_PORT SerialPort
@@ -59,15 +71,20 @@ under the License
 #define SERIAL_PORT Serial1
 #endif
 #define SERIAL_DEBUG Serial
+#elif defined(ARDUINO_ARCH_NRF52)
+const uint32_t BAUDRATE = 256000;
+const uint32_t TIMEOUT = 10000;
+#define SERIAL_PORT Serial
+#define SERIAL_DEBUG Serial1
 #else
-//#define BAUDRATE 256000
-#define TIMEOUT 10000
+const uint32_t BAUDRATE = 256000;
+const uint32_t TIMEOUT = 10000;
 #define SERIAL_PORT Serial
 #define SERIAL_DEBUG Serial1
 #endif
 
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
-#define BAUDRATE_DEBUG 115200
+const uint32_t BAUDRATE_DEBUG = 115200;
 
 #define START_COMMAND			(char*)"START"
 #define MSET_COMMAND			(char*)"MSET"
@@ -161,6 +178,13 @@ under the License
 #elif defined(ARDUINO_ARCH_RP2040)
 #define ARANCINO_TASK_PRIORITY      configMAX_PRIORITIES - 1
 #define SERVICETASK_STACK           1024
+#elif defined(ARDUINO_ARCH_NRF52)
+#define ARANCINO_TASK_PRIORITY      configMAX_PRIORITIES - 1
+#define SERVICETASK_STACK           2048
+#else
+#warning "This platform has not been tested!"
+#define ARANCINO_TASK_PRIORITY      configMAX_PRIORITIES - 1
+#define SERVICETASK_STACK           1024
 #endif
 
 #define SERIAL_MAX_RETRIES          10
@@ -182,3 +206,5 @@ under the License
 #define FIELDS_ITEMS_RESPONSE 3
 #define ITEMS_RESPONSE 4
 #define CLIENTS_RESPONSE 5
+
+#endif

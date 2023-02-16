@@ -145,7 +145,7 @@ void SerialIface::setSerialPort(Stream& serialPort){
 
 void SerialIface::setSerialPort(){
 	//default implementation for Arancino boards
-	#if defined (SERIAL_PORT) && defined(BAUDRATE) && defined (TIMEOUT)
+	#if defined(SERIAL_PORT)
 	
 	#if defined(ARDUINO_ARCH_ESP32) && defined(UART_RX) && defined(UART_TX)
 	SERIAL_PORT.begin(BAUDRATE, SERIAL_8N1, UART_RX, UART_TX);

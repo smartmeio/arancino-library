@@ -238,7 +238,7 @@ void ArancinoClass::enableDebugMessages(bool sendViaCommMode){
 		_commMode = true;
 	} else {
 		//Default config for Arancino Boards
-		#if defined(SERIAL_DEBUG) && defined(BAUDRATE_DEBUG)
+		#if defined(SERIAL_DEBUG)
 		SERIAL_DEBUG.begin(BAUDRATE_DEBUG);
 		_isDebug = true;
 		_dbgSerial = &SERIAL_DEBUG;
