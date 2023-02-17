@@ -179,7 +179,7 @@ const uint32_t BAUDRATE_DEBUG = 115200;
 #define ARANCINO_TASK_PRIORITY      configMAX_PRIORITIES - 1
 #define SERVICETASK_STACK           1024
 #elif defined(ARDUINO_ARCH_NRF52)
-#define ARANCINO_TASK_PRIORITY      configMAX_PRIORITIES - 1
+#define ARANCINO_TASK_PRIORITY      TASK_PRIO_HIGH
 #define SERVICETASK_STACK           2048
 #else
 #warning "This platform has not been tested!"
