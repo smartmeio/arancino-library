@@ -106,15 +106,15 @@ typedef struct {
 } ArancinoPacket;
 
 typedef struct {
-	char* fwname;
-	char* fwversion;
-	char* tzoffset;
+	const char* fwname;
+	const char* fwversion;
+	const char* tzoffset;
 } ArancinoMetadata;
 
 typedef struct {
 	uint8_t pers = CFG_UNSET;
 	uint8_t ack = CFG_UNSET;
-	char* type = CFG_UNSET;
+	const char* type = CFG_UNSET;
 	//const char* signature
 } ArancinoCFG;
 
@@ -141,64 +141,64 @@ class ArancinoClass {
 		void attachInterface(ArancinoIface& iface);
 
 		//BEGIN
-		void begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* custom_v1 = NULL, char* custom_v2 = NULL);
-		void begin(ArancinoMetadata _amdata, char* custom_v1 = NULL, char* custom_v2 = NULL);
+		void begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, const char* custom_v1 = NULL, const char* custom_v2 = NULL);
+		void begin(ArancinoMetadata _amdata, const char* custom_v1 = NULL, const char* custom_v2 = NULL);
 
-		ArancinoPacket set(char* key, int value, bool isAck = true, bool isPersistent = false, char* type = "appl");
-		ArancinoPacket set(char* key, double value, bool isAck = true, bool isPersistent = false, char* type = "appl");
-		ArancinoPacket set(char* key, float value, bool isAck = true, bool isPersistent = false, char* type = "appl");
-		ArancinoPacket set(char* key, long value, bool isAck = true, bool isPersistent = false, char* type = "appl");
-		ArancinoPacket set(char* key, uint32_t value, bool isAck = true, bool isPersistent = false, char* type = "appl");
-		ArancinoPacket set(char* key, char* value, bool isAck = true, bool isPersistent = false, char* type = "appl");
+		ArancinoPacket set(const char* key, int value, bool isAck = true, bool isPersistent = false, const char* type = "appl");
+		ArancinoPacket set(const char* key, double value, bool isAck = true, bool isPersistent = false, const char* type = "appl");
+		ArancinoPacket set(const char* key, float value, bool isAck = true, bool isPersistent = false, const char* type = "appl");
+		ArancinoPacket set(const char* key, long value, bool isAck = true, bool isPersistent = false, const char* type = "appl");
+		ArancinoPacket set(const char* key, uint32_t value, bool isAck = true, bool isPersistent = false, const char* type = "appl");
+		ArancinoPacket set(const char* key, const char* value, bool isAck = true, bool isPersistent = false, const char* type = "appl");
 
 		//MSET
-		ArancinoPacket mset(char** keys, char** values, int len, bool isAck=true, bool isPersistent = false, char* type = "appl");
+		ArancinoPacket mset(char** keys, char** values, int len, bool isAck=true, bool isPersistent = false, const char* type = "appl");
 
 		//GET
-		template<class T = char*> T get(char* key, bool isPersistent = false, char* type = "appl");
+		template<class T = char*> T get(const char* key, bool isPersistent = false, const char* type = "appl");
 
 		//MGET
-		template<class T = char**> T mget(char** keys, int len, bool isPersistent = false, char* type = "appl");
+		template<class T = char**> T mget(char** keys, int len, bool isPersistent = false, const char* type = "appl");
 
 		//DEL
-		template<class T = int> T del(char* key, bool isAck = true, bool isPersistent = false, char* type = "appl");
+		template<class T = int> T del(const char* key, bool isAck = true, bool isPersistent = false, const char* type = "appl");
 
 		//HSET
-		ArancinoPacket hset(char* key, char* field, char* value, bool isAck = true, bool isPersistent = false, char* type = "appl");
-		ArancinoPacket hset(char* key, char* field, int value, bool isAck = true, bool isPersistent = false, char* type = "appl");
-		ArancinoPacket hset(char* key, char* field, float value, bool isAck = true, bool isPersistent = false, char* type = "appl");
-		ArancinoPacket hset(char* key, char* field, double value, bool isAck = true, bool isPersistent = false, char* type = "appl");
-		ArancinoPacket hset(char* key, char* field, uint32_t value, bool isAck = true, bool isPersistent = false, char* type = "appl");
-		ArancinoPacket hset(char* key, char* field, long value, bool isAck = true, bool isPersistent = false, char* type = "appl");
+		ArancinoPacket hset(const char* key, const char* field, const char* value, bool isAck = true, bool isPersistent = false, const char* type = "appl");
+		ArancinoPacket hset(const char* key, const char* field, int value, bool isAck = true, bool isPersistent = false, const char* type = "appl");
+		ArancinoPacket hset(const char* key, const char* field, float value, bool isAck = true, bool isPersistent = false, const char* type = "appl");
+		ArancinoPacket hset(const char* key, const char* field, double value, bool isAck = true, bool isPersistent = false, const char* type = "appl");
+		ArancinoPacket hset(const char* key, const char* field, uint32_t value, bool isAck = true, bool isPersistent = false, const char* type = "appl");
+		ArancinoPacket hset(const char* key, const char* field, long value, bool isAck = true, bool isPersistent = false, const char* type = "appl");
 
 		//HGET
-		template<class T = char*> T hget(char* key, char* field, bool isPersistent = false, char* type = "appl");
+		template<class T = char*> T hget(const char* key, const char* field, bool isPersistent = false, const char* type = "appl");
 
 		//HDEL
-		template<class T = int> T hdel(char* key, char* field, bool isAck = true, bool isPersistent = false);
+		template<class T = int> T hdel(const char* key, const char* field, bool isAck = true, bool isPersistent = false);
 
 		//PUBLISH
-		template<class T = int> T publish(char* channel, char* msg, bool isAck = true);
-		template<class T = int> T publish(char* channel, double msg, bool isAck = true);
-		template<class T = int> T publish(char* channel, int msg, bool isAck = true);
-		template<class T = int> T publish(char* channel, uint32_t msg, bool isAck = true);
-		template<class T = int> T publish(char* channel, long msg, bool isAck = true);
+		template<class T = int> T publish(const char* channel, const char* msg, bool isAck = true);
+		template<class T = int> T publish(const char* channel, double msg, bool isAck = true);
+		template<class T = int> T publish(const char* channel, int msg, bool isAck = true);
+		template<class T = int> T publish(const char* channel, uint32_t msg, bool isAck = true);
+		template<class T = int> T publish(const char* channel, long msg, bool isAck = true);
 
 		//FLUSH
 		ArancinoPacket flush(bool isAck = true, bool isPersistent = false);
 
 		//STORE
-		template<class T = char*> T store(char* key, int value, char* timestamp = NULL, bool isAck = true);
-		template<class T = char*> T store(char* key, uint32_t value, char* timestamp = NULL, bool isAck = true);
-		template<class T = char*> T store(char* key, double value, char* timestamp = NULL, bool isAck = true);
-		template<class T = char*> T store(char* key, float value, char* timestamp = NULL, bool isAck = true);
-		template<class T = char*> T store(char* key, long value, char* timestamp = NULL, bool isAck = true);
+		template<class T = char*> T store(const char* key, int value, const char* timestamp = NULL, bool isAck = true);
+		template<class T = char*> T store(const char* key, uint32_t value, const char* timestamp = NULL, bool isAck = true);
+		template<class T = char*> T store(const char* key, double value, const char* timestamp = NULL, bool isAck = true);
+		template<class T = char*> T store(const char* key, float value, const char* timestamp = NULL, bool isAck = true);
+		template<class T = char*> T store(const char* key, long value, const char* timestamp = NULL, bool isAck = true);
 
 		//MSTORE
-		template<class T = char**> T mstore(char** keys, char** values, int len, char* timestamp = NULL, bool isAck = true);
+		template<class T = char**> T mstore(char** keys, char** values, int len, const char* timestamp = NULL, bool isAck = true);
 
 		//STORE TAGS
-		ArancinoPacket storetags(char* key, char** tags, char** values, int len, char* timestamp = NULL, bool isAck = true);
+		ArancinoPacket storetags(const char* key, char** tags, char** values, int len, const char* timestamp = NULL, bool isAck = true);
 
 		//GETRESERVED
 		char* getModuleVersion();
@@ -225,7 +225,7 @@ class ArancinoClass {
 
 		//PRINT
 		void print(String value);
-		void print(char* value);
+		void print(const char* value);
 		void print(int value);
 		void print(float value);
 		void print(double value);
@@ -241,7 +241,7 @@ class ArancinoClass {
 		char* getTimestamp();
 
 		//CHECK UTF-8
-		bool isValidUTF8(const char * string);
+		bool isValidUTF8(const char* string);
 
 		//HW CONTROL
 		void systemReset();
@@ -268,18 +268,18 @@ class ArancinoClass {
 		void _freeArray(char** _array);
 		void _freePacket(ArancinoPacket packet);
 
-		ArancinoPacket __publish(char* channel, char* msg, bool isAck = true);
-		ArancinoPacket __store(char* key, char* value, char* timestamp=NULL, bool isAck = true);
+		ArancinoPacket __publish(const char* channel, const char* msg, bool isAck = true);
+		ArancinoPacket __store(const char* key, const char* value, const char* timestamp=NULL, bool isAck = true);
 
 
-		template<class T = char*> T getReserved(char* key);
-		ArancinoPacket setReserved( char* key, char* value);
+		template<class T = char*> T getReserved(const char* key);
+		ArancinoPacket setReserved( const char* key, const char* value);
 
 		//INTERNAL UTILS
 		void _doubleToString(double value, unsigned int _nDecimal, char* str); //truncation!
 		void _floatToString(float value, unsigned int _nDecimal, char* str);
 
-		void _printDebugMessage(char* value);
+		void _printDebugMessage(const char* value);
 		
 		#if defined(USEFREERTOS)	//The entire prototype would be ill-formed if freertos is not defined
 		BaseType_t takeCommMutex(TickType_t timeout);
@@ -290,16 +290,16 @@ class ArancinoClass {
 
 		//execute command
 
-		ArancinoPacket createArancinoPacket(char* response_raw, int response_type);
+		ArancinoPacket createArancinoPacket(const char* response_raw, int response_type);
 
-		ArancinoPacket executeCommand(char* cmd, char* key, char* field, char* value, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type);
-		ArancinoPacket executeCommand(char* cmd, char** keys, char** fields, char** values, int len, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type);
+		ArancinoPacket executeCommand(const char* cmd, const char* key, const char* field, const char* value, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type);
+		ArancinoPacket executeCommand(const char* cmd, char** keys, char** fields, char** values, int len, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type);
 		ArancinoPacket executeCommand(JsonDocument& cmd_doc, bool isAck, int response_type);
 		ArancinoPacket executeCommand(JsonDocument& cmd_doc, JsonDocument& rsp_doc, bool isAck, int response_type);
 		ArancinoPacket createArancinoPacket(JsonDocument& response_dict, int response_type);
 
-		void _buildArancinoJson(JsonDocument& doc, char* cmd, char* key, char* field, char* value, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg);
-		void _buildArancinoJson(JsonDocument& doc, char* cmd, char** keys, char** fields, char** values, int len, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg);
+		void _buildArancinoJson(JsonDocument& doc, const char* cmd, const char* key, const char* field, const char* value, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg);
+		void _buildArancinoJson(JsonDocument& doc, const char* cmd, char** keys, char** fields, char** values, int len, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg);
 
 		//Protocol interface
 		ArancinoIface* _iface;
@@ -308,36 +308,6 @@ class ArancinoClass {
 		Stream* _dbgSerial;
 		bool _isDebug = false;
 		bool _commMode = false;
-
-		//TEMPLATE WRAPPED
-		// ArancinoPacket _getPacket(char* key);
-		// char* _get(char* key);
-
-		// ArancinoPacket _delPacket(char* key);
-		// int _del(char* key);
-
-		// ArancinoPacket _hgetPacket(char* key, char* field);
-		// char* _hget(char* key, char* field);
-
-		// ArancinoPacket _hgetallPacket(char* key);
-		// char** _hgetall(char* key);
-
-		// ArancinoPacket _hkeysPacket(char* key);
-		// char** _hkeys(char* key);
-
-		// ArancinoPacket _hvalsPacket(char* key);
-		// char** _hvals(char* key);
-
-		// ArancinoPacket _hdelPacket(char* key, char* field);
-		// int _hdel(char* key, char* field);
-
-		// ArancinoPacket _keysPacket(char* pattern="");
-		// char** _keys(char* pattern="");
-
-		// ArancinoPacket _publishPacket(int channel, char* msg);
-		// ArancinoPacket _publishPacket(char* channel, char* msg);
-		// int _publish(int channel, char* msg);
-		// int _publish(char* channel, char* msg);
 
 	friend class ArancinoTasks;
 };

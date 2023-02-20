@@ -67,14 +67,14 @@ void ArancinoClass::delay(long milli){
 
 /******** API BASIC :: BEGIN *********/
 
-void ArancinoClass::begin(ArancinoMetadata _amdata, char* custom_v1, char* custom_v2)
+void ArancinoClass::begin(ArancinoMetadata _amdata, const char* custom_v1, const char* custom_v2)
 {
 	ArancinoConfig _acfg;
 	// setting default configuration value
 	begin(_amdata, _acfg);
 }
 
-void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, char* custom_v1, char* custom_v2) {
+void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, const char* custom_v1, const char* custom_v2) {
 #if defined(ARDUINO_ARCH_ESP32)
 	esp_task_wdt_init(120, true);
 #endif
@@ -264,42 +264,42 @@ void ArancinoClass::disableDebugMessages(){
 
 /******** API BASIC :: SET *********/
 
-ArancinoPacket ArancinoClass::set(char *key, int value, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::set(const char* key, int value, bool isAck, bool isPersistent, const char* type)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
 	return set(key, str, isAck, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set(char *key, uint32_t value, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::set(const char* key, uint32_t value, bool isAck, bool isPersistent, const char* type)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
 	return set(key, str, isAck, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set(char *key, long value, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::set(const char* key, long value, bool isAck, bool isPersistent, const char* type)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
 	return set(key, str, isAck, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set(char *key, float value, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::set(const char* key, float value, bool isAck, bool isPersistent, const char* type)
 {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
 	return set(key, str, isAck, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set(char *key, double value, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::set(const char* key, double value, bool isAck, bool isPersistent, const char* type)
 {
 	char str[20] = "";
 	_doubleToString(value, decimal_digits, str);
 	return set(key, str, isAck, isPersistent);
 }
 
-ArancinoPacket ArancinoClass::set(char *key, char *value, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::set(const char* key, const char* value, bool isAck, bool isPersistent, const char* type)
 {
 	if (key == NULL || value == NULL || strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
@@ -314,7 +314,7 @@ ArancinoPacket ArancinoClass::set(char *key, char *value, bool isAck, bool isPer
 
 /******** API BASIC :: MSET *********/
 
-ArancinoPacket ArancinoClass::mset(char **keys, char **values, int len, bool isAck, bool isPersistent, char* type )
+ArancinoPacket ArancinoClass::mset(char **keys, char **values, int len, bool isAck, bool isPersistent, const char* type )
 {
 	if ((keys == NULL) || (values == NULL) || (len <= 0))
 		return invalidCommandErrorPacket;
@@ -329,7 +329,7 @@ ArancinoPacket ArancinoClass::mset(char **keys, char **values, int len, bool isA
 /******** API BASIC :: GET *********/
 
 template <>
-ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::get<ArancinoPacket>(const char* key, bool isPersistent, const char* type)
 {
 	if (key == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
@@ -340,7 +340,7 @@ ArancinoPacket ArancinoClass::get<ArancinoPacket>(char* key, bool isPersistent, 
 	return executeCommand(GET_COMMAND, key, NULL, NULL, true, true, false, cfg, KEY_VALUE_RESPONSE);
 }
 
-template <> char *ArancinoClass::get(char* key, bool isPersistent, char* type)
+template <> char *ArancinoClass::get(const char* key, bool isPersistent, const char* type)
 {
 	ArancinoPacket packet = get<ArancinoPacket>(key, isPersistent, type);
 	if (!packet.isError){
@@ -352,7 +352,7 @@ template <> char *ArancinoClass::get(char* key, bool isPersistent, char* type)
 
 /******** API BASIC :: MGET *********/
 
-template <> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char **keys, int len, bool isPersistent, char* type)
+template <> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char **keys, int len, bool isPersistent, const char* type)
 {
 	if ((keys == NULL) || (len <= 0))
 		return invalidCommandErrorPacket;
@@ -363,7 +363,7 @@ template <> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char **keys, int 
 	return executeCommand(GET_COMMAND, keys, NULL, NULL, len, true, true, false, cfg, KEY_VALUE_RESPONSE);
 }
 
-template <> char **ArancinoClass::mget(char** keys, int len, bool isPersistent, char* type)
+template <> char **ArancinoClass::mget(char** keys, int len, bool isPersistent, const char* type)
 {
 	ArancinoPacket packet = mget<ArancinoPacket>(keys, len, isPersistent, type);
 	if (packet.isError)
@@ -374,7 +374,7 @@ template <> char **ArancinoClass::mget(char** keys, int len, bool isPersistent, 
 /******** API BASIC :: DEL *********/
 
 template <>
-ArancinoPacket ArancinoClass::del<ArancinoPacket>(char* key, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::del<ArancinoPacket>(const char* key, bool isAck, bool isPersistent, const char* type)
 {
 	if (key == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
@@ -387,7 +387,7 @@ ArancinoPacket ArancinoClass::del<ArancinoPacket>(char* key, bool isAck, bool is
 }
 
 template <>
-int ArancinoClass::del(char* key, bool isAck, bool isPersistent, char* type)
+int ArancinoClass::del(const char* key, bool isAck, bool isPersistent, const char* type)
 {
 	ArancinoPacket packet = del<ArancinoPacket>(key, isAck, isPersistent, type);
 	if (!packet.isError)
@@ -398,44 +398,44 @@ int ArancinoClass::del(char* key, bool isAck, bool isPersistent, char* type)
 
 /******** API BASIC :: HSET *********/
 
-ArancinoPacket ArancinoClass::hset(char *key, char *field, int value, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::hset(const char* key, const char* field, int value, bool isAck, bool isPersistent, const char* type)
 {
 	char str[20];
 	itoa(value, str, 10);
 	return hset(key, field, str, isAck, isPersistent, type);
 }
 
-ArancinoPacket ArancinoClass::hset(char *key, char *field, float value, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::hset(const char* key, const char* field, float value, bool isAck, bool isPersistent, const char* type)
 {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
 	return hset(key, field, str);
 }
 
-ArancinoPacket ArancinoClass::hset(char *key, char *field, double value, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::hset(const char* key, const char* field, double value, bool isAck, bool isPersistent, const char* type)
 {
 	char str[20] = "";
 	_doubleToString(value, decimal_digits, str);
 	return hset(key, field, str, isAck, isPersistent, type);
 }
 
-ArancinoPacket ArancinoClass::hset(char *key, char *field, uint32_t value, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::hset(const char* key, const char* field, uint32_t value, bool isAck, bool isPersistent, const char* type)
 {
 	char str[20];
 	itoa(value, str, 10);
 	return hset(key, field, str, isAck, isPersistent, type);
 }
 
-ArancinoPacket ArancinoClass::hset(char *key, char *field, long value, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::hset(const char* key, const char* field, long value, bool isAck, bool isPersistent, const char* type)
 {
 	char str[20];
 	itoa(value, str, 10);
 	return hset(key, field, str, isAck, isPersistent, type);
 }
 
-ArancinoPacket ArancinoClass::hset(char *key, char *field, char *value, bool isAck, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::hset(const char* key, const char* field, const char* value, bool isAck, bool isPersistent, const char* type)
 {
-	if (key == NULL && field == NULL || value == NULL || strcmp(key, "") == 0 || strcmp(field, "") == 0)
+	if ((key == NULL && field == NULL) || (value == NULL || strcmp(key, "") == 0) || (strcmp(field, "") == 0))
 		return invalidCommandErrorPacket;
 	
 	ArancinoCFG cfg;
@@ -448,7 +448,7 @@ ArancinoPacket ArancinoClass::hset(char *key, char *field, char *value, bool isA
 /******** API BASIC :: HGET *********/
 
 template <>
-ArancinoPacket ArancinoClass::hget<ArancinoPacket>(char *key, char *field, bool isPersistent, char* type)
+ArancinoPacket ArancinoClass::hget<ArancinoPacket>(const char* key, const char* field, bool isPersistent, const char* type)
 {
 	if (key == NULL || field == NULL || strcmp(key, "") == 0 || strcmp(field, "") == 0)
 		return invalidCommandErrorPacket;
@@ -460,7 +460,7 @@ ArancinoPacket ArancinoClass::hget<ArancinoPacket>(char *key, char *field, bool 
 }
 
 template <>
-char *ArancinoClass::hget(char *key, char *field, bool isPersistent, char* type)
+char *ArancinoClass::hget(const char* key, const char* field, bool isPersistent, const char* type)
 {
 	ArancinoPacket packet = hget<ArancinoPacket>(key, field, isPersistent, type);
 	if (!packet.isError)
@@ -472,7 +472,7 @@ char *ArancinoClass::hget(char *key, char *field, bool isPersistent, char* type)
 /******** API BASIC :: HDEL *********/
 
 template <>
-ArancinoPacket ArancinoClass::hdel<ArancinoPacket>(char *key, char *field, bool isAck, bool isPersistent)
+ArancinoPacket ArancinoClass::hdel<ArancinoPacket>(const char* key, const char* field, bool isAck, bool isPersistent)
 {
 	if (key == NULL && field == NULL && strcmp(key, "") == 0 && strcmp(field, "") == 0)
 		return invalidCommandErrorPacket;
@@ -484,7 +484,7 @@ ArancinoPacket ArancinoClass::hdel<ArancinoPacket>(char *key, char *field, bool 
 }
 
 template <>
-int ArancinoClass::hdel(char *key, char *field, bool isAck, bool isPersistent)
+int ArancinoClass::hdel(const char* key, const char* field, bool isAck, bool isPersistent)
 {
 	ArancinoPacket packet = hdel<ArancinoPacket>(key, field, isAck, isPersistent);
 	int retValue = 0;
@@ -496,13 +496,13 @@ int ArancinoClass::hdel(char *key, char *field, bool isAck, bool isPersistent)
 /******** API BASIC :: PUBLISH *********/
 
 template <>
-ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, char *msg, bool isAck)
+ArancinoPacket ArancinoClass::publish<ArancinoPacket>(const char* channel, const char* msg, bool isAck)
 {
 	return __publish(channel, msg, isAck);
 }
 
 template <>
-int ArancinoClass::publish(char *channel, char *msg, bool isAck)
+int ArancinoClass::publish(const char* channel, const char* msg, bool isAck)
 {
 	ArancinoPacket packet = __publish(channel, msg, isAck);
 	if (!packet.isError)
@@ -512,7 +512,7 @@ int ArancinoClass::publish(char *channel, char *msg, bool isAck)
 }
 
 template <>
-ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, double msg, bool isAck)
+ArancinoPacket ArancinoClass::publish<ArancinoPacket>(const char* channel, double msg, bool isAck)
 {
 	char str[20] = "";
 	_doubleToString(msg, decimal_digits, str);
@@ -520,7 +520,7 @@ ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, double msg,
 }
 
 template <>
-int ArancinoClass::publish(char *channel, double msg, bool isAck)
+int ArancinoClass::publish(const char* channel, double msg, bool isAck)
 {
 	char str[20] = "";
 	_doubleToString(msg, decimal_digits, str);
@@ -532,7 +532,7 @@ int ArancinoClass::publish(char *channel, double msg, bool isAck)
 }
 
 template <>
-ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, int msg, bool isAck)
+ArancinoPacket ArancinoClass::publish<ArancinoPacket>(const char* channel, int msg, bool isAck)
 {
 	char str[20] = "";
 	itoa(msg, str, 10);
@@ -540,7 +540,7 @@ ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, int msg, bo
 }
 
 template <>
-int ArancinoClass::publish(char *channel, int msg, bool isAck)
+int ArancinoClass::publish(const char* channel, int msg, bool isAck)
 {
 	char str[20] = "";
 	itoa(msg, str, 10);
@@ -552,7 +552,7 @@ int ArancinoClass::publish(char *channel, int msg, bool isAck)
 }
 
 template <>
-ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, uint32_t msg, bool isAck)
+ArancinoPacket ArancinoClass::publish<ArancinoPacket>(const char* channel, uint32_t msg, bool isAck)
 {
 	char str[20] = "";
 	itoa(msg, str, 10);
@@ -560,7 +560,7 @@ ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, uint32_t ms
 }
 
 template <>
-int ArancinoClass::publish(char *channel, uint32_t msg, bool isAck)
+int ArancinoClass::publish(const char* channel, uint32_t msg, bool isAck)
 {
 	char str[20] = "";
 	itoa(msg, str, 10);
@@ -572,7 +572,7 @@ int ArancinoClass::publish(char *channel, uint32_t msg, bool isAck)
 }
 
 template <>
-ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, long msg, bool isAck)
+ArancinoPacket ArancinoClass::publish<ArancinoPacket>(const char* channel, long msg, bool isAck)
 {
 	char str[20] = "";
 	itoa(msg, str, 10);
@@ -580,7 +580,7 @@ ArancinoPacket ArancinoClass::publish<ArancinoPacket>(char *channel, long msg, b
 }
 
 template <>
-int ArancinoClass::publish(char *channel, long msg, bool isAck)
+int ArancinoClass::publish(const char* channel, long msg, bool isAck)
 {
 	char str[20] = "";
 	itoa(msg, str, 10);
@@ -591,7 +591,7 @@ int ArancinoClass::publish(char *channel, long msg, bool isAck)
 		return 0;
 }
 
-ArancinoPacket ArancinoClass::__publish(char *channel, char *msg, bool isAck)
+ArancinoPacket ArancinoClass::__publish(const char* channel, const char* msg, bool isAck)
 {
 	if (channel == NULL || msg == NULL || strcmp(channel, "") == 0)
 		return invalidCommandErrorPacket;
@@ -622,7 +622,7 @@ ArancinoPacket ArancinoClass::flush(bool isAck, bool isPersistent)
 /******** API BASIC :: STORE *********/
 
 template <>
-ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, int value, char* timestamp, bool isAck)
+ArancinoPacket ArancinoClass::store<ArancinoPacket>(const char* key, int value, const char* timestamp, bool isAck)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
@@ -630,7 +630,7 @@ ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, int value, char* 
 }
 
 template <>
-char *ArancinoClass::store(char *key, int value, char* timestamp, bool isAck)
+char *ArancinoClass::store(const char* key, int value, const char* timestamp, bool isAck)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
@@ -642,7 +642,7 @@ char *ArancinoClass::store(char *key, int value, char* timestamp, bool isAck)
 }
 
 template <>
-ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, uint32_t value, char* timestamp, bool isAck)
+ArancinoPacket ArancinoClass::store<ArancinoPacket>(const char* key, uint32_t value, const char* timestamp, bool isAck)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
@@ -650,7 +650,7 @@ ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, uint32_t value, c
 }
 
 template <>
-char *ArancinoClass::store(char *key, uint32_t value, char* timestamp, bool isAck)
+char *ArancinoClass::store(const char* key, uint32_t value, const char* timestamp, bool isAck)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
@@ -662,7 +662,7 @@ char *ArancinoClass::store(char *key, uint32_t value, char* timestamp, bool isAc
 }
 
 template <>
-ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, long value, char* timestamp, bool isAck)
+ArancinoPacket ArancinoClass::store<ArancinoPacket>(const char* key, long value, const char* timestamp, bool isAck)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
@@ -670,7 +670,7 @@ ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, long value, char*
 }
 
 template <>
-char *ArancinoClass::store(char *key, long value, char* timestamp, bool isAck)
+char *ArancinoClass::store(const char* key, long value, const char* timestamp, bool isAck)
 {
 	char str[20] = "";
 	itoa(value, str, 10);
@@ -682,7 +682,7 @@ char *ArancinoClass::store(char *key, long value, char* timestamp, bool isAck)
 }
 
 template <>
-ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, float value, char* timestamp, bool isAck)
+ArancinoPacket ArancinoClass::store<ArancinoPacket>(const char* key, float value, const char* timestamp, bool isAck)
 {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
@@ -690,7 +690,7 @@ ArancinoPacket ArancinoClass::store<ArancinoPacket>(char *key, float value, char
 }
 
 template <>
-char *ArancinoClass::store(char *key, float value, char* timestamp, bool isAck)
+char *ArancinoClass::store(const char* key, float value, const char* timestamp, bool isAck)
 {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
@@ -702,7 +702,7 @@ char *ArancinoClass::store(char *key, float value, char* timestamp, bool isAck)
 		return NULL;
 }
 
-ArancinoPacket ArancinoClass::__store( char* key, char* value, char* timestamp, bool isAck) {
+ArancinoPacket ArancinoClass::__store(const char* key, const char* value, const char* timestamp, bool isAck) {
 
 	if(timestamp==NULL){
 		 timestamp = getTimestamp();
@@ -730,7 +730,7 @@ ArancinoPacket ArancinoClass::__store( char* key, char* value, char* timestamp, 
 /******** API BASIC :: MSTORE *********/
 
 template <>
-ArancinoPacket ArancinoClass::mstore<ArancinoPacket>(char** keys, char** values, int len, char* timestamp, bool isAck)
+ArancinoPacket ArancinoClass::mstore<ArancinoPacket>(char** keys, char** values, int len, const char* timestamp, bool isAck)
 {
 	if(timestamp==NULL){
 		 timestamp = getTimestamp();
@@ -759,7 +759,7 @@ ArancinoPacket ArancinoClass::mstore<ArancinoPacket>(char** keys, char** values,
 }
 
 template<> 
-void ArancinoClass::mstore(char** keys, char** values, int len, char* timestamp, bool isAck) {
+void ArancinoClass::mstore(char** keys, char** values, int len, const char* timestamp, bool isAck) {
 	if(timestamp==NULL){
 		 timestamp = getTimestamp();
 	}
@@ -771,7 +771,7 @@ void ArancinoClass::mstore(char** keys, char** values, int len, char* timestamp,
 }
 
 template <>
-char **ArancinoClass::mstore(char** keys, char** values, int len, char* timestamp, bool isAck)
+char **ArancinoClass::mstore(char** keys, char** values, int len, const char* timestamp, bool isAck)
 {
 	if(timestamp==NULL){
 		 timestamp = getTimestamp();
@@ -788,7 +788,7 @@ char **ArancinoClass::mstore(char** keys, char** values, int len, char* timestam
 
 /******** API BASIC :: STORETAGS *********/
 
-ArancinoPacket ArancinoClass::storetags(char *key, char **tags, char **values, int len, char* timestamp, bool isAck)
+ArancinoPacket ArancinoClass::storetags(const char* key, char **tags, char **values, int len, const char* timestamp, bool isAck)
 {
 	if(timestamp==NULL){
 		 timestamp = getTimestamp();
@@ -816,7 +816,7 @@ ArancinoPacket ArancinoClass::storetags(char *key, char **tags, char **values, i
 
 /******** API BASIC :: SETRESERVED *********/
 
-ArancinoPacket ArancinoClass::setReserved(char *key, char *value)
+ArancinoPacket ArancinoClass::setReserved(const char* key, const char* value)
 {
 	if (key == NULL && value == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
@@ -826,7 +826,7 @@ ArancinoPacket ArancinoClass::setReserved(char *key, char *value)
 /******** API BASIC :: GETRESERVED *********/
 
 template <>
-ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char *key)
+ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(const char* key)
 {
 	if (key == NULL && strcmp(key, "") == 0)
 		return invalidCommandErrorPacket;
@@ -835,7 +835,7 @@ ArancinoPacket ArancinoClass::getReserved<ArancinoPacket>(char *key)
 }
 
 template <>
-char *ArancinoClass::getReserved(char *key)
+char *ArancinoClass::getReserved(const char* key)
 {
 	ArancinoPacket packet = getReserved<ArancinoPacket>(key);
 	if (!packet.isError)
@@ -1034,7 +1034,7 @@ bool ArancinoClass::isValidUTF8(const char *string) // From: https://stackoverfl
 
 /******** API ADVANCED :: PRINT *********/
 
-void ArancinoClass::print(char* value){
+void ArancinoClass::print(const char* value){
 	_printDebugMessage(value);
 }
 
@@ -1129,7 +1129,7 @@ char *ArancinoClass::getTimestamp()
 
 /******** INTERNAL UTILS :: FREE *********/
 
-ArancinoPacket ArancinoClass::executeCommand(char* cmd, char* key, char* field, char* value, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
+ArancinoPacket ArancinoClass::executeCommand(const char* cmd, const char* key, const char* field, const char* value, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
 	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
 	bool error = true;
 
@@ -1162,7 +1162,7 @@ ArancinoPacket ArancinoClass::executeCommand(char* cmd, char* key, char* field, 
 	}
 }
 
-ArancinoPacket ArancinoClass::executeCommand(char* cmd, char** keys, char** fields, char** values, int len, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
+ArancinoPacket ArancinoClass::executeCommand(const char* cmd, char** keys, char** fields, char** values, int len, bool isAck, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg, int response_type){
 	StaticJsonDocument<CMD_DOC_SIZE> cmd_doc;
 	bool error = true;
 
@@ -1297,11 +1297,6 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 			{
 				char** strings_array = (char**)malloc((resp_size + 1) * sizeof(char*));
 
-				/*	will contain the union of the response strings terminated with \0
-					E.G.: "rsp1\0rsp2\0rsp3\0
-				*/
-				char* response_strings = NULL;
-
 				strings_array[0] = (char*)resp_size; //save the items count into the first element of the array
 				
 				/*	Move pointer to next position, since the first one
@@ -1364,11 +1359,6 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 			else if (resp_size > 1)
 			{
 				char** strings_array = (char**)malloc((resp_size + 1) * sizeof(char*));
-				
-				/*	will contain the union of the response strings terminated with \0
-					E.G.: "rsp1\0rsp2\0rsp3\0
-				*/
-				char* response_strings = NULL;
 
 				strings_array[0] = (char*)resp_size; //save the items count into the first element of the array
 				
@@ -1411,7 +1401,7 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 	return packet;
 }
 
-void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, char* cmd, char* key, char* field, char* value, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg){
+void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, const char* cmd, const char* key, const char* field, const char* value, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg){
 	
 	JsonObject cmd_args = cmd_doc.createNestedObject("args");
 	cmd_doc["cmd"] = cmd;
@@ -1449,7 +1439,7 @@ void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, char* cmd, char* k
 	}
 }
 
-void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, char* cmd, char** keys, char** fields, char** values, int len, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg){
+void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, const char* cmd, char** keys, char** fields, char** values, int len, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg){
 	JsonObject cmd_args = cmd_doc.createNestedObject("args");
 	cmd_doc["cmd"] = cmd;
 
@@ -1535,7 +1525,7 @@ void ArancinoClass::_floatToString(float value, unsigned int _nDecimal, char *st
 	interrupts();
 }
 
-void ArancinoClass::_printDebugMessage(char* value) {
+void ArancinoClass::_printDebugMessage(const char* value) {
 	if (_isDebug && _commMode){
 	__publish(MONITOR_KEY, value);
 	set(MONITOR_KEY, value, false);

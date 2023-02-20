@@ -23,7 +23,7 @@ under the License
 #include <cstdint>
 
 #ifndef MCU_FAMILY
-#define MCU_FAMILY (char*)"undefined"
+#define MCU_FAMILY (const char*)"undefined"
 #endif
 
 #ifdef BAUDRATE
@@ -86,37 +86,37 @@ const uint32_t TIMEOUT = 10000;
 #define SERIAL_TRANSPORT typeof(SERIAL_PORT)
 const uint32_t BAUDRATE_DEBUG = 115200;
 
-#define START_COMMAND			(char*)"START"
-#define MSET_COMMAND			(char*)"MSET"
-#define MSET_PERS_COMMAND		(char*)"MSETPERS"
-#define SET_COMMAND 			(char*)"SET"
-#define SET_PERS_COMMAND 		(char*)"SETPERS"
-#define MGET_COMMAND			(char*)"MGET"
-#define GET_COMMAND 			(char*)"GET"
-#define DEL_COMMAND 			(char*)"DEL"
-#define KEYS_COMMAND			(char*)"KEYS"
-#define HGET_COMMAND			(char*)"HGET"
-#define HGETALL_COMMAND			(char*)"HGETALL"
-#define HKEYS_COMMAND			(char*)"HKEYS"
-#define HDEL_COMMAND			(char*)"HDEL"
-#define HSET_COMMAND			(char*)"HSET"
-#define HSET_PERS_COMMAND		(char*)"HSETPERS"
-#define HVALS_COMMAND			(char*)"HVALS"
-#define PUBLISH_COMMAND			(char*)"PUB"
-#define FLUSH_COMMAND			(char*)"FLUSH"
-#define STORE_COMMAND			(char*)"STORE"
-#define MSTORE_COMMAND			(char*)"MSTORE"
-#define STORETAGS_COMMAND		(char*)"STORETAGS"
-#define GETRESERVED_COMMAND		(char*)"GETRSVD"
-#define SETRESERVED_COMMAND		(char*)"SETRSVD"
+#define START_COMMAND			(const char*)"START"
+#define MSET_COMMAND			(const char*)"MSET"
+#define MSET_PERS_COMMAND		(const char*)"MSETPERS"
+#define SET_COMMAND 			(const char*)"SET"
+#define SET_PERS_COMMAND 		(const char*)"SETPERS"
+#define MGET_COMMAND			(const char*)"MGET"
+#define GET_COMMAND 			(const char*)"GET"
+#define DEL_COMMAND 			(const char*)"DEL"
+#define KEYS_COMMAND			(const char*)"KEYS"
+#define HGET_COMMAND			(const char*)"HGET"
+#define HGETALL_COMMAND			(const char*)"HGETALL"
+#define HKEYS_COMMAND			(const char*)"HKEYS"
+#define HDEL_COMMAND			(const char*)"HDEL"
+#define HSET_COMMAND			(const char*)"HSET"
+#define HSET_PERS_COMMAND		(const char*)"HSETPERS"
+#define HVALS_COMMAND			(const char*)"HVALS"
+#define PUBLISH_COMMAND			(const char*)"PUB"
+#define FLUSH_COMMAND			(const char*)"FLUSH"
+#define STORE_COMMAND			(const char*)"STORE"
+#define MSTORE_COMMAND			(const char*)"MSTORE"
+#define STORETAGS_COMMAND		(const char*)"STORETAGS"
+#define GETRESERVED_COMMAND		(const char*)"GETRSVD"
+#define SETRESERVED_COMMAND		(const char*)"SETRSVD"
 
 #define SENT_STRING				"Sent Command: "
 #define RCV_STRING				"Received Response: "
 
-#define END_TX_CHAR				(char)4 //'@' //
-#define DATA_SPLIT_CHAR			(char)30 //'#' //
-#define ARRAY_SPLIT_CHAR		(char)16 //'%' //
-#define NULL_CHAR				(char)25
+#define END_TX_CHAR				(const char)4 //'@' //
+#define DATA_SPLIT_CHAR			(const char)30 //'#' //
+#define ARRAY_SPLIT_CHAR		(const char)16 //'%' //
+#define NULL_CHAR				(const char)25
 #define ID_SEPARATOR			"_"
 
 #define RSP_OK							100
@@ -139,14 +139,14 @@ const uint32_t BAUDRATE_DEBUG = 115200;
 #define DBG_PIN					26		//pin used to Debug Message
 //#define PWR_PIN				??		//pin used for Power Management
 
-#define MONITOR_KEY				(char*)"___MONITOR___"
-#define POWER_KEY				(char*)"___POWER___"
-#define MODVERS_KEY				(char*)"___MODVERS___"
-#define MODLOGLVL_KEY			(char*)"___MODLOGLVL___"
-#define MODENV_KEY              (char*)"___MODENV___"
-#define BLINK_ID_KEY			(char*)"___BLINK_ID___"
-#define LIB_VERSION				(char*)"2.0.0"	//library version
-#define CRTX_VERSION            (char*)"1.0.0"  //cortex version
+#define MONITOR_KEY				(const char*)"___MONITOR___"
+#define POWER_KEY				(const char*)"___POWER___"
+#define MODVERS_KEY				(const char*)"___MODVERS___"
+#define MODLOGLVL_KEY			(const char*)"___MODLOGLVL___"
+#define MODENV_KEY              (const char*)"___MODENV___"
+#define BLINK_ID_KEY			(const char*)"___BLINK_ID___"
+#define LIB_VERSION				(const char*)"2.0.0"	//library version
+#define CRTX_VERSION            (const char*)"1.0.0"  //cortex version
 
 //RESPONSE CODE
 #define INVALID_VALUE_ERROR     -4
