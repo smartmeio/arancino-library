@@ -32,10 +32,6 @@ TaskHandle_t arancinoHandle1;
 // TaskHandle_t arancinoHandle2;
 // TaskHandle_t arancinoHandle3;
 
-TimerHandle_t timerHandle1;
-TimerHandle_t timerHandle2;
-TimerHandle_t timerHandle3;
-
 SemaphoreHandle_t CommMutex;
 #endif
 
@@ -141,13 +137,6 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, const 
 
 	//TASK
 	ArancinoTasks _atask;
-	timerHandle1 = xTimerCreate("Heartbeat", pdMS_TO_TICKS(10000), pdTRUE, (void*)0, _atask.heartbeatCallback);
-	timerHandle2 = xTimerCreate("Interoception", pdMS_TO_TICKS(60000), pdTRUE, (void*)0, _atask.interoceptionCallback);
-	timerHandle3 = xTimerCreate("Identification", pdMS_TO_TICKS(10000), pdTRUE, (void*)0, _atask.identificationCallback);
-
-	xTimerStart(timerHandle1, 0);
-	xTimerStart(timerHandle2, 0);
-	xTimerStart(timerHandle3, 0);
 	xTaskCreate(_atask.serviceTask, "serviceTask", SERVICETASK_STACK, NULL, ARANCINO_TASK_PRIORITY, &arancinoHandle1);
 	#endif
 }

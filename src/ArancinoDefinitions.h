@@ -187,6 +187,11 @@ const uint32_t BAUDRATE_DEBUG = 115200;
 #define SERVICETASK_STACK           1024
 #endif
 
+#define HEARTBEAT_PERIOD            (pdMS_TO_TICKS(10000))
+#define IDENTIFICATION_PERIOD       (pdMS_TO_TICKS(60000))
+#define INTEROCEPTION_PERIOD        (pdMS_TO_TICKS(10000))
+#define SERVICE_TASK_PERIOD         (pdMS_TO_TICKS(5000))
+
 #define SERIAL_MAX_RETRIES          10
 #define MQTT_MAX_RETRIES            100
 #define BLUETOOTH_MAX_RETRIES       100

@@ -44,29 +44,9 @@ under the License
   DynamicJsonDocument* ArancinoTasks::cmd_doc;
   DynamicJsonDocument* ArancinoTasks::rsp_doc;
 
-  bool ArancinoTasks::_identificationFlag;
-  bool ArancinoTasks::_interoceptionFlag;
-  bool ArancinoTasks::_heartbeatFlag; 
-
   ArancinoTasks::ArancinoTasks(){
   cmd_doc = new DynamicJsonDocument(CMD_DOC_SIZE);
   rsp_doc = new DynamicJsonDocument(RSP_DOC_SIZE);
-
-  _identificationFlag = false;
-  _interoceptionFlag = false;
-  _heartbeatFlag = false; 
-  }
-
-  void ArancinoTasks::identificationCallback (TimerHandle_t xTimer){
-  ArancinoTasks::_identificationFlag = true;
-  }
-
-  void ArancinoTasks::interoceptionCallback (TimerHandle_t xTimer){
-  ArancinoTasks::_interoceptionFlag = true;
-  }
-
-  void ArancinoTasks::heartbeatCallback (TimerHandle_t xTimer){
-  _heartbeatFlag = true;
   }
 
   void ArancinoTasks::heartbeatTask(){
@@ -148,6 +128,7 @@ under the License
       cmd_cfg["ack"] = 0;
       
       ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), false, VOID_RESPONSE);
+      (void)rsp; //to silence the warning
       (*cmd_doc).clear();
     }
     Arancino.free(rsp);
@@ -194,26 +175,30 @@ under the License
   void ArancinoTasks::serviceTask(void* pvParameters){
     pinMode(LED_BUILTIN,OUTPUT);
 
+    TickType_t HB_LastWakeTime = xTaskGetTickCount();
+    TickType_t ID_LastWakeTime = xTaskGetTickCount();
+    TickType_t INT_LastWakeTime = xTaskGetTickCount();
+    
     while(1){
       //Heartbeat
-      if(_heartbeatFlag){
+      if(xTaskGetTickCount() >= HB_LastWakeTime + HEARTBEAT_PERIOD){
         heartbeatTask();
-        _heartbeatFlag = false;
+        HB_LastWakeTime = xTaskGetTickCount();
       }
 
       //Blink id
-      if(_identificationFlag){
+      if(xTaskGetTickCount() >= ID_LastWakeTime + IDENTIFICATION_PERIOD){
         identificationTask();
-        _identificationFlag = false;
+        ID_LastWakeTime = xTaskGetTickCount();     
       }
 
       // Interoception
-      if (_interoceptionFlag){
+      if (xTaskGetTickCount() >= INT_LastWakeTime + INTEROCEPTION_PERIOD){
         interoceptionTask();
-        _interoceptionFlag = false;
+        INT_LastWakeTime = xTaskGetTickCount();
       }
 
-      vTaskDelay(1000);
+      vTaskDelay(SERVICE_TASK_PERIOD);
     }
   }
 
