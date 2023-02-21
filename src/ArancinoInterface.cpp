@@ -35,16 +35,16 @@ void SerialIface::ifaceBegin(){
     //Nothing to initialize here.
 }
 
-int SerialIface::serialWrite(const char* str, uint32_t len, long timeout){
+int SerialIface::serialWrite(const char* str, uint32_t len, unsigned long timeout){
 	if (!str || !len)
 		return 0;
 
 	int sent = 0; //successfully sent chars count
 	int written = -1;
-	int i; //sending command index
-	long str_send_ts = millis(); //start timestamp of string sending
-	long char_send_ts; //start timestamp of single char sending
-	const long char_timeout = 100;
+	uint32_t i; //sending command index
+	unsigned long str_send_ts = millis(); //start timestamp of string sending
+	unsigned long char_send_ts; //start timestamp of single char sending
+	const unsigned long char_timeout = 100;
 
 	for (i = 0; i < len; i++) {
 		written = -1;
@@ -108,7 +108,7 @@ void SerialIface::sendArancinoCommand(JsonDocument& command){
 	docStr = (char*)malloc(docSize * sizeof(char));
 	serializeMsgPack(command, docStr, docSize);
 
-	int sent = serialWrite(docStr, docSize, TIMEOUT);
+	uint32_t sent = serialWrite(docStr, docSize, TIMEOUT);
 	if (sent < docSize)
 	{
 		#if DEBUG

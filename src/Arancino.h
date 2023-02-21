@@ -133,7 +133,7 @@ class ArancinoClass {
 		void startScheduler();
 
 		//SLEEP
-		void delay(long milli);
+		void delay(unsigned long milli);
 
 		/***** API BASIC *****/
 

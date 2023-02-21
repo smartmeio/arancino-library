@@ -50,11 +50,11 @@ void ArancinoClass::attachInterface(ArancinoIface& iface){
 }
 
 /******** API BASIC :: DELAY *********/
-void ArancinoClass::delay(long milli){
+void ArancinoClass::delay(unsigned long milli){
 	//Check if scheduler was started or not
 #if defined(USEFREERTOS)
 	if(xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED){
-		long startmillis = millis();
+		unsigned long startmillis = millis();
 		while(millis() - startmillis < milli);
 	} else {
 		vTaskDelay(milli);
@@ -1273,7 +1273,7 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 		case KEY_VALUE_RESPONSE: {
 			// GET - MGET - HGET
 			JsonArray resp_items = response_dict["args"]["items"];
-			int resp_size = resp_items.size();
+			size_t resp_size = resp_items.size();
 			if (resp_size == 0)
 			{
 				packet = communicationErrorPacket;
@@ -1336,7 +1336,7 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 		case ITEMS_RESPONSE: {
 			// STORE - MSTORE
 			JsonArray resp_items = response_dict["args"]["items"];
-			int resp_size = resp_items.size();
+			size_t resp_size = resp_items.size();
 			if (resp_size == 0)
 			{
 				packet = communicationErrorPacket;
