@@ -20,6 +20,7 @@ under the License
 
 #include "ArancinoInterface.h"
 #include <Arancino.h>
+#include <StreamUtils.h>
 
 #if defined(ARDUINO_ARCH_ESP32) && defined(CUSTOM_SERIAL)
 HardwareSerial SERIAL_PORT(UARTx);
@@ -206,17 +207,17 @@ void MqttIface::ifaceBegin(){
 
 void MqttIface::sendArancinoCommand(JsonDocument& command){
 	int counter = 0;
-	char buff[CMD_DOC_SIZE];
-	serializeMsgPack(command, buff);
 	while (counter < MQTT_MAX_RETRIES){
-		if (this->publish(_outputTopic, buff)){
+		if(this->beginPublish(_outputTopic, measureMsgPack(command),false)){
+			BufferingPrint bufferedClient(*this->_client, 64);
+			serializeMsgPack(command, bufferedClient);
+			bufferedClient.flush();
+			this-> endPublish();
 			return;
 		}
 		Arancino.println("Failed to send message, retrying.");
-		counter++;
+		counter++;	
 	}
-	Arancino.println("Failed to send message. Attempting to reconnect");
-
 	//This should not happen. Check if still connected
 	this->_reconnect();
 }
@@ -235,7 +236,7 @@ bool MqttIface::receiveArancinoResponse(JsonDocument& response){
 	}
 
 	_newIncomingMessage = false;
-	bool error = deserializeMsgPack(response, _inputBuffer, sizeof(_inputBuffer));
+	bool error = deserializeMsgPack(response, _inputBuffer);
 	Arancino.free(_inputBuffer);
 	return error;
 }
