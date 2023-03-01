@@ -2,7 +2,7 @@
 The following section concern the use of FreeRTOS, already implemented in the Arancino Library; will be illustrated the Arancino-related FreeRTOS APIs and some basic FreeRTOS functions. For more advanced features, please see the official [FreeRTOS Documentation](https://www.freertos.org/Documentation/RTOS_book.html).
 
 ### FreeRTOS library
-The Arancino library can take advantage of FreeRTOS library in order to achieve multiple tasks on a single MCU core; this includes several support tasks that act as support routines for Arancino protocol. __Users that desire to use FreeRTOS without using an Arancino board must install the correct FreeRTOS library__; the correct functioning of the library is not guaranteed with other FreeRTOS versions. Still users don't have to include the FreeRTOS library because it is already included in Arancino library if the flag USEFREERTOS is defined.
+The Arancino library can take advantage of FreeRTOS library in order to run multiple tasks both in single-core and multi-core MCUs; this includes support task that executes support routines for Arancino protocol. __Users that desire to use FreeRTOS without using an Arancino board must install the correct FreeRTOS library__; the correct functioning of the library is not guaranteed with other FreeRTOS versions. Still users don't have to include the FreeRTOS library because it is already included in Arancino library. 
 
 ### Notes about using FreeRTOS on other Arancino architectures
 The Arancino library currently supports 4 architectures. 
@@ -13,29 +13,27 @@ The Arancino library currently supports 4 architectures.
 | Arancino Pico      | RP2040| yes     |
 | Arancino V   | STM32| yes    |
 
+Depending on the board used and therefore on the core, it will be possible to enable or disable the use of FreeRTOS:
 
-When FreeRTOS is supported it's also enabled by default. You can enable or disable it:
-
-#### Arduino IDE:
-Go into the directory of the desidered core (depends by your system) and open the `boards.txt` file. In the `build.extra_flags` property of the desired board, append this flag `-DUSEFREERTOS` to enable or remove it to disable FreeRTOS
+#### Arduino IDE
+Through the menu `Tools` -> `Using FreeRTOS` -> `Yes`.
 
 #### Platform.IO:
-Go into the directory of the desidered platform (depends by your system) and open the json file of the desider board. In the `extra_flags` attribute append this flag `-DUSEFREERTOS` to enable or remove it to disable FreeRTOS. 
-
+Add an extra flag to the `platformio.ini` configuration file. Each core can have different flags to activate, for this reason it is recommended to get this information from the README of the used core.
 
 >Note:
-When you disable FreeRTOS, most of the adavanced features of Arancino Library are disabled (Device Identification, Interoception and others in the futures).
+When you disable FreeRTOS, most of the adavanced features of Arancino Library are disabled (Heartbeat, Device Identification, Interoception and others in the future).
 
 ___
 ### startScheduler
 ##### *void startScheduler*
-Configure the `LED_BUILTIN` for debug and start the FreeRTOS scheduler. When a fatal FreeRTOS error occur, the `LED_BUILTIN` will blink following this codes:
+Configure the `LED_BUILTIN` for debug and start the FreeRTOS scheduler. When a  FreeRTOS error occur, the `LED_BUILTIN` will blink in various ways. The blink sequences vary according to the mcu, for this reason it is advisable to refer to the core documentation for more information.
+The errors we can get are as follows:
+-    Fatal FreeRTOS Error, something bad happened. Think really hard about what you just changed.
+-    Stack overflow, task needs more bytes defined for its stack.
+-    Malloc failed, probably ran out of heap.
 
--    3 blinks - Fatal Rtos Error, something bad happened. Think really hard about what you just changed.
--    2 blinks  - Stack overflow, task needs more bytes defined for its stack.
--    1 blink - Malloc failed, probably ran out of heap.
-
-> **IMPORTANT**: `Arancino.startScheduler()` never returns, so it **MUST be** the last instruction of Arduino setup() function.
+> **IMPORTANT**: depending on the mcu used the `Arancino.startScheduler()` function may never return. For this reason it is **strongly recommended** to insert it as the last instruction of the `setup()` function.
 
 ##### Example:
 ```c++
@@ -71,7 +69,7 @@ Tasks are normally implemented as an infinite loop, and must never attempt to re
 * **`pcName`**:	A descriptive name for the task. This is mainly used to facilitate debugging, but can also be used to [obtain a task handle](https://www.freertos.org/a00021.html#xTaskGetHandle).
 The maximum length of a task’s name is set using the config `MAX_TASK_NAME_LEN` parameter in `FreeRTOSConfig.h`.
 
-* **`usStackDepth`**:	The number of words (not bytes!) to allocate for use as the task’s stack. For example, if the stack is 16-bits wide and _usStackDepth_ is 100, then 200 bytes will be allocated for use as the task’s stack. As another example, if the stack is 32-bits wide and _usStackDepth_ is 400 then 1600 bytes will be allocated for use as the task’s stack.
+* **`usStackDepth`**:	The number of words (bytes for ESP32 architecture) to allocate for use as the task’s stack. For example, if the stack is 16-bits wide and _usStackDepth_ is 100, then 200 bytes will be allocated for use as the task’s stack. As another example, if the stack is 32-bits wide and _usStackDepth_ is 400 then 1600 bytes will be allocated for use as the task’s stack.
 The stack depth multiplied by the stack width must not exceed the maximum value that can be contained in a variable of type `size_t`. See the FAQ [How big should the stack be?](https://www.freertos.org/FAQMem.html#StackSize).
 
 * **`pvParameters`**:	A value that will be passed into the created task as the task’s parameter.
@@ -131,6 +129,11 @@ void loop2(void *pvPramaters)
   while (1)
   {
     vTaskDelay(1000); //wait 1 second (non-blocking delay)
+    // OR
+    /*
+      wait 1 second (non-blocking delay, tick-independent way)
+    */
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
@@ -223,18 +226,20 @@ void loop() {
 }
 ```
 ___
-### Arancino Tasks
-Since the introduction of FreeRTOS in the Arancino Library, we developed a set of support tasks that improve the Arancino protocol with useful features such as:
-- `void deviceIdentification(void *pvPramaters)`
-- `static void interoception(void *pvPramaters)`
+### Arancino background services
+Since the introduction of FreeRTOS in the Arancino Library, we developed a set of support services that improve the Arancino protocol with useful features.
 
-This methods run in the background if `USEFREERTOS` flag is defined.
+If FreeRTOS is enabled, a special service task will call these methods in the background at regular intervals.
 
-### DeviceIdentification
-The task implements a function for visual identification (a blink of the built-in led) of the microcontroller connected to the Arancino Deamon (by using the reserved key `BLINK_ID_KEY`).
+>**IMPORTANT NOTE:**  It is essential that the tasks instantiated by the user never occupy all the cpu time, as there would be the risk of starving the service task; this occurrence would cause the MCU to be reset by the daemon.
+
+#### **Heartbeat**
+This service is used to signal to the daemon that the MCU is alive. If the daemon does not receive the heartbeat it will reset the MCU.
+
+#### **DeviceIdentification**
+The service implements a function for visual identification (a blink of the built-in led) of the microcontroller connected to the Arancino Deamon (by using the reserved key `BLINK_ID_KEY`).
 This is very helpful when several devices are connected in the same instance of an Arancino Deamon.
 
-### Interoception
+#### **Interoception**
 This task periodically sends to Arancino Deamon microcontroller current health parameters such as internal temperature, free heap and total memory every 60 seconds.
-The keys used by this task are `mem_free_key,mem_used_key,mem_tot_key,temp_key`
-and are transmitted by a single MSTORE command.
+The keys used by this task are `mem_free_key`, `mem_used_key`, `mem_tot_key`, `temp_key` and are transmitted by a single MSTORE command.
