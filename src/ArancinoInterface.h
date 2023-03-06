@@ -84,7 +84,8 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 	static char* _outputTopic;
 	static char* _serviceTopic;
 	static bool _newIncomingMessage;
-	static char* _inputBuffer;
+	static unsigned int _length;
+	static byte* _payload;
 	static void _arancinoCallback(char* topic, byte* payload, unsigned int lenght);
 };
 

@@ -163,11 +163,12 @@ void SerialIface::setSerialPort(){
 /******** MQTT interface *********/
 
 //Static variables definition
-char* MqttIface::_inputBuffer;
 bool MqttIface::_newIncomingMessage = false;
 char* MqttIface::_inputTopic;
 char* MqttIface::_outputTopic;
 char* MqttIface::_serviceTopic;
+unsigned int MqttIface::_length;
+byte* MqttIface::_payload;
 
 void MqttIface::ifaceBegin(){
 	setClient(*_client);
@@ -236,8 +237,7 @@ bool MqttIface::receiveArancinoResponse(JsonDocument& response){
 	}
 
 	_newIncomingMessage = false;
-	bool error = deserializeMsgPack(response, _inputBuffer);
-	Arancino.free(_inputBuffer);
+	bool error = deserializeMsgPack(response, this->_payload, this->_length);
 	return error;
 }
 
@@ -247,8 +247,8 @@ void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int lengt
 		//should check whether the message is "reset" or no other messages will be sent here?
 		Arancino.systemReset();
 	} else if (!strcmp(topic, _inputTopic)){
-		_inputBuffer = (char*)Arancino.calloc(length, sizeof(char));
-		memcpy(_inputBuffer, payload, length);
+		_length = length;
+		_payload = payload;
 		_newIncomingMessage = true;
 	} 
 }

@@ -21,10 +21,10 @@ under the License
 #include "Arancino.h"
 #include "ArancinoTasks.h"
 
-ArancinoPacket reservedKeyErrorPacket = {true, RESERVED_KEY_ERROR, RESERVED_KEY_ERROR, {.string = NULL}};	   // default reserved key error packet
-ArancinoPacket communicationErrorPacket = {true, COMMUNICATION_ERROR, COMMUNICATION_ERROR, {.string = NULL}};  // default reserved key error packet
-ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_VALUE_ERROR, {.string = NULL}}; // default reserved key error packet
-ArancinoPacket voidCommunicationPacket = {false, RSP_OK, VOID_ERROR_TYPE, {.string = NULL}}; 							   // default reserved key for non-ack messages
+ArancinoPacket reservedKeyErrorPacket = {true, RESERVED_KEY_ERROR, RESERVED_KEY_ERROR, {.string = NULL}};	   	// default reserved key error packet
+ArancinoPacket communicationErrorPacket = {true, COMMUNICATION_ERROR, COMMUNICATION_ERROR, {.string = NULL}};  	// default reserved key error packet
+ArancinoPacket invalidCommandErrorPacket = {true, INVALID_VALUE_ERROR, INVALID_VALUE_ERROR, {.string = NULL}}; 	// default reserved key error packet
+ArancinoPacket voidCommunicationPacket = {false, RSP_OK, VOID_ERROR_TYPE, {.string = NULL}};				   	// default reserved key for non-ack messages
 
 // TASK
 #if defined(USEFREERTOS)
@@ -103,12 +103,12 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, const 
 	cmd_doc["cmd"] = START_COMMAND;
 	JsonObject cmd_args = cmd_doc.createNestedObject("args");
 	cmd_args["port_id"] = id;
-	cmd_args["fw_mcu_family"] = (char*)MCU_FAMILY;
+	cmd_args["fw_mcu_family"] = MCU_FAMILY;
 	cmd_args["fw_lib_ver"] = LIB_VERSION;
 	cmd_args["fw_name"] = _amdata.fwname;
 	cmd_args["fw_ver"] = _amdata.fwversion;
 	cmd_args["fw_build_time"] = str_build_time;
-	cmd_args["fw_core_ver"] = (char*)ARANCINO_CORE_VERSION;
+	cmd_args["fw_core_ver"] = ARANCINO_CORE_VERSION;
 	cmd_args["fw_crtx_ver"] = CRTX_VERSION;
 	cmd_args["use_freertos"] = useFreeRtos ? 1 : 0;
 	if(custom_v1)

@@ -34,6 +34,10 @@ under the License
 #undef TIMEOUT
 #endif
 
+#ifndef ARANCINO_CORE_VERSION
+#define ARANCINO_CORE_VERSION "0.0.0"
+#endif
+
 #if defined(__SAMD21G18A__)
 const uint32_t BAUDRATE = 4000000;
 const uint32_t TIMEOUT = 1000;
