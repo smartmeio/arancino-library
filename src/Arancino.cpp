@@ -398,7 +398,7 @@ ArancinoPacket ArancinoClass::hset(const char* key, const char* field, float val
 {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
-	return hset(key, field, str);
+	return hset(key, field, str, isAck, isPersistent, type);
 }
 
 ArancinoPacket ArancinoClass::hset(const char* key, const char* field, double value, bool isAck, bool isPersistent, const char* type)
@@ -1471,6 +1471,8 @@ void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, const char* cmd, c
 void ArancinoClass::systemReset(){
 	#if defined(ARDUINO_ARCH_RP2040)
 	watchdog_reboot(0,0,0);
+	#elif defined(ARDUINO_ARCH_ESP32)
+	esp_restart();
 	#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_STM32) || defined(ARDUINO_ARCH_NRF52)
 	NVIC_SystemReset();
 	#else 
