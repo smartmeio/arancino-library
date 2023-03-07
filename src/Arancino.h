@@ -80,6 +80,7 @@ extern "C" {
 #if defined(ARDUINO_ARCH_ESP32)
 #include <HardwareSerial.h>
 #include <esp_task_wdt.h>
+#include <esp_task.h>
 #define pvPortMalloc std::malloc
 #define vPortFree std::free
 #endif
