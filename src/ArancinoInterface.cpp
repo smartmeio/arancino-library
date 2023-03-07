@@ -237,7 +237,7 @@ bool MqttIface::receiveArancinoResponse(JsonDocument& response){
 	}
 
 	_newIncomingMessage = false;
-	bool error = deserializeMsgPack(response, this->_payload, this->_length);
+	bool error = deserializeMsgPack(response, (const char*)this->_payload, this->_length);
 	return error;
 }
 
