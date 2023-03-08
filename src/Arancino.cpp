@@ -76,8 +76,13 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, const 
 #endif
 
 	MicroID.getUniqueIDString(id, ID_SIZE/2);
-	_iface->ifaceBegin();
-	
+	if (_iface != NULL){
+		_iface->ifaceBegin();
+	} else {
+		Arancino.println("Interface not set!");
+		while(1);
+	}
+
 	// firmware build time
 	char str_build_time[strlen(__DATE__) + 1 + strlen(__TIME__) + 1 + strlen(_amdata.tzoffset)] = "";
 	strcpy(str_build_time, __DATE__);
@@ -227,7 +232,7 @@ void ArancinoClass::enableDebugMessages(bool sendViaCommMode){
 		_commMode = true;
 	} else {
 		//Default config for Arancino Boards
-		#if defined(SERIAL_DEBUG)
+		#if defined(SERIAL_DEBUG) && defined(BAUDRATE_DEBUG)
 		SERIAL_DEBUG.begin(BAUDRATE_DEBUG);
 		_isDebug = true;
 		_dbgSerial = &SERIAL_DEBUG;
@@ -1517,7 +1522,7 @@ void ArancinoClass::_floatToString(float value, unsigned int _nDecimal, char *st
 }
 
 void ArancinoClass::_printDebugMessage(const char* value) {
-	if (_isDebug && _commMode){
+	if (_isDebug && _commMode && started){
 	__publish(MONITOR_KEY, value);
 	set(MONITOR_KEY, value, false);
 	} else if(_isDebug && _dbgSerial != NULL){
