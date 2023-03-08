@@ -306,7 +306,9 @@ void BluetoothIface::ifaceBegin(){
 }
 
 void BluetoothIface::sendArancinoCommand(JsonDocument& command){
-	serializeMsgPack(command, *_bleSerial);
+	WriteBufferingStream bufferedStream(*_bleSerial, 64);
+	serializeMsgPack(command, bufferedStream);
+	bufferedStream.flush();
 }
 
 bool BluetoothIface::receiveArancinoResponse(JsonDocument& response){
