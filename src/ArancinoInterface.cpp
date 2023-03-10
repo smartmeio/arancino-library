@@ -306,13 +306,19 @@ void BluetoothIface::ifaceBegin(){
 }
 
 void BluetoothIface::sendArancinoCommand(JsonDocument& command){
-	WriteBufferingStream bufferedStream(*_bleSerial, 64);
+	WriteBufferingStream bufferedStream(*_bleSerial, 128);
 	serializeMsgPack(command, bufferedStream);
 	bufferedStream.flush();
 }
 
 bool BluetoothIface::receiveArancinoResponse(JsonDocument& response){
-	DeserializationError error = deserializeMsgPack(response, *_bleSerial);
+	unsigned long startMillis = millis();
+	DeserializationError error;
+	do
+	{
+		error = deserializeMsgPack(response, *_bleSerial);
+	}
+	while (error != 0 && millis() < startMillis + TIMEOUT);
 
 	if(error){
 		if (++_timeoutCounter == BLUETOOTH_MAX_RETRIES){
