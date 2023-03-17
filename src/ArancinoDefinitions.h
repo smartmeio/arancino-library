@@ -149,7 +149,7 @@ const uint32_t BAUDRATE_DEBUG = 115200;
 #define MODLOGLVL_KEY			(const char*)"___MODLOGLVL___"
 #define MODENV_KEY              (const char*)"___MODENV___"
 #define BLINK_ID_KEY			(const char*)"___BLINK_ID___"
-#define LIB_VERSION				(const char*)"2.0.0"	//library version
+#define LIB_VERSION				(const char*)"3.1.0"	//library version
 #define CRTX_VERSION            (const char*)"1.0.0"  //cortex version
 
 //RESPONSE CODE
@@ -183,7 +183,7 @@ const uint32_t BAUDRATE_DEBUG = 115200;
 #define ARANCINO_TASK_PRIORITY      configMAX_PRIORITIES - 1
 #define SERVICETASK_STACK           1024
 #elif defined(ARDUINO_ARCH_NRF52)
-#define ARANCINO_TASK_PRIORITY      TASK_PRIO_HIGH - 1
+#define ARANCINO_TASK_PRIORITY      TASK_PRIO_HIGH
 #define SERVICETASK_STACK           2048
 #else
 #warning "This platform has not been tested!"
