@@ -40,7 +40,7 @@ under the License
 
 #if defined(__SAMD21G18A__)
 const uint32_t BAUDRATE = 4000000;
-const uint32_t TIMEOUT = 1000;
+const uint32_t TIMEOUT = 10000;
 #define SERIAL_PORT SerialUSB
 #define SERIAL_DEBUG Serial
 #elif defined(ARDUINO_ARCH_RP2040) && defined(USEFREERTOS)

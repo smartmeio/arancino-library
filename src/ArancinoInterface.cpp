@@ -224,20 +224,20 @@ void MqttIface::sendArancinoCommand(JsonDocument& command){
 }
 
 bool MqttIface::receiveArancinoResponse(JsonDocument& response){
-	int counter = 0;
-	while(!_newIncomingMessage){
-		if (counter < MQTT_MAX_RETRIES){
-			this->loop();
-			counter++;
-			delay(10);
-		} else {
-			//No need for cleanup: no message was received nor memory allocated for it
-			return true;
-		}
+	unsigned long startMillis = millis();
+	bool error = true;
+	do {
+		this->loop();
+		delay(10);
+	} while(!_newIncomingMessage && (millis() < startMillis + TIMEOUT));
+
+
+	if (_newIncomingMessage)
+	{
+		error = deserializeMsgPack(response, (const char*)this->_payload, this->_length);
+		_newIncomingMessage = false;
 	}
 
-	_newIncomingMessage = false;
-	bool error = deserializeMsgPack(response, (const char*)this->_payload, this->_length);
 	return error;
 }
 
