@@ -50,29 +50,21 @@ under the License
   }
 
   void ArancinoTasks::heartbeatTask(){
-    uint8_t idSize = strlen(Arancino.id);
-    char topic[idSize + 5]; //ID_SIZE + '_HBx' + '\0'
-    strcpy(topic, Arancino.id);
-    strcat(topic, "_HB0");
-
-    topic[idSize+3] = '0'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
-
     JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
     (*cmd_doc)["cmd"] = PUBLISH_COMMAND;
     JsonArray cmd_items = cmd_args.createNestedArray("items");
     JsonObject items_obj = cmd_items.createNestedObject();
-    items_obj["channel"] = topic;
+    items_obj["channel"] = "HB0";
     items_obj["message"] = Arancino.getTimestamp();
 
     JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
-    cmd_cfg["ack"] = 0;
-    cmd_cfg["pers"] = 0;
+    cmd_cfg["ack"] = CFG_FALSE;
+    cmd_cfg["pers"] = CFG_FALSE;
+    cmd_cfg["prfx"] = CFG_TRUE;
 
     ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, CLIENTS_RESPONSE);
-    
-    topic[idSize+3] = '1'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
-    
-    items_obj["channel"] = topic;
+        
+    items_obj["channel"] = "HB1";
     items_obj["message"] = Arancino.getTimestamp();
 
     rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, CLIENTS_RESPONSE);
