@@ -38,25 +38,4 @@ class ArancinoConfig{
 		*/
 		bool USE_PORT_ID_PREFIX_KEY = false;
 
-
-		/*
-			Enables by default the Arduino Loop function as a FreeRTOS Task.
-		*/
-		bool FREERTOS_LOOP_TASK_ENABLE = false;
-
-
-		/*
-			Sets the default stack size available for the Arduino Loop function when it's managed
-				as a FreeRTOS Task. 256 Bytes by default.
-		*/
-		int FREERTOS_LOOP_TASK_STACK_SIZE = 256;
-
-
-		/*
-			Assignes a priority of the Arduino Loop function when it's managed as a FreeRTOS Task.
-				0 -> Lowest Priority.
-				9 -> Highest Priority.
-		*/
-		int FREERTOS_LOOP_TASK_PRIORITY = 0;
-
 };

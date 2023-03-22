@@ -197,31 +197,31 @@ void ArancinoClass::start(JsonDocument& cmd_doc) {
 void ArancinoClass::startScheduler()
 {
 	started = true;
-#if defined(__SAMD21G18A__)
-	vSetErrorLed(LED_BUILTIN, HIGH);
-#endif
-	/*
-	 * Uncomment this if you want run loop() as a dedicated task.
-	 * If loop() doesn't run as dedicated task, should not contain blocking code.
-	 */
-	// task started in main.c (core)
 #if defined(ARDUINO_ARANCINO_VOLANTE)
-	// initYieldTask(100);
+	/*
+		FreeRTOS scheduler has been already started
+		from NRF52 core
+	*/
 #elif defined(ARDUINO_ARCH_RP2040)
-	// initYieldTask(100);
-	// runLoopAsTask(128, tskIDLE_PRIORITY);
-	// initFreeRTOS(); //128 = stack depth for loop, tskIDLE_PRIORITY = priority
+	/*
+		FreeRTOS scheduler has been already started
+		from RP2040 core
+	*/
 #elif defined(__SAMD21G18A__)
-	//runLoopAsTask(128, tskIDLE_PRIORITY);
+	vSetErrorLed(LED_BUILTIN, HIGH);
 	vTaskStartScheduler();
 #elif defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
 	vTaskStartScheduler();
 #elif defined(ARDUINO_ARCH_ESP32)
-
+	/*
+		FreeRTOS scheduler has been already started
+		from ESP32 core
+	*/
 #else
 #error "FreeRTOS not supported on the selected board!"
 #endif
 }
+
 #endif
 
 /******** API BASIC :: DEBUG OPTIONS *********/
