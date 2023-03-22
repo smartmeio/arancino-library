@@ -74,6 +74,8 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, const 
 #if defined(ARDUINO_ARCH_ESP32)
 	esp_task_wdt_init(120, true);
 #endif
+	arancino_id_prefix = _acfg.USE_PORT_ID_PREFIX_KEY;
+	decimal_digits = _acfg.DECIMAL_DIGITS;
 
 	MicroID.getUniqueIDString(id, ID_SIZE/2);
 	if (_iface != NULL){
@@ -302,6 +304,7 @@ ArancinoPacket ArancinoClass::set(const char* key, const char* value, bool isAck
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
+	cfg.isPrefix = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(SET_COMMAND, key, NULL, value, isAck, true, true, cfg, VOID_RESPONSE);
 }
 
@@ -317,6 +320,7 @@ ArancinoPacket ArancinoClass::mset(char **keys, char **values, int len, bool isA
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
+	cfg.isPrefix = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(SET_COMMAND, keys, NULL, values, len, isAck, true, true, cfg, VOID_RESPONSE);
 }
 
@@ -331,6 +335,7 @@ ArancinoPacket ArancinoClass::get<ArancinoPacket>(const char* key, bool isPersis
 	ArancinoCFG cfg;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
+	cfg.isPrefix = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(GET_COMMAND, key, NULL, NULL, true, true, false, cfg, KEY_VALUE_RESPONSE);
 }
 
@@ -354,6 +359,7 @@ template <> ArancinoPacket ArancinoClass::mget<ArancinoPacket>(char **keys, int 
 	ArancinoCFG cfg;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
+	cfg.isPrefix = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(GET_COMMAND, keys, NULL, NULL, len, true, true, false, cfg, KEY_VALUE_RESPONSE);
 }
 
@@ -377,6 +383,7 @@ ArancinoPacket ArancinoClass::del<ArancinoPacket>(const char* key, bool isAck, b
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
+	cfg.isPrefix = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(DEL_COMMAND, key, NULL, NULL, isAck, true, false, cfg, KEYS_RESPONSE);
 }
 
@@ -436,6 +443,7 @@ ArancinoPacket ArancinoClass::hset(const char* key, const char* field, const cha
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
+	cfg.isPrefix = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(HSET_COMMAND, key, field, value, isAck, true, true, cfg, VOID_RESPONSE);
 }
 
@@ -450,6 +458,7 @@ ArancinoPacket ArancinoClass::hget<ArancinoPacket>(const char* key, const char* 
 	ArancinoCFG cfg;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
 	cfg.type = type;
+	cfg.isPrefix = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(HGET_COMMAND, key, field, NULL, true, true, true, cfg, KEY_VALUE_RESPONSE);
 }
 
@@ -474,6 +483,7 @@ ArancinoPacket ArancinoClass::hdel<ArancinoPacket>(const char* key, const char* 
 	ArancinoCFG cfg;
 	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
 	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
+	cfg.isPrefix = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(HDEL_COMMAND, key, field, NULL, isAck, true, true, cfg, KEYS_RESPONSE);
 }
 
@@ -599,7 +609,8 @@ ArancinoPacket ArancinoClass::__publish(const char* channel, const char* msg, bo
 	items_obj["message"] = msg;
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
-	cmd_cfg["ack"] = isAck? 1 : 0;
+	cmd_cfg["ack"] = isAck ? CFG_TRUE : CFG_FALSE;
+	cmd_cfg["prfx"] = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(cmd_doc, isAck, CLIENTS_RESPONSE);
 }
 
@@ -716,8 +727,9 @@ ArancinoPacket ArancinoClass::__store(const char* key, const char* value, const 
 	items_obj["ts"] = timestamp;
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
-	cmd_cfg["ack"] = isAck? 1 : 0;
+	cmd_cfg["ack"] = isAck ? CFG_TRUE : CFG_FALSE;
 	cmd_cfg["type"] = "tse";
+	cmd_cfg["prfx"] = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(cmd_doc, isAck, ITEMS_RESPONSE);
 }
 
@@ -747,8 +759,9 @@ ArancinoPacket ArancinoClass::mstore<ArancinoPacket>(char** keys, char** values,
 	}
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
-	cmd_cfg["ack"] = isAck? 1 : 0;
+	cmd_cfg["ack"] = isAck ? CFG_TRUE : CFG_FALSE;
 	cmd_cfg["type"] = "tse";
+	cmd_cfg["prfx"] = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(cmd_doc, isAck, ITEMS_RESPONSE);
 }
 
@@ -803,8 +816,9 @@ ArancinoPacket ArancinoClass::storetags(const char* key, char **tags, char **val
 	cmd_args["ts"] = timestamp;
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
-	cmd_cfg["ack"] = isAck? 1 : 0;
+	cmd_cfg["ack"] = isAck ? CFG_TRUE : CFG_FALSE;
 	cmd_cfg["type"] = "tags";
+	cmd_cfg["prfx"] = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(cmd_doc, isAck, VOID_RESPONSE);
 }
 
@@ -1422,15 +1436,18 @@ void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, const char* cmd, c
 	}
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
-	if (cfg.pers){
+	if (cfg.pers != CFG_UNSET){
 		cmd_cfg["pers"] = cfg.pers == CFG_FALSE ? 0 : 1;
 	}
-	if (cfg.ack){
+	if (cfg.ack != CFG_UNSET){
 		cmd_cfg["ack"] = cfg.ack == CFG_FALSE ? 0 : 1;
 	}
-	if (cfg.type){
+	if (cfg.type != NULL){
 		cmd_cfg["type"] = cfg.type;
 	}
+	if (cfg.isPrefix != CFG_UNSET){
+		cmd_cfg["prfx"] = cfg.isPrefix == CFG_FALSE ? 0 : 1;
+	}	
 }
 
 void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, const char* cmd, char** keys, char** fields, char** values, int len, bool argsHasItems, bool itemsHasDict, ArancinoCFG cfg){
@@ -1462,14 +1479,17 @@ void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, const char* cmd, c
 	}
 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
-	if (cfg.pers){
+	if (cfg.pers != CFG_UNSET){
 		cmd_cfg["pers"] = cfg.pers == CFG_FALSE ? 0 : 1;
 	}
-	if (cfg.ack){
+	if (cfg.ack != CFG_UNSET){
 		cmd_cfg["ack"] = cfg.ack == CFG_FALSE ? 0 : 1;
 	}
-	if (cfg.type){
+	if (cfg.type != NULL){
 		cmd_cfg["type"] = cfg.type;
+	}
+	if (cfg.isPrefix != CFG_UNSET){
+		cmd_cfg["prfx"] = cfg.isPrefix == CFG_FALSE ? 0 : 1;
 	}
 }
 

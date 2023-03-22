@@ -205,9 +205,9 @@ const uint32_t BAUDRATE_DEBUG = 115200;
 //MsgPack
 #define CMD_DOC_SIZE 512
 #define RSP_DOC_SIZE 256
-#define CFG_UNSET 0
-#define CFG_TRUE 1
-#define CFG_FALSE 2
+#define CFG_UNSET   (-1)
+#define CFG_FALSE   (0)
+#define CFG_TRUE    (1)
 
 #define VOID_RESPONSE 0
 #define KEY_VALUE_RESPONSE 1

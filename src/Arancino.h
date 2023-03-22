@@ -113,9 +113,10 @@ typedef struct {
 } ArancinoMetadata;
 
 typedef struct {
-	uint8_t pers = CFG_UNSET;
-	uint8_t ack = CFG_UNSET;
-	const char* type = CFG_UNSET;
+	int pers = CFG_UNSET;
+	int ack = CFG_UNSET;
+	const char* type = NULL;
+	int isPrefix = CFG_UNSET;
 	//const char* signature
 } ArancinoCFG;
 
