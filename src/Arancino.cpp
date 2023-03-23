@@ -117,7 +117,7 @@ void ArancinoClass::begin(ArancinoMetadata _amdata, ArancinoConfig _acfg, const 
 	cmd_args["fw_build_time"] = str_build_time;
 	cmd_args["fw_core_ver"] = ARANCINO_CORE_VERSION;
 	cmd_args["fw_crtx_ver"] = CRTX_VERSION;
-	cmd_args["use_freertos"] = useFreeRtos ? 1 : 0;
+	cmd_args["fw_freertos"] = useFreeRtos ? 1 : 0;
 	if(custom_v1)
 		cmd_args["CUSTOM_KEY_1"] = custom_v1;
 	if(custom_v2)
