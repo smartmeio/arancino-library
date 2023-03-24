@@ -729,7 +729,6 @@ ArancinoPacket ArancinoClass::__store(const char* key, const char* value, const 
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
 	cmd_cfg["ack"] = isAck ? CFG_TRUE : CFG_FALSE;
 	cmd_cfg["type"] = "tse";
-	cmd_cfg["prfx"] = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(cmd_doc, isAck, ITEMS_RESPONSE);
 }
 
@@ -818,7 +817,6 @@ ArancinoPacket ArancinoClass::storetags(const char* key, char **tags, char **val
 	JsonObject cmd_cfg = cmd_doc.createNestedObject("cfg");
 	cmd_cfg["ack"] = isAck ? CFG_TRUE : CFG_FALSE;
 	cmd_cfg["type"] = "tags";
-	cmd_cfg["prfx"] = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
 	return executeCommand(cmd_doc, isAck, VOID_RESPONSE);
 }
 
