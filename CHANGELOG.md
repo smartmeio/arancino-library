@@ -1,5 +1,18 @@
 # Changelog
 
+#### v 3.1.0 - 2023.x.x
+* Upd: Implemented new Cortex protocol [#1jdx7ak] (https://app.clickup.com/t/1jdx7ak)
+* Add: Added support to ESP32 [#863gbd6ym] (https://app.clickup.com/t/863gbd6ym)
+* Add: Added support to NRF52 [#863gbd74b] (https://app.clickup.com/t/863gbd74b)
+* Upd: Increased Serial timeout [#33kn3c2] (https://app.clickup.com/t/33kn3c2)
+* Upd: Renamed task GetBlinkId [#31ewyzv] (https://app.clickup.com/t/31ewyzv)
+* Upd: Updated examples [#23n7teq] (https://app.clickup.com/t/23n7teq)
+* Upd: Manage new DB instance for configuration keys [#23fqct7] (https://app.clickup.com/t/23fqct7)
+* Upd: Introduced ACK in `SET` methods [#23fpyp2] (https://app.clickup.com/t/23fpyp2)
+* Upd: Service functions in a single task [#861mjudeh] (https://app.clickup.com/t/861mjudeh)
+* Upd: Ifaces adapted to new protocol [#861mjue8p] (https://app.clickup.com/t/861mjue8p)
+* Upd: Fixed warnings in `const char*` conversion [#863gbd62q] (https://app.clickup.com/t/863gbd62q)
+
 #### v 3.0.0 - 2022.10.10
 * Add: added interface system with MQTT and BLE_UART communication mediums [#1nwtwna]
 * Upd: improved debug messages handling [#1ww0cnr]
