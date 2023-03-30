@@ -136,7 +136,7 @@ bool SerialIface::receiveArancinoResponse(JsonDocument& response){
 	if (error){
 		this->comm_timeout = true;
 	}
-	return error;
+	return (bool)error;
 }
 
 
@@ -234,7 +234,7 @@ bool MqttIface::receiveArancinoResponse(JsonDocument& response){
 
 	if (_newIncomingMessage)
 	{
-		error = deserializeMsgPack(response, (const char*)this->_payload, this->_length);
+		error = (bool)deserializeMsgPack(response, (const char*)this->_payload, this->_length);
 		_newIncomingMessage = false;
 	}
 
@@ -318,7 +318,7 @@ bool BluetoothIface::receiveArancinoResponse(JsonDocument& response){
 	{
 		error = deserializeMsgPack(response, *_bleSerial);
 	}
-	while (error != 0 && millis() < startMillis + TIMEOUT);
+	while (error != DeserializationError::Ok && millis() < startMillis + TIMEOUT);
 
 	if(error){
 		if (++_timeoutCounter == BLUETOOTH_MAX_RETRIES){
@@ -329,5 +329,5 @@ bool BluetoothIface::receiveArancinoResponse(JsonDocument& response){
 		_timeoutCounter = 0;
 	}
 
-	return error;
+	return (bool)error;
 }
