@@ -54,8 +54,8 @@ ArancinoMetadata amdata = {
 };
 
 //FreeRtos
-TaskHandle_t loopTaskHandle;
-void loopTask(void *pvParameters);
+TaskHandle_t customLoopTaskHandle;
+void customLoopTask(void *pvParameters);
 
 void setup() {
   
@@ -83,7 +83,7 @@ void setup() {
   //sets the value 123.456 into the 'baz' key
   Arancino.set(key3, value3);
 
-  xTaskCreate(loopTask, "loopTask", 512, NULL, 1, &loopTaskHandle);
+  xTaskCreate(customLoopTask, "customLoopTask", 512, NULL, 1, &customLoopTaskHandle);
   Arancino.startScheduler();
 
 }
@@ -92,7 +92,7 @@ void loop() {
   //empty
 }
 
-void loopTask(void *pvParameters){
+void customLoopTask(void *pvParameters){
   while(1){
     //do something
   }

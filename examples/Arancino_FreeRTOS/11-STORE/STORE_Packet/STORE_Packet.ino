@@ -50,8 +50,8 @@ ArancinoMetadata amdata = {
 };
 
 //FreeRtos
-TaskHandle_t loopTaskHandle;
-void loopTask(void *pvParameters);
+TaskHandle_t customLoopTaskHandle;
+void customLoopTask(void *pvParameters);
 
 void setup() {
 
@@ -61,7 +61,7 @@ void setup() {
   Arancino.enableDebugMessages();
   Arancino.begin(amdata);
 
-  xTaskCreate(loopTask, "loopTask", 512, NULL, 1, &loopTaskHandle);
+  xTaskCreate(customLoopTask, "customLoopTask", 512, NULL, 1, &customLoopTaskHandle);
   Arancino.startScheduler();
 
 }
@@ -70,7 +70,7 @@ void loop(){
   //empty
 }
 
-void loopTask(void *pvParameters) {
+void customLoopTask(void *pvParameters) {
   while(1){
     char* key1 = "EX_sample_1";
     int sample1 = random(0,10);
