@@ -55,7 +55,7 @@ extern "C" {
 extern "C" {
 #include <STM32FreeRTOS.h>
 }
-#elif defined (ARDUINO_ARANCINO_VOLANTE)
+#elif defined (ARDUINO_ARCH_NRF52)
 //need to serial
 #include <Adafruit_TinyUSB.h>
 #elif defined (ARDUINO_ARCH_RP2040)

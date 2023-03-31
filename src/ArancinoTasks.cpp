@@ -93,13 +93,13 @@ under the License
 
     if(rsp.response.string != NULL && !strcmp(rsp.response.string, "1")){
       for(int i=0;i < 20; i++){
-          #if defined (ARDUINO_ARANCINO_VOLANTE)
+          #if defined (ARDUINO_ARCH_NRF52)
           digitalWrite(LED_BUILTIN,LOW);
           #else
           digitalWrite(LED_BUILTIN,HIGH);
           #endif
           vTaskDelay(100);
-          #if defined (ARDUINO_ARANCINO_VOLANTE)
+          #if defined (ARDUINO_ARCH_NRF52)
           digitalWrite(LED_BUILTIN,HIGH);
           #else
           digitalWrite(LED_BUILTIN,LOW);
@@ -222,7 +222,7 @@ under the License
       #endif
   }
 
-  #elif defined (ARDUINO_ARANCINO_VOLANTE)
+  #elif defined (ARDUINO_ARCH_NRF52)
     float ArancinoTasks::mcuTemp(){
       return readCPUTemperature();
     }

@@ -199,7 +199,7 @@ void ArancinoClass::start(JsonDocument& cmd_doc) {
 void ArancinoClass::startScheduler()
 {
 	started = true;
-#if defined(ARDUINO_ARANCINO_VOLANTE)
+#if defined(ARDUINO_ARCH_NRF52)
 	/*
 		FreeRTOS scheduler has been already started
 		from NRF52 core
@@ -963,7 +963,7 @@ void *ArancinoClass::calloc(size_t nmemb, size_t _size)
 {
 /* Call the FreeRTOS version of malloc. */
 #if defined(USEFREERTOS)
-#if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2) || defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040)
+#if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2) || defined(ARDUINO_ARCH_NRF52) || defined(ARDUINO_ARCH_RP2040)
 	uint8_t *ptr = (uint8_t *)malloc(nmemb * (_size));
 	memset(ptr, 0, nmemb); // clear the buffer #pte4c0
 	return ptr;
