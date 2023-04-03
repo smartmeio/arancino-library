@@ -258,19 +258,19 @@ void MqttIface::setNetworkClient(Client& networkClient){
 	this->_client = &networkClient;
 }
 
-void MqttIface::setUsername(char* username){
+void MqttIface::setUsername(const char* username){
 	this->_username = username;
 }
 
-void MqttIface::setPassword(char* password){
+void MqttIface::setPassword(const char* password){
 	this->_password = password;
 }
 
-void MqttIface::setDaemonID(char* daemonID){
+void MqttIface::setDaemonID(const char* daemonID){
 	this->_daemonID = daemonID;
 }
 
-void MqttIface::setBrokerAddress(char* broker){
+void MqttIface::setBrokerAddress(const char* broker){
 	this->_broker = broker;
 }
 

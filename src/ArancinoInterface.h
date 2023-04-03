@@ -58,10 +58,10 @@ class SerialIface : public ArancinoIface {
 class MqttIface : public ArancinoIface, public PubSubClient {
 	public:
 	void setNetworkClient(Client& networkClient);
-	void setUsername(char* username);
-	void setPassword(char* password);
-	void setDaemonID(char* daemonID);
-	void setBrokerAddress(char* broker);
+	void setUsername(const char* username);
+	void setPassword(const char* password);
+	void setDaemonID(const char* daemonID);
+	void setBrokerAddress(const char* broker);
 	void setPort(int port);
 
 	private:
@@ -71,11 +71,11 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 
 	void _reconnect();
 
-	char* _username=NULL;
-	char* _password=NULL;
-	char* _daemonID;
-	char* _broker;	//IP addresses can be passed as well hostnames (as strings)
-	int _port=1883;
+	const char* _username = NULL;
+	const char* _password = NULL;
+	const char* _daemonID;
+	const char* _broker;	//IP addresses can be passed as well hostnames (as strings)
+	int _port = 1883;
 
 	Client* _client; //Network client
 	//Since callback function needs to be declared as static, every related variable needs to be static as well
