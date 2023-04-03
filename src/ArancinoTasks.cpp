@@ -77,16 +77,12 @@ under the License
     (*cmd_doc)["cmd"] = GET_COMMAND;
     JsonArray cmd_items = cmd_args.createNestedArray("items");
     uint8_t idSize = strlen(Arancino.id);
-    char blink_key[idSize + 1 + strlen(BLINK_ID_KEY)];
-    strcpy(blink_key, Arancino.id);
-    char separator = '_';
-    strncat(blink_key, &separator, 1);
-    strcat(blink_key, BLINK_ID_KEY);
 
-    cmd_items.add(blink_key);
+    cmd_items.add(BLINK_ID_KEY);
     JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
-    cmd_cfg["pers"] = 1;
+    cmd_cfg["pers"] = CFG_TRUE;
     cmd_cfg["type"] = "rsvd";
+    cmd_cfg["prfx"] = CFG_TRUE;
     
     ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), true, KEY_VALUE_RESPONSE);
     (*cmd_doc).clear();
@@ -111,13 +107,14 @@ under the License
       (*cmd_doc)["cmd"] = SET_COMMAND;
       cmd_items = cmd_args.createNestedArray("items");
       JsonObject items_obj = cmd_items.createNestedObject();
-      items_obj["key"] = blink_key;
+      items_obj["key"] = BLINK_ID_KEY;
       items_obj["value"] = 0;
 
       cmd_cfg = (*cmd_doc).createNestedObject("cfg");
       cmd_cfg["pers"] = 1;
       cmd_cfg["type"] = "rsvd";
       cmd_cfg["ack"] = 0;
+      cmd_cfg["prfx"] = CFG_TRUE;
       
       ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), false, VOID_RESPONSE);
       (void)rsp; //to silence the warning
