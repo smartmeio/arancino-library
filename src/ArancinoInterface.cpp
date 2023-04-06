@@ -208,7 +208,7 @@ void MqttIface::ifaceBegin(){
 
 void MqttIface::sendArancinoCommand(JsonDocument& command){
 	int counter = 0;
-	while (counter < MQTT_MAX_RETRIES){
+	if (this->connected()){
 		if(this->beginPublish(_outputTopic, measureMsgPack(command),false)){
 			BufferingPrint bufferedClient(*this->_client, 64);
 			serializeMsgPack(command, bufferedClient);
@@ -218,9 +218,10 @@ void MqttIface::sendArancinoCommand(JsonDocument& command){
 		}
 		Arancino.println("Failed to send message, retrying.");
 		counter++;	
+	} else {
+		//This should not happen. Check if still connected
+		this->_reconnect();
 	}
-	//This should not happen. Check if still connected
-	this->_reconnect();
 }
 
 bool MqttIface::receiveArancinoResponse(JsonDocument& response){

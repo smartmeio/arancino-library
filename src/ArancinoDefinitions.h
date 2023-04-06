@@ -196,8 +196,6 @@ const uint32_t BAUDRATE_DEBUG = 115200;
 #define INTEROCEPTION_PERIOD        (pdMS_TO_TICKS(10000))
 #define SERVICE_TASK_PERIOD         (pdMS_TO_TICKS(5000))
 
-#define SERIAL_MAX_RETRIES          10
-#define MQTT_MAX_RETRIES            500
 #define BLUETOOTH_MAX_RETRIES       100
 
 #define ID_SIZE IDSIZE*2 //IDSIZE will be provided by microcontroller-id library
