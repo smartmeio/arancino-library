@@ -1,6 +1,6 @@
 # Changelog
 
-#### v 3.1.0 - 2023.x.x
+#### v 3.1.0 - 2023.04.06
 * Upd: Implemented new Cortex protocol [#1jdx7ak](https://app.clickup.com/t/1jdx7ak)
 * Add: Added support to ESP32 [#863gbd6ym](https://app.clickup.com/t/863gbd6ym)
 * Add: Added support to NRF52 [#863gbd74b](https://app.clickup.com/t/863gbd74b)
@@ -12,6 +12,7 @@
 * Upd: Service functions in a single task [#861mjudeh](https://app.clickup.com/t/861mjudeh)
 * Upd: Ifaces adapted to new protocol [#861mjue8p](https://app.clickup.com/t/861mjue8p)
 * Upd: Fixed warnings in `const char*` conversion [#863gbd62q](https://app.clickup.com/t/863gbd62q)
+* Upd: Added check for client connection when using MQTT [#863ge1z5k](https://app.clickup.com/t/863ge1z5k)
 
 #### v 3.0.0 - 2022.10.10
 * Add: added interface system with MQTT and BLE_UART communication mediums [#1nwtwna]
