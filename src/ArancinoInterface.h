@@ -69,7 +69,7 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 	void sendArancinoCommand(JsonDocument& command);
 	bool receiveArancinoResponse(JsonDocument& response);
 
-	void _reconnect();
+	bool _reconnect();
 
 	const char* _username = NULL;
 	const char* _password = NULL;

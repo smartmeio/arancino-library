@@ -207,21 +207,16 @@ void MqttIface::ifaceBegin(){
 }
 
 void MqttIface::sendArancinoCommand(JsonDocument& command){
-	int counter = 0;
-	if (this->connected()){
+	if (this->connected() || this->_reconnect()){ //check if connected otherwise attempt reconnection
 		if(this->beginPublish(_outputTopic, measureMsgPack(command),false)){
 			BufferingPrint bufferedClient(*this->_client, 64);
 			serializeMsgPack(command, bufferedClient);
 			bufferedClient.flush();
-			this-> endPublish();
+			this->endPublish();
 			return;
 		}
-		Arancino.println("Failed to send message, retrying.");
-		counter++;	
-	} else {
-		//This should not happen. Check if still connected
-		this->_reconnect();
 	}
+	Arancino.println("Failed to send message, retrying.");
 }
 
 bool MqttIface::receiveArancinoResponse(JsonDocument& response){
@@ -281,8 +276,9 @@ void MqttIface::setPort(int port){
 		this->_port = port;
 }
 
-void MqttIface::_reconnect(){
-	while (!this->connected()){
+bool MqttIface::_reconnect(){
+	unsigned long startMillis = millis();
+	while (!this->connected() && (millis() < startMillis + TIMEOUT)){
 		if (!this->connect(Arancino.id, _username, _password)){
 			//If debug is enabled, tell the user that connection failed
 			Arancino.print("Connection failed, retrying in 2 seconds. RC=");
@@ -290,6 +286,8 @@ void MqttIface::_reconnect(){
 			Arancino.delay(2000);
 		}
 	}
+
+	return this->connected();
 }
 
 /******** Bluetooth interface *********/

@@ -175,7 +175,7 @@ const uint32_t BAUDRATE_DEBUG = 115200;
 #if defined(ARDUINO_ARCH_ESP32)
 //ESP32 configMAX_PRIORITIES is 25
 #define ARANCINO_TASK_PRIORITY      (ESP_TASK_TCPIP_PRIO - 1)
-#define SERVICETASK_STACK           (1024 * 4)
+#define SERVICETASK_STACK           (1200 * 4)
 #elif defined(__SAMD21G18A__)
 #define ARANCINO_TASK_PRIORITY      configMAX_PRIORITIES - 1
 #define SERVICETASK_STACK           768
