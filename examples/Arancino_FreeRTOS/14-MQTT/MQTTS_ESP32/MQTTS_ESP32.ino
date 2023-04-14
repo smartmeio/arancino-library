@@ -3,7 +3,7 @@
 
   Copyright (C) 2023 SmartMe.IO
 
-  Authors:  Dario Gogliandolo <dario.gogliandolo@smartme.io>
+  Authors:  Marco Calapristi <marco.calapristi@smartme.io>
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may
   not use this file except in compliance with the License. You may obtain
@@ -20,14 +20,27 @@
 
 #include <WiFi.h>
 #include <Arancino.h>
+#include <WiFiClientSecure.h>
 
 // Change these values accordingly with your network.
 const char* ssid = "ssid";
 const char* password = "YourPassword!";
 
-WiFiClient arancinoClient;
+WiFiClientSecure arancinoClient;
 
 MqttIface iface;
+
+const char *test_root_ca =  \
+    "-----BEGIN CERTIFICATE-----\n" \
+    "-----END CERTIFICATE-----\n";
+
+const char *test_client_key = \
+    "-----BEGIN RSA PRIVATE KEY-----\n" \
+    "-----END RSA PRIVATE KEY-----\n";
+
+const char *test_client_cert = \
+    "-----BEGIN CERTIFICATE-----\n" \
+    "-----END CERTIFICATE-----\n";
 
 ArancinoMetadata amdata = {
   .fwname = "Mqtt ESP32 w/ FreeRTOS Example",
@@ -49,6 +62,11 @@ void setup()
     delay(500);
     Serial.print(".");
   }
+
+  //Load the certificates to network client
+  arancinoClient.setCACert(test_root_ca);
+  arancinoClient.setCertificate(test_client_cert);
+  arancinoClient.setPrivateKey(test_client_key);
 
   Arancino.enableDebugMessages(Serial);
   Arancino.println("Started");

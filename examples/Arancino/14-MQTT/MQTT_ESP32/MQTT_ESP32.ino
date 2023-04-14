@@ -1,9 +1,9 @@
 /*
   SPDX-license-identifier: Apache-2.0
 
-  Copyright (C) 2021 SmartMe.IO
+  Copyright (C) 2023 SmartMe.IO
 
-  Authors:  Marco Calapristi <marco.calapristi@smartme.io>
+  Authors:  Dario Gogliandolo <dario.gogliandolo@smartme.io>
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may
   not use this file except in compliance with the License. You may obtain
@@ -16,15 +16,6 @@
   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
   License for the specific language governing permissions and limitations
   under the License
-*/
-
-/*
-  Arancino MQTT example
-
-  This sketch shows how to use Arancino Protocol via MQTT.
-  In this example an Ethernet shield was used, but any network client should work just fine.
-
-  In order to do that you should first set up a MqttIface and then attach it to Arancino Library as shown below
 */
 
 #include <WiFi.h>
@@ -71,6 +62,11 @@ void setup()
 }
 
 void loop() {
+  //Check if WiFi is still connected
+  if(WiFi.status() != WL_CONNECTED){
+    WiFi.begin(ssid, password);
+  }
+  
   Arancino.set("foo", "bar");
   Arancino.println("SET: foo -> bar");
   delay(1000);
