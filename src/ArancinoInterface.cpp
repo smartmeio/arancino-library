@@ -179,7 +179,7 @@ void MqttIface::ifaceBegin(){
 	//+1 because of \n
 	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
 	_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 2, sizeof(char));
-	_serviceTopic = (char*)Arancino.calloc(strlen("arancino/service") + strlen(_daemonID) + strlen(Arancino.id) + 2, sizeof(char));
+	_serviceTopic = (char*)Arancino.calloc(strlen("arancino/service/") + strlen(_daemonID) + 1, sizeof(char));
 
 	strcpy(_inputTopic, "arancino/cortex/");
 	strcat(_inputTopic, _daemonID);
@@ -207,7 +207,9 @@ void MqttIface::ifaceBegin(){
 }
 
 void MqttIface::sendArancinoCommand(JsonDocument& command){
-	if (this->connected() || this->_reconnect()){ //check if connected otherwise attempt reconnection
+	if (!this->connected()) this->_reconnect();
+
+	if (this->connected()){
 		if(this->beginPublish(_outputTopic, measureMsgPack(command),false)){
 			BufferingPrint bufferedClient(*this->_client, 64);
 			serializeMsgPack(command, bufferedClient);
@@ -216,25 +218,33 @@ void MqttIface::sendArancinoCommand(JsonDocument& command){
 			return;
 		}
 	}
-	Arancino.println("Failed to send message, retrying.");
+
+	Arancino.println("Failed to send message.");
 }
 
 bool MqttIface::receiveArancinoResponse(JsonDocument& response){
-	unsigned long startMillis = millis();
+	if (!this->connected()) this->_reconnect();
+
 	bool error = true;
-	do {
-		this->loop();
-		delay(10);
-	} while(!_newIncomingMessage && (millis() < startMillis + TIMEOUT));
+
+	if (this->connected()){
+		unsigned long startMillis = millis();
+		do {
+			this->loop();
+			delay(10);
+		} while(!_newIncomingMessage && (millis() < startMillis + TIMEOUT));
 
 
-	if (_newIncomingMessage)
-	{
-		error = (bool)deserializeMsgPack(response, (const char*)this->_payload, this->_length);
-		_newIncomingMessage = false;
+		if (_newIncomingMessage)
+		{
+			error = (bool)deserializeMsgPack(response, (const char*)this->_payload, this->_length);
+			_newIncomingMessage = false;
+		}
+
+		return error;
 	}
 
-	return error;
+	return error; // Return error if client is not connected
 }
 
 void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int length){
@@ -277,14 +287,10 @@ void MqttIface::setPort(int port){
 }
 
 bool MqttIface::_reconnect(){
-	unsigned long startMillis = millis();
-	while (!this->connected() && (millis() < startMillis + TIMEOUT)){
-		if (!this->connect(Arancino.id, _username, _password)){
-			//If debug is enabled, tell the user that connection failed
-			Arancino.print("Connection failed, retrying in 2 seconds. RC=");
-			Arancino.println(this->state());
-			Arancino.delay(2000);
-		}
+	if (!this->connect(Arancino.id, _username, _password)){
+		//If debug is enabled, tell the user that connection failed
+		Arancino.print("Connection failed. RC=");
+		Arancino.println(this->state());
 	}
 
 	return this->connected();
