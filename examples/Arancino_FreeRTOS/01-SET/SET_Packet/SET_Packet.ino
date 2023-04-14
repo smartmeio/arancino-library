@@ -52,8 +52,8 @@ ArancinoMetadata amdata = {
 };
 
 //FreeRtos
-TaskHandle_t loopTaskHandle;
-void loopTask(void *pvParameters);
+TaskHandle_t customLoopTaskHandle;
+void customLoopTask(void *pvParameters);
 
 void setup() {
 
@@ -84,7 +84,7 @@ void setup() {
 
   Arancino.free(apckt); //delete packet from memory
 
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
+  xTaskCreate(customLoopTask, "customLoopTask", 512, NULL, 1, &customLoopTaskHandle);
   Arancino.startScheduler();
 }
 
@@ -92,7 +92,7 @@ void loop() {
   //empty
 }
 
-void loopTask(void *pvParameters){
+void customLoopTask(void *pvParameters){
   while(1){
     //do something
   }

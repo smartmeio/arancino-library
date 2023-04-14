@@ -20,9 +20,6 @@
 - **`DECIMAL_DIGITS`**: Default `4`. Represents the number to the right of the decimal point for the float and double data types.
  Float data type has 7 digits, while double data type has up to 15 digits, including decimal digits.
  If the digits exceed the maximum allowed for the type(float or double), the decimal part will be truncated and rounded up or rounded down.
-- **`FREERTOS_LOOP_TASK_ENABLE`**: Default `false`. If `true` the Arduino Loop function will be automatically implemented as FreeRTOS Task.
-- **`FREERTOS_LOOP_TASK_STACK_SIZE`**: Default `256`. Sets the default stack size for the Arduino Loop function when it's managed as FreeRTOS Task. This length is provided in *words*, not bytes, and should be proportional to the used stack memory.
-- **`FREERTOS_LOOP_TASK_PRIORITY`**: Default `0`. Assignes a priority to the Arduino Loop Task in which 0 stands for highest priority while 9 stands for lowest priority.
 ### ArancinoMetadata
 `ArancinoMetadata` is a data structure used to encapsulate firmware metadata; it is later read and exposed by Arancino Daemon via Rest API.
 #### Content

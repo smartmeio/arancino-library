@@ -41,8 +41,8 @@ ArancinoMetadata amdata = {
 };
 
 //FreeRtos
-TaskHandle_t loopTaskHandle;
-void loopTask(void *pvParameters);
+TaskHandle_t customLoopTaskHandle;
+void customLoopTask(void *pvParameters);
 
 char* keys[] = {"CS_2-Red", "CS_2-Green", "CS_2-Blue"};
 
@@ -53,7 +53,7 @@ void setup() {
   char* startingValues[] = {"255", "255", "255"}; //White
   Arancino.mset(keys, startingValues, 3);
 
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
+  xTaskCreate(customLoopTask, "customLoopTask", 512, NULL, 1, &customLoopTaskHandle);
   Arancino.startScheduler();
 }
 
@@ -61,7 +61,7 @@ void loop() {
   //empty
 }
 
-void loopTask(void *pvParameters){
+void customLoopTask(void *pvParameters){
   while(1){
     //Update RGB values
     char** result = Arancino.mget(keys,3);

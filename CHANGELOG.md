@@ -1,5 +1,19 @@
 # Changelog
 
+#### v 3.1.0 - 2023.04.06
+* Upd: Implemented new Cortex protocol [#1jdx7ak](https://app.clickup.com/t/1jdx7ak)
+* Add: Added support to ESP32 [#863gbd6ym](https://app.clickup.com/t/863gbd6ym)
+* Add: Added support to NRF52 [#863gbd74b](https://app.clickup.com/t/863gbd74b)
+* Upd: Increased Serial timeout [#33kn3c2](https://app.clickup.com/t/33kn3c2)
+* Upd: Renamed task GetBlinkId [#31ewyzv](https://app.clickup.com/t/31ewyzv)
+* Upd: Updated examples [#23n7teq](https://app.clickup.com/t/23n7teq)
+* Upd: Manage new DB instance for configuration keys [#23fqct7](https://app.clickup.com/t/23fqct7)
+* Upd: Introduced ACK in `SET` methods [#23fpyp2](https://app.clickup.com/t/23fpyp2)
+* Upd: Service functions in a single task [#861mjudeh](https://app.clickup.com/t/861mjudeh)
+* Upd: Ifaces adapted to new protocol [#861mjue8p](https://app.clickup.com/t/861mjue8p)
+* Upd: Fixed warnings in `const char*` conversion [#863gbd62q](https://app.clickup.com/t/863gbd62q)
+* Upd: Added check for client connection when using MQTT [#863ge1z5k](https://app.clickup.com/t/863ge1z5k)
+
 #### v 3.0.0 - 2022.10.10
 * Add: added interface system with MQTT and BLE_UART communication mediums [#1nwtwna]
 * Upd: improved debug messages handling [#1ww0cnr]
@@ -12,32 +26,32 @@
 * Fix: fixed an error in STORE_packet example
 
 #### v 2.1.0 - 2022.07.29
-* Upd: ERR_GENERIC was redefined as ERR [#1jz91mu] (https://app.clickup.com/t/1jz91mu)
-* Upd: ID_PREFIX removed from `store`, `mstore` and `storeTags` commands [#23v2xn3] (https://app.clickup.com/t/23v2xn3)
-* Add: added executeCommandFast command [#394mek4] (https://app.clickup.com/t/394mek4)
-* Add: added `mstore` with timestamp argument [#394memb] (https://app.clickup.com/t/394memb)
+* Upd: ERR_GENERIC was redefined as ERR [#1jz91mu](https://app.clickup.com/t/1jz91mu)
+* Upd: ID_PREFIX removed from `store`, `mstore` and `storeTags` commands [#23v2xn3](https://app.clickup.com/t/23v2xn3)
+* Add: added executeCommandFast command [#394mek4](https://app.clickup.com/t/394mek4)
+* Add: added `mstore` with timestamp argument [#394memb](https://app.clickup.com/t/394memb)
 
 #### v 2.0.1 - 2022.05.27
-* Fix: bug debug for arancino mignon board. [#2g4fxvx] (https://app.clickup.com/t/2g4fxvx)
+* Fix: bug debug for arancino mignon board. [#2g4fxvx](https://app.clickup.com/t/2g4fxvx)
 
 #### v 2.0.0 - 2022.01.17
-* Upd: updated unit test examples. [#1uqbjbp] (https://app.clickup.com/t/1uqbjbp)
-* Add: added useFreeRtos parameter in `start` command. [#1vht0nc] (https://app.clickup.com/t/1vht0nc)
-* Fix: bug into `deviceIdentification` task. [#1w8qx9m] (https://app.clickup.com/t/1w8qx9m)
-* Add: added examples wthout freeRtos. [#1vhrhj2] (https://app.clickup.com/t/1vhrhj2)
-* Fix: read internal temperature for STM32. [#pbbnm1] (https://app.clickup.com/t/pbbnm1)
-* Udp: code revision. [#j58vz6] (https://app.clickup.com/t/j58vz6)
-* Udp: examples revision. [#jd3yjq] (https://app.clickup.com/t/jd3yjq)
-* Add: read internal temperature for STM32. [#pbbnm1] (https://app.clickup.com/t/pbbnm1)
+* Upd: updated unit test examples. [#1uqbjbp](https://app.clickup.com/t/1uqbjbp)
+* Add: added useFreeRtos parameter in `start` command. [#1vht0nc](https://app.clickup.com/t/1vht0nc)
+* Fix: bug into `deviceIdentification` task. [#1w8qx9m](https://app.clickup.com/t/1w8qx9m)
+* Add: added examples wthout freeRtos. [#1vhrhj2](https://app.clickup.com/t/1vhrhj2)
+* Fix: read internal temperature for STM32. [#pbbnm1](https://app.clickup.com/t/pbbnm1)
+* Udp: code revision. [#j58vz6](https://app.clickup.com/t/j58vz6)
+* Udp: examples revision. [#jd3yjq](https://app.clickup.com/t/jd3yjq)
+* Add: read internal temperature for STM32. [#pbbnm1](https://app.clickup.com/t/pbbnm1)
 * Add: Arduino `loop` as FreeRtos task. [#p59vhb](https://app.clickup.com/t/p59vhb)
 * Fix: fixed bug with float and double using FreeRtos. [#n990qu](https://app.clickup.com/t/n990qu)
 * Add: added interocep function. [#d2x5yt](https://app.clickup.com/t/d2x5yt)
 * Add: added `setReserved` function. [#n1amcu](https://app.clickup.com/t/n1amcu)
-* Upd: removed deprecated arguments on the `begin` function. [fb6jve] (https://app.clickup.com/t/fb6jve)
-* Upd: removed `metadata` function. [fb6hyw] (https://app.clickup.com/t/fb6hyw)
-* Upd: removed check on reserved command. [fv2dmy] (https://app.clickup.com/t/fv2dmy)
-* Upd: updated sync/async mode. [fd59jj] (https://app.clickup.com/t/fd59jj)
-* Add: added persistent mode to `mset` and `hset` function. [aex4by] (https://app.clickup.com/t/aex4by)
+* Upd: removed deprecated arguments on the `begin` function. [fb6jve](https://app.clickup.com/t/fb6jve)
+* Upd: removed `metadata` function. [fb6hyw](https://app.clickup.com/t/fb6hyw)
+* Upd: removed check on reserved command. [fv2dmy](https://app.clickup.com/t/fv2dmy)
+* Upd: updated sync/async mode. [fd59jj](https://app.clickup.com/t/fd59jj)
+* Add: added persistent mode to `mset` and `hset` function. [aex4by](https://app.clickup.com/t/aex4by)
 * Add: added `getReserved` function. [g31n4z](https://app.clickup.com/t/g31n4z)
 * Add: added `store` function. [#gk4cn8](https://app.clickup.com/t/gk4cn8)
 * Add: added `storetags` function. [#hf2fg6](https://app.clickup.com/t/hf2fg6)

@@ -19,144 +19,213 @@ under the License
 */
 
 #include <ArancinoTasks.h>
-#if defined(__SAMD21G18A__)
-#include <TemperatureZero.h>
-#endif
-#include <avr/dtostrf.h>
-#if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
-#include "stm32yyxx_ll_adc.h"
-#define CALX_TEMP 25
-#define LL_ADC_RESOLUTION LL_ADC_RESOLUTION_12B
-#define ADC_RANGE 4096
-#endif
-
-/******** TASK DEVICE IDENTIFICATION *********/
 
 #if defined(USEFREERTOS)
 
-ArancinoTasks arancinoTask;
-
-void ArancinoTasks::deviceIdentification(void *pvPramaters){
-  pinMode(LED_BUILTIN,OUTPUT);
-  while (1)
-  {
-    char* value = Arancino.getBlinkId();
-    if(!strcmp(value,"1")){
-        for(int i=0;i < 20; i++){
-            #if defined (ARDUINO_ARANCINO_VOLANTE)
-            digitalWrite(LED_BUILTIN,LOW);
-            #else
-            digitalWrite(LED_BUILTIN,HIGH);
-            #endif
-            vTaskDelay(100);
-            #if defined (ARDUINO_ARANCINO_VOLANTE)
-            digitalWrite(LED_BUILTIN,HIGH);
-            #else
-            digitalWrite(LED_BUILTIN,LOW);
-            #endif
-            vTaskDelay(200);
-        }
-        Arancino.setBlinkId(0);
-    }
-    Arancino.free(value);
-    vTaskDelay(10000); //wait 10 seconds (non-blocking delay)
-  }
-}
-
-void ArancinoTasks::interoception(void *pvPramaters){
-  while (1)
-  {
-    #if !defined(ARDUINO_ARANCINO_VOLANTE) && !defined(ARDUINO_ARCH_RP2040)
-    //free memory
-    int memory_free = xPortGetFreeHeapSize();
-    char mem_free[20];
-    itoa(memory_free,mem_free,10);
-    //used memory
-    int memory_used=configTOTAL_HEAP_SIZE-memory_free;
-    char mem_used[20];
-    itoa(memory_used, mem_used, 10);
-    #endif
-    //mcu temperature
-    float temperature = arancinoTask.mcuTemp();
-    char temp[20];
-    dtostrf(temperature,4,2,temp);
-    //total memory
-    char mem_tot[20];
-    itoa(configTOTAL_HEAP_SIZE, mem_tot, 10);
-    char mem_free_key[]="MEM_FREE";
-    char mem_used_key[]="MEM_USED";
-    char mem_tot_key[]="MEM_TOT";
-    char temp_key[]="TEMP";
-    #if defined(ARDUINO_ARANCINO_VOLANTE) || defined(ARDUINO_ARCH_RP2040)
-    char* keys[] = {mem_tot_key,temp_key};
-    char* values[] = {mem_tot,temp};
-    ArancinoPacket acpkt = Arancino.mstore<ArancinoPacket>(keys,values,2);
-    #else
-    char* keys[] = {mem_free_key,mem_used_key,mem_tot_key,temp_key};
-    char* values[] = {mem_free,mem_used,mem_tot,temp};
-    ArancinoPacket acpkt = Arancino.mstore<ArancinoPacket>(keys,values,4);
-    #endif
-    Arancino.free(acpkt);
-    vTaskDelay(60000); //wait 60 seconds (non-blocking delay)
-  }
-
-}
-
-void ArancinoTasks::sendHeartbeat(void *pvPramaters){
-  uint8_t idSize = strlen(Arancino.id);
-  char topic[idSize + 5]; //ID_SIZE + '_HBx' + '\0'
-  strcpy(topic, Arancino.id);
-  strcat(topic, "_HB0");
-  while (1) {
-    topic[idSize+3] = '0'; //If the topic structure isn't changed i know exactly the byte I'm supposed to change
-    Arancino.publish(topic, Arancino.getTimestamp());
-    topic[idSize+3] = '1';
-    Arancino.publish(topic, Arancino.getTimestamp());
-    vTaskDelay(10000);
-  }
-}
-
-#if defined(__SAMD21G18A__)
-float ArancinoTasks::mcuTemp(){
-  TemperatureZero tempZero = TemperatureZero();
-  tempZero.init();
-  return tempZero.readInternalTemperature();
-}
-
-#elif defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
-
-
-float ArancinoTasks::mcuTemp(){
-  #ifdef ATEMP
-  int32_t VRef;
-    #ifdef __LL_ADC_CALC_VREFANALOG_VOLTAGE
-       VRef= (__LL_ADC_CALC_VREFANALOG_VOLTAGE(analogRead(AVREF), LL_ADC_RESOLUTION));
-    #else
-       VRef= (VREFINT * ADC_RANGE / analogRead(AVREF)); // ADC sample to mV
-    #endif
-    #ifdef __LL_ADC_CALC_TEMPERATURE
-      return (__LL_ADC_CALC_TEMPERATURE(VRef, analogRead(ATEMP), LL_ADC_RESOLUTION));
-    #elif defined(__LL_ADC_CALC_TEMPERATURE_TYP_PARAMS)
-      return (__LL_ADC_CALC_TEMPERATURE_TYP_PARAMS(AVG_SLOPE, V25, CALX_TEMP, VRef, analogRead(ATEMP), LL_ADC_RESOLUTION));
-    #else
-      return 0;
-    #endif
-  #else
-    return 0;
+  #if defined(__SAMD21G18A__)
+    #include <TemperatureZero.h>
   #endif
 
-}
+  #if defined(ARDUINO_ARCH_ESP32)
+    #include <stdlib.h>
+  #else
+    #include <avr/dtostrf.h>
+  #endif
 
-#elif defined (ARDUINO_ARANCINO_VOLANTE)
+  #if defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
+    #include "stm32yyxx_ll_adc.h"
+    #define CALX_TEMP 25
+    #define LL_ADC_RESOLUTION LL_ADC_RESOLUTION_12B
+    #define ADC_RANGE 4096
+  #endif
 
-float ArancinoTasks::mcuTemp(){
-  return readCPUTemperature();
-}
+  /******** TASK DEVICE IDENTIFICATION *********/
 
-#else
+  DynamicJsonDocument* ArancinoTasks::cmd_doc;
+  DynamicJsonDocument* ArancinoTasks::rsp_doc;
 
-float ArancinoTasks::mcuTemp(){
-  return 0;
-}
-#endif
+  ArancinoTasks::ArancinoTasks(){
+  cmd_doc = new DynamicJsonDocument(CMD_DOC_SIZE);
+  rsp_doc = new DynamicJsonDocument(RSP_DOC_SIZE);
+  }
+
+  void ArancinoTasks::heartbeatTask(){
+    JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
+    (*cmd_doc)["cmd"] = PUBLISH_COMMAND;
+    JsonArray cmd_items = cmd_args.createNestedArray("items");
+    JsonObject items_obj = cmd_items.createNestedObject();
+    items_obj["channel"] = "HB0";
+    items_obj["message"] = Arancino.getTimestamp();
+
+    JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+    cmd_cfg["ack"] = CFG_FALSE;
+    cmd_cfg["pers"] = CFG_FALSE;
+    cmd_cfg["prfx"] = CFG_TRUE;
+
+    ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, CLIENTS_RESPONSE);
+        
+    items_obj["channel"] = "HB1";
+    items_obj["message"] = Arancino.getTimestamp();
+
+    rsp = Arancino.executeCommand((*cmd_doc), (*rsp_doc), false, CLIENTS_RESPONSE);
+    (*cmd_doc).clear();
+    Arancino.free(rsp);
+  }
+
+  void ArancinoTasks::identificationTask(){
+    JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
+    (*cmd_doc)["cmd"] = GET_COMMAND;
+    JsonArray cmd_items = cmd_args.createNestedArray("items");
+    uint8_t idSize = strlen(Arancino.id);
+
+    cmd_items.add(BLINK_ID_KEY);
+    JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+    cmd_cfg["pers"] = CFG_TRUE;
+    cmd_cfg["type"] = "rsvd";
+    cmd_cfg["prfx"] = CFG_TRUE;
+    
+    ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), true, KEY_VALUE_RESPONSE);
+    (*cmd_doc).clear();
+
+    if(rsp.response.string != NULL && !strcmp(rsp.response.string, "1")){
+      for(int i=0;i < 20; i++){
+          #if defined (ARDUINO_ARCH_NRF52)
+          digitalWrite(LED_BUILTIN,LOW);
+          #else
+          digitalWrite(LED_BUILTIN,HIGH);
+          #endif
+          vTaskDelay(100);
+          #if defined (ARDUINO_ARCH_NRF52)
+          digitalWrite(LED_BUILTIN,HIGH);
+          #else
+          digitalWrite(LED_BUILTIN,LOW);
+          #endif
+          vTaskDelay(200);
+      }
+
+      cmd_args = (*cmd_doc).createNestedObject("args");
+      (*cmd_doc)["cmd"] = SET_COMMAND;
+      cmd_items = cmd_args.createNestedArray("items");
+      JsonObject items_obj = cmd_items.createNestedObject();
+      items_obj["key"] = BLINK_ID_KEY;
+      items_obj["value"] = 0;
+
+      cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+      cmd_cfg["pers"] = 1;
+      cmd_cfg["type"] = "rsvd";
+      cmd_cfg["ack"] = 0;
+      cmd_cfg["prfx"] = CFG_TRUE;
+      
+      ArancinoPacket rsp = Arancino.executeCommand((*cmd_doc), false, VOID_RESPONSE);
+      (void)rsp; //to silence the warning
+      (*cmd_doc).clear();
+    }
+    Arancino.free(rsp);
+  }
+
+  void ArancinoTasks::interoceptionTask(){
+    char* ts = Arancino.getTimestamp();
+    JsonObject cmd_args = (*cmd_doc).createNestedObject("args");
+    JsonArray cmd_items = cmd_args.createNestedArray("items");
+    JsonObject temp_obj = cmd_items.createNestedObject();
+    JsonObject cmd_cfg = (*cmd_doc).createNestedObject("cfg");
+
+    (*cmd_doc)["cmd"] = STORE_COMMAND;
+    temp_obj["key"] = "TEMP";
+    temp_obj["value"] = mcuTemp();
+    temp_obj["ts"] = ts;
+    cmd_cfg["ack"] = 0;
+    cmd_cfg["type"] = "tse";
+
+    #if defined(__SAMD21G18A__)
+      JsonObject memtot_obj = cmd_items.createNestedObject();
+      JsonObject memused_obj = cmd_items.createNestedObject();
+      memtot_obj["key"] = "MEM_TOT";
+      memtot_obj["value"] = configTOTAL_HEAP_SIZE;
+      memtot_obj["ts"] = ts;
+      memused_obj["key"] = "MEM_USED";
+      memused_obj["value"] = configTOTAL_HEAP_SIZE - xPortGetFreeHeapSize();
+      memused_obj["ts"] = ts;
+    #elif defined(ARDUINO_ARCH_RP2040)
+      JsonObject memtot_obj = cmd_items.createNestedObject();
+      JsonObject memused_obj = cmd_items.createNestedObject();
+      memtot_obj["key"] = "MEM_TOT";
+      memtot_obj["value"] = rp2040.getTotalHeap();
+      memtot_obj["ts"] = ts;
+      memused_obj["key"] = "MEM_USED";
+      memused_obj["value"] = rp2040.getUsedHeap();
+      memused_obj["ts"] = ts;
+    #endif
+    
+    Arancino.executeCommand((*cmd_doc), false, ITEMS_RESPONSE);
+    (*cmd_doc).clear();
+  }
+
+  void ArancinoTasks::serviceTask(void* pvParameters){
+    pinMode(LED_BUILTIN,OUTPUT);
+
+    TickType_t HB_LastWakeTime = xTaskGetTickCount();
+    TickType_t ID_LastWakeTime = xTaskGetTickCount();
+    TickType_t INT_LastWakeTime = xTaskGetTickCount();
+    
+    while(1){
+      //Heartbeat
+      if(xTaskGetTickCount() >= HB_LastWakeTime + HEARTBEAT_PERIOD){
+        heartbeatTask();
+        HB_LastWakeTime = xTaskGetTickCount();
+      }
+
+      //Blink id
+      if(xTaskGetTickCount() >= ID_LastWakeTime + IDENTIFICATION_PERIOD){
+        identificationTask();
+        ID_LastWakeTime = xTaskGetTickCount();     
+      }
+
+      // Interoception
+      if (xTaskGetTickCount() >= INT_LastWakeTime + INTEROCEPTION_PERIOD){
+        interoceptionTask();
+        INT_LastWakeTime = xTaskGetTickCount();
+      }
+
+      vTaskDelay(SERVICE_TASK_PERIOD);
+    }
+  }
+
+
+  #if defined(__SAMD21G18A__)
+    float ArancinoTasks::mcuTemp(){
+      TemperatureZero tempZero = TemperatureZero();
+      tempZero.init();
+      return tempZero.readInternalTemperature();
+    }
+  #elif defined(ARDUINO_ARANCINOV12_H743ZI) || defined(ARDUINO_ARANCINOV12_H743ZI2)
+    float ArancinoTasks::mcuTemp(){
+      #ifdef ATEMP
+      int32_t VRef;
+        #ifdef __LL_ADC_CALC_VREFANALOG_VOLTAGE
+          VRef= (__LL_ADC_CALC_VREFANALOG_VOLTAGE(analogRead(AVREF), LL_ADC_RESOLUTION));
+        #else
+          VRef= (VREFINT * ADC_RANGE / analogRead(AVREF)); // ADC sample to mV
+        #endif
+        #ifdef __LL_ADC_CALC_TEMPERATURE
+          return (__LL_ADC_CALC_TEMPERATURE(VRef, analogRead(ATEMP), LL_ADC_RESOLUTION));
+        #elif defined(__LL_ADC_CALC_TEMPERATURE_TYP_PARAMS)
+          return (__LL_ADC_CALC_TEMPERATURE_TYP_PARAMS(AVG_SLOPE, V25, CALX_TEMP, VRef, analogRead(ATEMP), LL_ADC_RESOLUTION));
+        #else
+          return 0;
+        #endif
+      #else
+        return 0;
+      #endif
+  }
+
+  #elif defined (ARDUINO_ARCH_NRF52)
+    float ArancinoTasks::mcuTemp(){
+      return readCPUTemperature();
+    }
+  #else
+    float ArancinoTasks::mcuTemp(){
+      return 0;
+    }
+  #endif
 #endif

@@ -18,16 +18,41 @@ License for the specific language governing permissions and limitations
 under the License
 */
 
-#include <Arancino.h>
+#ifndef ARANCINOTASKS_H_
+#define ARANCINOTASKS_H_
+
 #include <ArancinoDefinitions.h>
+#include <Arancino.h>
+#include <ArduinoJson.h>
 
 class ArancinoTasks{
+	#ifdef USEFREERTOS
 	public:
-		static void deviceIdentification(void *pvPramaters);
-        static void interoception(void *pvPramaters);
-		static void sendHeartbeat(void *pvPramaters);
+		ArancinoTasks();
+		static void serviceTask(void *pvPramaters);
+		TimerHandle_t identificationTimer;
+		TimerHandle_t interoceptionTimer;
+		TimerHandle_t heartbeatTimer;
+
+		static void identificationCallback(TimerHandle_t xTimer);
+		static void interoceptionCallback(TimerHandle_t xTimer);
+		static void heartbeatCallback(TimerHandle_t xTimer);
+		
 	private:
-		float mcuTemp();
-		bool temp_initialized = false;  //temp inizialized
+		static float mcuTemp();
+		static DynamicJsonDocument* cmd_doc;
+		static DynamicJsonDocument* rsp_doc;
+		static SemaphoreHandle_t jsonMutex;
+
+		static void identificationTask();
+		static void interoceptionTask();
+		static void heartbeatTask();
+
+		static bool _identificationFlag;
+		static bool _interoceptionFlag;
+		static bool _heartbeatFlag;
+		
+	#endif
 };
 
+#endif 

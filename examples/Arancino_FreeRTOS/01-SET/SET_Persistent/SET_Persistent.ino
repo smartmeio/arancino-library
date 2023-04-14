@@ -52,8 +52,8 @@ ArancinoMetadata amdata = {
 };
 
 //FreeRtos
-TaskHandle_t loopTaskHandle;
-void loopTask(void *pvParameters);
+TaskHandle_t customLoopTaskHandle;
+void customLoopTask(void *pvParameters);
 
 void setup() {
 
@@ -67,7 +67,7 @@ void setup() {
   Arancino.set("EX_01_3_key_4", "bar", NULL);      //volatile key
   Arancino.set("EX_01_3_key_5", "bar");            //volatile key
 
-  xTaskCreate(loopTask, "loopTask", 256, NULL, 1, &loopTaskHandle);
+  xTaskCreate(customLoopTask, "customLoopTask", 512, NULL, 1, &customLoopTaskHandle);
   Arancino.startScheduler();
 }
 

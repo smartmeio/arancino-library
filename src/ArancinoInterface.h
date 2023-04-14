@@ -24,12 +24,13 @@ under the License
 #include <Arduino.h>
 #include <ArancinoDefinitions.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 class ArancinoIface{
 	public:
 	virtual void ifaceBegin() = 0;
-	virtual void sendArancinoCommand(char* command) = 0;
-	virtual char* receiveArancinoResponse(char terminator) = 0;
+	virtual void sendArancinoCommand(JsonDocument& command) = 0;
+	virtual bool receiveArancinoResponse(JsonDocument& response) = 0;
 };
 
 /******** INTERFACES *********/
@@ -45,34 +46,36 @@ class SerialIface : public ArancinoIface {
 
 	private:
 	void ifaceBegin();
-	void sendArancinoCommand(char* command);
-	char* receiveArancinoResponse(char terminator);
+	int serialWrite(const char* str, uint32_t len, unsigned long timeout);
+	void sendArancinoCommand(JsonDocument& command);
+	bool receiveArancinoResponse(JsonDocument& response);
 
 	Stream* _serialPort;
 	bool comm_timeout = false;
 };
 
+
 class MqttIface : public ArancinoIface, public PubSubClient {
 	public:
 	void setNetworkClient(Client& networkClient);
-	void setUsername(char* username);
-	void setPassword(char* password);
-	void setDaemonID(char* daemonID);
-	void setBrokerAddress(char* broker);
+	void setUsername(const char* username);
+	void setPassword(const char* password);
+	void setDaemonID(const char* daemonID);
+	void setBrokerAddress(const char* broker);
 	void setPort(int port);
 
 	private:
 	void ifaceBegin();
-	void sendArancinoCommand(char* command);
-	char* receiveArancinoResponse(char terminator);
+	void sendArancinoCommand(JsonDocument& command);
+	bool receiveArancinoResponse(JsonDocument& response);
 
-	void _reconnect();
+	bool _reconnect();
 
-	char* _username=NULL;
-	char* _password=NULL;
-	char* _daemonID;
-	char* _broker;	//IP addresses can be passed as well hostnames (as strings)
-	int _port=1883;
+	const char* _username = NULL;
+	const char* _password = NULL;
+	const char* _daemonID;
+	const char* _broker;	//IP addresses can be passed as well hostnames (as strings)
+	int _port = 1883;
 
 	Client* _client; //Network client
 	//Since callback function needs to be declared as static, every related variable needs to be static as well
@@ -81,7 +84,8 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 	static char* _outputTopic;
 	static char* _serviceTopic;
 	static bool _newIncomingMessage;
-	static char* _inputBuffer;
+	static unsigned int _length;
+	static byte* _payload;
 	static void _arancinoCallback(char* topic, byte* payload, unsigned int lenght);
 };
 
@@ -91,8 +95,8 @@ class BluetoothIface : public ArancinoIface {
 
 	private:
 	void ifaceBegin();
-	void sendArancinoCommand(char* command);
-	char* receiveArancinoResponse(char terminator);
+	void sendArancinoCommand(JsonDocument& command);
+	bool receiveArancinoResponse(JsonDocument& response);
 	
 	bool comm_timeout = false;
 	Stream* _bleSerial;
