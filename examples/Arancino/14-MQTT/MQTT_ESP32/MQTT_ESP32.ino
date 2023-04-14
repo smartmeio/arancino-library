@@ -28,7 +28,6 @@
 */
 
 #include <WiFi.h>
-#include <PubSubClient.h>
 #include <Arancino.h>
 
 // Change these values accordingly with your network.
@@ -36,7 +35,6 @@ const char* ssid = "ssid";
 const char* password = "YourPassword!";
 
 WiFiClient arancinoClient;
-PubSubClient client(arancinoClient);
 
 MqttIface iface;
 
