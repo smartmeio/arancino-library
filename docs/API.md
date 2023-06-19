@@ -22,7 +22,7 @@
 > #define CMD_DOC_SIZE 512  //size for the message sent from the MCU
 > #define RSP_DOC_SIZE 256  // size for message received on the MCU
 > ```
-> Currently the memory values ​​is sized to work with FreeRTOS enabled, if you don't use FreeRTOS it is possible to increase these values.
+> Currently the memory values ​​is sized to work with FreeRTOS enabled, if FreeRTOS is disabled is possible to increase these values.
 > 
 ### metadata
 #### *void metadata(ArancinoMetadata data)*  |  ***DEPRECATED from Version 1.4.0***
