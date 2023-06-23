@@ -23,7 +23,7 @@ Arancino Library allows to export/import data to/from the Linux environment usin
 -  [Reserved Keys](docs/RESERVED_KEYS.md)
 
 ##  Compatibility list
-The Arancino Library `3.1.0` officially supports the following Arancino Core versions:
+The Arancino Library `3.1.1` officially supports the following Arancino Core versions:
 |Board| Core Version |
 |--|--|
 | SAMD21 | 1.4.0 |
