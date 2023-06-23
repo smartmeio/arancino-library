@@ -177,6 +177,9 @@ void MqttIface::ifaceBegin(){
 	setBufferSize(CMD_DOC_SIZE);
 
 	//+1 because of \n
+	Arancino.free(_inputTopic);
+	Arancino.free(_outputTopic);
+	Arancino.free(_serviceTopic);
 	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
 	_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 2, sizeof(char));
 	_serviceTopic = (char*)Arancino.calloc(strlen("arancino/service/") + strlen(_daemonID) + 1, sizeof(char));
@@ -194,54 +197,65 @@ void MqttIface::ifaceBegin(){
 	strcpy(_serviceTopic, "arancino/service/");
 	strcat(_serviceTopic, _daemonID);
 
-	this->_reconnect();
+	if(this->_reconnect()){
 
-	this->subscribe(_serviceTopic); //arancino/service/dID
-	this->subscribe(_inputTopic);
+		this->subscribe(_serviceTopic); //arancino/service/dID
+		this->subscribe(_inputTopic);
 
-	char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
-	strcpy(discoverytopic, "arancino/discovery/");
-	strcat(discoverytopic, _daemonID);
-	this->publish(discoverytopic, Arancino.id);
-	Arancino.free(discoverytopic);
+		char discoverytopic[(strlen("arancino/discovery/") + strlen(_daemonID)+1)];
+		strcpy(discoverytopic, "arancino/discovery/");
+		strcat(discoverytopic, _daemonID);
+		this->publish(discoverytopic, Arancino.id);
+		/*char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
+		strcpy(discoverytopic, "arancino/discovery/");
+		strcat(discoverytopic, _daemonID);
+		this->publish(discoverytopic, Arancino.id);
+		Arancino.free(discoverytopic);*/
+
+	}
 }
 
 void MqttIface::sendArancinoCommand(JsonDocument& command){
-	if (!this->connected()) this->_reconnect();
+	if (!this->connected()){
+		/*Arancino.free(_inputTopic);
+		Arancino.free(_outputTopic);
+		Arancino.free(_serviceTopic);*/
+		this->ifaceBegin();
+	}
 
 	if (this->connected()){
 		if(this->beginPublish(_outputTopic, measureMsgPack(command),false)){
-			BufferingPrint bufferedClient(*this->_client, 64);
+			/*BufferingPrint bufferedClient(*(this->_client), 64);
 			serializeMsgPack(command, bufferedClient);
-			bufferedClient.flush();
-			this->endPublish();
-			return;
+			bufferedClient.flush();*/
+			serializeMsgPack(command, *(this->_client));
+			//return;
 		}
+		this->endPublish();
 	}
-
-	Arancino.println("Failed to send message.");
 }
 
 bool MqttIface::receiveArancinoResponse(JsonDocument& response){
-	if (!this->connected()) this->_reconnect();
 
 	bool error = true;
 
-	if (this->connected()){
-		unsigned long startMillis = millis();
-		do {
-			this->loop();
-			delay(10);
-		} while(!_newIncomingMessage && (millis() < startMillis + TIMEOUT));
-
-
-		if (_newIncomingMessage)
-		{
-			error = (bool)deserializeMsgPack(response, (const char*)this->_payload, this->_length);
-			_newIncomingMessage = false;
+	unsigned long startMillis = millis();
+	do {
+		if (!this->connected()){
+			/*Arancino.free(_inputTopic);
+			Arancino.free(_outputTopic);
+			Arancino.free(_serviceTopic);*/
+			this->ifaceBegin();
 		}
+		this->loop();
+		delay(10);
+	} while(!_newIncomingMessage && (millis() < startMillis + TIMEOUT));
 
-		return error;
+
+	if (_newIncomingMessage)
+	{
+		error = (bool)deserializeMsgPack(response, (const char*)this->_payload, this->_length);
+		_newIncomingMessage = false;
 	}
 
 	return error; // Return error if client is not connected
@@ -287,13 +301,14 @@ void MqttIface::setPort(int port){
 }
 
 bool MqttIface::_reconnect(){
-	if (!this->connect(Arancino.id, _username, _password)){
-		//If debug is enabled, tell the user that connection failed
-		Arancino.print("Connection failed. RC=");
-		Arancino.println(this->state());
-	}
-
-	return this->connected();
+	//force disconnect
+	this->disconnect();
+	char willtopic[(strlen("arancino/service/connection_status/")+strlen(_daemonID)+1+strlen(Arancino.id)+1)];
+	strcpy(willtopic, "arancino/service/connection_status/");
+	strcat(willtopic, _daemonID);
+	strcat(willtopic, "/");
+	strcat(willtopic, Arancino.id);
+	return this->connect(Arancino.id, _username, _password,willtopic,2,0,"offline");
 }
 
 /******** Bluetooth interface *********/

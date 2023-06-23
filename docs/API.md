@@ -15,6 +15,15 @@
 > Arancino.set("test", mem);
 > Arancino.free(mem);
 > ```
+>
+> is possible in some application static memory reserved for ArancinoPacket is not enough. To change the value of the memory assignment edit the follow line in ArancinoDefinition.h:
+> ```
+> //MsgPack
+> #define CMD_DOC_SIZE 512  //size for the message sent from the MCU
+> #define RSP_DOC_SIZE 256  // size for message received on the MCU
+> ```
+> Currently the memory values ​​is sized to work with FreeRTOS enabled, if FreeRTOS is disabled is possible to increase these values.
+> 
 ### metadata
 #### *void metadata(ArancinoMetadata data)*  |  ***DEPRECATED from Version 1.4.0***
 Stores the metadata to use later during the `START` command in `begin` API.
