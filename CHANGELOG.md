@@ -1,8 +1,8 @@
 # Changelog
 
-#### v 3.1.1 - 2023.06.XX
+#### v 3.1.1 - 2023.06.23
 * Upd: Implemented will message for MQTT interface [#861myg408](https://app.clickup.com/t/861myg408)
-* fix: fixed client reconnection MQTT interface [#861myg318] (https://app.clickup.com/t/861myg318)
+* fix: fixed client reconnection MQTT interface [#861myg318](https://app.clickup.com/t/861myg318)
 
 #### v 3.1.0 - 2023.04.06
 * Upd: Implemented new Cortex protocol [#1jdx7ak](https://app.clickup.com/t/1jdx7ak)
