@@ -74,6 +74,7 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 	const char* _username = NULL;
 	const char* _password = NULL;
 	const char* _daemonID;
+	const char* _topic = "arancino";
 	const char* _broker;	//IP addresses can be passed as well hostnames (as strings)
 	int _port = 1883;
 

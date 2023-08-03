@@ -180,11 +180,12 @@ void MqttIface::ifaceBegin(){
 	Arancino.free(_inputTopic);
 	Arancino.free(_outputTopic);
 	Arancino.free(_serviceTopic);
-	_inputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
-	_outputTopic = (char*)Arancino.calloc(strlen("arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 2, sizeof(char));
-	_serviceTopic = (char*)Arancino.calloc(strlen("arancino/service/") + strlen(_daemonID) + 1, sizeof(char));
+	_inputTopic = (char*)Arancino.calloc(strlen(_topic)+strlen("_bus/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
+	_outputTopic = (char*)Arancino.calloc(strlen(_topic)+strlen("_bus/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 2, sizeof(char));
+	_serviceTopic = (char*)Arancino.calloc(strlen(_topic)+strlen("_bus/service") + strlen(_daemonID) + strlen(Arancino.id) + 2, sizeof(char));
 
-	strcpy(_inputTopic, "arancino/cortex/");
+	strcpy(_inputTopic, _topic);
+	strcat(_inputTopic, "_bus/cortex/");
 	strcat(_inputTopic, _daemonID);
 	strcat(_inputTopic, "/");
 	strcat(_inputTopic, Arancino.id);
@@ -194,7 +195,8 @@ void MqttIface::ifaceBegin(){
 	strcat(_inputTopic, "/rsp_to_mcu");
 	strcat(_outputTopic, "/cmd_from_mcu");
 
-	strcpy(_serviceTopic, "arancino/service/");
+	strcpy(_serviceTopic, _topic);
+	strcat(_serviceTopic, "_bus/service/");
 	strcat(_serviceTopic, _daemonID);
 
 	if(this->_reconnect()){
@@ -202,10 +204,12 @@ void MqttIface::ifaceBegin(){
 		this->subscribe(_serviceTopic); //arancino/service/dID
 		this->subscribe(_inputTopic);
 
-		char discoverytopic[(strlen("arancino/discovery/") + strlen(_daemonID)+1)];
-		strcpy(discoverytopic, "arancino/discovery/");
+		char* discoverytopic = (char*)Arancino.calloc(strlen(_topic)+("_bus/discovery/") + strlen(_daemonID)+1, sizeof(char));
+		strcpy(discoverytopic,_topic);
+		strcat(discoverytopic, "_bus/discovery/");
 		strcat(discoverytopic, _daemonID);
 		this->publish(discoverytopic, Arancino.id);
+		Arancino.free(discoverytopic);
 		/*char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
 		strcpy(discoverytopic, "arancino/discovery/");
 		strcat(discoverytopic, _daemonID);
@@ -300,11 +304,16 @@ void MqttIface::setPort(int port){
 		this->_port = port;
 }
 
+void MqttIface::setTopic(const char* topic){
+	this->_topic = topic;
+}
+
 bool MqttIface::_reconnect(){
 	//force disconnect
 	this->disconnect();
-	char willtopic[(strlen("arancino/service/connection_status/")+strlen(_daemonID)+1+strlen(Arancino.id)+1)];
-	strcpy(willtopic, "arancino/service/connection_status/");
+	char willtopic[(strlen(_topic)+strlen("_bus/service/connection_status/")+strlen(_daemonID)+1+strlen(Arancino.id)+1)];
+	strcpy(willtopic, _topic);
+	strcat(willtopic, "a_bus/service/connection_status/");
 	strcat(willtopic, _daemonID);
 	strcat(willtopic, "/");
 	strcat(willtopic, Arancino.id);
