@@ -1,5 +1,8 @@
 # Changelog
 
+#### v 2.1.2 - 2023.10.31
+* Fix: fixed persistent mode in `hset` command #92  
+
 #### v 2.1.1 - 2022.09.19
 * Fix: fixed an error that occurred when FreeRTOS was not enabled
 * Fix: fixed a bug in executeCommandFast function

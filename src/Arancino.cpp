@@ -380,35 +380,35 @@ ArancinoPacket ArancinoClass::hset(char *key, char *field, int value, bool isPer
 {
 	char str[20];
 	itoa(value, str, 10);
-	return hset(key, field, str);
+	return hset(key, field, str, isPersistent);
 }
 
 ArancinoPacket ArancinoClass::hset(char *key, char *field, float value, bool isPersistent)
 {
 	char str[20] = "";
 	_floatToString(value, decimal_digits, str);
-	return hset(key, field, str);
+	return hset(key, field, str, isPersistent);
 }
 
 ArancinoPacket ArancinoClass::hset(char *key, char *field, double value, bool isPersistent)
 {
 	char str[20] = "";
 	_doubleToString(value, decimal_digits, str);
-	return hset(key, field, str);
+	return hset(key, field, str, isPersistent);
 }
 
 ArancinoPacket ArancinoClass::hset(char *key, char *field, uint32_t value, bool isPersistent)
 {
 	char str[20];
 	itoa(value, str, 10);
-	return hset(key, field, str);
+	return hset(key, field, str, isPersistent);
 }
 
 ArancinoPacket ArancinoClass::hset(char *key, char *field, long value, bool isPersistent)
 {
 	char str[20];
 	itoa(value, str, 10);
-	return hset(key, field, str);
+	return hset(key, field, str, isPersistent);
 }
 
 ArancinoPacket ArancinoClass::hset(char *key, char *field, char *value, bool isPersistent)
