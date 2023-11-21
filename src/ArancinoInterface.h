@@ -63,6 +63,7 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 	void setDaemonID(const char* daemonID);
 	void setBrokerAddress(const char* broker);
 	void setPort(int port);
+	void setTopic(const char *);
 
 	private:
 	void ifaceBegin();

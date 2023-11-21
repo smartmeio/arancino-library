@@ -1,5 +1,8 @@
 # Changelog
 
+#### v 3.2.0 - 2023.XX.XX
+* Upd: added `setTopic` method for MQTT interface #90
+
 #### v 3.1.1 - 2023.06.23
 * Upd: Implemented will message for MQTT interface [#861myg408](https://app.clickup.com/t/861myg408)
 * fix: fixed client reconnection MQTT interface [#861myg318](https://app.clickup.com/t/861myg318)

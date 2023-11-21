@@ -60,5 +60,6 @@ setPassword	KEYWORD2
 setPort	KEYWORD2
 setNetworkClient	KEYWORD2
 setBLESerial	KEYWORD2
+setTopic	KEYWORD2
 getTimestamp	KEYWORD2
 enableDebugMessages	KEYWORD2

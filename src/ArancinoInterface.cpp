@@ -204,12 +204,12 @@ void MqttIface::ifaceBegin(){
 		this->subscribe(_serviceTopic); //arancino/service/dID
 		this->subscribe(_inputTopic);
 
-		char* discoverytopic = (char*)Arancino.calloc(strlen(_topic)+("_bus/discovery/") + strlen(_daemonID)+1, sizeof(char));
+		char discoverytopic[ (strlen(_topic)+strlen("_bus/discovery/") + strlen(_daemonID)+1)];
 		strcpy(discoverytopic,_topic);
 		strcat(discoverytopic, "_bus/discovery/");
 		strcat(discoverytopic, _daemonID);
 		this->publish(discoverytopic, Arancino.id);
-		Arancino.free(discoverytopic);
+		//Arancino.free(discoverytopic);
 		/*char* discoverytopic = (char*)Arancino.calloc(strlen("arancino/discovery/") + strlen(_daemonID)+1, sizeof(char));
 		strcpy(discoverytopic, "arancino/discovery/");
 		strcat(discoverytopic, _daemonID);
@@ -245,10 +245,8 @@ bool MqttIface::receiveArancinoResponse(JsonDocument& response){
 
 	unsigned long startMillis = millis();
 	do {
-		if (!this->connected()){
-			/*Arancino.free(_inputTopic);
-			Arancino.free(_outputTopic);
-			Arancino.free(_serviceTopic);*/
+		if (!this->connected())
+		{
 			this->ifaceBegin();
 		}
 		this->loop();
@@ -313,7 +311,7 @@ bool MqttIface::_reconnect(){
 	this->disconnect();
 	char willtopic[(strlen(_topic)+strlen("_bus/service/connection_status/")+strlen(_daemonID)+1+strlen(Arancino.id)+1)];
 	strcpy(willtopic, _topic);
-	strcat(willtopic, "a_bus/service/connection_status/");
+	strcat(willtopic, "_bus/service/connection_status/");
 	strcat(willtopic, _daemonID);
 	strcat(willtopic, "/");
 	strcat(willtopic, Arancino.id);
