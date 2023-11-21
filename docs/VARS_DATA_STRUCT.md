@@ -104,9 +104,11 @@ void setPassword(char*  password);
 void setDaemonID(char*  daemonID);
 void setBrokerAddress(char*  broker);
 void setPort(int  port);
+void setTopic(char*  topic);
 ```
 Most of the API is self explainatory, however particuar attention should be paid to both the `setNetworkClient` method, in which a valid network client should be passed as argument, and the `setBrokerAddress`, in which both IP addresses and domain names may be passed as string.
 The `DaemonID` is the ID used by the Arancino module that will have to listen to the MCU requests; you can modify that in the configuration file of the Arancino module configuration file itself.
+The `setTopic` method allow to change the value of the root topic's name (default setted to arancino). 
 
 #### BluetoothIface
 The `BluetoothIface` class exploits UART-like communication over Bluetooth and BLE.
