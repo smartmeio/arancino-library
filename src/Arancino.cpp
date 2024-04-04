@@ -324,6 +324,20 @@ ArancinoPacket ArancinoClass::mset(char **keys, char **values, int len, bool isA
 	return executeCommand(SET_COMMAND, keys, NULL, values, len, isAck, true, true, cfg, VOID_RESPONSE);
 }
 
+/******** SUBSCRIBE **********/
+ArancinoPacket ArancinoClass::subscribe(char** keys, void (*callbacks)(ArancinoPacket), int len, bool isAck, bool isPersistent, const char* type)
+{
+	if (keys == NULL)
+		return invalidCommandErrorPacket;
+	subscribeCallbacks = callbacks;
+	ArancinoCFG cfg;
+	cfg.ack = isAck ? CFG_TRUE : CFG_FALSE;
+	cfg.pers = isPersistent ? CFG_TRUE : CFG_FALSE;
+	cfg.type = type;
+	cfg.isPrefix = arancino_id_prefix ? CFG_TRUE : CFG_FALSE;
+	return executeCommand(SUBSCRIBE_COMMAND, keys, NULL, NULL, len, true, true, false, cfg, VOID_RESPONSE);
+}
+
 /******** API BASIC :: GET *********/
 
 template <>
@@ -1203,6 +1217,32 @@ ArancinoPacket ArancinoClass::executeCommand(const char* cmd, char** keys, char*
 	
 }
 
+void ArancinoClass::loop(){
+	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
+	bool error = true;
+
+	#if defined(USEFREERTOS)
+	if (takeCommMutex((TickType_t)portMAX_DELAY) != pdFALSE){
+	#endif
+
+	error = _iface->receiveArancinoEvent(rsp_doc);
+
+	#if defined(USEFREERTOS)
+	giveCommMutex();
+	}
+	#endif
+
+	if(!rsp_doc.isNull() && !error)
+	{
+		ArancinoPacket packet = createArancinoPacket(rsp_doc, SUBSCRIBE_RESPONSE);
+		if (subscribeCallbacks != NULL)
+		{
+			subscribeCallbacks(packet);
+		}
+		Arancino.free(packet);
+    }
+}
+
 ArancinoPacket ArancinoClass::executeCommand(JsonDocument& cmd_doc, bool isAck, int response_type){
 	StaticJsonDocument<RSP_DOC_SIZE> rsp_doc;
 	bool error = true;
@@ -1395,6 +1435,34 @@ ArancinoPacket ArancinoClass::createArancinoPacket(JsonDocument& response_dict, 
 			}
 			break;
 		}
+		case SUBSCRIBE_RESPONSE: {
+			size_t resp_size = 2;
+			char** strings_array = (char**)malloc((resp_size + 1) * sizeof(char*));
+			//save the items count into the first element of the array
+			strings_array[0] = (char*)resp_size;
+			/*	Move pointer to next position, since the first one
+					will contain the items count */
+			++strings_array;
+			const char* channel = response_dict["args"]["items"]["channel"];
+			const char* message = response_dict["args"]["items"]["message"];
+			if (channel != NULL) //&& message != NULL)
+			{
+				size_t channelLen = strlen(channel) + 1; //adding an element for \0
+				size_t messageLen = strlen(message) + 1; //adding an element for \0
+				strings_array[0] = (char*)malloc(channelLen * sizeof(char));
+				strings_array[1] = (char*)malloc(messageLen * sizeof(char));
+				strcpy(strings_array[0], channel);
+				strcpy(strings_array[1], message);
+			}
+			else
+			{
+				strings_array[0] = NULL;
+				strings_array[1] = NULL;
+			}
+			ArancinoPacket temp = {false, response_dict["rsp_code"], STRING_ARRAY, {.stringArray = strings_array}};
+			packet = temp;
+			break;
+		}
 		case CLIENTS_RESPONSE: {
 			// PUBLISH
 			ArancinoPacket temp = {false, response_dict["rsp_code"], INT, {.integer = response_dict["args"]["clients"]}};
@@ -1489,6 +1557,7 @@ void ArancinoClass::_buildArancinoJson(JsonDocument& cmd_doc, const char* cmd, c
 	if (cfg.isPrefix != CFG_UNSET){
 		cmd_cfg["prfx"] = cfg.isPrefix == CFG_FALSE ? 0 : 1;
 	}
+
 }
 
 void ArancinoClass::systemReset(){

@@ -156,6 +156,9 @@ class ArancinoClass {
 		//MSET
 		ArancinoPacket mset(char** keys, char** values, int len, bool isAck=true, bool isPersistent = false, const char* type = "appl");
 
+		//SUBSCRIBE
+		ArancinoPacket subscribe(char** channels, void (*callbacks)(ArancinoPacket),int len, bool isAck = true, bool isPersistent = false, const char* type = "appl");
+
 		//GET
 		template<class T = char*> T get(const char* key, bool isPersistent = false, const char* type = "appl");
 
@@ -201,6 +204,9 @@ class ArancinoClass {
 
 		//STORE TAGS
 		ArancinoPacket storetags(const char* key, char** tags, char** values, int len, const char* timestamp = NULL, bool isAck = true);
+
+		//LOOP SUBSCRIBE EVENT
+		void loop();
 
 		//GETRESERVED
 		char* getModuleVersion();
@@ -310,6 +316,10 @@ class ArancinoClass {
 		Stream* _dbgSerial;
 		bool _isDebug = false;
 		bool _commMode = false;
+
+		void (*subscribeCallbacks)(ArancinoPacket);
+
+		//setCallbacks(void (*callbacks[])(int), int size);
 
 	friend class ArancinoTasks;
 };

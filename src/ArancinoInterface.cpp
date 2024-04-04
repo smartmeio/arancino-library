@@ -263,6 +263,24 @@ bool MqttIface::receiveArancinoResponse(JsonDocument& response){
 	return error; // Return error if client is not connected
 }
 
+bool MqttIface::receiveArancinoEvent(JsonDocument& response){
+
+	bool error = true;
+
+	if (!this->connected()){
+		this->ifaceBegin();
+	}
+	this->loop();
+
+	if (_newIncomingMessage)
+	{
+		error = (bool)deserializeMsgPack(response, (const char*)this->_payload, this->_length);
+		_newIncomingMessage = false;
+	}
+
+	return error; // Return error if client is not connected
+}
+
 void MqttIface::_arancinoCallback(char* topic, byte* payload, unsigned int length){
 
 	if (!strcmp(topic, _serviceTopic)){
@@ -315,7 +333,8 @@ bool MqttIface::_reconnect(){
 	strcat(willtopic, _daemonID);
 	strcat(willtopic, "/");
 	strcat(willtopic, Arancino.id);
-	return this->connect(Arancino.id, _username, _password,willtopic,2,0,"offline");
+	//return this->connect(Arancino.id, _username, _password,willtopic,2,0,"offline");
+	return this->connect(Arancino.id, _username, _password);
 }
 
 /******** Bluetooth interface *********/

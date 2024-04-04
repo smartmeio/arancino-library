@@ -31,6 +31,7 @@ class ArancinoIface{
 	virtual void ifaceBegin() = 0;
 	virtual void sendArancinoCommand(JsonDocument& command) = 0;
 	virtual bool receiveArancinoResponse(JsonDocument& response) = 0;
+	virtual bool receiveArancinoEvent(JsonDocument& response) = 0;
 };
 
 /******** INTERFACES *********/
@@ -69,6 +70,7 @@ class MqttIface : public ArancinoIface, public PubSubClient {
 	void ifaceBegin();
 	void sendArancinoCommand(JsonDocument& command);
 	bool receiveArancinoResponse(JsonDocument& response);
+	bool receiveArancinoEvent(JsonDocument& response);
 
 	bool _reconnect();
 

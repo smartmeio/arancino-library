@@ -113,6 +113,7 @@ const uint32_t BAUDRATE_DEBUG = 115200;
 #define STORETAGS_COMMAND		(const char*)"STORETAGS"
 #define GETRESERVED_COMMAND		(const char*)"GETRSVD"
 #define SETRESERVED_COMMAND		(const char*)"SETRSVD"
+#define SUBSCRIBE_COMMAND		(const char*)"SUB"
 
 #define SENT_STRING				"Sent Command: "
 #define RCV_STRING				"Received Response: "
@@ -213,5 +214,6 @@ const uint32_t BAUDRATE_DEBUG = 115200;
 #define FIELDS_ITEMS_RESPONSE 3
 #define ITEMS_RESPONSE 4
 #define CLIENTS_RESPONSE 5
+#define SUBSCRIBE_RESPONSE 6
 
 #endif
