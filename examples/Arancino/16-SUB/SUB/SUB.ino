@@ -66,12 +66,13 @@ ArancinoMetadata amdata = {
 
 
 void callbackTopic(ArancinoPacket pckt) {
-
-        SerialMon.print("Topic: ");
-        SerialMon.print(pckt.response.stringArray[0]);
-        SerialMon.print(" Message: ");
-        SerialMon.println(pckt.response.stringArray[1]);
-        Arancino.free(pckt);
+  if(pckt.isError==0){
+    SerialMon.print("Topic: ");
+    SerialMon.print(pckt.response.stringArray[0]);
+    SerialMon.print(" Message: ");
+    SerialMon.println(pckt.response.stringArray[1]);
+  }
+  Arancino.free(pckt);
 }
 
 
