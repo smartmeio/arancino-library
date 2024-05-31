@@ -180,9 +180,9 @@ void MqttIface::ifaceBegin(){
 	Arancino.free(_inputTopic);
 	Arancino.free(_outputTopic);
 	Arancino.free(_serviceTopic);
-	_inputTopic = (char*)Arancino.calloc(strlen(_topic)+strlen("_bus/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
-	_outputTopic = (char*)Arancino.calloc(strlen(_topic)+strlen("_bus/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 2, sizeof(char));
-	_serviceTopic = (char*)Arancino.calloc(strlen(_topic)+strlen("_bus/service") + strlen(_daemonID) + strlen(Arancino.id) + 2, sizeof(char));
+	_inputTopic = (char*)Arancino.calloc(strlen(_topic)+strlen("_arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/rsp_to_mcu") + 2, sizeof(char));
+	_outputTopic = (char*)Arancino.calloc(strlen(_topic)+strlen("_arancino/cortex/") + strlen(_daemonID) + strlen(Arancino.id) + strlen("/cmd_from_mcu") + 2, sizeof(char));
+	_serviceTopic = (char*)Arancino.calloc(strlen(_topic)+strlen("_arancino/service") + strlen(_daemonID) + strlen(Arancino.id) + 2, sizeof(char));
 
 	strcpy(_inputTopic, _topic);
 	strcat(_inputTopic, "_bus/cortex/");
@@ -204,9 +204,9 @@ void MqttIface::ifaceBegin(){
 		this->subscribe(_serviceTopic); //arancino/service/dID
 		this->subscribe(_inputTopic);
 
-		char discoverytopic[ (strlen(_topic)+strlen("_bus/discovery/") + strlen(_daemonID)+1)];
+		char discoverytopic[ (strlen(_topic)+strlen("_arancino/discovery/") + strlen(_daemonID)+1)];
 		strcpy(discoverytopic,_topic);
-		strcat(discoverytopic, "_bus/discovery/");
+		strcat(discoverytopic, "_arancino/discovery/");
 		strcat(discoverytopic, _daemonID);
 		this->publish(discoverytopic, Arancino.id);
 		//Arancino.free(discoverytopic);
@@ -327,9 +327,9 @@ void MqttIface::setTopic(const char* topic){
 bool MqttIface::_reconnect(){
 	//force disconnect
 	this->disconnect();
-	char willtopic[(strlen(_topic)+strlen("_bus/service/connection_status/")+strlen(_daemonID)+1+strlen(Arancino.id)+1)];
+	char willtopic[(strlen(_topic)+strlen("_arancino/service/connection_status/")+strlen(_daemonID)+1+strlen(Arancino.id)+1)];
 	strcpy(willtopic, _topic);
-	strcat(willtopic, "_bus/service/connection_status/");
+	strcat(willtopic, "_arancino/service/connection_status/");
 	strcat(willtopic, _daemonID);
 	strcat(willtopic, "/");
 	strcat(willtopic, Arancino.id);
