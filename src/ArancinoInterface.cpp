@@ -139,6 +139,10 @@ bool SerialIface::receiveArancinoResponse(JsonDocument& response){
 	return (bool)error;
 }
 
+bool SerialIface::receiveArancinoEvent(JsonDocument& response){
+	return receiveArancinoResponse(response); // Return error if client is not connected
+}
+
 
 void SerialIface::setSerialPort(Stream& serialPort){
 	this->_serialPort = &serialPort;
@@ -185,7 +189,7 @@ void MqttIface::ifaceBegin(){
 	_serviceTopic = (char*)Arancino.calloc(strlen(_topic)+strlen("_arancino/service") + strlen(_daemonID) + strlen(Arancino.id) + 2, sizeof(char));
 
 	strcpy(_inputTopic, _topic);
-	strcat(_inputTopic, "_bus/cortex/");
+	strcat(_inputTopic, "_arancino/cortex/");
 	strcat(_inputTopic, _daemonID);
 	strcat(_inputTopic, "/");
 	strcat(_inputTopic, Arancino.id);
@@ -196,7 +200,7 @@ void MqttIface::ifaceBegin(){
 	strcat(_outputTopic, "/cmd_from_mcu");
 
 	strcpy(_serviceTopic, _topic);
-	strcat(_serviceTopic, "_bus/service/");
+	strcat(_serviceTopic, "_arancino/service/");
 	strcat(_serviceTopic, _daemonID);
 
 	if(this->_reconnect()){
@@ -375,5 +379,10 @@ bool BluetoothIface::receiveArancinoResponse(JsonDocument& response){
 		_timeoutCounter = 0;
 	}
 
+	return (bool)error;
+}
+
+bool BluetoothIface::receiveArancinoEvent(JsonDocument& response){
+	DeserializationError error = deserializeMsgPack(response, *_bleSerial);
 	return (bool)error;
 }

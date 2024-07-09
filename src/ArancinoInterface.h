@@ -50,6 +50,7 @@ class SerialIface : public ArancinoIface {
 	int serialWrite(const char* str, uint32_t len, unsigned long timeout);
 	void sendArancinoCommand(JsonDocument& command);
 	bool receiveArancinoResponse(JsonDocument& response);
+	bool receiveArancinoEvent(JsonDocument& response);
 
 	Stream* _serialPort;
 	bool comm_timeout = false;
@@ -101,6 +102,7 @@ class BluetoothIface : public ArancinoIface {
 	void ifaceBegin();
 	void sendArancinoCommand(JsonDocument& command);
 	bool receiveArancinoResponse(JsonDocument& response);
+	bool receiveArancinoEvent(JsonDocument& response);
 	
 	bool comm_timeout = false;
 	Stream* _bleSerial;
